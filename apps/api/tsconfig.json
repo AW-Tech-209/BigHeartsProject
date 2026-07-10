@@ -1,0 +1,25 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "rootDir": "src",
+    "outDir": "dist",
+    "baseUrl": ".",
+
+    // NestJS se apoya en decoradores y en la metadata de tipos que emite
+    // TypeScript para resolver la inyección de dependencias.
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+
+    // Los DTOs y entidades de Nest declaran propiedades que rellena el
+    // framework (o un ORM), no el constructor. Con esto activado TypeScript
+    // exigiría inicializarlas todas a mano.
+    "strictPropertyInitialization": false,
+
+    "incremental": true,
+    "resolveJsonModule": true
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist"]
+}

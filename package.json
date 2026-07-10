@@ -11,9 +11,10 @@
     "node": ">=20"
   },
   "scripts": {
-    "build": "npm run build --workspaces --if-present",
-    "dev:api": "npm run dev --workspace @academia/api",
-    "dev:web": "npm run dev --workspace @academia/web",
+    "build:types": "npm run build --workspace @academia/types",
+    "build": "npm run build:types && npm run build --workspaces --if-present",
+    "dev:api": "npm run build:types && npm run dev --workspace @academia/api",
+    "dev:web": "npm run build:types && npm run dev --workspace @academia/web",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
