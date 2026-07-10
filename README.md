@@ -5,6 +5,11 @@ TypeScript compartido entre ambos.
 
 Gestionado con **npm workspaces**. Hay un único `package-lock.json`, en la raíz.
 
+> **Sobre el nombre.** El proyecto se llama **academia** en todas partes: el paquete raíz
+> (`academia`) y el _scope_ de npm de los tres workspaces (`@academia/api`, `@academia/web`,
+> `@academia/types`). El repositorio en GitHub se llama `BigHeartsProject` por razones
+> históricas; es el único sitio donde aparece otro nombre.
+
 ## Requisitos
 
 - **Node.js >= 20** (probado con 22.x)
@@ -13,8 +18,10 @@ Gestionado con **npm workspaces**. Hay un único `package-lock.json`, en la raí
 ## Clonar e instalar
 
 ```bash
-git clone <url-del-repositorio>
-cd BigHearts
+# El segundo argumento hace que la carpeta local se llame `academia` y no
+# `BigHeartsProject`, que es como se llama el repositorio en GitHub.
+git clone https://github.com/AW-Tech-209/BigHeartsProject.git academia
+cd academia
 
 # Instala las dependencias de los tres workspaces y los enlaza entre sí.
 # Ejecútalo SIEMPRE desde la raíz, nunca dentro de apps/ o packages/.
@@ -102,6 +109,26 @@ src/
 └── admin/          Operaciones de back-office (rol ADMIN).
 ```
 
+### Dentro de `apps/web`
+
+```
+apps/web/
+├── index.html          Punto de entrada de Vite. Monta <div id="root">.
+├── vite.config.ts      Config de Vite (plugin de React, puerto, optimizeDeps).
+├── tsconfig.json       TypeScript del código de navegador (DOM, JSX).
+├── tsconfig.node.json  TypeScript de vite.config.ts, que corre en Node.
+└── src/
+    ├── main.tsx        Bootstrap de React (createRoot + StrictMode).
+    ├── App.tsx         Componente raíz. Hoy solo demuestra el import compartido.
+    └── vite-env.d.ts   Tipos que Vite inyecta (import.meta.env, assets...).
+```
+
+> **Hoy es un scaffold mínimo.** Arranca y compila, y nada más. El bootstrap detallado del
+> frontend —Tailwind, router, store y la estructura de `src/` (`components/`, `pages/`,
+> `hooks/`…)— es responsabilidad de otra persona en una task aparte de esta misma HU.
+> `App.tsx` existe solo para probar que el import de `@academia/types` funciona: quien haga ese
+> bootstrap puede borrarlo sin miramientos.
+
 ## El paquete de tipos compartidos
 
 `@academia/types` es un workspace local. Las apps lo declaran como `"@academia/types": "*"` y npm
@@ -118,6 +145,103 @@ enum `UserRole` existe en el JavaScript final. Si cambias algo en `packages/type
 ```bash
 npm run build:types
 ```
+
+## Cómo añadir dependencias
+
+Hay dos formas de instalar un paquete en un workspace concreto, y **son equivalentes**:
+
+```bash
+# Opción A: desde la raíz, apuntando al workspace con -w
+npm install zod -w apps/api
+npm install zod -w @academia/api   # también vale el nombre del paquete
+
+# Opción B: entrando en la carpeta del workspace
+cd apps/api && npm install zod
+```
+
+En los dos casos npm hace lo mismo: añade `zod` a `apps/api/package.json` y actualiza el
+**lockfile de la raíz**. Aunque ejecutes el comando dentro de `apps/api`, npm sube por el árbol
+de directorios hasta encontrar el `package.json` que declara `workspaces` y trabaja desde ahí.
+
+Para una dependencia de herramientas que afecte a todo el repo (linters, formatters, hooks),
+instálala en la raíz:
+
+```bash
+npm install -D <paquete>   # desde la raíz, sin -w
+```
+
+### La regla del lockfile
+
+> **Debe existir UN solo `package-lock.json`, en la raíz del repo. Nunca dentro de `apps/*` ni de
+> `packages/*`.**
+
+Ese fichero es el que garantiza que todo el equipo y el CI instalen exactamente las mismas
+versiones. Un lockfile dentro de una app rompe la resolución compartida de npm: las apps podrían
+acabar con copias distintas de la misma dependencia, y `@academia/types` dejaría de enlazarse por
+symlink.
+
+Si alguna vez aparece un `package-lock.json` dentro de una app (normalmente porque alguien corrió
+un generador tipo `npm create vite` o `nest new` ahí dentro), bórralo y reinstala desde la raíz:
+
+```bash
+rm apps/<app>/package-lock.json
+npm install
+```
+
+Comprobación rápida de que la regla se cumple:
+
+```bash
+find . -name package-lock.json -not -path "*/node_modules/*"
+# Debe imprimir exactamente una línea: ./package-lock.json
+```
+
+## Despliegue (resumen)
+
+Todavía **no está configurado**. Se hará en la **HU-003**.
+
+La idea: ambas apps se despliegan **desde este mismo repositorio**, cada una apuntando a su
+subcarpeta como raíz del proyecto y leyendo su propio `.env`:
+
+| App      | Raíz del despliegue | Variables de entorno |
+| -------- | ------------------- | -------------------- |
+| Frontend | `apps/web`          | su propio `.env`     |
+| Backend  | `apps/api`          | su propio `.env`     |
+
+Esto no requiere separar el monorepo: las plataformas de despliegue habituales admiten indicar un
+directorio raíz dentro del repo. La configuración concreta (comandos de build, variables por
+entorno, dominios) queda para la HU-003.
+
+## Trampas conocidas
+
+Dos cosas que ya nos han mordido, están resueltas, y **no hay que reintroducir**. Ambas están
+comentadas también en el código, junto a la línea que las evita.
+
+### 1. `optimizeDeps.include: ['@academia/types']` en `apps/web/vite.config.ts`
+
+**No borres esa línea.** Vite excluye del pre-bundling las dependencias enlazadas por symlink (los
+workspaces del monorepo), porque asume que son fuentes ESM. Pero `@academia/types` se compila a
+**CommonJS**, ya que NestJS lo consume con `require()`.
+
+Sin esa línea el `build` sigue pasando, pero el navegador revienta en cuanto se importa un **valor**
+del paquete (por ejemplo el enum `UserRole`), porque esbuild nunca convirtió el módulo CJS a ESM.
+
+### 2. No actives `incremental: true` en `apps/api/tsconfig.json`
+
+`nest-cli.json` usa `deleteOutDir: true`, que borra `dist/` en cada build — pero **no** borra el
+fichero `.tsbuildinfo`. Con `incremental` activado, tsc consulta esa caché, concluye que los
+ficheros ya están emitidos y no los vuelve a escribir.
+
+El resultado es un `dist/` incompleto y, lo peor, **`nest build` sale con código 0**. El fallo solo
+aparece al arrancar el binario compilado, con un `Cannot find module './admin/admin.module'`.
+
+### 3. Compila `@academia/types` antes que las apps
+
+El script `build` de la raíz llama a `build:types` explícitamente antes que al resto. Esto es
+necesario: `npm run build --workspaces` recorre los workspaces en el orden en que están declarados
+(`apps/*` y luego `packages/*`), **no** en orden topológico de dependencias. Sin ese paso previo,
+`apps/api` y `apps/web` fallan con `TS2307: Cannot find module '@academia/types'`.
+
+Por eso `dev:api` y `dev:web` también invocan `build:types` antes de arrancar.
 
 ## Convención de commits
 

@@ -7,9 +7,16 @@ export default defineConfig({
     port: 5173,
   },
   optimizeDeps: {
-    // Vite excluye del pre-bundling las dependencias enlazadas (symlinks de
-    // workspace). Como @academia/types se publica en CommonJS, hay que
-    // incluirlo explícitamente para que esbuild lo convierta a ESM.
+    // NO BORRAR esta línea.
+    //
+    // Vite excluye del pre-bundling las dependencias enlazadas por symlink
+    // (los workspaces del monorepo), asumiendo que son fuentes ESM que ya sabe
+    // procesar. Pero @academia/types se compila a CommonJS, porque la API de
+    // NestJS lo consume con require().
+    //
+    // Si se quita, el build sigue pasando pero el navegador revienta en cuanto
+    // se importa un VALOR del paquete (p. ej. el enum UserRole), porque
+    // esbuild nunca convirtió el módulo CJS a ESM.
     include: ['@academia/types'],
   },
 });
