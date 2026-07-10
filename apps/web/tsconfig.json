@@ -1,0 +1,26 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    // El navegador necesita las libs de DOM, que la base (agnóstica) no incluye.
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+
+    "module": "ESNext",
+    // "bundler": deja que Vite resuelva los imports, como hace en runtime.
+    "moduleResolution": "bundler",
+    "jsx": "react-jsx",
+
+    // Vite transpila fichero a fichero con esbuild, sin visión global del
+    // proyecto: `isolatedModules` prohíbe lo que eso no puede soportar.
+    "isolatedModules": true,
+    "useDefineForClassFields": true,
+
+    // Vite se encarga de emitir; tsc aquí solo comprueba tipos.
+    "noEmit": true,
+    "declaration": false,
+    "declarationMap": false,
+
+    "allowSyntheticDefaultImports": true
+  },
+  "include": ["src"],
+  "exclude": ["node_modules", "dist"]
+}
