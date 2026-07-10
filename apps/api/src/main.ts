@@ -4,17 +4,21 @@ import { Logger } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 
 import { AppModule } from './app.module';
+import { AppConfigService } from './config/app-config.service';
 
 async function bootstrap(): Promise<void> {
+  // Si el .env es inválido, NestFactory.create lanza aquí: el proceso muere
+  // antes de abrir ningún puerto.
   const app = await NestFactory.create(AppModule);
 
-  // TODO(Bloque 4): leer el puerto desde el ConfigService tipado en lugar de
-  // process.env directamente.
-  const port = Number(process.env.PORT ?? 3000);
+  const config = app.get(AppConfigService);
 
-  await app.listen(port);
+  await app.listen(config.port);
 
-  Logger.log(`API escuchando en http://localhost:${port}`, 'Bootstrap');
+  Logger.log(
+    `API escuchando en http://localhost:${config.port} [entorno: ${config.nodeEnv}]`,
+    'Bootstrap',
+  );
 }
 
 void bootstrap();

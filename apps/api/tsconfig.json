@@ -17,7 +17,9 @@
     // exigiría inicializarlas todas a mano.
     "strictPropertyInitialization": false,
 
-    "incremental": true,
+    // OJO: no activar `incremental`. nest-cli usa `deleteOutDir: true`, que
+    // borra dist/ pero no el .tsbuildinfo; tsc entonces cree que los ficheros
+    // ya están emitidos y deja dist/ incompleto.
     "resolveJsonModule": true
   },
   "include": ["src/**/*"],

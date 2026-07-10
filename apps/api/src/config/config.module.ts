@@ -1,10 +1,34 @@
-import { Module } from '@nestjs/common';
+import { Global, Module } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
+
+import { AppConfigService } from './app-config.service';
+import { validateEnv } from './env.validation';
 
 /**
- * Configuración de la aplicación y validación de variables de entorno.
+ * Configuración global de la aplicación.
  *
- * TODO(Bloque 4): registrar @nestjs/config como módulo global, validar el
- * entorno con un esquema y exponer un ConfigService tipado.
+ * `@Global()` + `exports` hacen que cualquier módulo pueda inyectar
+ * `AppConfigService` sin tener que importar este módulo explícitamente.
  */
-@Module({})
+@Global()
+@Module({
+  imports: [
+    ConfigModule.forRoot({
+      // Disponible en toda la app sin re-importar.
+      isGlobal: true,
+
+      // Se resuelve relativo al cwd del proceso, que al lanzar la app con los
+      // scripts del workspace es `apps/api/`.
+      envFilePath: ['.env'],
+
+      // Si esto lanza, Nest aborta el arranque antes de levantar el servidor.
+      validate: validateEnv,
+
+      // Evita releer y re-parsear el .env en cada acceso.
+      cache: true,
+    }),
+  ],
+  providers: [AppConfigService],
+  exports: [AppConfigService],
+})
 export class AppConfigModule {}
