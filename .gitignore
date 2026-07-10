@@ -1,0 +1,29 @@
+# Dependencias
+node_modules/
+
+# Builds
+dist/
+build/
+.vite/
+*.tsbuildinfo
+
+# Tests / cobertura
+coverage/
+
+# Variables de entorno reales.
+# Se ignoran todos los .env y sus variantes, PERO los .env.example
+# se versionan para documentar qué variables necesita cada app.
+.env
+.env.*
+!.env.example
+
+# Logs
+*.log
+npm-debug.log*
+
+# Editores / SO
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json
