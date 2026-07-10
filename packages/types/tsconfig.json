@@ -1,0 +1,14 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    // CommonJS para que NestJS (que compila a CJS) pueda hacer `require` del
+    // paquete sin interop. Vite pre-bundlea CJS desde node_modules sin problema,
+    // así que este formato sirve a las dos apps.
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "rootDir": "src",
+    "outDir": "dist"
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist"]
+}
