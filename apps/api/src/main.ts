@@ -13,6 +13,15 @@ async function bootstrap(): Promise<void> {
 
   const config = app.get(AppConfigService);
 
+  // Solo orígenes de dev: Vite arranca en 5173 y prueba el siguiente puerto
+  // libre si ya hay algo escuchando (5174, 5175...), así que se acepta
+  // cualquier puerto de localhost en vez de fijar uno o dos.
+  if (config.isDevelopment) {
+    app.enableCors({
+      origin: /^http:\/\/localhost:\d+$/,
+    });
+  }
+
   await app.listen(config.port);
 
   Logger.log(
