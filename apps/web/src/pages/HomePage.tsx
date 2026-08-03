@@ -1,0 +1,57 @@
+import { UserRole } from '@academia/types';
+import { useQuery } from '@tanstack/react-query';
+
+import { Button } from '@/components/ui/button';
+import { httpClient } from '@/lib/http-client';
+
+/** Forma del payload que devuelve `GET /health` en @academia/api. */
+type HealthPayload = { status: 'ok'; uptime: number };
+
+export function HomePage() {
+  const health = useQuery({
+    queryKey: ['health'],
+    queryFn: () => httpClient.get<HealthPayload>('/health'),
+    // Es un simple indicador de estado: mejor fallar rápido y dejar que el
+    // usuario reintente a mano que reintentar en silencio de fondo.
+    retry: false,
+  });
+
+  return (
+    <main className="mx-auto max-w-2xl space-y-6 p-8 text-base leading-relaxed text-foreground">
+      <h1 className="text-2xl font-semibold">Academia</h1>
+      <p>Scaffold de @academia/web: Vite + React + TypeScript + Tailwind/shadcn.</p>
+
+      <section className="space-y-2">
+        <h2 className="text-lg font-medium">Roles desde @academia/types</h2>
+        <ul className="list-inside list-disc">
+          {Object.values(UserRole).map((rol) => (
+            <li key={rol}>{rol}</li>
+          ))}
+        </ul>
+      </section>
+
+      <section className="space-y-2">
+        <h2 className="text-lg font-medium">GET /health vía React Query + axios</h2>
+
+        {health.isPending && <p className="text-muted-foreground">Cargando...</p>}
+
+        {health.isError && (
+          <div className="space-y-2 rounded-lg border border-destructive/40 bg-destructive/10 p-4">
+            <p className="text-destructive">
+              No se pudo contactar con la API: {health.error.message}
+            </p>
+            <Button variant="outline" onClick={() => health.refetch()}>
+              Reintentar
+            </Button>
+          </div>
+        )}
+
+        {health.isSuccess && (
+          <pre className="rounded-lg border border-border bg-muted p-4">
+            {JSON.stringify(health.data, null, 2)}
+          </pre>
+        )}
+      </section>
+    </main>
+  );
+}

@@ -95,6 +95,16 @@ curl -i http://localhost:3000/health
 La API **arranca aunque la BD esté caída** (patrón _readiness probe_): en vez de entrar en
 crash-loop, sigue viva y `/health` devuelve 503 hasta que la base de datos vuelve.
 
+### Configurar el entorno del frontend
+
+El frontend necesita saber dónde vive la API. Copia también su plantilla:
+
+```bash
+cp apps/web/.env.example apps/web/.env
+```
+
+Como mínimo tienes que definir `VITE_API_URL` (por defecto, `http://localhost:3000`).
+
 ## Levantar cada app
 
 Todos los comandos se ejecutan **desde la raíz**:
@@ -105,6 +115,11 @@ npm run dev:web    # Frontend en http://localhost:5173
 ```
 
 Ambos compilan antes `@academia/types`, porque las dos apps dependen de su build.
+
+> **CORS en desarrollo.** `apps/api/src/main.ts` habilita CORS solo cuando `NODE_ENV` es
+> `development`, para cualquier origen `http://localhost:<puerto>`. Así no importa en qué
+> puerto acabe Vite si el 5173 ya está ocupado (5174, 5175...). En producción no se habilita
+> nada; la configuración real de CORS de producción queda para la HU-003 de despliegue.
 
 Comprobación rápida de que la API vive:
 
@@ -174,20 +189,35 @@ apps/api/
 ```
 apps/web/
 ├── index.html          Punto de entrada de Vite. Monta <div id="root">.
-├── vite.config.ts      Config de Vite (plugin de React, puerto, optimizeDeps).
-├── tsconfig.json       TypeScript del código de navegador (DOM, JSX).
+├── vite.config.ts      Config de Vite (plugin de React, Tailwind, alias @/*, optimizeDeps).
+├── components.json     Config de shadcn/ui (estilo, alias, base color).
+├── tsconfig.json       TypeScript del código de navegador (DOM, JSX, alias @/*).
 ├── tsconfig.node.json  TypeScript de vite.config.ts, que corre en Node.
 └── src/
-    ├── main.tsx        Bootstrap de React (createRoot + StrictMode).
-    ├── App.tsx         Componente raíz. Hoy solo demuestra el import compartido.
-    └── vite-env.d.ts   Tipos que Vite inyecta (import.meta.env, assets...).
+    ├── main.tsx            Bootstrap de React (createRoot + StrictMode) e import de index.css.
+    ├── index.css           Tailwind v4 + tema de shadcn/ui (alto contraste, fuente base 16px).
+    ├── vite-env.d.ts       Tipos que Vite inyecta, incl. import.meta.env.VITE_API_URL.
+    ├── app/
+    │   ├── App.tsx         Componente raíz: compone providers.tsx + router.tsx.
+    │   ├── providers.tsx   QueryClientProvider de React Query.
+    │   └── router.tsx      Rutas con react-router-dom (BrowserRouter).
+    ├── pages/              Componentes de página (uno por ruta).
+    ├── features/           Módulos de dominio (vacío hoy: cada HU añade el suyo aquí).
+    ├── components/ui/      Componentes generados por shadcn/ui (p. ej. button.tsx).
+    ├── lib/
+    │   ├── http-client.ts  Instancia de axios: adjunta el token y desenvuelve ApiResponse/ApiError.
+    │   ├── api-error.ts    ApiClientError, el error tipado que lanza http-client.ts.
+    │   ├── auth/token-storage.ts  Wrapper sobre localStorage para el token.
+    │   ├── query-client.ts Instancia de QueryClient.
+    │   └── utils.ts        Helper cn() de shadcn/ui.
+    └── stores/
+        └── useAppStore.ts  Store de Zustand, vacío a propósito: listo para futuras HUs.
 ```
 
-> **Hoy es un scaffold mínimo.** Arranca y compila, y nada más. El bootstrap detallado del
-> frontend —Tailwind, router, store y la estructura de `src/` (`components/`, `pages/`,
-> `hooks/`…)— es responsabilidad de otra persona en una task aparte de esta misma HU.
-> `App.tsx` existe solo para probar que el import de `@academia/types` funciona: quien haga ese
-> bootstrap puede borrarlo sin miramientos.
+> **Arquitectura feature-based.** `app/` es cableado transversal (providers, router), `pages/`
+> son componentes de ruta, y `features/` es donde vivirán los módulos de dominio (auth, aulas,
+> reservas...) según se vayan implementando: cada uno con sus propios `components/`, `hooks/` y
+> llamadas a `lib/http-client.ts`.
 
 ## El paquete de tipos compartidos
 
