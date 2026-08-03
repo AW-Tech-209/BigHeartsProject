@@ -38,10 +38,62 @@ La API no arranca sin sus variables de entorno. Copia la plantilla y rellénala:
 cp apps/api/.env.example apps/api/.env
 ```
 
-Como mínimo tienes que definir `JWT_SECRET` (32 caracteres o más). Si falta cualquier variable
-obligatoria, o alguna está malformada, la app **se niega a arrancar** y te dice cuál.
+Tienes que definir, como mínimo:
 
-El `.env` real está ignorado por git; el `.env.example` no.
+- `JWT_SECRET` — 32 caracteres o más.
+- `DATABASE_URL` y `DIRECT_URL` — conexión a PostgreSQL (ver la sección siguiente).
+
+Si falta cualquier variable obligatoria, o alguna está malformada, la app **se niega a arrancar**
+y te dice cuál. El `.env` real está ignorado por git; el `.env.example` no.
+
+## Base de datos (Prisma + PostgreSQL)
+
+La base de datos es **PostgreSQL**, alojado en **Supabase**, y se accede con **Prisma** (fijado a
+la major **6**; ver _Trampas conocidas_).
+
+### 1. Configurar la conexión
+
+En `apps/api/.env`, sustituye `[YOUR-PASSWORD]` por la contraseña de la base de datos (Supabase →
+_Project Settings → Database_) en **las dos** variables:
+
+```bash
+# Runtime: pooler en modo transacción (pgbouncer, puerto 6543)
+DATABASE_URL=postgresql://postgres.<ref>:<password>@aws-0-us-east-2.pooler.supabase.com:6543/postgres?pgbouncer=true
+
+# Migraciones: conexión directa en modo sesión (puerto 5432)
+DIRECT_URL=postgresql://postgres.<ref>:<password>@aws-0-us-east-2.pooler.supabase.com:5432/postgres
+```
+
+Son **dos** URLs a propósito: pgbouncer (el pooler) no soporta las sentencias que necesita Prisma
+Migrate, así que las migraciones van por la conexión directa (`DIRECT_URL`) y las consultas
+normales por el pooler (`DATABASE_URL`). Si tu contraseña tiene caracteres especiales
+(`@ : / ? # & %`), **URL-encódéalos** (`@` → `%40`, etc.).
+
+### 2. Aplicar el esquema
+
+```bash
+npm run db:migrate    # crea/aplica migraciones en desarrollo (usa DIRECT_URL)
+npm run db:deploy     # aplica migraciones ya existentes (para CI / producción)
+npm run db:studio     # abre Prisma Studio para inspeccionar la BD
+```
+
+El cliente de Prisma se **genera solo** tras `npm install` (script `postinstall`) y antes de cada
+`build`, así que no hay que generarlo a mano. El esquema vive en
+[apps/api/prisma/schema.prisma](apps/api/prisma/schema.prisma) y las migraciones en
+`apps/api/prisma/migrations/` (versionadas).
+
+### 3. Comprobar la conexión
+
+`GET /health` confirma que la API **y** la base de datos responden:
+
+```bash
+curl -i http://localhost:3000/health
+# 200 → {"success":true,"data":{"status":"ok","uptime":1,"database":"up"},"timestamp":"..."}
+# 503 → {"success":false,"error":{"code":"DATABASE_UNAVAILABLE",...}}  (BD inalcanzable)
+```
+
+La API **arranca aunque la BD esté caída** (patrón _readiness probe_): en vez de entrar en
+crash-loop, sigue viva y `/health` devuelve 503 hasta que la base de datos vuelve.
 
 ### Configurar el entorno del frontend
 
@@ -73,7 +125,7 @@ Comprobación rápida de que la API vive:
 
 ```bash
 curl http://localhost:3000/health
-# {"success":true,"data":{"status":"ok","uptime":1},"timestamp":"..."}
+# {"success":true,"data":{"status":"ok","uptime":1,"database":"up"},"timestamp":"..."}
 ```
 
 ## Scripts de la raíz
@@ -89,6 +141,9 @@ curl http://localhost:3000/health
 | `npm run format`       | Formatea todo el repo con Prettier.                             |
 | `npm run format:check` | Comprueba el formato sin escribir nada (útil en CI).            |
 | `npm run typecheck`    | Comprueba los tipos de los tres workspaces.                     |
+| `npm run db:migrate`   | Crea y aplica migraciones de Prisma en desarrollo.              |
+| `npm run db:deploy`    | Aplica migraciones existentes (CI / producción).                |
+| `npm run db:studio`    | Abre Prisma Studio.                                             |
 
 ## Estructura de carpetas
 
@@ -109,19 +164,24 @@ curl http://localhost:3000/health
 ### Dentro de `apps/api`
 
 ```
-src/
-├── main.ts         Bootstrap. Lee el puerto del ConfigService.
-├── app.module.ts   Módulo raíz. Compone los módulos de dominio.
-├── config/         Config global y validación del entorno con Zod.
-├── common/         Piezas transversales: filtros, guards, interceptores, pipes.
-├── health/         Endpoint GET /health.
-├── auth/           Autenticación, JWT y guards de rol.
-├── users/          Usuarios: alumnos, profesores, administradores.
-├── classrooms/     Aulas: catálogo, capacidad, disponibilidad.
-├── bookings/       Reservas de aulas.
-├── sessions/       Sesiones de clase en el calendario.
-├── notifications/  Envío de notificaciones (email, in-app).
-└── admin/          Operaciones de back-office (rol ADMIN).
+apps/api/
+├── prisma/
+│   ├── schema.prisma   Esquema de la BD (modelo User, enum UserRole).
+│   └── migrations/      Migraciones versionadas.
+└── src/
+    ├── main.ts         Bootstrap. Lee el puerto del ConfigService.
+    ├── app.module.ts   Módulo raíz. Compone los módulos de dominio.
+    ├── config/         Config global y validación del entorno con Zod.
+    ├── prisma/         PrismaService/PrismaModule (@Global). Acceso a la BD.
+    ├── common/         Piezas transversales: filtros, guards, interceptores, pipes.
+    ├── health/         Endpoint GET /health (comprueba proceso + BD).
+    ├── auth/           Autenticación, JWT y guards de rol.
+    ├── users/          Usuarios: alumnos, profesores, administradores.
+    ├── classrooms/     Aulas: catálogo, capacidad, disponibilidad.
+    ├── bookings/       Reservas de aulas.
+    ├── sessions/       Sesiones de clase en el calendario.
+    ├── notifications/  Envío de notificaciones (email, in-app).
+    └── admin/          Operaciones de back-office (rol ADMIN).
 ```
 
 ### Dentro de `apps/web`
@@ -272,6 +332,21 @@ necesario: `npm run build --workspaces` recorre los workspaces en el orden en qu
 `apps/api` y `apps/web` fallan con `TS2307: Cannot find module '@academia/types'`.
 
 Por eso `dev:api` y `dev:web` también invocan `build:types` antes de arrancar.
+
+### 4. Prisma está fijado a la major 6 (no subir a la 7 a la ligera)
+
+Prisma **7** eliminó `url`/`directUrl` del bloque `datasource` del `schema.prisma` y obliga a mover
+la conexión a un `prisma.config.ts` con _driver adapters_. Es un cambio de arquitectura que esta HU
+no necesita, y que además rompe la configuración de Supabase (pooler + conexión directa) tal cual la
+documenta Supabase. Por eso `prisma` y `@prisma/client` están fijados a `^6`. Subir a la 7 es un
+trabajo propio, no un `npm update`.
+
+### 5. Con el pooler (pgbouncer), no fíes de consultas sueltas a `information_schema`
+
+El pooler de Supabase en modo transacción (`DATABASE_URL`, puerto 6543) cachea _prepared statements_
+y puede devolver resultados parciales/obsoletos al consultar el catálogo (`information_schema`)
+directamente. No es un fallo del esquema: para verificar el estado real de la BD usa Prisma Client
+(un `create`/`findMany`) o conéctate por `DIRECT_URL` (puerto 5432).
 
 ## Convención de commits
 

@@ -32,6 +32,16 @@ export class AppConfigService {
     return this.config.get('JWT_SECRET', { infer: true });
   }
 
+  /** Conexión a PostgreSQL en runtime (pooler pgbouncer). */
+  get databaseUrl(): string {
+    return this.config.get('DATABASE_URL', { infer: true });
+  }
+
+  /** Conexión directa a PostgreSQL, usada por Prisma Migrate. */
+  get directUrl(): string {
+    return this.config.get('DIRECT_URL', { infer: true });
+  }
+
   get isProduction(): boolean {
     return this.nodeEnv === 'production';
   }
@@ -39,6 +49,4 @@ export class AppConfigService {
   get isDevelopment(): boolean {
     return this.nodeEnv === 'development';
   }
-
-  // TODO(Prisma): añadir `get databaseUrl(): string` cuando exista DATABASE_URL.
 }

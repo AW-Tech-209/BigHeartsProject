@@ -20,6 +20,9 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "typecheck": "npm run typecheck --workspaces --if-present",
+    "db:migrate": "npm run prisma:migrate --workspace @academia/api",
+    "db:deploy": "npm run prisma:deploy --workspace @academia/api",
+    "db:studio": "npm run prisma:studio --workspace @academia/api",
     "prepare": "husky"
   },
   "devDependencies": {
