@@ -1,0 +1,45 @@
+// Schema de Prisma para @academia/api.
+// Docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+
+  // Runtime: pooler de Supabase en modo transacción (pgbouncer, IPv4).
+  url = env("DATABASE_URL")
+
+  // Migraciones: conexión directa en modo sesión. pgbouncer no soporta
+  // las sentencias que Prisma Migrate necesita, por eso se separa.
+  directUrl = env("DIRECT_URL")
+}
+
+/// Roles de usuario de la plataforma.
+///
+/// Los valores DEBEN coincidir con el enum `UserRole` de @academia/types, que
+/// es el contrato compartido con el frontend. Prisma genera su propio enum a
+/// partir de este; ambos comparten los mismos miembros a propósito.
+enum UserRole {
+  STUDENT
+  TEACHER
+  ADMIN
+}
+
+/// Usuario de la plataforma. Primer modelo base de la HU-001; se ampliará en
+/// las siguientes HUs (relaciones con aulas, reservas, sesiones...).
+model User {
+  id        String   @id @default(uuid()) @db.Uuid
+  email     String   @unique
+  /// Hash de la contraseña. NUNCA se expone en las respuestas de la API
+  /// (ver el tipo `User` de @academia/types, que no incluye este campo).
+  password  String
+  firstName String   @map("first_name")
+  lastName  String   @map("last_name")
+  role      UserRole @default(STUDENT)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("users")
+}

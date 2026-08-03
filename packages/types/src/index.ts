@@ -21,6 +21,26 @@ export enum UserRole {
   ADMIN = 'ADMIN',
 }
 
+/**
+ * Vista pública de un usuario: la forma en que viaja por la API hacia el
+ * frontend.
+ *
+ * IMPORTANTE: NO incluye `password` ni ningún dato sensible. El modelo `User`
+ * de Prisma (backend) sí lo tiene; este tipo es deliberadamente un subconjunto,
+ * para que sea imposible serializar el hash por accidente.
+ *
+ * Las fechas son cadenas ISO 8601, porque así es como sobreviven a `JSON`.
+ */
+export interface User {
+  id: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  role: UserRole;
+  createdAt: string;
+  updatedAt: string;
+}
+
 /** Error normalizado que devuelve la API cuando algo falla. */
 export interface ApiError {
   /** Código estable y legible por máquina, p. ej. `USER_NOT_FOUND`. */
