@@ -8,11 +8,19 @@ generator client {
 datasource db {
   provider = "postgresql"
 
-  // Runtime: pooler de Supabase en modo transacción (pgbouncer, IPv4).
+  // NOTA: la extensión de Prisma para VS Code puede subrayar `url`/`directUrl`
+  // como "deprecados, muévelos a prisma.config.ts". Es un aviso de Prisma 7; la
+  // extensión va por delante de nuestra CLI. Estamos PINEADOS a Prisma 6 (ver
+  // README → Trampas conocidas), donde declararlos aquí es lo correcto y
+  // soportado: `prisma validate/generate/migrate` pasan sin error. Ignorable
+  // hasta que haya una HU específica para migrar a Prisma 7.
+
+  // Runtime: en dev, Postgres en Docker; en staging/prod, pooler de Supabase.
   url = env("DATABASE_URL")
 
-  // Migraciones: conexión directa en modo sesión. pgbouncer no soporta
-  // las sentencias que Prisma Migrate necesita, por eso se separa.
+  // Migraciones: conexión directa. En Supabase, pgbouncer no soporta las
+  // sentencias que Prisma Migrate necesita, por eso se separa de `url`.
+  // En el Postgres de Docker (sin pooler) ambas apuntan al mismo sitio.
   directUrl = env("DIRECT_URL")
 }
 
