@@ -1,0 +1,91 @@
+# Entorno de desarrollo local de Academia.
+#
+# Objetivo: `docker compose up` levanta el stack completo, reproducible e
+# idéntico entre los dos miembros del equipo, sin pasos manuales.
+#
+# Estrategia de base de datos: en DESARROLLO usamos este PostgreSQL en
+# contenedor (aislado por dev, desechable, rápido). Supabase queda reservado
+# para staging/producción; sus credenciales viven en el .env de cada quien, no
+# aquí. La imagen se pinea a la MISMA major que Supabase (17) para no introducir
+# deriva de versión.
+#
+# Todas las variables tienen valor por defecto (${VAR:-default}), así que el
+# stack arranca sin configuración previa. Puedes sobrescribirlas con un `.env`
+# en la raíz del repo si lo necesitas.
+
+name: academia
+
+services:
+  # ── PostgreSQL ─────────────────────────────────────────────────────────────
+  postgres:
+    image: postgres:17-alpine
+    container_name: academia-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-academia}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-academia}
+      POSTGRES_DB: ${POSTGRES_DB:-academia}
+    ports:
+      # Publicado al host para poder correr la API en local (fuera de Docker)
+      # o inspeccionar la BD con un cliente como TablePlus/psql.
+      - '${POSTGRES_PORT:-5432}:5432'
+    volumes:
+      # Volumen con nombre = los datos sobreviven a `docker compose down`.
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      # La API no arranca hasta que la BD acepta conexiones (ver depends_on).
+      test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER:-academia} -d ${POSTGRES_DB:-academia}']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # ── Backend (NestJS) ───────────────────────────────────────────────────────
+  api:
+    build:
+      # Contexto = raíz del monorepo: la imagen necesita los tres workspaces.
+      context: .
+      dockerfile: apps/api/Dockerfile.dev
+    container_name: academia-api
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      NODE_ENV: development
+      PORT: 3000
+      # Hot-reload en Docker sobre Windows/macOS: los eventos inotify no cruzan
+      # el bind-mount, así que forzamos el watcher de TypeScript a hacer polling.
+      # Sin esto, `nest start --watch` no ve los cambios del host.
+      TSC_WATCHFILE: DynamicPriorityPolling
+      TSC_WATCHDIRECTORY: DynamicPriorityPolling
+      # En dev el secreto no es sensible; en staging/prod va por el entorno real.
+      JWT_SECRET: ${JWT_SECRET:-dev-only-secret-no-usar-en-produccion-1234}
+      # Dentro de la red de Docker, la BD se resuelve por el nombre del servicio
+      # (`postgres`), no por localhost. Sin pooler, así que url y directUrl
+      # apuntan al mismo sitio.
+      DATABASE_URL: postgresql://${POSTGRES_USER:-academia}:${POSTGRES_PASSWORD:-academia}@postgres:5432/${POSTGRES_DB:-academia}
+      DIRECT_URL: postgresql://${POSTGRES_USER:-academia}:${POSTGRES_PASSWORD:-academia}@postgres:5432/${POSTGRES_DB:-academia}
+    ports:
+      - '${API_PORT:-3000}:3000'
+    volumes:
+      # Hot-reload: el código fuente del host se monta en el contenedor, así que
+      # `nest start --watch` recompila al guardar. node_modules y dist NO se
+      # montan (se quedan los de la imagen), por eso solo montamos src y prisma.
+      - ./apps/api/src:/app/apps/api/src
+      - ./apps/api/prisma:/app/apps/api/prisma
+    # Al arrancar: aplica migraciones, siembra datos de prueba (idempotente) y
+    # levanta el backend en modo watch. Todo automático, sin pasos manuales.
+    # Se usan los scripts del workspace para que el cwd sea apps/api y Prisma
+    # encuentre prisma/schema.prisma.
+    command: >
+      sh -c "npm run prisma:deploy --workspace @academia/api &&
+             npm run db:seed --workspace @academia/api &&
+             npm run dev --workspace @academia/api"
+
+  # ── Frontend (Vite) ────────────────────────────────────────────────────────
+  # TODO(Dev B, HU-002): añadir aquí el servicio `web` con hot-reload de Vite y
+  # VITE_API_URL apuntando al backend. La red y CORS ya están preparados:
+  # el backend acepta cualquier origen localhost en desarrollo (ver main.ts).
+
+volumes:
+  postgres-data:

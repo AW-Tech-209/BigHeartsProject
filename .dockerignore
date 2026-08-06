@@ -1,0 +1,29 @@
+# Nunca copiar al contexto de build de Docker:
+
+# Dependencias y artefactos (se instalan/generan dentro de la imagen).
+node_modules
+**/node_modules
+dist
+**/dist
+build
+**/build
+*.tsbuildinfo
+
+# Secretos: la config de la BD en Docker viene del compose, no de .env.
+# Así no horneamos la contraseña de Supabase dentro de la imagen.
+.env
+**/.env
+
+# Git y metadatos.
+.git
+.gitignore
+.husky
+
+# Frontend: el backend no lo necesita para construirse.
+apps/web
+
+# Varios.
+*.log
+coverage
+.vscode
+.idea

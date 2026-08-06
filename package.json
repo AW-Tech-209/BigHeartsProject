@@ -23,6 +23,10 @@
     "db:migrate": "npm run prisma:migrate --workspace @academia/api",
     "db:deploy": "npm run prisma:deploy --workspace @academia/api",
     "db:studio": "npm run prisma:studio --workspace @academia/api",
+    "db:seed": "npm run db:seed --workspace @academia/api",
+    "docker:up": "docker compose up",
+    "docker:up:build": "docker compose up --build",
+    "docker:down": "docker compose down",
     "prepare": "husky"
   },
   "devDependencies": {
