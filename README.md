@@ -12,8 +12,9 @@ Gestionado con **npm workspaces**. Hay un único `package-lock.json`, en la raí
 
 ## Requisitos
 
-- **Node.js >= 20** (probado con 22.x)
-- **npm >= 7** (necesario para workspaces; probado con 11.x)
+- **Docker Desktop** (o Docker Engine + Compose v2) — vía recomendada, levanta todo el stack.
+- **Node.js >= 20** (probado con 22.x) — solo si corres las apps fuera de Docker.
+- **npm >= 7** (necesario para workspaces; probado con 11.x).
 
 ## Clonar e instalar
 
@@ -30,7 +31,79 @@ npm install
 
 `npm install` también instala los hooks de git (Husky) mediante el script `prepare`.
 
+## Arranque rápido con Docker (recomendado)
+
+La forma reproducible de levantar **todo el entorno** (base de datos + backend + frontend) es
+Docker Compose. Requiere **Docker Desktop** (o Docker Engine + Compose v2).
+
+```bash
+docker compose up          # levanta los tres servicios
+# la primera vez, o tras cambiar dependencias/Dockerfiles:
+docker compose up --build
+```
+
+Eso es **todo**. Sin pasos manuales: el contenedor de la API aplica las migraciones, siembra los
+datos de prueba y arranca en modo watch; el de la web levanta Vite. No necesitas crear ningún
+`.env` para el flujo Docker: el `docker-compose.yml` ya inyecta la configuración (usa un PostgreSQL
+en contenedor, no Supabase — ver _Estrategia de base de datos_).
+
+Atajos equivalentes desde npm: `npm run docker:up`, `npm run docker:up:build`, `npm run docker:down`.
+
+### Servicios y puertos
+
+| Servicio   | URL / puerto          | Qué es                                               |
+| ---------- | --------------------- | ---------------------------------------------------- |
+| `web`      | http://localhost:5173 | Frontend (Vite dev server).                          |
+| `api`      | http://localhost:3000 | Backend NestJS. Health-check en `/health`.           |
+| `postgres` | `localhost:5432`      | PostgreSQL 17 (volumen persistente `postgres-data`). |
+
+Comprobación rápida de que el stack vive:
+
+```bash
+curl http://localhost:3000/health
+# {"success":true,"data":{"status":"ok","uptime":1,"database":"up"},"timestamp":"..."}
+```
+
+### Credenciales de prueba (seed)
+
+El seed crea un usuario por rol. Todos comparten la misma contraseña:
+
+| Rol     | Email                   | Contraseña     |
+| ------- | ----------------------- | -------------- |
+| ADMIN   | `admin@academia.local`  | `Password123!` |
+| TEACHER | `profe@academia.local`  | `Password123!` |
+| STUDENT | `alumno@academia.local` | `Password123!` |
+
+El seed es idempotente (`upsert` por email): se puede re-ejecutar sin duplicar. Para lanzarlo a
+mano: `npm run db:seed` (o dentro del contenedor, ya corre solo al arrancar).
+
+### Hot-reload
+
+Los cambios en el código se reflejan **sin reconstruir la imagen**: el código de `apps/api/src` y
+`apps/web/src` se monta en los contenedores, y tanto NestJS como Vite recargan al guardar. En
+Windows/macOS el watcher usa _polling_ (los eventos de ficheros no cruzan el bind-mount), ya
+configurado en el compose.
+
+### Parar y resetear
+
+```bash
+docker compose down            # para los servicios, CONSERVA los datos
+docker compose down -v         # además borra el volumen de PostgreSQL (BD desde cero)
+```
+
+### Estrategia de base de datos
+
+- **Desarrollo** → PostgreSQL en Docker (este compose). Aislado por dev, desechable, rápido.
+- **Staging / producción** → Supabase. La imagen del contenedor está pineada a la misma major que
+  Supabase (17) para no introducir deriva.
+
+El SPA corre en el **navegador**, así que `VITE_API_URL` apunta a `http://localhost:3000` (el puerto
+publicado de la API), **no** a `http://api:3000` (que solo resuelve dentro de la red de Docker).
+
 ### Configurar el entorno del backend
+
+> Solo necesario si corres la API **fuera** de Docker (`npm run dev:api`). Con `docker compose up`
+> puedes saltarte esto.
 
 La API no arranca sin sus variables de entorno. Copia la plantilla y rellénala:
 
@@ -105,16 +178,19 @@ cp apps/web/.env.example apps/web/.env
 
 Como mínimo tienes que definir `VITE_API_URL` (por defecto, `http://localhost:3000`).
 
-## Levantar cada app
+## Levantar cada app sin Docker
 
-Todos los comandos se ejecutan **desde la raíz**:
+Alternativa al flujo Docker, útil para depurar una sola app en el host. Requiere Node y un
+PostgreSQL accesible (puedes levantar solo la BD con `docker compose up postgres`). Todos los
+comandos se ejecutan **desde la raíz**:
 
 ```bash
 npm run dev:api    # API en http://localhost:3000
 npm run dev:web    # Frontend en http://localhost:5173
 ```
 
-Ambos compilan antes `@academia/types`, porque las dos apps dependen de su build.
+Ambos compilan antes `@academia/types`, porque las dos apps dependen de su build. Recuerda tener
+`apps/api/.env` configurado (ver _Configurar el entorno del backend_).
 
 > **CORS en desarrollo.** `apps/api/src/main.ts` habilita CORS solo cuando `NODE_ENV` es
 > `development`, para cualquier origen `http://localhost:<puerto>`. Así no importa en qué
@@ -130,20 +206,24 @@ curl http://localhost:3000/health
 
 ## Scripts de la raíz
 
-| Comando                | Qué hace                                                        |
-| ---------------------- | --------------------------------------------------------------- |
-| `npm run dev:api`      | Levanta el backend en modo watch.                               |
-| `npm run dev:web`      | Levanta el frontend en modo watch.                              |
-| `npm run build`        | Compila los tres workspaces (`types` primero, por dependencia). |
-| `npm run build:types`  | Compila solo el paquete de tipos compartidos.                   |
-| `npm run lint`         | Pasa ESLint a todo el repo.                                     |
-| `npm run lint:fix`     | Igual, arreglando lo que se pueda automáticamente.              |
-| `npm run format`       | Formatea todo el repo con Prettier.                             |
-| `npm run format:check` | Comprueba el formato sin escribir nada (útil en CI).            |
-| `npm run typecheck`    | Comprueba los tipos de los tres workspaces.                     |
-| `npm run db:migrate`   | Crea y aplica migraciones de Prisma en desarrollo.              |
-| `npm run db:deploy`    | Aplica migraciones existentes (CI / producción).                |
-| `npm run db:studio`    | Abre Prisma Studio.                                             |
+| Comando                   | Qué hace                                                        |
+| ------------------------- | --------------------------------------------------------------- |
+| `npm run dev:api`         | Levanta el backend en modo watch.                               |
+| `npm run dev:web`         | Levanta el frontend en modo watch.                              |
+| `npm run build`           | Compila los tres workspaces (`types` primero, por dependencia). |
+| `npm run build:types`     | Compila solo el paquete de tipos compartidos.                   |
+| `npm run lint`            | Pasa ESLint a todo el repo.                                     |
+| `npm run lint:fix`        | Igual, arreglando lo que se pueda automáticamente.              |
+| `npm run format`          | Formatea todo el repo con Prettier.                             |
+| `npm run format:check`    | Comprueba el formato sin escribir nada (útil en CI).            |
+| `npm run typecheck`       | Comprueba los tipos de los tres workspaces.                     |
+| `npm run db:migrate`      | Crea y aplica migraciones de Prisma en desarrollo.              |
+| `npm run db:deploy`       | Aplica migraciones existentes (CI / producción).                |
+| `npm run db:studio`       | Abre Prisma Studio.                                             |
+| `npm run db:seed`         | Siembra los usuarios de prueba (idempotente).                   |
+| `npm run docker:up`       | Levanta el stack completo en Docker.                            |
+| `npm run docker:up:build` | Igual, reconstruyendo las imágenes.                             |
+| `npm run docker:down`     | Para el stack (conserva los datos).                             |
 
 ## Estructura de carpetas
 
@@ -154,12 +234,17 @@ curl http://localhost:3000/health
 │   └── web/          Frontend React + Vite. Consume la API.
 ├── packages/
 │   └── types/        Tipos TypeScript compartidos entre api y web.
+├── docker-compose.yml     Stack de desarrollo: postgres + api + web.
+├── .dockerignore          Qué NO entra al contexto de build de Docker.
 ├── eslint.config.mjs      Config de ESLint para todo el repo (flat config).
 ├── .prettierrc.json       Reglas de formato, compartidas por todos.
 ├── commitlint.config.mjs  Convención de mensajes de commit.
 ├── tsconfig.base.json     Opciones de TypeScript comunes a los 3 workspaces.
 └── package.json           Raíz del monorepo. Declara los workspaces.
 ```
+
+Cada app tiene su `Dockerfile.dev` (imagen de desarrollo con hot-reload) en su carpeta:
+`apps/api/Dockerfile.dev` y `apps/web/Dockerfile.dev`.
 
 ### Dentro de `apps/api`
 
