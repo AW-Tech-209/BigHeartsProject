@@ -83,9 +83,31 @@ services:
              npm run dev --workspace @academia/api"
 
   # ── Frontend (Vite) ────────────────────────────────────────────────────────
-  # TODO(Dev B, HU-002): añadir aquí el servicio `web` con hot-reload de Vite y
-  # VITE_API_URL apuntando al backend. La red y CORS ya están preparados:
-  # el backend acepta cualquier origen localhost en desarrollo (ver main.ts).
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile.dev
+    container_name: academia-web
+    restart: unless-stopped
+    depends_on:
+      # Solo para ordenar el arranque; la web funciona aunque la API tarde
+      # (el health-check de la home reintenta a mano).
+      - api
+    environment:
+      # OJO: esta URL la usa el NAVEGADOR del host, no el contenedor. Por eso es
+      # localhost:3000 (el puerto publicado de la API) y NO http://api:3000, que
+      # solo resuelve dentro de la red de Docker. El SPA corre en el navegador.
+      VITE_API_URL: ${VITE_API_URL:-http://localhost:3000}
+      # Hot-reload en Docker sobre Windows/macOS: el watcher de Vite (chokidar)
+      # no recibe eventos inotify a través del bind-mount, así que hace polling.
+      CHOKIDAR_USEPOLLING: 'true'
+    ports:
+      - '${WEB_PORT:-5173}:5173'
+    volumes:
+      # Hot-reload: montamos el código del host. node_modules se queda el de la
+      # imagen (no lo montamos), por eso solo van src e index.html.
+      - ./apps/web/src:/app/apps/web/src
+      - ./apps/web/index.html:/app/apps/web/index.html
 
 volumes:
   postgres-data:

@@ -19,9 +19,6 @@ build
 .gitignore
 .husky
 
-# Frontend: el backend no lo necesita para construirse.
-apps/web
-
 # Varios.
 *.log
 coverage
