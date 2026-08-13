@@ -370,21 +370,20 @@ find . -name package-lock.json -not -path "*/node_modules/*"
 # Debe imprimir exactamente una línea: ./package-lock.json
 ```
 
-## Despliegue (resumen)
+## CI/CD y despliegue
 
-Todavía **no está configurado**. Se hará en la **HU-003**.
+Cada Pull Request ejecuta **lint + build** (backend y frontend) vía GitHub Actions
+([.github/workflows/ci.yml](.github/workflows/ci.yml)); con la protección de rama activada, un fallo
+bloquea el merge. Al hacer merge a `main`, el stack se despliega a **staging** sin intervención:
 
-La idea: ambas apps se despliegan **desde este mismo repositorio**, cada una apuntando a su
-subcarpeta como raíz del proyecto y leyendo su propio `.env`:
+| Pieza         | Plataforma | Disparador                                        |
+| ------------- | ---------- | ------------------------------------------------- |
+| Backend       | Render     | Merge a `main` (solo si cambió el back).          |
+| Frontend      | Vercel     | Merge a `main` + **preview URL por PR**.          |
+| Base de datos | Supabase   | PostgreSQL de staging (migraciones en el deploy). |
 
-| App      | Raíz del despliegue | Variables de entorno |
-| -------- | ------------------- | -------------------- |
-| Frontend | `apps/web`          | su propio `.env`     |
-| Backend  | `apps/api`          | su propio `.env`     |
-
-Esto no requiere separar el monorepo: las plataformas de despliegue habituales admiten indicar un
-directorio raíz dentro del repo. La configuración concreta (comandos de build, variables por
-entorno, dominios) queda para la HU-003.
+El paso a paso completo (conectar cuentas, secretos, protección de rama, smoke test) está en
+**[DEPLOYMENT.md](DEPLOYMENT.md)**.
 
 ## Trampas conocidas
 

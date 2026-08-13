@@ -1,0 +1,73 @@
+name: CI
+
+# Se ejecuta en cada Pull Request hacia main y en los push a main.
+# Los checks de PR son los que, con la protección de rama activada, bloquean el
+# merge si fallan (ver DEPLOYMENT.md → Protección de rama).
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+# Si se empuja varias veces al mismo PR, cancela las ejecuciones anteriores.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  # Husky instala hooks de git en el `prepare`; en CI no hacen falta.
+  HUSKY: 0
+
+jobs:
+  # ── Backend (tarea Dev A) ───────────────────────────────────────────────────
+  backend:
+    name: Backend (lint + build)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      # `npm ci` instala TODO el monorepo (workspaces) de forma reproducible
+      # desde el package-lock.json de la raíz. Su postinstall genera el cliente
+      # de Prisma (offline, no necesita base de datos).
+      - name: Install
+        run: npm ci
+
+      # Las apps importan @academia/types compilado; hay que construirlo antes.
+      - name: Build shared types
+        run: npm run build:types
+
+      - name: Lint
+        run: npx eslint apps/api
+
+      - name: Build
+        run: npm run build --workspace @academia/api
+
+  # ── Frontend (tarea Dev B) ──────────────────────────────────────────────────
+  frontend:
+    name: Frontend (lint + build)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install
+        run: npm ci
+
+      - name: Build shared types
+        run: npm run build:types
+
+      - name: Lint
+        run: npx eslint apps/web
+
+      # `build` del frontend hace `tsc --noEmit` (typecheck) + `vite build`.
+      - name: Build
+        run: npm run build --workspace @academia/web

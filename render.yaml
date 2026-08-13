@@ -1,0 +1,54 @@
+# Blueprint de Render para el BACKEND de staging (@academia/api).
+# Docs: https://render.com/docs/blueprint-spec
+#
+# Uso: en Render → New → Blueprint → conectar este repo. Render lee este fichero
+# y crea el servicio. Las variables marcadas `sync: false` se rellenan a mano en
+# el panel (son secretos, no van al repo). Ver DEPLOYMENT.md.
+
+services:
+  - type: web
+    name: academia-api-staging
+    runtime: node
+    region: ohio # us-east, cerca de Supabase (us-east-2), menos latencia
+    plan: free
+    branch: main
+
+    # Se construye desde la raíz del monorepo (necesita los workspaces y el
+    # package-lock.json de la raíz). npm ci genera el cliente de Prisma en su
+    # postinstall; build:types compila el paquete compartido.
+    buildCommand: npm ci && npm run build:types && npm run build --workspace @academia/api
+
+    # En el plan free no hay "pre-deploy command", así que aplicamos las
+    # migraciones aquí, antes de arrancar. Idempotente y seguro con una sola
+    # instancia (el free tier no escala horizontalmente).
+    startCommand: npm run prisma:deploy --workspace @academia/api && npm run start:prod --workspace @academia/api
+
+    # Render enruta el tráfico solo cuando este endpoint responde 200.
+    healthCheckPath: /health
+
+    # Monorepo: solo redepliega si cambió el backend o los tipos compartidos.
+    # Un cambio solo-frontend NO dispara deploy del backend.
+    buildFilter:
+      paths:
+        - apps/api/**
+        - packages/types/**
+        - package.json
+        - package-lock.json
+        - render.yaml
+
+    envVars:
+      - key: NODE_ENV
+        value: staging
+      - key: NODE_VERSION
+        value: '22'
+      # Render inyecta PORT automáticamente; la app lo lee vía ConfigService.
+      #
+      # Secretos: se rellenan en el panel de Render (sync: false = no en el repo).
+      - key: DATABASE_URL # Supabase pooler (6543, pgbouncer) — runtime
+        sync: false
+      - key: DIRECT_URL # Supabase conexión directa (5432) — migraciones
+        sync: false
+      - key: JWT_SECRET # openssl rand -base64 48
+        sync: false
+      - key: CORS_ORIGIN # URL del frontend en Vercel, p. ej. https://academia-web.vercel.app
+        sync: false
