@@ -35,17 +35,47 @@ enum UserRole {
   ADMIN
 }
 
-/// Usuario de la plataforma. Primer modelo base de la HU-001; se ampliará en
-/// las siguientes HUs (relaciones con aulas, reservas, sesiones...).
+/// Estado de la cuenta. Coincide con `UserStatus` de @academia/types.
+enum UserStatus {
+  ACTIVE
+  PENDING
+  SUSPENDED
+}
+
+/// Nivel de hipoacusia. Coincide con `HearingLossLevel` de @academia/types.
+enum HearingLossLevel {
+  NONE
+  MILD
+  MODERATE
+  SEVERE
+  PROFOUND
+}
+
+/// Preferencia de comunicación. Coincide con `CommunicationPreference`.
+enum CommunicationPreference {
+  SIGN_LANGUAGE
+  LIP_READING
+  WRITTEN_TEXT
+  SPOKEN_AUDIO
+}
+
+/// Usuario de la plataforma. Modelo base de la HU-001, ampliado en la HU de
+/// registro con estado de cuenta y preferencias de accesibilidad.
 model User {
-  id        String   @id @default(uuid()) @db.Uuid
-  email     String   @unique
+  id        String     @id @default(uuid()) @db.Uuid
+  email     String     @unique
   /// Hash de la contraseña. NUNCA se expone en las respuestas de la API
   /// (ver el tipo `User` de @academia/types, que no incluye este campo).
   password  String
-  firstName String   @map("first_name")
-  lastName  String   @map("last_name")
-  role      UserRole @default(STUDENT)
+  firstName String     @map("first_name")
+  lastName  String     @map("last_name")
+  role      UserRole   @default(STUDENT)
+  status    UserStatus @default(ACTIVE)
+
+  /// Preferencias de accesibilidad. Opcionales: `null` si no se declararon.
+  hearingLossLevel        HearingLossLevel?        @map("hearing_loss_level")
+  communicationPreference CommunicationPreference? @map("communication_preference")
+
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 

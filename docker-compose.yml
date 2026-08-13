@@ -65,6 +65,11 @@ services:
       # apuntan al mismo sitio.
       DATABASE_URL: postgresql://${POSTGRES_USER:-academia}:${POSTGRES_PASSWORD:-academia}@postgres:5432/${POSTGRES_DB:-academia}
       DIRECT_URL: postgresql://${POSTGRES_USER:-academia}:${POSTGRES_PASSWORD:-academia}@postgres:5432/${POSTGRES_DB:-academia}
+      # Registro: profesores PENDING por defecto.
+      TEACHER_APPROVAL_REQUIRED: ${TEACHER_APPROVAL_REQUIRED:-true}
+      # Credenciales del Admin del seed (valores de DEV; en prod van por secretos).
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@academia.local}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-Admin123!}
     ports:
       - '${API_PORT:-3000}:3000'
     volumes:

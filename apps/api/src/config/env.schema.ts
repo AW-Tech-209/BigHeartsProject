@@ -61,6 +61,17 @@ export const envSchema = z.object({
    * frontend desplegado. Por eso, al desplegar, hay que definirla.
    */
   CORS_ORIGIN: z.string().optional(),
+
+  /**
+   * Si está activo, los profesores se registran con status PENDING (a la espera
+   * de aprobación); los estudiantes siempre nacen ACTIVE. Si se desactiva, los
+   * profesores también nacen ACTIVE. Llega como string desde el entorno.
+   * Opcional: por defecto `true`.
+   */
+  TEACHER_APPROVAL_REQUIRED: z
+    .enum(['true', 'false'])
+    .default('true')
+    .transform((value) => value === 'true'),
 });
 
 /** Variables de entorno ya validadas y con los tipos correctos. */
