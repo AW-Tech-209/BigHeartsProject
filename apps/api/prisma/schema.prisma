@@ -79,5 +79,35 @@ model User {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
+  /// Sesiones (refresh tokens) emitidas para este usuario. Al borrar el usuario
+  /// se borran en cascada.
+  refreshTokens RefreshToken[]
+
   @@map("users")
+}
+
+/// Refresh token OPACO de una sesión (HU-102).
+///
+/// El token que ve el cliente es una cadena aleatoria de alta entropía; aquí
+/// solo se guarda su HASH (SHA-256), nunca el valor en claro: si se filtra la
+/// BD, los tokens no son reutilizables. La búsqueda en login/refresh/logout se
+/// hace por `tokenHash`.
+///
+/// Rotación: cada refresh revoca el token usado (`revokedAt`) y emite uno nuevo.
+/// Si se vuelve a presentar un token ya revocado, se asume robo y se revoca toda
+/// la familia de sesiones del usuario (detección de reuso).
+model RefreshToken {
+  id        String   @id @default(uuid()) @db.Uuid
+  /// Hash SHA-256 del token en claro. Único: identifica la sesión.
+  tokenHash String   @unique @map("token_hash")
+  userId    String   @map("user_id") @db.Uuid
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  /// Cuándo caduca (ahora + REFRESH_TOKEN_TTL_DAYS al emitirlo).
+  expiresAt DateTime @map("expires_at")
+  /// Momento de revocación (logout, rotación o reuso detectado). `null` = activo.
+  revokedAt DateTime? @map("revoked_at")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([userId])
+  @@map("refresh_tokens")
 }

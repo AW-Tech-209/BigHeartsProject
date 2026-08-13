@@ -32,6 +32,26 @@ export class AppConfigService {
     return this.config.get('JWT_SECRET', { infer: true });
   }
 
+  /** Vida del Access Token JWT (formato `ms`, p. ej. `15m`). */
+  get jwtAccessExpiresIn(): string {
+    return this.config.get('JWT_ACCESS_EXPIRES_IN', { infer: true });
+  }
+
+  /** Vida del Refresh Token, en días. */
+  get refreshTokenTtlDays(): number {
+    return this.config.get('REFRESH_TOKEN_TTL_DAYS', { infer: true });
+  }
+
+  /** Ventana (segundos) del rate limiting de los endpoints de `/auth`. */
+  get authThrottleTtl(): number {
+    return this.config.get('AUTH_THROTTLE_TTL', { infer: true });
+  }
+
+  /** Máximo de intentos por IP dentro de la ventana de rate limiting de `/auth`. */
+  get authThrottleLimit(): number {
+    return this.config.get('AUTH_THROTTLE_LIMIT', { infer: true });
+  }
+
   /** Conexión a PostgreSQL en runtime (pooler pgbouncer). */
   get databaseUrl(): string {
     return this.config.get('DATABASE_URL', { infer: true });
