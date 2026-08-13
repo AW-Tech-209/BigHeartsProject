@@ -1,24 +1,105 @@
-import { Body, Controller, HttpCode, HttpStatus, Post } from '@nestjs/common';
-import type { RegisterResponse } from '@academia/types';
+import { Body, Controller, HttpCode, HttpStatus, Post, Req, Res, UseGuards } from '@nestjs/common';
+import type { LoginResponse, RefreshResponse, RegisterResponse } from '@academia/types';
+import type { Request, Response } from 'express';
 
+import { AppConfigService } from '../config/app-config.service';
+import { REFRESH_COOKIE_NAME } from './auth.constants';
 import { AuthService } from './auth.service';
+import type { IssuedSession } from './auth.types';
+import { Public } from './decorators/public.decorator';
+import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
+import { AuthThrottlerGuard } from './guards/auth-throttler.guard';
+import { clearRefreshCookie, setRefreshCookie } from './refresh-cookie';
 
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(
+    private readonly authService: AuthService,
+    private readonly config: AppConfigService,
+  ) {}
 
   /**
    * POST /auth/register
    *
-   * Registra un estudiante o profesor. Devuelve el usuario público (con su
-   * `status`, que el frontend usa para el mensaje de confirmación). El envelope
-   * de éxito lo añade el ResponseInterceptor global.
+   * Registra un estudiante o profesor. Público y con rate limiting (freno de
+   * fuerza bruta / creación masiva). El envelope de éxito lo añade el
+   * ResponseInterceptor global.
    */
+  @Public()
+  @UseGuards(AuthThrottlerGuard)
   @Post('register')
   @HttpCode(HttpStatus.CREATED)
   async register(@Body() dto: RegisterDto): Promise<RegisterResponse> {
     const user = await this.authService.register(dto);
     return { user };
+  }
+
+  /**
+   * POST /auth/login
+   *
+   * Valida credenciales y abre sesión: devuelve el Access Token en el cuerpo y
+   * planta el Refresh Token en una cookie httpOnly. Público y con rate limiting.
+   */
+  @Public()
+  @UseGuards(AuthThrottlerGuard)
+  @Post('login')
+  @HttpCode(HttpStatus.OK)
+  async login(
+    @Body() dto: LoginDto,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<LoginResponse> {
+    const issued = await this.authService.login(dto);
+    this.plantCookie(res, issued);
+    return issued.session;
+  }
+
+  /**
+   * POST /auth/refresh
+   *
+   * Renueva la sesión a partir de la cookie del refresh token, rotándolo. Es
+   * público para el guard de JWT (no usa Access Token; se apoya en la cookie).
+   */
+  @Public()
+  @Post('refresh')
+  @HttpCode(HttpStatus.OK)
+  async refresh(
+    @Req() req: Request,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<RefreshResponse> {
+    const rawToken = this.readRefreshCookie(req);
+    const issued = await this.authService.refresh(rawToken);
+    this.plantCookie(res, issued);
+    return issued.session;
+  }
+
+  /**
+   * POST /auth/logout
+   *
+   * Revoca el refresh token y borra la cookie. Idempotente y público: cerrar
+   * sesión debe funcionar aunque el Access Token ya haya caducado.
+   */
+  @Public()
+  @Post('logout')
+  @HttpCode(HttpStatus.OK)
+  async logout(
+    @Req() req: Request,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<{ loggedOut: true }> {
+    const rawToken = this.readRefreshCookie(req);
+    if (rawToken) {
+      await this.authService.logout(rawToken);
+    }
+    clearRefreshCookie(res, this.config);
+    return { loggedOut: true };
+  }
+
+  private plantCookie(res: Response, issued: IssuedSession): void {
+    setRefreshCookie(res, this.config, issued.refreshToken, issued.refreshExpiresAt);
+  }
+
+  private readRefreshCookie(req: Request): string | undefined {
+    const cookies = (req as Request & { cookies?: Record<string, string> }).cookies;
+    return cookies?.[REFRESH_COOKIE_NAME];
   }
 }

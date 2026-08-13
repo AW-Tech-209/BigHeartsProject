@@ -1,6 +1,7 @@
 import { Controller, Get, Logger, ServiceUnavailableException } from '@nestjs/common';
 import { ApiErrorCode } from '@academia/types';
 
+import { Public } from '../auth/decorators/public.decorator';
 import { PrismaService } from '../prisma/prisma.service';
 
 /** Payload que devuelve el health-check cuando todo está operativo. */
@@ -25,7 +26,10 @@ export class HealthController {
    *  - Todo OK        → 200. El ResponseInterceptor envuelve el payload.
    *  - BD inaccesible → 503 (ServiceUnavailableException). El AllExceptionsFilter
    *    lo convierte en el envelope de error con code DATABASE_UNAVAILABLE.
+   *
+   * Público: es una readiness probe, no debe exigir sesión.
    */
+  @Public()
   @Get()
   async check(): Promise<HealthStatus> {
     if (!(await this.isDatabaseReachable())) {

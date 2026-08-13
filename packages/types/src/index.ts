@@ -102,10 +102,57 @@ export interface RegisterResponse {
   user: User;
 }
 
+/**
+ * Cuerpo de la petición de login (`POST /auth/login`).
+ *
+ * Solo email y contraseña: el resto de la sesión (tokens) lo emite el backend.
+ */
+export interface LoginInput {
+  email: string;
+  password: string;
+}
+
+/**
+ * Sesión que devuelve un login o un refresh correctos.
+ *
+ * Contrato del flujo de tokens acordado entre backend y frontend (ver
+ * AUTH_FLOW.md):
+ *  - `accessToken`: JWT de vida corta. El frontend lo guarda EN MEMORIA (no en
+ *    localStorage) y lo manda en `Authorization: Bearer <token>`.
+ *  - `expiresIn`: segundos de validez del access token, para que el frontend
+ *    programe la renovación silenciosa antes de que caduque.
+ *  - El REFRESH token NO viaja en este cuerpo: vive en una cookie httpOnly que
+ *    el navegador gestiona solo. Por eso no aparece aquí (JS no debe leerlo).
+ */
+export interface AuthSession {
+  user: User;
+  accessToken: string;
+  /** Segundos hasta que el access token caduca (p. ej. 900 = 15 min). */
+  expiresIn: number;
+}
+
+/** Respuesta de `POST /auth/login`. */
+export type LoginResponse = AuthSession;
+
+/** Respuesta de `POST /auth/refresh`. Misma forma que el login. */
+export type RefreshResponse = AuthSession;
+
 /** Códigos de error estables que la API puede devolver en `ApiError.code`. */
 export const ApiErrorCode = {
   VALIDATION_ERROR: 'VALIDATION_ERROR',
   EMAIL_ALREADY_EXISTS: 'EMAIL_ALREADY_EXISTS',
+  /** Email o contraseña incorrectos en el login. Mensaje deliberadamente genérico. */
+  INVALID_CREDENTIALS: 'INVALID_CREDENTIALS',
+  /** La cuenta está suspendida por un administrador. */
+  ACCOUNT_SUSPENDED: 'ACCOUNT_SUSPENDED',
+  /** La cuenta está pendiente de aprobación (profesor). No puede iniciar sesión aún. */
+  ACCOUNT_PENDING: 'ACCOUNT_PENDING',
+  /** Falta el token, o es inválido/expirado, en una ruta protegida. */
+  UNAUTHENTICATED: 'UNAUTHENTICATED',
+  /** El refresh token no existe, expiró, o ya fue revocado/usado. */
+  INVALID_REFRESH_TOKEN: 'INVALID_REFRESH_TOKEN',
+  /** Se superó el límite de peticiones (rate limiting). */
+  TOO_MANY_REQUESTS: 'TOO_MANY_REQUESTS',
   DATABASE_UNAVAILABLE: 'DATABASE_UNAVAILABLE',
   INTERNAL_ERROR: 'INTERNAL_ERROR',
 } as const;

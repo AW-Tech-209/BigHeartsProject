@@ -39,6 +39,27 @@ export const envSchema = z.object({
   JWT_SECRET: z.string().min(32, 'debe tener al menos 32 caracteres'),
 
   /**
+   * Vida del Access Token JWT. Formato de `ms`/jsonwebtoken (p. ej. `15m`, `1h`).
+   * Corto a propósito: si se roba, caduca pronto. La sesión larga la sostiene el
+   * refresh token. Opcional: por defecto 15 minutos.
+   */
+  JWT_ACCESS_EXPIRES_IN: z.string().default('15m'),
+
+  /**
+   * Vida del Refresh Token, en días. La sesión sobrevive recargas y visitas
+   * durante este tiempo mientras se vaya renovando. Opcional: por defecto 30.
+   */
+  REFRESH_TOKEN_TTL_DAYS: z.coerce.number().int().positive().max(365).default(30),
+
+  /**
+   * Rate limiting de los endpoints sensibles de `/auth` (login y register).
+   * Ventana en segundos y nº máximo de intentos por IP dentro de esa ventana.
+   * Frena fuerza bruta y enumeración. Opcionales: por defecto 5 intentos / 60 s.
+   */
+  AUTH_THROTTLE_TTL: z.coerce.number().int().positive().default(60),
+  AUTH_THROTTLE_LIMIT: z.coerce.number().int().positive().default(5),
+
+  /**
    * Conexión a PostgreSQL en RUNTIME. En Supabase, el pooler en modo
    * transacción (pgbouncer, puerto 6543). La usa Prisma Client para las
    * consultas normales de la app.
