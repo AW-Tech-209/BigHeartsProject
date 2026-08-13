@@ -1,5 +1,7 @@
 import { UserRole } from '@academia/types';
 import { useQuery } from '@tanstack/react-query';
+import { UserPlus } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 import { Button } from '@/components/ui/button';
 import { httpClient } from '@/lib/http-client';
@@ -20,6 +22,11 @@ export function HomePage() {
     <main className="mx-auto max-w-2xl space-y-6 p-8 text-base leading-relaxed text-foreground">
       <h1 className="text-2xl font-semibold">Academia</h1>
       <p>Scaffold de @academia/web: Vite + React + TypeScript + Tailwind/shadcn.</p>
+
+      <Button render={<Link to="/registro" />} className="h-12 gap-2 px-6 text-base">
+        <UserPlus aria-hidden="true" strokeWidth={2} className="size-5" />
+        Crear una cuenta
+      </Button>
 
       <section className="space-y-2">
         <h2 className="text-lg font-medium">Roles desde @academia/types</h2>
