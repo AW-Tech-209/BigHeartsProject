@@ -1,10 +1,16 @@
 import { Module } from '@nestjs/common';
 
+import { AuthController } from './auth.controller';
+import { AuthService } from './auth.service';
+
 /**
- * Autenticación y autorización: login, registro, emisión y validación de JWT,
- * guards de rol.
+ * Autenticación y registro. PrismaService y AppConfigService se inyectan desde
+ * sus módulos globales (PrismaModule / AppConfigModule).
  *
- * TODO(HU-002): controller, service, estrategias de Passport y guards.
+ * TODO(HU siguiente): login, emisión/validación de JWT y guards de rol.
  */
-@Module({})
+@Module({
+  controllers: [AuthController],
+  providers: [AuthService],
+})
 export class AuthModule {}

@@ -1,8 +1,5 @@
-import { Controller, Get, HttpStatus, Logger, Res } from '@nestjs/common';
-import type { Response } from 'express';
-// Import desde el paquete compartido del monorepo: el envelope de respuesta es
-// el contrato acordado entre backend y frontend.
-import type { ApiResponse } from '@academia/types';
+import { Controller, Get, Logger, ServiceUnavailableException } from '@nestjs/common';
+import { ApiErrorCode } from '@academia/types';
 
 import { PrismaService } from '../prisma/prisma.service';
 
@@ -25,34 +22,23 @@ export class HealthController {
    * GET /health
    *
    * Confirma que el proceso responde Y que hay conexión con PostgreSQL.
-   *  - Todo OK        → 200 con `success: true`.
-   *  - BD inaccesible → 503 con `success: false`. El proceso sigue vivo, pero
-   *    no puede servir peticiones que dependan de la base de datos.
+   *  - Todo OK        → 200. El ResponseInterceptor envuelve el payload.
+   *  - BD inaccesible → 503 (ServiceUnavailableException). El AllExceptionsFilter
+   *    lo convierte en el envelope de error con code DATABASE_UNAVAILABLE.
    */
   @Get()
-  async check(@Res({ passthrough: true }) res: Response): Promise<ApiResponse<HealthStatus>> {
-    const timestamp = new Date().toISOString();
-
+  async check(): Promise<HealthStatus> {
     if (!(await this.isDatabaseReachable())) {
-      res.status(HttpStatus.SERVICE_UNAVAILABLE);
-      return {
-        success: false,
-        error: {
-          code: 'DATABASE_UNAVAILABLE',
-          message: 'La API está viva pero no puede conectar con la base de datos.',
-        },
-        timestamp,
-      };
+      throw new ServiceUnavailableException({
+        code: ApiErrorCode.DATABASE_UNAVAILABLE,
+        message: 'La API está viva pero no puede conectar con la base de datos.',
+      });
     }
 
     return {
-      success: true,
-      data: {
-        status: 'ok',
-        uptime: Math.floor(process.uptime()),
-        database: 'up',
-      },
-      timestamp,
+      status: 'ok',
+      uptime: Math.floor(process.uptime()),
+      database: 'up',
     };
   }
 

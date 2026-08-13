@@ -47,6 +47,9 @@ jobs:
       - name: Build
         run: npm run build --workspace @academia/api
 
+      - name: Test
+        run: npm run test --workspace @academia/api
+
   # ── Frontend (tarea Dev B) ──────────────────────────────────────────────────
   frontend:
     name: Frontend (lint + build)

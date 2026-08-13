@@ -59,6 +59,14 @@ export class AppConfigService {
       .filter((origin) => origin.length > 0);
   }
 
+  /**
+   * Si los profesores requieren aprobación (nacen PENDING). Ver la regla de
+   * negocio en AuthService.
+   */
+  get teacherApprovalRequired(): boolean {
+    return this.config.get('TEACHER_APPROVAL_REQUIRED', { infer: true });
+  }
+
   get isProduction(): boolean {
     return this.nodeEnv === 'production';
   }
