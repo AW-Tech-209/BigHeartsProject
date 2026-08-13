@@ -51,6 +51,16 @@ export const envSchema = z.object({
    * separa de DATABASE_URL. Ver prisma/schema.prisma (`directUrl`).
    */
   DIRECT_URL: postgresUrl,
+
+  /**
+   * Orígenes permitidos por CORS en staging/producción, separados por comas.
+   * Ejemplo: CORS_ORIGIN=https://academia-web.vercel.app,https://academia.app
+   *
+   * En development se IGNORA (se permite cualquier localhost). Opcional: si no
+   * se define en staging/prod, no se habilita CORS y el navegador bloqueará al
+   * frontend desplegado. Por eso, al desplegar, hay que definirla.
+   */
+  CORS_ORIGIN: z.string().optional(),
 });
 
 /** Variables de entorno ya validadas y con los tipos correctos. */

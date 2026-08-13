@@ -42,6 +42,23 @@ export class AppConfigService {
     return this.config.get('DIRECT_URL', { infer: true });
   }
 
+  /**
+   * Orígenes permitidos por CORS en staging/producción, ya parseados a lista.
+   * Vacío si no se ha configurado `CORS_ORIGIN`.
+   */
+  get corsOrigins(): string[] {
+    const raw = this.config.get('CORS_ORIGIN', { infer: true });
+
+    if (!raw) {
+      return [];
+    }
+
+    return raw
+      .split(',')
+      .map((origin) => origin.trim())
+      .filter((origin) => origin.length > 0);
+  }
+
   get isProduction(): boolean {
     return this.nodeEnv === 'production';
   }
