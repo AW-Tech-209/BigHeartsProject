@@ -4,9 +4,9 @@ Este documento fija el **punto de integración acordado entre backend (Dev A) y
 frontend (Dev B)**: dónde vive cada token y cómo se renueva la sesión. Es la
 referencia común; el contrato de tipos vive en `@academia/types`.
 
-> Estado: el **backend (Dev A) está implementado y verificado**. Las tareas de
-> frontend (Dev B) — pantalla de login, store de Zustand, interceptor de axios y
-> guard de rutas — consumen exactamente este contrato.
+> Estado: **backend (Dev A) y frontend (Dev B) implementados**. El backend emite
+> y rota los tokens; el frontend los consume con el store de Zustand, el
+> interceptor de axios y los guards de ruta descritos más abajo.
 
 ## Decisión: dónde vive cada token
 
@@ -53,6 +53,41 @@ o `{ success, error }`).
 > menos en las llamadas a `/auth/*`). Sin eso el navegador no envía ni recibe la
 > cookie `httpOnly`.
 
+## Implementación en el frontend
+
+| Pieza                     | Archivo                                                                        | Qué resuelve                                                                    |
+| ------------------------- | ------------------------------------------------------------------------------ | ------------------------------------------------------------------------------- |
+| Store de sesión           | `apps/web/src/stores/auth-store.ts`                                            | `status` + `user` + `accessToken` **en memoria**. Sin `persist`, a propósito.   |
+| Refresh silencioso        | `apps/web/src/lib/auth/refresh-session.ts`                                     | Llama a `/auth/refresh` con un axios **crudo** y colapsa llamadas concurrentes. |
+| Interceptor               | `apps/web/src/lib/http-client.ts`                                              | Adjunta el Bearer; ante un 401 renueva y **reintenta** la petición original.    |
+| Rehidratación al arrancar | `apps/web/src/features/auth/hooks/use-session-bootstrap.ts`                    | Un único `/auth/refresh` por carga de página.                                   |
+| Pantalla de login         | `apps/web/src/pages/LoginPage.tsx` + `features/auth/components/login-form.tsx` | Formulario accesible y mensajes por código de error.                            |
+| Guard de rutas            | `apps/web/src/features/auth/components/require-auth.tsx`                       | Redirige a `/login` sin sesión; muestra "sin acceso" si el rol no alcanza.      |
+| UI por rol                | `apps/web/src/features/auth/components/role-gate.tsx`                          | Oculta bloques según el rol (comodidad de UI, **no** seguridad).                |
+
+### Tres detalles que no son obvios
+
+- **El refresh es _single-flight_.** Si dos peticiones reciben un 401 a la vez y
+  cada una llamara a `/auth/refresh`, la segunda presentaría la cookie ya
+  rotada: el backend lo lee como reutilización (robo) y **revoca la familia
+  entera**, cerrando la sesión. Por eso `refreshSession()` reutiliza el refresh
+  en vuelo. Por lo mismo, la rehidratación del arranque usa una bandera a nivel
+  de módulo: `<StrictMode>` monta cada componente dos veces en desarrollo.
+- **El refresh usa un cliente de axios sin interceptores.** Si viajara por
+  `httpClient`, un 401 del propio refresh dispararía otro refresh en bucle.
+- **`/auth/login` y `/auth/register` están excluidos del reintento.** Su 401 es
+  la respuesta que la pantalla quiere mostrar ("credenciales incorrectas"), no
+  un token caducado.
+
+### Estado del access token entre recargas
+
+El access token **no se persiste en `localStorage`**: lo que hay en disco lo lee
+cualquier XSS y sobrevive al cierre de la pestaña. La persistencia entre visitas
+la da la cookie `httpOnly`, que este código no puede leer. Esto es lo que hace
+que exista el estado `checking` del store: tras un F5 no se sabe si hay sesión
+hasta que `/auth/refresh` contesta, y sin ese estado intermedio el guard
+expulsaría a login a usuarios que sí la tienen.
+
 ## Seguridad implementada (backend)
 
 - **Contraseñas**: bcrypt coste 12. Nunca se devuelven (el tipo `User` no las
@@ -86,6 +121,26 @@ el `code` (no según el texto).
 | -------------------------------- | -------- | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | development (`http://localhost`) | `false`  | `Lax`      | Front y API comparten sitio `localhost`.                                                                                                                                                    |
 | staging / producción             | `true`   | `None`     | Front (Vercel) y API (Render) son dominios distintos ⇒ cookie cross-site ⇒ requiere `Secure`+`SameSite=None`. Exige `CORS_ORIGIN` bien configurado y `credentials: true` en CORS (ya está). |
+
+## Rutas del frontend
+
+| Ruta        | Acceso              | Nota                                                           |
+| ----------- | ------------------- | -------------------------------------------------------------- |
+| `/`         | Pública             | Ofrece entrar o registrarse; si ya hay sesión, ir al panel.    |
+| `/registro` | Pública             | HU-101.                                                        |
+| `/login`    | Pública, sin sesión | Con sesión activa redirige a `/panel`.                         |
+| `/panel`    | **Requiere sesión** | Sin sesión → `/login`, recordando a dónde iba para volver ahí. |
+
+Para exigir además un rol: `<RequireAuth roles={[UserRole.ADMIN]}>`. Si hay
+sesión pero el rol no alcanza, se muestra una pantalla de "sin acceso" en vez de
+mandar al login: el usuario **sí** inició sesión, y devolverlo a un formulario de
+acceso le haría creer que su sesión falló.
+
+> **Pendiente para la siguiente HU:** hoy la API no expone ninguna ruta
+> protegida (solo `/auth/*` y `/health`, todas `@Public()`), así que el reintento
+> tras 401 del interceptor no tiene todavía ningún endpoint real contra el que
+> dispararse. Empezará a actuar en cuanto se añada el primer endpoint con sesión
+> (aulas, reservas), sin tocar este código.
 
 ## Variables de entorno
 

@@ -58,8 +58,13 @@ export function RegistrationResult({ user }: { user: User }) {
         </Callout>
       )}
 
-      <Button render={<Link to="/" />} className="h-12 w-full px-6 text-base sm:w-auto">
-        Ir al inicio
+      {/* Una cuenta pendiente todavía no puede entrar: mandarla al login sería
+          empujarla a un error. La activa sí continúa el flujo hasta el final. */}
+      <Button
+        render={<Link to={pending ? '/' : '/login'} />}
+        className="h-12 w-full px-6 text-base sm:w-auto"
+      >
+        {pending ? 'Ir al inicio' : 'Iniciar sesión'}
         <ArrowRight aria-hidden="true" strokeWidth={2} className="size-5" />
       </Button>
     </div>
