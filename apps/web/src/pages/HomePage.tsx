@@ -1,15 +1,17 @@
 import { UserRole } from '@academia/types';
 import { useQuery } from '@tanstack/react-query';
-import { UserPlus } from 'lucide-react';
+import { LayoutDashboard, LogIn, UserPlus } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 import { Button } from '@/components/ui/button';
+import { useAuth } from '@/features/auth/hooks/use-auth';
 import { httpClient } from '@/lib/http-client';
 
 /** Forma del payload que devuelve `GET /health` en @academia/api. */
 type HealthPayload = { status: 'ok'; uptime: number };
 
 export function HomePage() {
+  const { isAuthenticated, isChecking } = useAuth();
   const health = useQuery({
     queryKey: ['health'],
     queryFn: () => httpClient.get<HealthPayload>('/health'),
@@ -23,10 +25,34 @@ export function HomePage() {
       <h1 className="text-2xl font-semibold">Academia</h1>
       <p>Scaffold de @academia/web: Vite + React + TypeScript + Tailwind/shadcn.</p>
 
-      <Button render={<Link to="/registro" />} className="h-12 gap-2 px-6 text-base">
-        <UserPlus aria-hidden="true" strokeWidth={2} className="size-5" />
-        Crear una cuenta
-      </Button>
+      {/* Mientras se rehidrata la sesión no sabemos aún qué ofrecer, así que no
+          se pinta nada: enseñar "Iniciar sesión" y cambiarlo medio segundo
+          después por "Ir a mi panel" es peor que esperar a saberlo. */}
+      {!isChecking && (
+        <div className="flex flex-wrap gap-3">
+          {isAuthenticated ? (
+            <Button render={<Link to="/panel" />} className="h-12 gap-2 px-6 text-base">
+              <LayoutDashboard aria-hidden="true" strokeWidth={2} className="size-5" />
+              Ir a mi panel
+            </Button>
+          ) : (
+            <>
+              <Button render={<Link to="/login" />} className="h-12 gap-2 px-6 text-base">
+                <LogIn aria-hidden="true" strokeWidth={2} className="size-5" />
+                Iniciar sesión
+              </Button>
+              <Button
+                variant="outline"
+                render={<Link to="/registro" />}
+                className="h-12 gap-2 px-6 text-base"
+              >
+                <UserPlus aria-hidden="true" strokeWidth={2} className="size-5" />
+                Crear una cuenta
+              </Button>
+            </>
+          )}
+        </div>
+      )}
 
       <section className="space-y-2">
         <h2 className="text-lg font-medium">Roles desde @academia/types</h2>

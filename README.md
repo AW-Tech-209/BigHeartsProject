@@ -284,18 +284,21 @@ apps/web/
     ├── vite-env.d.ts       Tipos que Vite inyecta, incl. import.meta.env.VITE_API_URL.
     ├── app/
     │   ├── App.tsx         Componente raíz: compone providers.tsx + router.tsx.
-    │   ├── providers.tsx   QueryClientProvider de React Query.
-    │   └── router.tsx      Rutas con react-router-dom (BrowserRouter).
+    │   ├── providers.tsx   React Query, región viva y rehidratación de la sesión.
+    │   └── router.tsx      Rutas con react-router-dom. Las privadas van en <RequireAuth>.
     ├── pages/              Componentes de página (uno por ruta).
-    ├── features/           Módulos de dominio (vacío hoy: cada HU añade el suyo aquí).
+    ├── features/           Módulos de dominio: uno por área.
+    │   └── auth/           Login, sesión y refresh (api/, components/, hooks/, lib/).
     ├── components/ui/      Componentes generados por shadcn/ui (p. ej. button.tsx).
+    ├── hooks/              useAnnounce (región viva), usePageTitle (foco al <h1> por ruta).
     ├── lib/
-    │   ├── http-client.ts  Instancia de axios: adjunta el token y desenvuelve ApiResponse/ApiError.
+    │   ├── http-client.ts  Axios: adjunta el token, desenvuelve ApiResponse y renueva ante un 401.
     │   ├── api-error.ts    ApiClientError, el error tipado que lanza http-client.ts.
-    │   ├── auth/token-storage.ts  Wrapper sobre localStorage para el token.
+    │   ├── auth/refresh-session.ts  Renovación silenciosa del access token (single-flight).
     │   ├── query-client.ts Instancia de QueryClient.
     │   └── utils.ts        Helper cn() de shadcn/ui.
     └── stores/
+        ├── auth-store.ts   Sesión: usuario, estado y access token EN MEMORIA (nunca en disco).
         └── useAppStore.ts  Store de Zustand, vacío a propósito: listo para futuras HUs.
 ```
 
