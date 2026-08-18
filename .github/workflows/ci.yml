@@ -21,7 +21,7 @@ env:
 jobs:
   # ── Backend (tarea Dev A) ───────────────────────────────────────────────────
   backend:
-    name: Backend (lint + build)
+    name: Backend (lint + build + test)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -50,9 +50,9 @@ jobs:
       - name: Test
         run: npm run test --workspace @academia/api
 
-  # ── Frontend (tarea Dev B) ──────────────────────────────────────────────────
+  # ── Frontend + tipos compartidos (tarea Dev B) ──────────────────────────────
   frontend:
-    name: Frontend (lint + build)
+    name: Frontend (lint + build + test)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -74,3 +74,14 @@ jobs:
       # `build` del frontend hace `tsc --noEmit` (typecheck) + `vite build`.
       - name: Build
         run: npm run build --workspace @academia/web
+
+      # Los tests de @academia/types viven en este job porque es el único que
+      # los tiene ya compilados y porque quien toca el contrato suele venir del
+      # frontend. Son funciones puras: segundos, no minutos.
+      - name: Test shared types
+        run: npm run test --workspace @academia/types
+
+      # Vitest + Testing Library + axe sobre jsdom (ARQUITECTURA.md §10.2, D17).
+      # Bloquea el merge: un test que no bloquea no existe.
+      - name: Test
+        run: npm run test --workspace @academia/web

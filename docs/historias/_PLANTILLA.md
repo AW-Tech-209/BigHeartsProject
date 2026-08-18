@@ -58,9 +58,10 @@ Cada uno debe ser **verificable**: alguien tiene que poder decir "cumple" o "no 
       \<qué ve el usuario\>.
 - [ ] **AC4** — **Autorización:** \<quién no puede hacer qué\>, verificado en el backend.
 - [ ] **AC5** — **Accesibilidad:** la pantalla cumple el checklist del skill `bighearts-ui`
-      (teclado con foco visible, los 4 estados, `.dark` y `.hc`, contraste, `aria-live`).
+      (teclado con foco visible, los 4 estados, `.dark` y `.hc`, contraste, `aria-live`), y los
+      componentes nuevos pasan `esperarSinFallosDeAccesibilidad()` (`bighearts-dod` §5).
 - [ ] **AC6** — **Verificación automática:** `typecheck`, `lint`, `format:check`, `build` y
-      `test --workspace @academia/api` en verde.
+      `npm run test` (los tres workspaces) en verde.
 
 <!--
 Cómo se escribe un AC verificable:

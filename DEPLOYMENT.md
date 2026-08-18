@@ -17,21 +17,30 @@ Pipeline de CI/CD de Academia. Resumen de la arquitectura:
 
 ## 1. CI en cada PR (GitHub Actions)
 
-Ya está: [.github/workflows/ci.yml](.github/workflows/ci.yml) corre dos jobs (`Backend` y
-`Frontend`), cada uno con lint + build, en cada PR hacia `main`.
+Ya está: [.github/workflows/ci.yml](.github/workflows/ci.yml) corre dos jobs en cada PR hacia
+`main`:
+
+- **Backend** — lint + build + tests de `@academia/api`.
+- **Frontend** — lint + build + tests de `@academia/types` y de `@academia/web`.
 
 Para que **un fallo bloquee el merge**, hay que activar la protección de rama (una sola vez):
 
 1. GitHub → repo → **Settings → Branches → Add branch ruleset** (o _Branch protection rules_).
 2. Branch name pattern: `main`.
 3. Marca **Require status checks to pass before merging** y añade como obligatorios:
-   - `Backend (lint + build)`
-   - `Frontend (lint + build)`
+   - `Backend (lint + build + test)`
+   - `Frontend (lint + build + test)`
 4. (Recomendado) **Require a pull request before merging**.
 5. Guarda.
 
 > Los nombres de los checks aparecen en la lista solo después de que el workflow haya corrido al
 > menos una vez. Abre un PR de prueba, deja que corra, y entonces añádelos.
+
+> **⚠️ Si cambias el `name:` de un job en `ci.yml`, actualiza esta lista Y la configuración del
+> ruleset en GitHub.** El check obligatorio se referencia por su nombre exacto: renombrar el job
+> deja el check antiguo esperando para siempre a una ejecución que ya no existe —o, peor, la
+> protección deja de aplicarse sin que nadie se entere. Estos nombres cambiaron en HU-205, al
+> añadirse el paso `test` al frontend.
 
 ---
 

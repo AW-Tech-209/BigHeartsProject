@@ -25,7 +25,9 @@ Todos desde la **raíz** del repo.
 | `npm run typecheck`                                          | Tipos de los tres workspaces.                                |
 | `npm run lint` / `npm run lint:fix`                          | ESLint en todo el repo.                                      |
 | `npm run format:check`                                       | Prettier sin escribir.                                       |
-| `npm run test --workspace @academia/api`                     | Tests de backend (Vitest). **No hay tests de frontend.**     |
+| `npm run test`                                               | Tests de los tres workspaces (Vitest). Compila tipos antes.  |
+| `npm run test --workspace @academia/api`                     | Solo backend. `@academia/web` y `@academia/types`, igual.    |
+| `npm run test:watch --workspace @academia/web`               | Frontend en watch, mientras escribes el componente.          |
 | `npm run db:migrate` / `db:deploy` / `db:studio` / `db:seed` | Prisma.                                                      |
 
 Health: `curl http://localhost:3000/health` → `{"success":true,...,"database":"up"}`.
@@ -91,6 +93,12 @@ rompa por desconocimiento.
 9. Cuerpo **17px**. Cero colores literales en `.tsx` (usa tokens: `bg-primary`, nunca `#054DAE`).
 10. **Sin mutaciones optimistas en reservas**: el cupo tiene concurrencia real, no se muestra
     "reservado" antes de que el servidor confirme.
+
+**Tests** → skill `bighearts-dod` §5
+
+11. Los tests de componente consultan por **rol accesible y texto visible** (`getByRole`,
+    `getByLabelText`). **Cero `data-testid`**: si un elemento no se encuentra por su rol, el
+    problema es el componente, no el test. Se interactúa con `user-event`, no con `fireEvent`.
 
 **Terminar una task** → skill `bighearts-dod`
 

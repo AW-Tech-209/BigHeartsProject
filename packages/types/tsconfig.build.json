@@ -1,0 +1,10 @@
+{
+  // Los tests viven junto al código que prueban, pero NO se publican: `dist/`
+  // es lo que consumen la API y la web, y un `.spec.js` ahí dentro obligaría a
+  // tener vitest instalado en producción. Mismo patrón que
+  // `apps/api/tsconfig.build.json`.
+  //
+  // El `tsconfig.json` de al lado sí los incluye, para que `typecheck` los mire.
+  "extends": "./tsconfig.json",
+  "exclude": ["node_modules", "dist", "**/*.spec.ts"]
+}

@@ -217,6 +217,7 @@ curl http://localhost:3000/health
 | `npm run format`          | Formatea todo el repo con Prettier.                             |
 | `npm run format:check`    | Comprueba el formato sin escribir nada (útil en CI).            |
 | `npm run typecheck`       | Comprueba los tipos de los tres workspaces.                     |
+| `npm run test`            | Vitest en los tres workspaces (compila los tipos antes).        |
 | `npm run db:migrate`      | Crea y aplica migraciones de Prisma en desarrollo.              |
 | `npm run db:deploy`       | Aplica migraciones existentes (CI / producción).                |
 | `npm run db:studio`       | Abre Prisma Studio.                                             |
@@ -275,9 +276,10 @@ apps/api/
 apps/web/
 ├── index.html          Punto de entrada de Vite. Monta <div id="root">.
 ├── vite.config.ts      Config de Vite (plugin de React, Tailwind, alias @/*, optimizeDeps).
+├── vitest.config.ts    Config de test. HEREDA vite.config.ts con mergeConfig; no la copia.
 ├── components.json     Config de shadcn/ui (estilo, alias, base color).
 ├── tsconfig.json       TypeScript del código de navegador (DOM, JSX, alias @/*).
-├── tsconfig.node.json  TypeScript de vite.config.ts, que corre en Node.
+├── tsconfig.node.json  TypeScript de vite.config.ts y vitest.config.ts, que corren en Node.
 └── src/
     ├── main.tsx            Bootstrap de React (createRoot + StrictMode) e import de index.css.
     ├── index.css           Tailwind v4 + tema de shadcn/ui (alto contraste, fuente base 16px).
@@ -297,9 +299,13 @@ apps/web/
     │   ├── auth/refresh-session.ts  Renovación silenciosa del access token (single-flight).
     │   ├── query-client.ts Instancia de QueryClient.
     │   └── utils.ts        Helper cn() de shadcn/ui.
-    └── stores/
-        ├── auth-store.ts   Sesión: usuario, estado y access token EN MEMORIA (nunca en disco).
-        └── useAppStore.ts  Store de Zustand, vacío a propósito: listo para futuras HUs.
+    ├── stores/
+    │   ├── auth-store.ts   Sesión: usuario, estado y access token EN MEMORIA (nunca en disco).
+    │   └── useAppStore.ts  Store de Zustand, vacío a propósito: listo para futuras HUs.
+    └── test/               Utilidades de test (no son tests: los .spec van junto al código).
+        ├── setup.ts                 Matchers de jest-dom + stub de matchMedia.
+        ├── render-con-providers.tsx Monta con React Query, región viva, router y tema.
+        └── accesibilidad.ts         esperarSinFallosDeAccesibilidad(): axe con detalle del fallo.
 ```
 
 > **Arquitectura feature-based.** `app/` es cableado transversal (providers, router), `pages/`
@@ -390,7 +396,7 @@ El paso a paso completo (conectar cuentas, secretos, protección de rama, smoke 
 
 ## Trampas conocidas
 
-Dos cosas que ya nos han mordido, están resueltas, y **no hay que reintroducir**. Ambas están
+Cinco cosas que ya nos han mordido, están resueltas, y **no hay que reintroducir**. Todas están
 comentadas también en el código, junto a la línea que las evita.
 
 ### 1. `optimizeDeps.include: ['@academia/types']` en `apps/web/vite.config.ts`
@@ -401,6 +407,10 @@ workspaces del monorepo), porque asume que son fuentes ESM. Pero `@academia/type
 
 Sin esa línea el `build` sigue pasando, pero el navegador revienta en cuanto se importa un **valor**
 del paquete (por ejemplo el enum `UserRole`), porque esbuild nunca convirtió el módulo CJS a ESM.
+
+Por lo mismo, `apps/web/vitest.config.ts` **hereda** esta config con `mergeConfig` en vez de
+declarar la suya. Una config de test paralela se desincronizaría de esta línea y el síntoma sería
+un test que falla al importar un valor de `@academia/types` — el mismo fallo, en otro sitio.
 
 ### 2. No actives `incremental: true` en `apps/api/tsconfig.json`
 
