@@ -1,5 +1,5 @@
-import { LoaderCircle, LogOut } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { LoaderCircle, LogOut, UserRound } from 'lucide-react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 
 import { Button } from '@/components/ui/button';
 import { useAnnounce } from '@/hooks/use-announce';
@@ -19,8 +19,11 @@ export function SessionBar() {
   const logout = useLogout();
   const navigate = useNavigate();
   const announce = useAnnounce();
+  const { pathname } = useLocation();
 
   if (!user) return null;
+
+  const isOnProfile = pathname === '/perfil';
 
   const { label, icon: RoleIcon } = roleDisplay[user.role];
 
@@ -49,24 +52,38 @@ export function SessionBar() {
           </p>
         </div>
 
-        <Button
-          variant="outline"
-          onClick={handleLogout}
-          disabled={logout.isPending}
-          className="h-11 gap-2 px-5 text-base"
-        >
-          {logout.isPending ? (
-            <>
-              <LoaderCircle aria-hidden="true" strokeWidth={2} className="size-5 animate-spin" />
-              Cerrando tu sesión…
-            </>
-          ) : (
-            <>
-              <LogOut aria-hidden="true" strokeWidth={2} className="size-5" />
-              Cerrar sesión
-            </>
-          )}
-        </Button>
+        <nav aria-label="Tu cuenta" className="flex flex-wrap items-center gap-3">
+          {/* Navegación, no acción: es un enlace real, así que funciona con
+              clic central, «abrir en pestaña nueva» y teclado sin JS extra. */}
+          <Button
+            variant="ghost"
+            render={<Link to="/perfil" />}
+            aria-current={isOnProfile ? 'page' : undefined}
+            className="h-11 gap-2 px-4 text-base aria-[current=page]:bg-muted"
+          >
+            <UserRound aria-hidden="true" strokeWidth={2} className="size-5" />
+            Tu perfil
+          </Button>
+
+          <Button
+            variant="outline"
+            onClick={handleLogout}
+            disabled={logout.isPending}
+            className="h-11 gap-2 px-5 text-base"
+          >
+            {logout.isPending ? (
+              <>
+                <LoaderCircle aria-hidden="true" strokeWidth={2} className="size-5 animate-spin" />
+                Cerrando tu sesión…
+              </>
+            ) : (
+              <>
+                <LogOut aria-hidden="true" strokeWidth={2} className="size-5" />
+                Cerrar sesión
+              </>
+            )}
+          </Button>
+        </nav>
       </div>
     </header>
   );

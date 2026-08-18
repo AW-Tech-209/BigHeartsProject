@@ -6,6 +6,7 @@ import { HomePage } from '@/pages/HomePage';
 import { LoginPage } from '@/pages/LoginPage';
 import { NotFoundPage } from '@/pages/NotFoundPage';
 import { PanelPage } from '@/pages/PanelPage';
+import { PerfilPage } from '@/pages/PerfilPage';
 import { RegisterPage } from '@/pages/RegisterPage';
 
 /**
@@ -37,6 +38,14 @@ export function AppRouter() {
           element={
             <RequireAuth>
               <PanelPage />
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/perfil"
+          element={
+            <RequireAuth>
+              <PerfilPage />
             </RequireAuth>
           }
         />

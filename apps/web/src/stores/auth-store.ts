@@ -43,6 +43,18 @@ type AuthState = {
 
   /** Guarda la sesión que devolvió un login o un refresh correctos. */
   setSession: (session: AuthSession) => void;
+  /**
+   * Refresca los datos del usuario sin tocar el token ni el estado de sesión.
+   *
+   * Lo usa la edición del perfil (HU-103): al guardar, el nombre de la barra de
+   * sesión tiene que cambiar sin recargar. No sirve `setSession` para esto,
+   * porque obligaría a inventar un `accessToken`; y sobrescribir el token con
+   * uno falso rompería la siguiente petición.
+   *
+   * Es un no-op si no hay sesión: sin usuario que refrescar, escribir uno aquí
+   * dejaría el store en un estado imposible (usuario sin token).
+   */
+  setUser: (user: User) => void;
   /** Borra la sesión: logout, refresh fallido, o no había sesión al arrancar. */
   clearSession: (reason?: SessionEndReason) => void;
 };
@@ -60,6 +72,8 @@ export const useAuthStore = create<AuthState>()((set) => ({
       accessToken: session.accessToken,
       endReason: 'none',
     }),
+
+  setUser: (user) => set((state) => (state.user === null ? state : { user })),
 
   clearSession: (reason = 'none') =>
     set((state) => ({
