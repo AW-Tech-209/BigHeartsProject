@@ -203,8 +203,17 @@ reserva** (§4.2), no antes: comprobarlo fuera deja una carrera abierta.
 - Profesores: nacen `PENDING` si `TEACHER_APPROVAL_REQUIRED` (por defecto `true`), y `ACTIVE` si
   está desactivado. Un profesor `PENDING` **no puede crear aulas** y **no puede iniciar sesión**
   (la API responde `ACCOUNT_PENDING`).
+- El administrador **aprueba** (`PENDING → ACTIVE`) o **rechaza** (`PENDING → REJECTED`). Las tres
+  transiciones son las únicas válidas desde `PENDING`; cualquier otra responde
+  `INVALID_STATUS_TRANSITION`.
 - `ADMIN` no es un rol auto-registrable: solo se crea por seed o administración
   (`RegisterableRole` en `@academia/types` lo excluye a nivel de tipo).
+
+> **Decisión D13 (2026-08-18) — `REJECTED` es un estado propio, no `SUSPENDED`.** `SUSPENDED`
+> significa "cuenta deshabilitada por un administrador"; un profesor rechazado nunca estuvo activo.
+> Reusarlo obligaría a decirle "tu cuenta fue suspendida", que es falso, y el microcopy de este
+> producto es deliberadamente literal (skill `bighearts-ui`). Cada estado tiene su código de error
+> en el login: `ACCOUNT_PENDING`, `ACCOUNT_REJECTED`, `ACCOUNT_SUSPENDED`.
 
 ### 4.6 Notificaciones
 
@@ -220,6 +229,16 @@ reservas `CONFIRMED` con aviso pendiente. Implicaciones:
   a propósito: el correo llega justo cuando el enlace ya se puede ver.
 - Con más de una instancia de la API, este diseño duplicaría envíos. Hoy Render corre una sola. Si
   eso cambia, hay que migrar a BullMQ (D11) o poner un lock en BD.
+
+> **Decisión D14 (2026-08-18) — el envío es un puerto con dos adaptadores.** `NotificationsModule`
+> expone la interfaz **`NotificationService`**; quien la llama nunca sabe cómo se envía. En Fase 1
+> la implementación activa es **`LoggingNotificationService`**, que registra destinatario, tipo de
+> evento y resultado de forma estructurada. El adaptador real (proveedor, plantillas, reintentos)
+> llega en el Sprint 4 y **sustituye la implementación sin tocar a ningún llamador**.
+>
+> Esto existe porque HU-104 necesita notificar el resultado de una aprobación antes de que haya
+> infraestructura de correo. El puerto deja el AC verificable hoy —con un espía en los tests— y
+> evita rehacer el cableado después. **El proveedor concreto sigue sin decidir; ver §14.6.**
 
 ### 4.7 Tiempo y zonas horarias
 
@@ -386,20 +405,36 @@ Convenciones: `id` UUID v4, nombres de tabla en plural, columnas mapeadas a `sna
 
 **`Classroom`**
 
-| Campo                  | Tipo                                                | Nota                                                          |
-| ---------------------- | --------------------------------------------------- | ------------------------------------------------------------- |
-| `id`                   | UUID                                                |                                                               |
-| `teacherId`            | UUID → `User`                                       | Solo el dueño edita o cancela.                                |
-| `title`, `description` | text                                                |                                                               |
-| `level`                | enum `BEGINNER \| INTERMEDIATE \| ADVANCED`         |                                                               |
-| `maxStudents`          | int                                                 | Cupo máximo.                                                  |
-| `currentBookings`      | int, default 0                                      | **Solo se muta dentro de la transacción de reserva** (§4.2).  |
-| `scheduledAt`          | `timestamptz`                                       | UTC (§4.7).                                                   |
-| `durationMinutes`      | int                                                 |                                                               |
-| `meetingLink`          | text                                                | **Cifrado AES-256-GCM** (§4.1).                               |
-| `meetingProvider`      | enum `MANUAL \| DAILY \| GOOGLE_MEET \| ZOOM`       | En Fase 1 siempre `MANUAL`.                                   |
-| `status`               | enum `DRAFT \| PUBLISHED \| CANCELLED \| COMPLETED` |                                                               |
-| `isRecurring`          | bool, default false                                 | Gancho para Fase 1.5. **Sin regla de recurrencia en Fase 1.** |
+| Campo                  | Tipo                                                | Nota                                                                  |
+| ---------------------- | --------------------------------------------------- | --------------------------------------------------------------------- |
+| `id`                   | UUID                                                |                                                                       |
+| `teacherId`            | UUID → `User`                                       | Solo el dueño edita o cancela.                                        |
+| `title`, `description` | text                                                |                                                                       |
+| `level`                | enum `BEGINNER \| INTERMEDIATE \| ADVANCED`         |                                                                       |
+| `maxStudents`          | int                                                 | Cupo máximo.                                                          |
+| `currentBookings`      | int, default 0                                      | **Solo se muta dentro de la transacción de reserva** (§4.2).          |
+| `scheduledAt`          | `timestamptz`                                       | UTC (§4.7).                                                           |
+| `durationMinutes`      | int                                                 |                                                                       |
+| `meetingLink`          | text                                                | **Cifrado AES-256-GCM** (§4.1).                                       |
+| `meetingProvider`      | enum `MANUAL \| DAILY \| GOOGLE_MEET \| ZOOM`       | En Fase 1 siempre `MANUAL`.                                           |
+| `status`               | enum `DRAFT \| PUBLISHED \| CANCELLED \| COMPLETED` | Nace `PUBLISHED` (D15). `DRAFT` y `COMPLETED` sin escritor en Fase 1. |
+| `isRecurring`          | bool, default false                                 | Gancho para Fase 1.5. **Sin regla de recurrencia en Fase 1.**         |
+
+> **Decisión D15 (2026-08-18) — el aula nace `PUBLISHED`.** `POST /classrooms` la publica de
+> inmediato; no hay flujo de borrador en Fase 1. Crear un aula tiene que costar menos que abrir un
+> grupo de WhatsApp, y un paso extra de publicación es fricción sin beneficio — la adopción por
+> parte de los profesores es un riesgo declarado en `DEFINICION_PROYECTO.md` §8.2. `DRAFT` se queda
+> en el enum, reservado para Fase 1.5.
+
+> **Decisión D16 (2026-08-18) — nadie escribe `COMPLETED` en Fase 1.** El estado "finalizada" se
+> **deriva por tiempo** (`now ≥ scheduledAt + durationMinutes`), como ya especifica §7.3, y los
+> listados filtran por hora, no por este estado. La columna se persistirá cuando el profesor cierre
+> la clase al marcar asistencia (HU-404), que es el momento natural de darla por terminada. No hay
+> cron para esto: meter `@nestjs/schedule` en el Sprint 2 sería adelantar una pieza del Sprint 4
+> sin que nada la necesite.
+>
+> **Consecuencia práctica:** una regla escrita contra `status = COMPLETED` nunca se dispararía hoy.
+> Las reglas de "ya no se puede tocar" se escriben contra `scheduledAt`, no contra el estado.
 
 **`Booking`**
 
@@ -533,14 +568,33 @@ está en el skill de UI, que es su fuente de verdad.
 | Tests de frontend                                                              | ❌ Ninguno        |
 | Tests E2E                                                                      | ❌ Ninguno        |
 
-### 10.2 El hueco de tests del frontend
+### 10.2 El hueco de tests del frontend — decidido, pendiente de implementar
 
-`apps/web` **no tiene runner de tests instalado** y su job de CI solo hace lint y build. Esto no es
-una omisión de la documentación: es el estado real, y hay que decidirlo antes de que Sprint 2 meta
-lógica de dominio en el frontend (derivación de estados, ventana de acceso, formateo de fechas).
+**Estado hoy:** `apps/web` no tiene runner de tests y su job de CI solo hace lint y build.
+`packages/types` tampoco tiene runner. Mientras siga así, el skill `bighearts-dod` **no puede
+exigir tests de frontend**, y no los exige.
 
-Mientras tanto, la definición de terminado (skill `bighearts-dod`) **no puede exigir tests de
-frontend**, y no los exige.
+> **Decisión D17 (2026-08-18) — se cierra el hueco en HU-205, antes de HU-203.**
+>
+> El detonante fue concreto: HU-103 se cerró con dos criterios de aceptación anotados como
+> "implementado, pero sin pasada manual". Un checklist de accesibilidad de diez puntos, recorrido a
+> mano sobre código recién escrito, se degrada — y en un producto para personas sordas una
+> regresión de accesibilidad no la reporta nadie: el usuario simplemente no consigue reservar.
+>
+> | Aspecto       | Decisión                                                                                                                                                                                                                                                     |
+> | ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+> | Runner        | **Vitest** en `apps/web` y en `packages/types`. Mismo runner que `@academia/api`; no se introduce Jest.                                                                                                                                                      |
+> | Componentes   | **Testing Library sobre jsdom**, consultando por **rol accesible y texto visible**. Prohibido `data-testid`: si un elemento no se encuentra por su rol, el problema es el componente.                                                                        |
+> | Accesibilidad | **`axe-core`** en los tests de componentes. Automatiza lo mecánico (roles, labels, `aria-*`, encabezados); **no sustituye** la pasada manual de teclado y lector de pantalla, la reduce.                                                                     |
+> | CI            | El paso `test` **bloquea el merge**. Un test que no bloquea no existe.                                                                                                                                                                                       |
+> | Cobertura     | **Sin umbral numérico.** Un porcentaje mínimo produce tests escritos para subir el porcentaje. Regla cualitativa en `bighearts-dod`: toda lógica de dominio del frontend tiene test, y todo componente de `components/dominio/` tiene test de accesibilidad. |
+> | Alcance       | **No retroactivo.** `features/auth` y `features/profile` se cubren cuando se toquen.                                                                                                                                                                         |
+>
+> `packages/types` es la parte urgente: `derivarEstadoAula()` vive ahí y la T0 de HU-203 pide tests
+> unitarios que hoy no tienen dónde ejecutarse.
+>
+> **Al cerrar HU-205 hay que actualizar esta sección, §10.1, `CLAUDE.md` y el skill
+> `bighearts-dod`.** Hasta entonces, §10.1 dice la verdad.
 
 ### 10.3 Convención de ramas y commits
 
@@ -698,4 +752,40 @@ en marcha se reducen a invariantes + enlace a `DEPLOYMENT.md`, `AUTH_FLOW.md` y 
 1. `SessionsModule` sin entidad en Fase 1 (§6.1).
 2. Umbral de `ultimos-cupos` en 3 (§7.3).
 3. Ubicación de la función derivadora de estado en `@academia/types` (§7.3).
-4. Qué hacer con la ausencia de tests en el frontend antes de Sprint 2 (§10.2).
+   _Se materializa en HU-203, que la implementa con tests propios._
+4. ~~Qué hacer con la ausencia de tests en el frontend antes de Sprint 2 (§10.2).~~
+   **✅ Resuelto (2026-08-18) — D17.** Vitest + Testing Library + `axe`, bloqueando en CI, sin
+   umbral de cobertura y sin cobertura retroactiva. Lo implementa **HU-205**, antes de HU-203.
+5. **Proveedor de email** para el adaptador real de `NotificationService` (§4.6, D14). Bloquea el
+   Sprint 4; no bloquea HU-104.
+6. **Formato de paginación** del listado de aulas: `{ items, total, page, pageSize }` con
+   `pageSize` 20 por defecto. Propuesto en HU-203, sin decidir formalmente.
+
+---
+
+## 15. Registro de decisiones — Sprint 2 (2026-08-18)
+
+Tomadas al convertir HU-104 y las cuatro HUs del Sprint 2 a `docs/historias/`. Cada una nació de un
+choque entre lo que la HU pedía y lo que el repo o estos documentos dicen.
+
+| #   | Decisión                                                                            | Dónde | Motivó                                                                                                                      |
+| --- | ----------------------------------------------------------------------------------- | ----- | --------------------------------------------------------------------------------------------------------------------------- |
+| D13 | `REJECTED` como estado propio de `UserStatus`                                       | §4.5  | HU-104 mandaba el rechazo a `SUSPENDED`, lo que obligaba a mentirle al usuario sobre su estado.                             |
+| D14 | `NotificationService` como puerto, con `LoggingNotificationService` en Fase 1       | §4.6  | HU-104 pedía email y no existe infraestructura de correo.                                                                   |
+| D15 | El aula nace `PUBLISHED`                                                            | §7.2  | HU-201 no decía en qué estado se crea, y `DRAFT` no tenía flujo de publicación en ninguna HU del sprint.                    |
+| D16 | `COMPLETED` sin escritor; se deriva por tiempo hasta HU-404                         | §7.2  | HU-202 prohibía editar aulas `COMPLETED`, una regla que nunca se dispararía.                                                |
+| D17 | Vitest + Testing Library + `axe` en `apps/web` y `packages/types`, bloqueando en CI | §10.2 | La T0 de HU-203 pedía tests unitarios en un workspace sin runner, y HU-103 cerró con dos AC de accesibilidad sin verificar. |
+
+Correcciones aplicadas a las HUs al convertirlas, sin necesidad de decisión nueva:
+
+- **HU-104** — el decorador `@Roles` no existía en el repo; pasa a ser task explícita (y HU-201
+  depende de ella). El AC "un profesor aprobado puede crear aulas" no era verificable en el Sprint
+  1, porque crear aulas es HU-201.
+- **HU-201** — faltaba `currentBookings` en el modelo, que §4.2 exige para la transacción de cupos
+  del Sprint 3. Añadido con valor `0`; nadie lo muta en este sprint.
+- **HU-202** — "notificar a los estudiantes con reserva" salió del alcance: `Booking` no existe
+  hasta el Sprint 3.
+- **HU-203** — el cupo se calculaba con `COUNT` sobre reservas; corregido al contador
+  `currentBookings` (D9). Se añade la función `derivarEstadoAula()` compartida (§7.3).
+- **HU-204** — el enlace se limita al profesor dueño; la regla de estudiante y ventana de 30
+  minutos queda aislada en un método que HU-303 extiende.

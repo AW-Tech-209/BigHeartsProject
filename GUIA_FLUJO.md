@@ -44,12 +44,51 @@ Un archivo por HU en `docs/historias/`, con el formato de
 `HU-XXX-slug-corto.md`. La convención completa está en
 [`docs/historias/README.md`](./docs/historias/README.md).
 
-El mismo texto va a una tarjeta de **GitHub Projects**: el tablero sigue siendo donde veo el
-estado; el repo es donde vive el texto. Si divergen, gana el repo — es lo que lee Claude Code.
-
-Lo único que hay que cuidar al pegar la HU: que **los acceptance criteria sean verificables**. El
-comando `/hu` los recorre uno por uno al final, así que un AC como "la reserva funciona bien" no
+Lo único que hay que cuidar al escribir la HU: que **los acceptance criteria sean verificables**.
+El comando `/hu` los recorre uno por uno al final, así que un AC como "la reserva funciona bien" no
 produce ninguna verificación útil. Hay ejemplos de bien y mal escritos en la plantilla.
+
+### GitHub: el issue es un puntero, no una copia
+
+**No copies el texto de la HU al issue.** Son dos fuentes de verdad y divergen — es exactamente lo
+que pasó con los `.docx`. Y hay pruebas prácticas: cuando descubrí que HU-203 dependía de HU-205,
+edité un archivo; con copia habrían sido dos, y una se olvida. Las _Notas de implementación_ se
+escriben **al cerrar**, y nadie las va a copiar de vuelta. Y si los checkboxes de las tasks están
+en los dos sitios, uno de los dos miente siempre.
+
+Reparto por herramienta:
+
+| GitHub (issue + Project)                           | El repo                                              |
+| -------------------------------------------------- | ---------------------------------------------------- |
+| Estado, responsable, sprint, prioridad, estimación | Contexto, tasks, criterios de aceptación, decisiones |
+| Tablero, qué está en curso, qué bloquea a qué      | Versionado, referencias cruzadas, historial          |
+| Coordinación con Dev A                             | Lo que Claude Code lee solo                          |
+
+**Anatomía del issue** — cinco líneas, ni una más:
+
+```
+Título:  HU-201 · Crear aula virtual con enlace de reunión manual
+Labels:  sprint-2, prioridad:critica, fullstack, a11y
+
+Cuerpo:
+  <la historia: Como… Quiero… Para…>
+
+  📄 Tasks y criterios de aceptación:
+  docs/historias/HU-201-crear-aula-virtual.md
+
+  Depende de: HU-102, HU-104 · Bloquea: HU-202, HU-203
+```
+
+Los campos del Project (Sprint, Prioridad, Estimación, Assignee, Estado) se rellenan ahí, no en el
+cuerpo.
+
+**El issue, no una tarjeta suelta.** Mis ramas ya llevan el número de issue delante
+(`8-hu-103-ver-y-editar-el-perfil-de-usuario-william`), así que el issue es la unidad de trabajo y
+el Project es una vista sobre ellos. Eso me da el `Closes #8` automático en el PR y el nombre de
+rama generado por GitHub.
+
+Para no transcribir a mano cada sprint: `gh issue create --title "…" --label "…" --body "…"`
+desde la terminal, en el mismo momento en que escribo el `.md`.
 
 ## 3. Desarrollar una HU
 

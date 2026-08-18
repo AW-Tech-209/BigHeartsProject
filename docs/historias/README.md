@@ -25,13 +25,36 @@ Projects. No se renumera una HU después de crearla.
 
 1. Pega la HU que Claude te generó en un archivo nuevo con este nombre, usando
    [`_PLANTILLA.md`](./_PLANTILLA.md) como formato.
-2. Copia el mismo contenido a una tarjeta de GitHub Projects (el proyecto sigue siendo el tablero;
-   el repo es la fuente de verdad del texto).
+2. Crea el **issue de GitHub** como **puntero**, nunca como copia (ver abajo).
 3. Crea la rama: `hu-<número>-<slug>-<persona>`.
 4. Impleméntala con `/hu docs/historias/HU-XXX-slug-corto.md`.
 5. Al cerrar el PR, marca la HU como completada en su cabecera y mueve la tarjeta.
 
 El flujo completo, con el porqué de cada paso, está en [`GUIA_FLUJO.md`](../../GUIA_FLUJO.md).
+
+## El issue de GitHub es un puntero
+
+**No se copia el texto de la HU al issue.** Dos fuentes de verdad divergen siempre: cuando cambia
+una dependencia se edita un archivo, no dos, y las _Notas de implementación_ se escriben al cerrar
+sin que nadie las lleve de vuelta al tablero. Si los checkboxes viven en los dos sitios, uno miente.
+
+GitHub lleva **estado**; el repo lleva **contenido**. Plantilla del issue:
+
+```
+Título:  HU-XXX · <título de la HU>
+Labels:  sprint-N, prioridad:<nivel>, <capa>, [a11y] [infra]
+
+Cuerpo:
+  <la historia: Como… Quiero… Para…>
+
+  📄 Tasks y criterios de aceptación:
+  docs/historias/HU-XXX-slug-corto.md
+
+  Depende de: … · Bloquea: …
+```
+
+Sprint, Prioridad, Estimación, Assignee y Estado se rellenan como **campos del Project**, no en el
+cuerpo del issue.
 
 ## Reglas del contenido
 
@@ -47,14 +70,37 @@ El flujo completo, con el porqué de cada paso, está en [`GUIA_FLUJO.md`](../..
 
 ## Estado
 
-| Sprint                         | Rango      | Estado                                |
-| ------------------------------ | ---------- | ------------------------------------- |
-| 0 — Fundación técnica          | HU-001…004 | ✅ Completo (anterior a esta carpeta) |
-| 1 — Autenticación y usuarios   | HU-101…104 | 🔄 En curso                           |
-| 2 — Gestión de aulas           | HU-201…204 | ⬜ Sin empezar                        |
-| 3 — Sistema de reservas        | HU-301…304 | ⬜ Sin empezar                        |
-| 4 — Notificaciones e historial | HU-401…404 | ⬜ Sin empezar                        |
+| HU                                             | Título                                        | Estado                                |
+| ---------------------------------------------- | --------------------------------------------- | ------------------------------------- |
+| HU-001…004                                     | Sprint 0 — Fundación técnica                  | ✅ Completo (anterior a esta carpeta) |
+| HU-101, 102                                    | Registro y login con sesión persistente       | ✅ Completo (anterior a esta carpeta) |
+| [HU-103](./HU-103-perfil-de-usuario.md)        | Ver y editar el perfil de usuario             | 🔄 En revisión                        |
+| [HU-104](./HU-104-aprobacion-de-profesores.md) | Aprobación de profesores por el administrador | ⬜ Pendiente                          |
+| [HU-201](./HU-201-crear-aula-virtual.md)       | Crear aula virtual con enlace manual          | ⬜ Pendiente                          |
+| [HU-202](./HU-202-editar-cancelar-aula.md)     | Editar o cancelar un aula propia              | ⬜ Pendiente                          |
+| [HU-203](./HU-203-listado-de-aulas.md)         | Listado de aulas con filtros                  | ⬜ Pendiente                          |
+| [HU-204](./HU-204-detalle-de-aula.md)          | Detalle de un aula                            | ⬜ Pendiente                          |
+| [HU-205](./HU-205-tests-de-frontend.md)        | Infraestructura de tests de frontend y tipos  | ⬜ Pendiente                          |
+| HU-301…304                                     | Sprint 3 — Sistema de reservas                | ⬜ Sin convertir a `.md`              |
+| HU-401…404                                     | Sprint 4 — Notificaciones e historial         | ⬜ Sin convertir a `.md`              |
+
+**Orden del Sprint 2:**
+
+```
+HU-104 ──► HU-201 ──► HU-203 ──► HU-204 ──► HU-202
+HU-205 ──────────────►┘
+```
+
+- **HU-104** va primero aunque sea del Sprint 1: crea el decorador `@Roles` y es lo único que
+  produce un profesor `ACTIVE`, sin el cual HU-201 no se puede probar.
+- **HU-205** no depende de nada y puede correr en paralelo con HU-201, pero **tiene que estar
+  cerrada antes de HU-203**: esa HU escribe la función compartida `derivarEstadoAula()` y los
+  componentes de dominio, y hoy no hay dónde ejecutar sus tests.
+- **HU-202 va al final** pese a su número: necesita el formulario de 201, el botón de entrada de
+  204, y el listado de 203 para poder verificar su AC2. **El número identifica, no ordena.**
 
 Las HUs de Sprint 0 y las primeras de Sprint 1 se implementaron antes de que existiera esta
-carpeta; su texto original está en GitHub Projects. No se reconstruyen aquí: se documenta desde la
-siguiente en adelante.
+carpeta; su texto original está en GitHub Projects. No se reconstruyen aquí.
+
+Las de Sprint 3 y 4 se convierten **justo antes de empezar cada sprint**, no ahora: dependen de
+decisiones que aún no están tomadas (`ARQUITECTURA.md` §14.6) y se reescribirían.
