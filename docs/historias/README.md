@@ -25,13 +25,36 @@ Projects. No se renumera una HU después de crearla.
 
 1. Pega la HU que Claude te generó en un archivo nuevo con este nombre, usando
    [`_PLANTILLA.md`](./_PLANTILLA.md) como formato.
-2. Copia el mismo contenido a una tarjeta de GitHub Projects (el proyecto sigue siendo el tablero;
-   el repo es la fuente de verdad del texto).
+2. Crea el **issue de GitHub** como **puntero**, nunca como copia (ver abajo).
 3. Crea la rama: `hu-<número>-<slug>-<persona>`.
 4. Impleméntala con `/hu docs/historias/HU-XXX-slug-corto.md`.
 5. Al cerrar el PR, marca la HU como completada en su cabecera y mueve la tarjeta.
 
 El flujo completo, con el porqué de cada paso, está en [`GUIA_FLUJO.md`](../../GUIA_FLUJO.md).
+
+## El issue de GitHub es un puntero
+
+**No se copia el texto de la HU al issue.** Dos fuentes de verdad divergen siempre: cuando cambia
+una dependencia se edita un archivo, no dos, y las _Notas de implementación_ se escriben al cerrar
+sin que nadie las lleve de vuelta al tablero. Si los checkboxes viven en los dos sitios, uno miente.
+
+GitHub lleva **estado**; el repo lleva **contenido**. Plantilla del issue:
+
+```
+Título:  HU-XXX · <título de la HU>
+Labels:  sprint-N, prioridad:<nivel>, <capa>, [a11y] [infra]
+
+Cuerpo:
+  <la historia: Como… Quiero… Para…>
+
+  📄 Tasks y criterios de aceptación:
+  docs/historias/HU-XXX-slug-corto.md
+
+  Depende de: … · Bloquea: …
+```
+
+Sprint, Prioridad, Estimación, Assignee y Estado se rellenan como **campos del Project**, no en el
+cuerpo del issue.
 
 ## Reglas del contenido
 
