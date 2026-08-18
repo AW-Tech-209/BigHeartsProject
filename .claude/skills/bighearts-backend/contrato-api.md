@@ -48,8 +48,12 @@ mensaje mostrar a partir del código, **nunca** parseando `message`.
 
 Códigos ya existentes: `VALIDATION_ERROR`, `EMAIL_ALREADY_EXISTS`, `INVALID_CREDENTIALS`,
 `ACCOUNT_SUSPENDED`, `ACCOUNT_PENDING`, `UNAUTHENTICATED`, `INVALID_REFRESH_TOKEN`,
-`TOO_MANY_REQUESTS`, `DATABASE_UNAVAILABLE`, `INTERNAL_ERROR`. Los del dominio de reservas están en
-`reglas-reservas.md` §7.
+`PROFILE_FORBIDDEN`, `USER_NOT_FOUND`, `TOO_MANY_REQUESTS`, `DATABASE_UNAVAILABLE`,
+`INTERNAL_ERROR`. Los del dominio de reservas están en `reglas-reservas.md` §7.
+
+`PROFILE_FORBIDDEN` está **reservado y sin emisor**: `/users/me` deriva el id del token, así que no
+existe petición capaz de provocarlo. Lo usará `AdminModule` cuando haya edición de perfiles
+ajenos. No inventes una ruta para justificarlo.
 
 ## 4. DTOs
 
@@ -82,13 +86,22 @@ parcial de `bookings`) van en SQL dentro de la migración, con un comentario que
 
 ## 6. Endpoints existentes
 
-| Método | Ruta             | Entrada         | `data`                         | Cookie                    |
-| ------ | ---------------- | --------------- | ------------------------------ | ------------------------- |
-| POST   | `/auth/register` | `RegisterInput` | `{ user }`                     | —                         |
-| POST   | `/auth/login`    | `LoginInput`    | `AuthSession`                  | **set** `refresh_token`   |
-| POST   | `/auth/refresh`  | — (cookie)      | `AuthSession`                  | **rota** `refresh_token`  |
-| POST   | `/auth/logout`   | — (cookie)      | `{ loggedOut: true }`          | **borra** `refresh_token` |
-| GET    | `/health`        | —               | `{ status, uptime, database }` | —                         |
+| Método | Ruta             | Entrada              | `data`                         | Cookie                    |
+| ------ | ---------------- | -------------------- | ------------------------------ | ------------------------- |
+| POST   | `/auth/register` | `RegisterInput`      | `{ user }`                     | —                         |
+| POST   | `/auth/login`    | `LoginInput`         | `AuthSession`                  | **set** `refresh_token`   |
+| POST   | `/auth/refresh`  | — (cookie)           | `AuthSession`                  | **rota** `refresh_token`  |
+| POST   | `/auth/logout`   | — (cookie)           | `{ loggedOut: true }`          | **borra** `refresh_token` |
+| GET    | `/users/me`      | — (token)            | `{ user }`                     | —                         |
+| PATCH  | `/users/me`      | `UpdateProfileInput` | `{ user }`                     | —                         |
+| GET    | `/health`        | —                    | `{ status, uptime, database }` | —                         |
+
+**`/users/me` y el id del token.** Las rutas del perfil propio son `/me` y **no existe
+`/users/:id`**: el id sale siempre de `@CurrentUser()`. No es una comodidad, es la autorización —
+sin forma de nombrar a un tercero, no hay perfil ajeno que proteger. `UpdateProfileInput` solo
+declara los campos editables, así que `email`, `role` e `id` en el cuerpo los rechaza el
+`whitelist` del ValidationPipe con `VALIDATION_ERROR`. Si algún día hace falta editar el perfil de
+otra persona, va en `AdminModule` con su propia autorización de rol, no aflojando esto.
 
 Al añadir un endpoint, actualiza `AUTH_FLOW.md` si es de `/auth`, y `docs/ARQUITECTURA.md` si
 introduce una decisión nueva.

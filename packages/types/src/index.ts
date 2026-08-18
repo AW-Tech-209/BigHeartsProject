@@ -103,6 +103,31 @@ export interface RegisterResponse {
 }
 
 /**
+ * Cuerpo de la petición de edición del perfil propio (`PATCH /users/me`).
+ *
+ * Es DELIBERADAMENTE un subconjunto de `User`: solo lo que el dueño de la
+ * cuenta puede cambiar por sí mismo. `email` y `role` están fuera a propósito
+ * —el primero necesita verificación por correo, el segundo es una decisión de
+ * administración— y `id`/`status`/timestamps no los edita nadie desde aquí.
+ * Añadir un campo a este tipo es autorizar a editarlo: piénsalo dos veces.
+ *
+ * Los campos de accesibilidad son opcionales y admiten `null` explícito: es la
+ * forma de RETIRAR una preferencia ya declarada. Omitir la clave significa
+ * "no la toques"; mandar `null` significa "bórrala".
+ */
+export interface UpdateProfileInput {
+  firstName: string;
+  lastName: string;
+  hearingLossLevel?: HearingLossLevel | null;
+  communicationPreference?: CommunicationPreference | null;
+}
+
+/** Respuesta de `GET /users/me` y de `PATCH /users/me`. */
+export interface ProfileResponse {
+  user: User;
+}
+
+/**
  * Cuerpo de la petición de login (`POST /auth/login`).
  *
  * Solo email y contraseña: el resto de la sesión (tokens) lo emite el backend.
@@ -151,6 +176,24 @@ export const ApiErrorCode = {
   UNAUTHENTICATED: 'UNAUTHENTICATED',
   /** El refresh token no existe, expiró, o ya fue revocado/usado. */
   INVALID_REFRESH_TOKEN: 'INVALID_REFRESH_TOKEN',
+  /**
+   * Intento de leer o editar el perfil de otra persona.
+   *
+   * Hoy NINGÚN endpoint lo emite, y es intencional: `/users/me` deriva el id
+   * del token (nunca de la ruta ni del cuerpo), así que no existe forma de
+   * direccionar un perfil ajeno para que la petición llegue a fallar. El código
+   * se reserva aquí porque el catálogo es API pública y los códigos se añaden,
+   * no se renombran; lo emitirá `AdminModule` cuando exista la edición de
+   * terceros. No inventes una ruta `/users/:id` solo para poder usarlo.
+   */
+  PROFILE_FORBIDDEN: 'PROFILE_FORBIDDEN',
+  /**
+   * El usuario referenciado no existe. En `/users/me` significa que el token
+   * es válido pero la cuenta que nombra ya no está: el access token vive 15
+   * min y se verifica solo por firma, así que sobrevive a que un administrador
+   * borre la cuenta.
+   */
+  USER_NOT_FOUND: 'USER_NOT_FOUND',
   /** Se superó el límite de peticiones (rate limiting). */
   TOO_MANY_REQUESTS: 'TOO_MANY_REQUESTS',
   DATABASE_UNAVAILABLE: 'DATABASE_UNAVAILABLE',

@@ -302,7 +302,7 @@ juntos.
 | `common`        | Filtro de excepciones, interceptor de respuesta, factoría de errores de validación. | ✅      |
 | `health`        | `GET /health` — proceso + BD.                                                       | ✅      |
 | `auth`          | Registro, login, refresh, logout, guards.                                           | ✅      |
-| `users`         | Perfiles y roles.                                                                   | 🔄 Stub |
+| `users`         | Perfil propio (`GET`/`PATCH /users/me`). La gestión de terceros vive en `admin`.    | ✅      |
 | `classrooms`    | Aulas, horarios, cupos, enlace.                                                     | ⬜ Stub |
 | `bookings`      | Reservas, concurrencia, cancelaciones.                                              | ⬜ Stub |
 | `sessions`      | Reservado (ver nota).                                                               | ⬜ Stub |

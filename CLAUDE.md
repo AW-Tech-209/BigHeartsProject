@@ -37,7 +37,7 @@ Seed: un usuario por rol, contraseña `Password123!` (ver `README.md`).
 
 ```
 apps/api/src/     config · prisma · common · health · auth ✅
-                  users 🔄 · classrooms · bookings · sessions · notifications · admin ⬜ (stubs)
+                  users ✅ · classrooms · bookings · sessions · notifications · admin ⬜ (stubs)
 apps/web/src/     app/ (providers, router) · pages/ · features/<dominio>/{api,components,hooks,lib}
                   components/ui/ (shadcn+Base UI) · components/dominio/ · hooks/ · lib/ · stores/
                   index.css  ← tema Tailwind v4 y tokens. NO existe src/styles/globals.css
