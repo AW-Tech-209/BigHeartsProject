@@ -558,23 +558,52 @@ está en el skill de UI, que es su fuente de verdad.
 
 ### 10.1 Lo que hay
 
-| Pieza                                                                          | Estado            |
-| ------------------------------------------------------------------------------ | ----------------- |
-| ESLint (flat config) + Prettier, todo el repo                                  | ✅                |
-| Husky `pre-commit` → `lint-staged` sobre los ficheros staged                   | ✅                |
-| Husky `commit-msg` → commitlint (Conventional Commits)                         | ✅                |
-| CI en cada PR a `main`: backend `lint + build + test`, frontend `lint + build` | ✅                |
-| Tests de backend con Vitest (`src/**/*.spec.ts`)                               | ✅ Solo en `auth` |
-| Tests de frontend                                                              | ❌ Ninguno        |
-| Tests E2E                                                                      | ❌ Ninguno        |
+| Pieza                                                                   | Estado                        |
+| ----------------------------------------------------------------------- | ----------------------------- |
+| ESLint (flat config) + Prettier, todo el repo                           | ✅                            |
+| Husky `pre-commit` → `lint-staged` sobre los ficheros staged            | ✅                            |
+| Husky `commit-msg` → commitlint (Conventional Commits)                  | ✅                            |
+| CI en cada PR a `main`: los dos jobs con `lint + build + test`          | ✅                            |
+| `npm run test` desde la raíz corre los tres workspaces                  | ✅                            |
+| Tests de backend con Vitest (`src/**/*.spec.ts`)                        | ✅ `auth` y `users`           |
+| Tests de `packages/types` con Vitest (`src/**/*.spec.ts`, entorno node) | ✅                            |
+| Tests de frontend con Vitest + Testing Library sobre jsdom              | ✅ Infraestructura + patrones |
+| Accesibilidad automatizada con `axe-core` en los tests de componente    | ✅                            |
+| Cobertura del frontend: `features/auth` y `features/profile`            | ⬜ No retroactiva (D17)       |
+| Tests E2E                                                               | ❌ Ninguno                    |
 
-### 10.2 El hueco de tests del frontend — decidido, pendiente de implementar
+**Cómo se corren:**
 
-**Estado hoy:** `apps/web` no tiene runner de tests y su job de CI solo hace lint y build.
-`packages/types` tampoco tiene runner. Mientras siga así, el skill `bighearts-dod` **no puede
-exigir tests de frontend**, y no los exige.
+```bash
+npm run test                                 # los tres workspaces (compila tipos antes)
+npm run test --workspace @academia/web       # solo frontend
+npm run test:watch --workspace @academia/web # en watch, mientras escribes
+```
 
-> **Decisión D17 (2026-08-18) — se cierra el hueco en HU-205, antes de HU-203.**
+### 10.2 Tests del frontend y de tipos — implementado en HU-205
+
+**Estado hoy:** implementado. `apps/web` y `packages/types` tienen runner, el CI los ejecuta en
+cada PR, y el skill `bighearts-dod` **ya exige** tests de frontend (§5 de ese skill).
+
+Lo que existe en el repo:
+
+| Pieza                                    | Dónde                                                                                             | Para qué                                                                                  |
+| ---------------------------------------- | ------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| Config de test del frontend              | `apps/web/vitest.config.ts`                                                                       | **Hereda `vite.config.ts` con `mergeConfig`**, no lo copia (ver abajo)                    |
+| Setup de jsdom                           | `apps/web/src/test/setup.ts`                                                                      | Matchers de `@testing-library/jest-dom` + stub de `matchMedia`                            |
+| `renderConProviders(ui, { tema, ruta })` | `apps/web/src/test/render-con-providers.tsx`                                                      | Monta con React Query + `LiveAnnouncer` + router de memoria, en `light` \| `dark` \| `hc` |
+| `esperarSinFallosDeAccesibilidad(cont.)` | `apps/web/src/test/accesibilidad.ts`                                                              | Corre `axe` y **falla con el detalle** de cada violación, no con un booleano              |
+| Config de test del contrato              | `packages/types/vitest.config.ts`                                                                 | Entorno `node`; los specs se excluyen de `dist` vía `tsconfig.build.json`                 |
+| Patrones a copiar                        | `validate-login.spec.ts` (lógica pura) · `login-form.spec.tsx` (teclado) · `field.spec.tsx` (axe) | Los tres ejemplos que HU-205 dejó sobre código existente                                  |
+
+> **Por qué la config de test hereda la de Vite y no se escribe aparte.** `vite.config.ts` contiene
+> el alias `@/*` y `optimizeDeps.include: ['@academia/types']` — la trampa nº 1 del `README.md`, que
+> existe porque el paquete se compila a CommonJS. Dos configs paralelas se desincronizan a la
+> primera que alguien toque una sola de las dos, y el síntoma sería un test que falla al importar un
+> **valor** (no un tipo) de `@academia/types`. Con `mergeConfig`, tocar `vite.config.ts` afecta a
+> las dos a la vez, que es la única forma de enterarse.
+
+> **Decisión D17 (2026-08-18) — implementada en HU-205, antes de HU-203.**
 >
 > El detonante fue concreto: HU-103 se cerró con dos criterios de aceptación anotados como
 > "implementado, pero sin pasada manual". Un checklist de accesibilidad de diez puntos, recorrido a
@@ -590,11 +619,20 @@ exigir tests de frontend**, y no los exige.
 > | Cobertura     | **Sin umbral numérico.** Un porcentaje mínimo produce tests escritos para subir el porcentaje. Regla cualitativa en `bighearts-dod`: toda lógica de dominio del frontend tiene test, y todo componente de `components/dominio/` tiene test de accesibilidad. |
 > | Alcance       | **No retroactivo.** `features/auth` y `features/profile` se cubren cuando se toquen.                                                                                                                                                                         |
 >
-> `packages/types` es la parte urgente: `derivarEstadoAula()` vive ahí y la T0 de HU-203 pide tests
-> unitarios que hoy no tienen dónde ejecutarse.
->
-> **Al cerrar HU-205 hay que actualizar esta sección, §10.1, `CLAUDE.md` y el skill
-> `bighearts-dod`.** Hasta entonces, §10.1 dice la verdad.
+> `packages/types` era la parte urgente: `derivarEstadoAula()` vive ahí y la T0 de HU-203 pide
+> tests unitarios que antes no tenían dónde ejecutarse. **Ya los tienen.**
+
+**Lo que sigue sin cubrirse, a propósito:**
+
+- **`features/auth` y `features/profile`.** Cobertura no retroactiva (D17). Los tres tests de
+  ejemplo caen sobre `auth` porque era el código que existía, no porque `auth` esté cubierto.
+- **E2E.** Se evalúa al cerrar la Fase 1, cuando haya flujos completos que merezca la pena recorrer
+  de punta a punta.
+- **Regresión visual y contraste calculado.** jsdom no aplica las hojas de Tailwind, así que la
+  regla `color-contrast` de axe está desactivada en el helper: automatizarla ahí daría un falso
+  verde. El contraste se verifica en `tokens.css` del skill `bighearts-ui` y a mano.
+- **Umbral numérico de cobertura.** D17: un porcentaje mínimo produce tests escritos para subir el
+  porcentaje.
 
 ### 10.3 Convención de ramas y commits
 
@@ -754,8 +792,8 @@ en marcha se reducen a invariantes + enlace a `DEPLOYMENT.md`, `AUTH_FLOW.md` y 
 3. Ubicación de la función derivadora de estado en `@academia/types` (§7.3).
    _Se materializa en HU-203, que la implementa con tests propios._
 4. ~~Qué hacer con la ausencia de tests en el frontend antes de Sprint 2 (§10.2).~~
-   **✅ Resuelto (2026-08-18) — D17.** Vitest + Testing Library + `axe`, bloqueando en CI, sin
-   umbral de cobertura y sin cobertura retroactiva. Lo implementa **HU-205**, antes de HU-203.
+   **✅ Resuelto (2026-08-18) — D17, e implementado en HU-205.** Vitest + Testing Library + `axe`,
+   bloqueando en CI, sin umbral de cobertura y sin cobertura retroactiva. Ver §10.2.
 5. **Proveedor de email** para el adaptador real de `NotificationService` (§4.6, D14). Bloquea el
    Sprint 4; no bloquea HU-104.
 6. **Formato de paginación** del listado de aulas: `{ items, total, page, pageSize }` con

@@ -5,7 +5,7 @@
 | **Sprint**       | Sprint 2 — Gestión de Aulas                                  |
 | **Prioridad**    | 🔴 Crítica (bloquea HU-203)                                  |
 | **Estimación**   | 1.5 días                                                     |
-| **Estado**       | ⬜ Pendiente                                                 |
+| **Estado**       | ✅ Completada (2026-08-18)                                   |
 | **Rama**         | `hu-205-tests-de-frontend-<persona>`                         |
 | **Colaboración** | Dev B, con revisión de Dev A (toca el CI y `packages/types`) |
 | **Depende de**   | Ninguna. Puede correr en paralelo con HU-201.                |
@@ -73,59 +73,59 @@ para resolver.
 
 ## 🔧 Tasks — Dev B (revisión de Dev A en T1, T7 y T8)
 
-- [ ] **T1** — Vitest en `packages/types`: `environment: 'node'`, `include: ['src/**/*.spec.ts']`,
+- [x] **T1** — Vitest en `packages/types`: `environment: 'node'`, `include: ['src/**/*.spec.ts']`,
       script `test`. Sin jsdom ni Testing Library — aquí solo viven funciones puras.
       **Esto desbloquea la T0 de HU-203.**
-- [ ] **T2** — Vitest en `apps/web`: `environment: 'jsdom'`, archivo de setup con
+- [x] **T2** — Vitest en `apps/web`: `environment: 'jsdom'`, archivo de setup con
       `@testing-library/jest-dom`, `include: ['src/**/*.{spec,test}.{ts,tsx}']`, scripts `test` y
       `test:watch`.
-- [ ] **T3** — La configuración de test **hereda** `apps/web/vite.config.ts` (alias `@/*`,
+- [x] **T3** — La configuración de test **hereda** `apps/web/vite.config.ts` (alias `@/*`,
       `optimizeDeps`), no la duplica. Ver la trampa de arriba.
-- [ ] **T4** — Helper `renderConProviders()` que envuelva en `QueryClientProvider`,
+- [x] **T4** — Helper `renderConProviders()` que envuelva en `QueryClientProvider`,
       `LiveAnnouncer` y router de memoria, y **acepte el tema** (`light` | `dark` | `hc`) aplicando
       la clase correspondiente al contenedor. Es lo que permite testear los tres modos.
-- [ ] **T5** — Helper `esperarSinFallosDeAccesibilidad(container)` que corra `axe` y falle con el
+- [x] **T5** — Helper `esperarSinFallosDeAccesibilidad(container)` que corra `axe` y falle con el
       detalle de la violación, no con un booleano.
-- [ ] **T6** — **Tres tests de ejemplo sobre código que ya existe**, que sirvan de patrón a copiar:
+- [x] **T6** — **Tres tests de ejemplo sobre código que ya existe**, que sirvan de patrón a copiar:
       uno de lógica pura (`features/auth/lib/validate-login.ts`), uno de componente con interacción
       de teclado (`features/auth/components/login-form.tsx`), y uno de `axe` sobre una primitiva de
       `components/ui/`.
-- [ ] **T7** — Script `test` en el `package.json` de la **raíz** que ejecute los tres workspaces.
+- [x] **T7** — Script `test` en el `package.json` de la **raíz** que ejecute los tres workspaces.
       Hoy no existe: `npm run test` desde la raíz no hace nada.
-- [ ] **T8** — `.github/workflows/ci.yml`: añadir el paso `test` al job de frontend, y los tests de
+- [x] **T8** — `.github/workflows/ci.yml`: añadir el paso `test` al job de frontend, y los tests de
       `packages/types` al pipeline.
-- [ ] **T9** — Actualizar la documentación afectada: `CLAUDE.md` (tabla de comandos, que hoy dice
+- [x] **T9** — Actualizar la documentación afectada: `CLAUDE.md` (tabla de comandos, que hoy dice
       "**No hay tests de frontend**"), `ARQUITECTURA.md` §10.1 y §10.2, el skill `bighearts-dod`
       (§2 y §5) y `docs/historias/_PLANTILLA.md` (el AC de verificación automática).
 
 ## ✅ Criterios de aceptación
 
-- [ ] **AC1** — `npm run test` desde la raíz ejecuta los tests de los **tres** workspaces y termina
+- [x] **AC1** — `npm run test` desde la raíz ejecuta los tests de los **tres** workspaces y termina
       en verde.
-- [ ] **AC2** — `npm run test --workspace @academia/types` ejecuta tests de funciones puras,
+- [x] **AC2** — `npm run test --workspace @academia/types` ejecuta tests de funciones puras,
       demostrado con el test de ejemplo.
-- [ ] **AC3** — `npm run test --workspace @academia/web` monta componentes en jsdom, demostrado con
+- [x] **AC3** — `npm run test --workspace @academia/web` monta componentes en jsdom, demostrado con
       el test del formulario de login, que **interactúa con teclado** (`user-event`), no
       disparando eventos a mano.
-- [ ] **AC4** — Un test de `apps/web` puede resolver el alias `@/*` **e importar un valor** de
+- [x] **AC4** — Un test de `apps/web` puede resolver el alias `@/*` **e importar un valor** de
       `@academia/types` (por ejemplo el enum `UserRole`) sin fallar. Es el mismo problema que
       `optimizeDeps` resuelve en runtime, y hay que comprobar que no reaparece en los tests.
-- [ ] **AC5** — El helper de render permite montar el mismo componente en `light`, `dark` y `hc`, y
+- [x] **AC5** — El helper de render permite montar el mismo componente en `light`, `dark` y `hc`, y
       un test lo demuestra en los tres.
-- [ ] **AC6** — **La red atrapa algo de verdad.** Quitarle el `<label>` a un input de un componente
+- [x] **AC6** — **La red atrapa algo de verdad.** Quitarle el `<label>` a un input de un componente
       cubierto hace **fallar** el test de `axe`, con un mensaje que nombra la violación. Este AC no
       se cumple con "axe está instalado": hay que demostrar el fallo y luego restaurarlo.
 - [ ] **AC7** — El CI ejecuta los tests de los tres workspaces en cada PR, y **un test roto bloquea
       el merge**. Verificado abriendo un PR con un test que falle a propósito y comprobando que el
       check queda en rojo.
-- [ ] **AC8** — **Los tests siguen la convención de consulta accesible:** los ejemplos usan
+- [x] **AC8** — **Los tests siguen la convención de consulta accesible:** los ejemplos usan
       `getByRole` y `getByLabelText`, y **no hay ni un `data-testid`** en el código entregado. Si un
       elemento no se puede encontrar por su rol o su etiqueta, el problema es el componente.
-- [ ] **AC9** — **Documentación al día:** `CLAUDE.md` ya no afirma que no hay tests de frontend;
+- [x] **AC9** — **Documentación al día:** `CLAUDE.md` ya no afirma que no hay tests de frontend;
       `bighearts-dod` exige lo que ahora sí se puede exigir y deja de excusar al frontend;
       `_PLANTILLA.md` refleja el comando nuevo. Recorrido explícito de la tabla de §6 del skill
       `bighearts-dod`.
-- [ ] **AC10** — **Verificación automática:** `typecheck`, `lint`, `format:check`, `build` y
+- [x] **AC10** — **Verificación automática:** `typecheck`, `lint`, `format:check`, `build` y
       `npm run test` (los tres workspaces) en verde.
 
 ## 🚫 Fuera de alcance
@@ -143,4 +143,42 @@ para resolver.
 
 ## Notas de implementación
 
-_Se rellena al cerrar._
+**Dependencias añadidas** (todas devDependencies, todas exigidas por D17):
+`vitest`, `jsdom`, `@testing-library/react`, `@testing-library/dom`, `@testing-library/user-event`,
+`@testing-library/jest-dom` y `axe-core` en `apps/web`; `vitest` en `packages/types`.
+Se usa **`axe-core` a pelo**, sin `jest-axe` ni `vitest-axe`: la T5 pedía un helper propio que
+fallara con el detalle de la violación, y un matcher de terceros habría añadido una dependencia
+para envolver justo lo que hacía falta escribir a mano.
+
+**Decisiones que hubo que tomar y no estaban tomadas:**
+
+1. **El test de ejemplo de `packages/types` no prueba una función pura, porque hoy no hay ninguna.**
+   El paquete son tipos, cuatro enums y `ApiErrorCode`; `derivarEstadoAula()` llega en HU-203, que
+   está explícitamente fuera de alcance aquí. Inventar una función solo para tener algo que probar
+   habría sido peor. El spec cubre lo que **sí existe en tiempo de ejecución**: que los enums
+   emitan objeto, que clave y valor coincidan (el contrato con los enums de Prisma) y que los
+   códigos de error no se repitan ni se renombren. Cuando llegue `derivarEstadoAula()`, sus tests
+   van en su propio `.spec.ts`.
+2. **`packages/types` necesitó un `tsconfig.build.json`.** Su `build` compilaba `src/**/*`, así que
+   el nuevo spec habría acabado en `dist/` —y por tanto en el bundle del frontend y en la imagen de
+   la API, exigiendo vitest en producción—. Mismo patrón que `apps/api/tsconfig.build.json`: el
+   `tsconfig.json` sigue incluyéndolos para que `typecheck` los mire, el de build los excluye.
+3. **`renderConProviders()` NO reutiliza `<AppProviders>`.** Ese componente monta
+   `useSessionBootstrap()`, que dispara `POST /auth/refresh` al montar; un test no debe salir a la
+   red. Tampoco usa el `queryClient` singleton, que compartiría caché entre tests.
+4. **La regla `color-contrast` de axe está desactivada** en `esperarSinFallosDeAccesibilidad()`.
+   jsdom no aplica las hojas de Tailwind: axe no tendría colores calculados que comparar y daría un
+   verde falso. El contraste se verifica en `tokens.css` y a mano.
+5. **Los nombres de los jobs del CI cambiaron** (`… (lint + build)` → `… (lint + build + test)`).
+   Los checks obligatorios de la protección de rama se referencian **por nombre exacto**, así que
+   hay que actualizarlos en GitHub o la protección deja de aplicarse en silencio. Queda avisado en
+   `DEPLOYMENT.md` §1.
+
+**Qué quedó pendiente:** la segunda mitad del **AC7** — comprobar en un PR real que el check queda
+en rojo. Localmente está demostrado que un test roto hace salir a `npm run test` con código 1, que
+es lo que hace fallar el step; lo que falta es push + PR + marcar los dos checks como obligatorios.
+
+**Arreglos de deriva encontrados de paso** (no eran de esta HU):
+`ARQUITECTURA.md` §10.1 decía que los tests de backend estaban "solo en `auth`" cuando `users`
+también los tiene desde HU-103; `README.md` → Trampas conocidas anunciaba "dos cosas" y listaba
+cinco; `.claude/skills/bighearts-ui/tokens.css` no pasaba `format:check`.

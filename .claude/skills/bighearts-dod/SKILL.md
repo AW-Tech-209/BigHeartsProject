@@ -9,9 +9,9 @@ license: Proprietary
 "Funciona en mi máquina" no es terminado. Terminado es: **los acceptance criteria de la HU se
 cumplen, la verificación está corrida, y la documentación no quedó mintiendo.**
 
-> Este checklist describe lo que **este repo** puede verificar hoy. No pide cosas que no existen
-> —por ejemplo, tests de frontend, que hoy no tienen runner instalado (ver §5)—. Un checklist que
-> pide imposibles se ignora entero, y entonces no sirve para nada.
+> Este checklist describe lo que **este repo** puede verificar hoy. No pide cosas que no existen.
+> Un checklist que pide imposibles se ignora entero, y entonces no sirve para nada. Por eso §5
+> dice también lo que **sigue** sin cubrirse, en vez de fingir que todo está automatizado.
 
 ## 1. Los acceptance criteria, uno por uno
 
@@ -31,15 +31,16 @@ nómbralo.
 ## 2. Verificación automática — siempre
 
 ```bash
-npm run typecheck                          # los tres workspaces
-npm run lint                               # ESLint en todo el repo
-npm run format:check                       # Prettier
-npm run test --workspace @academia/api     # Vitest (backend)
-npm run build                              # compila los tres, tipos primero
+npm run typecheck    # los tres workspaces
+npm run lint         # ESLint en todo el repo
+npm run format:check # Prettier
+npm run test         # Vitest en los TRES workspaces (compila tipos antes)
+npm run build        # compila los tres, tipos primero
 ```
 
-Los cinco en verde. Si tocaste `packages/types`, `npm run build:types` **antes** de lo demás, o el
-resto falla con `TS2307`.
+Los cinco en verde. `npm run test` desde la raíz ya hace `build:types` primero; si corres un
+workspace suelto y tocaste `packages/types`, lanza `npm run build:types` antes o fallará con
+`TS2307`.
 
 ## 3. Si tocaste backend
 
@@ -54,8 +55,9 @@ resto falla con `TS2307`.
 
 ## 4. Si tocaste frontend
 
-Recorre el **checklist del skill `bighearts-ui`** (está al final de su `SKILL.md`). En resumen, y
-sin sustituirlo:
+Primero los tests que §5 exige. Después recorre el **checklist del skill `bighearts-ui`** (está al
+final de su `SKILL.md`) — `axe` cubre lo mecánico, pero el recorrido con teclado, el orden del
+foco y si el texto se entiende siguen necesitando ojo humano. En resumen, y sin sustituirlo:
 
 - Teclado completo con foco visible; cada estado legible sin color; contraste y objetivos táctiles.
 - Los **4 estados**: cargando, vacío, error, éxito. Un componente sin los cuatro no está terminado.
@@ -64,16 +66,41 @@ sin sustituirlo:
 - Microcopy revisado contra `voz-microcopy.md`: español literal, sentence case, errores que
   explican en vez de disculparse.
 
-## 5. El hueco que hoy existe
+## 5. Tests de frontend y de tipos — qué se exige
 
-`apps/web` **no tiene runner de tests instalado**, y su job de CI solo hace lint y build. Por tanto:
+Desde HU-205 hay runner en `apps/web` y en `packages/types`, y el CI los ejecuta en cada PR. La
+regla es **cualitativa, no un porcentaje** (D17: un umbral numérico produce tests escritos para
+subir el umbral):
 
-- **No se exigen tests de frontend.** La verificación de UI es manual, contra el checklist de §4.
-- Si una HU mete lógica de dominio en el frontend (derivar estados de aula, formatear fechas y
-  zonas, calcular la ventana de acceso para pintar), **dilo en el PR**: es la señal de que hace
-  falta decidir el runner antes de seguir acumulando.
-- Tampoco hay E2E. Los flujos completos se prueban a mano contra `docker compose up` con los
-  usuarios del seed.
+- **Toda lógica de dominio del frontend tiene test.** Es decir, todo lo que viva en
+  `features/<dominio>/lib/` y toda función pura de `packages/types` — derivar el estado de un aula,
+  validar un formulario, formatear fechas y zonas, calcular la ventana de acceso para pintar.
+  Entorno `node`, sin DOM. Patrón: `features/auth/lib/validate-login.spec.ts`.
+- **Todo componente de `components/dominio/` tiene test de accesibilidad** con
+  `esperarSinFallosDeAccesibilidad(container)`. Patrón: `components/ui/field.spec.tsx`.
+- **Los componentes con interacción se prueban con teclado**, usando `user-event` —
+  `user.tab()`, `user.keyboard()`—, nunca `fireEvent`. Un `fireEvent.change` no comprueba que el
+  elemento sea alcanzable con Tab, ni que esté habilitado, ni que reciba el foco; en un producto
+  para personas sordas ese recorrido no es un detalle. Patrón:
+  `features/auth/components/login-form.spec.tsx`.
+- **Se consulta por rol accesible y texto visible** (`getByRole`, `getByLabelText`).
+  **`data-testid` está prohibido.** Si un elemento no se puede encontrar por su rol o su etiqueta,
+  el problema es el componente, no el test — y ese es justo el fallo que queremos que salte.
+- **Los tres modos de color** se montan con `renderConProviders(ui, { tema: 'dark' | 'hc' })`
+  cuando el componente cambie de aspecto entre ellos.
+
+**Lo que `axe` NO cubre, y por tanto sigue siendo manual (§4):** que el orden del foco tenga
+sentido, que un lector de pantalla lea algo comprensible, que el texto se entienda, y el contraste
+real —jsdom no aplica las hojas de Tailwind, así que la regla `color-contrast` está desactivada a
+propósito en el helper; automatizarla ahí daría un falso verde—.
+
+**Lo que sigue sin existir:**
+
+- **Cobertura retroactiva.** `features/auth` y `features/profile` se cubren cuando se toquen. Los
+  tests de ejemplo de HU-205 caen sobre `auth` porque era el código que había, no porque `auth`
+  esté cubierto.
+- **E2E.** Los flujos completos se prueban a mano contra `docker compose up` con los usuarios del
+  seed. Se evalúa Playwright al cerrar la Fase 1.
 
 ## 6. Documentación
 
@@ -87,6 +114,7 @@ sin sustituirlo:
 | Endpoints de `/auth` o el flujo de tokens            | `AUTH_FLOW.md`                |
 | Instalación, scripts, dependencias, una trampa nueva | `README.md`                   |
 | Una regla de UI o un patrón de componente            | skill `bighearts-ui`          |
+| Una convención de tests o un helper de `src/test/`   | este skill (§5)               |
 | Una invariante de servidor o el contrato de API      | skill `bighearts-backend`     |
 
 Si descubriste que un documento o un skill **ya estaba desactualizado**, arréglalo aunque no sea de
