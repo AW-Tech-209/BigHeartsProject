@@ -525,11 +525,25 @@ apps/web/src/
 │                       cada uno con api/, components/, hooks/, lib/.
 ├── components/
 │   ├── ui/             Primitivas de shadcn sobre Base UI.
-│   └── dominio/        Componentes del dominio BigHearts (aún por crear).
-├── hooks/              useAnnounce (región viva), usePageTitle (foco al <h1>).
+│   ├── layout/         El shell y la composición de página (HU-206): AppShell,
+│   │                   PaginaCabecera, Contenedor, RejillaAulas, destinosPorRol.
+│   └── dominio/        Componentes del dominio BigHearts: EstadoVacio, las tres
+│                       ilustraciones y el diccionario visual de estados de aula.
+├── hooks/              useAnnounce (región viva), usePageTitle (foco al <h1>),
+│                       useEsMovil (corte de 640px del shell).
 ├── lib/                http-client, api-error, refresh-session, query-client, cn().
 └── stores/             Zustand: sesión en memoria y preferencias.
 ```
+
+**El shell (HU-206).** Las nueve pantallas se montan sobre `<AppShell>`: marca, navegación superior
+por rol —tres o cuatro destinos, **nunca lateral y nunca tras una hamburguesa**—, barra inferior
+fija en móvil, y un `<main>` al que apunta el `<SkipLink>`. `<PaginaCabecera>` pone el único `<h1>`
+de la pantalla y es quien llama a `usePageTitle`, así que ninguna página puede olvidarse de mover el
+foco al cambiar de ruta. La especificación visual completa —anatomía, rejilla de 1/2/3 columnas,
+regla del sólido, estilo de ilustración— vive en `layout-y-composicion.md` del skill `bighearts-ui`.
+
+En escritorio y en móvil **solo se monta una de las dos barras** (`useEsMovil`), no las dos con una
+oculta por CSS: con ambas en el DOM, un lector de pantalla leería cada destino dos veces.
 
 > **Nota de auditoría — la ruta del tema estaba mal.** El skill de UI y `UI_GUIDELINES.md` decían
 > que los tokens viven en `src/styles/globals.css`. **Esa carpeta no existe**: el archivo real es
@@ -806,13 +820,16 @@ en marcha se reducen a invariantes + enlace a `DEPLOYMENT.md`, `AUTH_FLOW.md` y 
 Tomadas al convertir HU-104 y las cuatro HUs del Sprint 2 a `docs/historias/`. Cada una nació de un
 choque entre lo que la HU pedía y lo que el repo o estos documentos dicen.
 
-| #   | Decisión                                                                            | Dónde | Motivó                                                                                                                      |
-| --- | ----------------------------------------------------------------------------------- | ----- | --------------------------------------------------------------------------------------------------------------------------- |
-| D13 | `REJECTED` como estado propio de `UserStatus`                                       | §4.5  | HU-104 mandaba el rechazo a `SUSPENDED`, lo que obligaba a mentirle al usuario sobre su estado.                             |
-| D14 | `NotificationService` como puerto, con `LoggingNotificationService` en Fase 1       | §4.6  | HU-104 pedía email y no existe infraestructura de correo.                                                                   |
-| D15 | El aula nace `PUBLISHED`                                                            | §7.2  | HU-201 no decía en qué estado se crea, y `DRAFT` no tenía flujo de publicación en ninguna HU del sprint.                    |
-| D16 | `COMPLETED` sin escritor; se deriva por tiempo hasta HU-404                         | §7.2  | HU-202 prohibía editar aulas `COMPLETED`, una regla que nunca se dispararía.                                                |
-| D17 | Vitest + Testing Library + `axe` en `apps/web` y `packages/types`, bloqueando en CI | §10.2 | La T0 de HU-203 pedía tests unitarios en un workspace sin runner, y HU-103 cerró con dos AC de accesibilidad sin verificar. |
+| #   | Decisión                                                                                                                   | Dónde | Motivó                                                                                                                                                                                          |
+| --- | -------------------------------------------------------------------------------------------------------------------------- | ----- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| D13 | `REJECTED` como estado propio de `UserStatus`                                                                              | §4.5  | HU-104 mandaba el rechazo a `SUSPENDED`, lo que obligaba a mentirle al usuario sobre su estado.                                                                                                 |
+| D14 | `NotificationService` como puerto, con `LoggingNotificationService` en Fase 1                                              | §4.6  | HU-104 pedía email y no existe infraestructura de correo.                                                                                                                                       |
+| D15 | El aula nace `PUBLISHED`                                                                                                   | §7.2  | HU-201 no decía en qué estado se crea, y `DRAFT` no tenía flujo de publicación en ninguna HU del sprint.                                                                                        |
+| D16 | `COMPLETED` sin escritor; se deriva por tiempo hasta HU-404                                                                | §7.2  | HU-202 prohibía editar aulas `COMPLETED`, una regla que nunca se dispararía.                                                                                                                    |
+| D17 | Vitest + Testing Library + `axe` en `apps/web` y `packages/types`, bloqueando en CI                                        | §10.2 | La T0 de HU-203 pedía tests unitarios en un workspace sin runner, y HU-103 cerró con dos AC de accesibilidad sin verificar.                                                                     |
+| D18 | Las rutas `/aulas`, `/mis-clases` y `/mis-aulas` se registran en HU-206, con su estado vacío, antes de tener contenido     | §9    | Son destinos de la barra de navegación desde HU-206, y un enlace visible que cae en un 404 enseña al usuario a desconfiar de la navegación. HU-201, HU-203 y el Sprint 3 rellenan el contenido. |
+| D19 | El diccionario visual de estados de aula vive en `components/dominio/estado-aula-variantes.ts`, separado de `<EstadoAula>` | §7.3  | El AC9 de HU-206 exigía verificar la regla del sólido, pero el componente es de HU-203. Separar la tabla visual del componente permite testear la regla antes de que exista quien la obedece.   |
+| D20 | `<SessionBar>` desaparece: identidad y «Cerrar sesión» se absorben en la barra del shell                                   | §9    | Migrar las pantallas privadas al shell dejaba dos cabeceras apiladas. Un menú de avatar habría añadido estado oculto, que es justo lo que la navegación de HU-206 prohíbe.                      |
 
 Correcciones aplicadas a las HUs al convertirlas, sin necesidad de decisión nueva:
 

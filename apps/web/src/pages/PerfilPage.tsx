@@ -1,14 +1,13 @@
 import { ArrowLeft, LoaderCircle, RotateCw } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
-import { SkipLink } from '@/components/skip-link';
+import { AppShell } from '@/components/layout/app-shell';
+import { PaginaCabecera } from '@/components/layout/pagina-cabecera';
 import { Button } from '@/components/ui/button';
 import { Callout } from '@/components/ui/callout';
 import { Card } from '@/components/ui/card';
-import { SessionBar } from '@/features/auth/components/session-bar';
 import { ProfileForm } from '@/features/profile/components/profile-form';
 import { useProfile } from '@/features/profile/hooks/use-profile';
-import { usePageTitle } from '@/hooks/use-page-title';
 
 /**
  * Pantalla de perfil (HU-103): ver y editar los datos propios.
@@ -18,21 +17,17 @@ import { usePageTitle } from '@/hooks/use-page-title';
  * formulario cubre `éxito` con su aviso de guardado.
  */
 export function PerfilPage() {
-  const headingRef = usePageTitle('Tu perfil');
   const { data: user, isPending, isError, error, refetch, isRefetching } = useProfile();
 
   const withoutPreferences =
     user != null && user.hearingLossLevel === null && user.communicationPreference === null;
 
   return (
-    <div className="min-h-dvh bg-background">
-      <SkipLink />
-      <SessionBar />
-
-      <main
-        id="contenido"
-        className="mx-auto w-full max-w-3xl space-y-8 px-4 py-10 sm:px-6 lg:px-8"
-      >
+    <AppShell>
+      <div className="mx-auto w-full max-w-3xl space-y-8">
+        {/* Se conserva pese a la barra de navegación: `Panel` solo es destino
+            del rol ADMIN, así que para un estudiante o un profesor este enlace
+            es la única salida hacia su panel. */}
         <div>
           <Button
             variant="ghost"
@@ -44,19 +39,10 @@ export function PerfilPage() {
           </Button>
         </div>
 
-        <header className="space-y-2">
-          <h1
-            ref={headingRef}
-            tabIndex={-1}
-            className="text-3xl font-semibold text-balance outline-none"
-          >
-            Tu perfil
-          </h1>
-          <p className="max-w-[65ch] text-lg text-muted-foreground">
-            Revisa y actualiza tus datos. Tus preferencias de accesibilidad nos dicen cómo adaptar
-            la plataforma a ti.
-          </p>
-        </header>
+        <PaginaCabecera
+          titulo="Tu perfil"
+          contexto="Revisa y actualiza tus datos. Tus preferencias de accesibilidad nos dicen cómo adaptar la plataforma a ti."
+        />
 
         {/* Estado 1 — cargando. Con texto, nunca un spinner mudo. */}
         {isPending && (
@@ -136,7 +122,7 @@ export function PerfilPage() {
             <ProfileForm key={user.id} user={user} />
           </div>
         )}
-      </main>
-    </div>
+      </div>
+    </AppShell>
   );
 }
