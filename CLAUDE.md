@@ -41,7 +41,8 @@ Seed: un usuario por rol, contraseña `Password123!` (ver `README.md`).
 apps/api/src/     config · prisma · common · health · auth ✅
                   users ✅ · classrooms · bookings · sessions · notifications · admin ⬜ (stubs)
 apps/web/src/     app/ (providers, router) · pages/ · features/<dominio>/{api,components,hooks,lib}
-                  components/ui/ (shadcn+Base UI) · components/dominio/ · hooks/ · lib/ · stores/
+                  components/ui/ (shadcn+Base UI) · components/layout/ (shell, cabecera, rejilla)
+                  components/dominio/ (EstadoVacio, ilustraciones) · hooks/ · lib/ · stores/
                   index.css  ← tema Tailwind v4 y tokens. NO existe src/styles/globals.css
 packages/types/   contrato único back↔front. Se compila a dist/.
 docs/             DEFINICION_PROYECTO.md · ARQUITECTURA.md · historias/
@@ -49,6 +50,11 @@ docs/             DEFINICION_PROYECTO.md · ARQUITECTURA.md · historias/
 
 Backend feature-first por módulo NestJS; frontend feature-based por dominio. Nada de carpetas por
 tipo de archivo.
+
+**Toda pantalla se monta sobre el shell** (HU-206): `<AppShell>` da marca, navegación por rol y
+`<main>`; `<PaginaCabecera>` pone el único `<h1>`, mueve el foco al cambiar de ruta y fija el título
+del documento. No maquetes una página desde cero — la anatomía está en `layout-y-composicion.md`
+del skill `bighearts-ui`.
 
 ---
 
