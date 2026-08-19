@@ -80,22 +80,24 @@ cuerpo del issue.
 | [HU-202](./HU-202-editar-cancelar-aula.md)     | Editar o cancelar un aula propia              | ⬜ Pendiente                          |
 | [HU-203](./HU-203-listado-de-aulas.md)         | Listado de aulas con filtros                  | ⬜ Pendiente                          |
 | [HU-204](./HU-204-detalle-de-aula.md)          | Detalle de un aula                            | ⬜ Pendiente                          |
-| [HU-205](./HU-205-tests-de-frontend.md)        | Infraestructura de tests de frontend y tipos  | ⬜ Pendiente                          |
+| [HU-205](./HU-205-tests-de-frontend.md)        | Infraestructura de tests de frontend y tipos  | ✅ Completada                         |
+| [HU-206](./HU-206-sistema-visual-y-shell.md)   | Sistema visual y shell de la aplicación       | ⬜ Pendiente                          |
 | HU-301…304                                     | Sprint 3 — Sistema de reservas                | ⬜ Sin convertir a `.md`              |
 | HU-401…404                                     | Sprint 4 — Notificaciones e historial         | ⬜ Sin convertir a `.md`              |
 
 **Orden del Sprint 2:**
 
 ```
-HU-104 ──► HU-201 ──► HU-203 ──► HU-204 ──► HU-202
-HU-205 ──────────────►┘
+HU-205 ✅ ─► HU-206 ─► HU-104 ─► HU-201 ─► HU-203 ─► HU-204 ─► HU-202
 ```
 
-- **HU-104** va primero aunque sea del Sprint 1: crea el decorador `@Roles` y es lo único que
-  produce un profesor `ACTIVE`, sin el cual HU-201 no se puede probar.
-- **HU-205** no depende de nada y puede correr en paralelo con HU-201, pero **tiene que estar
-  cerrada antes de HU-203**: esa HU escribe la función compartida `derivarEstadoAula()` y los
-  componentes de dominio, y hoy no hay dónde ejecutar sus tests.
+- **HU-205** ya está cerrada: dejó Vitest, Testing Library y `axe` en los tres workspaces.
+- **HU-206 va ahora.** Monta el shell, la navegación por rol y las primitivas que faltan
+  (`AlertDialog`, `Table`, `Badge`, `Skeleton`). Las pantallas del Sprint 2 tienen que **nacer**
+  dentro del sistema; hacerlas antes y retocarlas después se paga dos veces. No depende de backend,
+  así que puede solaparse con HU-104.
+- **HU-104** va antes que HU-201 aunque sea del Sprint 1: crea el decorador `@Roles` y es lo único
+  que produce un profesor `ACTIVE`, sin el cual HU-201 no se puede probar.
 - **HU-202 va al final** pese a su número: necesita el formulario de 201, el botón de entrada de
   204, y el listado de 203 para poder verificar su AC2. **El número identifica, no ordena.**
 
