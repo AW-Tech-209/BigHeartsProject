@@ -36,9 +36,16 @@ enum UserRole {
 }
 
 /// Estado de la cuenta. Coincide con `UserStatus` de @academia/types.
+///
+/// `REJECTED` y `SUSPENDED` no son el mismo estado: el primero es una solicitud
+/// de profesor denegada (la cuenta nunca estuvo activa), el segundo una cuenta
+/// activa que un administrador deshabilitó. Se separan porque el login responde
+/// un código de error distinto en cada caso y el usuario lee un mensaje que
+/// tiene que ser cierto (decisión D13, `docs/ARQUITECTURA.md` §4.5).
 enum UserStatus {
   ACTIVE
   PENDING
+  REJECTED
   SUSPENDED
 }
 

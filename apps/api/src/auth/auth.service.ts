@@ -15,6 +15,7 @@ import { toPublicUser } from '../users/user.mapper';
 import { BCRYPT_SALT_ROUNDS, DECOY_PASSWORD_HASH } from './auth.constants';
 import {
   accountPending,
+  accountRejected,
   accountSuspended,
   invalidCredentials,
   invalidRefreshToken,
@@ -149,13 +150,24 @@ export class AuthService {
     return UserStatus.ACTIVE;
   }
 
-  /** Solo las cuentas ACTIVE pueden iniciar o mantener sesión. */
+  /**
+   * Solo las cuentas ACTIVE pueden iniciar o mantener sesión.
+   *
+   * Cada estado bloqueante tiene su PROPIO código de error, y no uno genérico,
+   * porque el frontend muestra un mensaje distinto en cada caso y los tres
+   * dicen cosas diferentes: `PENDING` es «espera», `REJECTED` es «te
+   * denegaron», `SUSPENDED` es «te la quitaron». Colapsarlos obligaría a
+   * mentirle al usuario sobre su situación (D13).
+   */
   private assertCanLogin(user: Pick<PrismaUser, 'status'>): void {
     if (user.status === UserStatus.SUSPENDED) {
       throw accountSuspended();
     }
     if (user.status === UserStatus.PENDING) {
       throw accountPending();
+    }
+    if (user.status === UserStatus.REJECTED) {
+      throw accountRejected();
     }
   }
 

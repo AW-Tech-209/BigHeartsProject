@@ -5,7 +5,7 @@
 | **Sprint**       | Sprint 1 — Autenticación y Usuarios                       |
 | **Prioridad**    | 🟠 Alta                                                   |
 | **Estimación**   | 3 días (2.5 originales + el guard de rol, que no existía) |
-| **Estado**       | ⬜ Pendiente                                              |
+| **Estado**       | ✅ Completada (2026-08-19)                                |
 | **Rama**         | `hu-104-aprobacion-de-profesores-<persona>`               |
 | **Colaboración** | Paralelo con contrato acordado                            |
 | **Depende de**   | HU-101, HU-102                                            |
@@ -50,64 +50,64 @@ espía en los tests, y el cableado no hay que rehacerlo.
 
 ## 🤝 Task de contrato — va primero
 
-- [ ] **T0** — En `packages/types`: añadir `REJECTED` a `UserStatus`, el código
+- [x] **T0** — En `packages/types`: añadir `REJECTED` a `UserStatus`, el código
       `ACCOUNT_REJECTED` y `INVALID_STATUS_TRANSITION` a `ApiErrorCode`, y el tipo de respuesta del
       listado de pendientes. Añadir `REJECTED` **también** al enum de `schema.prisma` en el mismo
       commit — los dos enums se cambian juntos. Luego `npm run build:types`.
 
 ## 🔧 Tasks — Dev A (backend)
 
-- [ ] **A1** — Decorador `@Roles(...)` + guard de rol en `auth/`, componible con el guard de
+- [x] **A1** — Decorador `@Roles(...)` + guard de rol en `auth/`, componible con el guard de
       autenticación global. Con sus tests.
-- [ ] **A2** — Migración de Prisma que añade `REJECTED` a `UserStatus`.
-- [ ] **A3** — `AdminModule`: `GET /admin/teachers/pending` — solo usuarios con `role = TEACHER` y
+- [x] **A2** — Migración de Prisma que añade `REJECTED` a `UserStatus`.
+- [x] **A3** — `AdminModule`: `GET /admin/teachers/pending` — solo usuarios con `role = TEACHER` y
       `status = PENDING`, ordenados por `createdAt`.
-- [ ] **A4** — `POST /admin/teachers/:id/approve` → `ACTIVE` · `POST /admin/teachers/:id/reject` →
+- [x] **A4** — `POST /admin/teachers/:id/approve` → `ACTIVE` · `POST /admin/teachers/:id/reject` →
       `REJECTED`. Los tres endpoints con `@Roles('ADMIN')`.
-- [ ] **A5** — Validar la transición: el objetivo debe existir, ser `TEACHER` y estar `PENDING`. En
+- [x] **A5** — Validar la transición: el objetivo debe existir, ser `TEACHER` y estar `PENDING`. En
       cualquier otro caso, `INVALID_STATUS_TRANSITION`.
-- [ ] **A6** — `NotificationsModule`: interfaz `NotificationService` + `LoggingNotificationService`
+- [x] **A6** — `NotificationsModule`: interfaz `NotificationService` + `LoggingNotificationService`
       que registra destinatario, tipo de evento y resultado. Documentar en el módulo que el
       adaptador real llega en Sprint 4.
-- [ ] **A7** — Login de un usuario `REJECTED` responde `ACCOUNT_REJECTED`, distinto de
+- [x] **A7** — Login de un usuario `REJECTED` responde `ACCOUNT_REJECTED`, distinto de
       `ACCOUNT_SUSPENDED`.
-- [ ] **A8** — Tests: autorización (403 para `STUDENT` y `TEACHER`), transiciones inválidas,
+- [x] **A8** — Tests: autorización (403 para `STUDENT` y `TEACHER`), transiciones inválidas,
       y que la notificación se dispara con los datos correctos.
 
 ## 🔧 Tasks — Dev B (frontend)
 
-- [ ] **B1** — `features/admin/` con `api/`, `hooks/`, `components/`.
-- [ ] **B2** — Ruta `/admin` envuelta en `<RequireAuth roles={[UserRole.ADMIN]}>` (el
+- [x] **B1** — `features/admin/` con `api/`, `hooks/`, `components/`.
+- [x] **B2** — Ruta `/admin` envuelta en `<RequireAuth roles={[UserRole.ADMIN]}>` (el
       `role-gate.tsx` ya existe; no dupliques la lógica).
-- [ ] **B3** — Tabla accesible de profesores pendientes: `<caption>`, encabezados reales, y las
+- [x] **B3** — Tabla accesible de profesores pendientes: `<caption>`, encabezados reales, y las
       acciones como `<button>`, nunca `<div onClick>`.
-- [ ] **B4** — Confirmación con `AlertDialog` **con verbos** (`Aprobar profesor` / `Volver`), nunca
+- [x] **B4** — Confirmación con `AlertDialog` **con verbos** (`Aprobar profesor` / `Volver`), nunca
       Sí/No. El rechazo es destructivo: usa `destructive` y advierte que el profesor no podrá
       entrar.
-- [ ] **B5** — Tras la acción: invalidar la query de pendientes y anunciar el resultado por
+- [x] **B5** — Tras la acción: invalidar la query de pendientes y anunciar el resultado por
       `aria-live="polite"` con `useAnnounce`.
-- [ ] **B6** — Los 4 estados: cargando, **vacío** (`No hay profesores esperando aprobación.`),
+- [x] **B6** — Los 4 estados: cargando, **vacío** (`No hay profesores esperando aprobación.`),
       error y éxito.
 
 ## ✅ Criterios de aceptación
 
-- [ ] **AC1** — `GET /admin/teachers/pending` devuelve **solo** usuarios con `role = TEACHER` y
+- [x] **AC1** — `GET /admin/teachers/pending` devuelve **solo** usuarios con `role = TEACHER` y
       `status = PENDING`. Un estudiante `PENDING` o un profesor `ACTIVE` no aparecen.
-- [ ] **AC2** — Aprobar cambia el `status` a `ACTIVE`, y ese mismo profesor —que antes recibía
+- [x] **AC2** — Aprobar cambia el `status` a `ACTIVE`, y ese mismo profesor —que antes recibía
       `ACCOUNT_PENDING`— consigue iniciar sesión.
-- [ ] **AC3** — Rechazar cambia el `status` a `REJECTED`, y su login responde `ACCOUNT_REJECTED`
+- [x] **AC3** — Rechazar cambia el `status` a `REJECTED`, y su login responde `ACCOUNT_REJECTED`
       con un mensaje distinto del de una cuenta suspendida.
-- [ ] **AC4** — **Autorización:** un `STUDENT` y un `TEACHER` reciben `403` en los tres endpoints.
+- [x] **AC4** — **Autorización:** un `STUDENT` y un `TEACHER` reciben `403` en los tres endpoints.
       Verificado con tests de backend, no ocultando la UI.
-- [ ] **AC5** — Aprobar a alguien que no es `TEACHER`, que ya está `ACTIVE`, o cuyo `id` no existe,
+- [x] **AC5** — Aprobar a alguien que no es `TEACHER`, que ya está `ACTIVE`, o cuyo `id` no existe,
       responde `INVALID_STATUS_TRANSITION` o `USER_NOT_FOUND` — nunca un 500.
-- [ ] **AC6** — **Notificación:** aprobar y rechazar invocan `NotificationService` con el
+- [x] **AC6** — **Notificación:** aprobar y rechazar invocan `NotificationService` con el
       destinatario y el tipo de evento correctos. Verificado con un espía en los tests. El envío
       real no forma parte de esta HU.
-- [ ] **AC7** — **Accesibilidad:** la tabla se recorre entera con teclado con foco visible, el
+- [x] **AC7** — **Accesibilidad:** la tabla se recorre entera con teclado con foco visible, el
       diálogo de confirmación atrapa el foco y se cierra con `Esc`, y el resultado de la acción se
       anuncia por región `aria-live`. Cumple el checklist del skill `bighearts-ui`.
-- [ ] **AC8** — **Verificación automática:** `typecheck`, `lint`, `format:check`, `build` y
+- [x] **AC8** — **Verificación automática:** `typecheck`, `lint`, `format:check`, `build` y
       `test --workspace @academia/api` en verde.
 
 ## 🚫 Fuera de alcance
@@ -122,4 +122,35 @@ espía en los tests, y el cableado no hay que rehacerlo.
 
 ## Notas de implementación
 
-_Se rellena al cerrar._
+**Decisiones que hubo que tomar y no estaban en la HU:**
+
+1. **Código de error del guard de rol.** La T0 no lo pedía, pero un `RolesGuard` sin código estable
+   habría respondido `'FORBIDDEN'` —un string fuera del catálogo— y habría dejado un agujero en el
+   contrato. Se añadió **`INSUFFICIENT_ROLE`** a `ApiErrorCode`. Es distinto de `PROFILE_FORBIDDEN`,
+   que sigue reservado para la edición de perfiles ajenos.
+2. **`/admin` no entra en la barra de navegación.** Los destinos de `ADMIN` son tres (Aulas · Panel
+   · Perfil) según `layout-y-composicion.md`, y la tarjeta «Administración» de `PanelPage` ya
+   prometía esta pantalla desde HU-206. Se cumple esa promesa con un enlace en vez de reescribir la
+   tabla de destinos del skill por una pantalla.
+3. **Validación del `:id` de la ruta.** El AC5 exige «nunca un 500», y un id sin forma de UUID
+   contra una columna `@db.Uuid` provoca exactamente eso. Un `ParseUUIDPipe` con
+   `exceptionFactory` lo traduce a `USER_NOT_FOUND`: desde fuera, un id malformado y un id
+   inexistente son el mismo hecho.
+4. **La transición se valida dos veces.** Una lectura previa para poder distinguir `USER_NOT_FOUND`
+   de `INVALID_STATUS_TRANSITION` (lo que el AC5 pide), y las mismas condiciones repetidas en el
+   `where` del `update` para que dos administradores con la lista abierta no puedan pisarse. No
+   hace falta transacción: es una sola escritura condicional, no un contador.
+5. **La notificación no puede tumbar la operación.** El estado ya está escrito cuando el aviso
+   sale; si el fallo subiera, el administrador vería un error sobre una aprobación que sí ocurrió y
+   reintentaría. Se registra y se sigue.
+
+**Pendiente, y por qué:**
+
+- **La migración `20260819104512_add_user_status_rejected` no se ha aplicado contra una BD.** Se
+  escribió a mano —con el SQL que Prisma emite para un `ADD VALUE`— porque no había Postgres
+  levantado al implementar. `prisma validate` y `prisma generate` pasan. **Antes de mergear:
+  `docker compose up` y `npm run db:migrate`.**
+- **El envío real de email** sigue fuera de alcance (Sprint 4). El puerto y su adaptador de
+  registro están; el proveedor sigue sin decidir (`ARQUITECTURA.md` §14.6 nº5).
+- **Reactivar a un profesor `REJECTED`** no existe: es HU propia de back-office, como declara el
+  «Fuera de alcance».
