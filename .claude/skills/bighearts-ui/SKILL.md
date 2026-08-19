@@ -73,6 +73,15 @@ Objetivos táctiles ≥ 44px, 48px en acciones primarias y en móvil.
 - Respeta `prefers-reduced-motion` y la preferencia de movimiento guardada en el perfil del usuario.
 - Todo componente necesita sus 4 estados: cargando, vacío, error, éxito. No se da por terminado sin ellos.
 
+## Layout y composición
+
+`SKILL.md` da las restricciones; **`layout-y-composicion.md` de este skill dice cómo se ve una
+página**. Léelo antes de montar cualquier pantalla, shell o rejilla. Contiene: el ancla visual
+(The Art Center — qué se roba y qué no), la navegación superior por rol, el contenedor y la rejilla
+de 1/2/3 columnas, la anatomía de página y de tarjeta con sus valores, el ritmo vertical, **la
+regla del sólido** (solo `acceso-abierto` y `en-curso` van en color pleno) y el estilo de
+ilustración.
+
 ## Patrones del dominio — dónde buscar cada uno
 
 Antes de reinventar cualquiera de estos, lee `patrones-dominio.md` de este skill:
