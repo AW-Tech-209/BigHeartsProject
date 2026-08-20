@@ -1,5 +1,5 @@
 import { UserRole, UserStatus, type User } from '@academia/types';
-import { screen, within } from '@testing-library/react';
+import { screen, waitFor, within } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 
 import { esperarSinFallosDeAccesibilidad } from '@/test/accesibilidad';
@@ -140,7 +140,14 @@ describe('PendingTeachersTable — la confirmación (B4, AC7)', () => {
     await user.tab();
     await user.tab();
 
-    expect(dialogo).toContainElement(document.activeElement as HTMLElement);
+    // El guardián de foco de Base UI redirige de vuelta al diálogo de forma
+    // asíncrona: en CI (jsdom + timing distinto al de desarrollo) el foco pasa
+    // por `<body>` un instante antes de volver a entrar. `waitFor` tolera ese
+    // paso intermedio sin dejar de comprobar la garantía real: que el foco NO
+    // se queda fuera del diálogo.
+    await waitFor(() => {
+      expect(dialogo).toContainElement(document.activeElement as HTMLElement);
+    });
   });
 
   it('se cierra con Esc sin ejecutar la acción', async () => {
