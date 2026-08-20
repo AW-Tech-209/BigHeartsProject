@@ -7,7 +7,7 @@
 
 services:
   - type: web
-    name: bighearts-api-staging
+    name: bighearts-backend-staging
     runtime: node
     region: ohio # us-east, cerca de Supabase (us-east-2), menos latencia
     plan: free
