@@ -52,6 +52,10 @@ services:
         sync: false
       - key: JWT_SECRET # openssl rand -base64 48
         sync: false
+      # Clave AES-256-GCM del enlace de reunión. 64 hex exactos; sin ella la API
+      # no arranca. Cambiarla deja ilegibles los enlaces ya guardados.
+      - key: MEETING_LINK_KEY # openssl rand -hex 32
+        sync: false
       - key: CORS_ORIGIN # URL del frontend en Vercel, p. ej. https://academia-web.vercel.app
         sync: false
       - key: ADMIN_EMAIL # Credenciales del Admin sembrado por prisma/seed.ts

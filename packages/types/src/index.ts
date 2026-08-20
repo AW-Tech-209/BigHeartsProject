@@ -199,6 +199,136 @@ export type LoginResponse = AuthSession;
 /** Respuesta de `POST /auth/refresh`. Misma forma que el login. */
 export type RefreshResponse = AuthSession;
 
+/**
+ * Nivel de inglés de un aula. Coincide con `EnglishLevel` de `schema.prisma`.
+ *
+ * Son tres a propósito y no un catálogo fino (A1/A2/B1…): el estudiante elige
+ * con esta etiqueta y con la descripción de la clase, no con una escala del
+ * Marco Común Europeo que obligaría a aprenderse otra taxonomía antes de poder
+ * reservar.
+ */
+export enum EnglishLevel {
+  BEGINNER = 'BEGINNER',
+  INTERMEDIATE = 'INTERMEDIATE',
+  ADVANCED = 'ADVANCED',
+}
+
+/**
+ * Estado del aula. Coincide con `ClassroomStatus` de `schema.prisma`.
+ *
+ * En Fase 1 solo hay DOS escritores: `POST /classrooms` la crea `PUBLISHED`
+ * (D15) y HU-202 la pasa a `CANCELLED`.
+ *
+ *  - `DRAFT` está reservado para Fase 1.5 y **nadie lo escribe**: crear un aula
+ *    tiene que costar menos que abrir un grupo de WhatsApp, y un paso extra de
+ *    publicación es fricción sin beneficio.
+ *  - `COMPLETED` **tampoco tiene escritor** (D16). "Ya terminó" se deriva del
+ *    tiempo (`now ≥ scheduledAt + durationMinutes`), así que una regla escrita
+ *    contra este valor no se dispararía nunca. Lo persistirá HU-404, cuando el
+ *    profesor cierre la clase al marcar asistencia.
+ */
+export enum ClassroomStatus {
+  DRAFT = 'DRAFT',
+  PUBLISHED = 'PUBLISHED',
+  CANCELLED = 'CANCELLED',
+  COMPLETED = 'COMPLETED',
+}
+
+/**
+ * De dónde salió el enlace de la videollamada. Coincide con `MeetingProvider`
+ * de `schema.prisma`.
+ *
+ * En Fase 1 **siempre** es `MANUAL`: el profesor crea la reunión en Zoom o Meet
+ * y pega el enlace. Los otros tres valores existen para que integrar generación
+ * automática (Fase 1.5) no obligue a una migración de enum con datos dentro.
+ */
+export enum MeetingProvider {
+  MANUAL = 'MANUAL',
+  DAILY = 'DAILY',
+  GOOGLE_MEET = 'GOOGLE_MEET',
+  ZOOM = 'ZOOM',
+}
+
+/**
+ * Vista pública de un aula: la forma en que viaja por la API hacia el frontend.
+ *
+ * **`meetingLink` es opcional y se OMITE, no se envía vacío.** Es el mismo
+ * patrón que `User` sin `password`, pero por un motivo distinto: aquí el campo
+ * a veces sí puede viajar. La regla la decide el servidor (`ARQUITECTURA.md`
+ * §4.1) —el profesor dueño lo ve siempre; un estudiante solo con reserva
+ * `CONFIRMED` y dentro de los 30 minutos previos— y cuando no aplica, la clave
+ * no aparece en el JSON. Ni cifrada, ni en `null`, ni escondida en otro campo:
+ * el frontend nunca debe recibir algo que no puede mostrar.
+ *
+ * Que el tipo lo declare `?` es lo que obliga al frontend a tratar su ausencia
+ * como el caso normal en vez de como un error.
+ *
+ * Las fechas son cadenas ISO 8601 en UTC (§4.7). Quien las pinta las formatea a
+ * la zona del usuario y **siempre nombra la zona**.
+ */
+export interface Classroom {
+  id: string;
+  teacherId: string;
+  title: string;
+  description: string;
+  level: EnglishLevel;
+  /** Cupo máximo de estudiantes. */
+  maxStudents: number;
+  /**
+   * Reservas `CONFIRMED` vigentes. **Solo se muta dentro de la transacción de
+   * reserva** (§4.2); en Sprint 2 nadie lo toca y siempre vale 0.
+   */
+  currentBookings: number;
+  /** Instante de inicio, ISO 8601 en UTC. */
+  scheduledAt: string;
+  durationMinutes: number;
+  meetingProvider: MeetingProvider;
+  status: ClassroomStatus;
+  /** Gancho de Fase 1.5. En Fase 1 no hay ninguna regla de recurrencia. */
+  isRecurring: boolean;
+  /** Presente SOLO cuando el servidor decide revelarlo. Ver arriba. */
+  meetingLink?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+/**
+ * Cuerpo de la petición de creación de aula (`POST /classrooms`).
+ *
+ * Es DELIBERADAMENTE un subconjunto de `Classroom`. Lo que NO está aquí, y por
+ * qué:
+ *  - `teacherId` sale del token, nunca del cuerpo. Aceptarlo sería dejar que un
+ *    profesor publicara clases a nombre de otro.
+ *  - `status` nace `PUBLISHED` (D15) y `currentBookings` en `0`: no son
+ *    decisiones del formulario.
+ *  - `meetingProvider` es `MANUAL` en toda la Fase 1.
+ *  - `isRecurring` no se ofrece: la columna existe, la funcionalidad no.
+ *
+ * Añadir un campo a este tipo es autorizar a que el cliente lo decida.
+ */
+export interface CreateClassroomInput {
+  title: string;
+  description: string;
+  level: EnglishLevel;
+  maxStudents: number;
+  /** Instante de inicio, ISO 8601. Debe ser futuro; lo comprueba el servidor. */
+  scheduledAt: string;
+  durationMinutes: number;
+  /** URL de la reunión que el profesor creó en Zoom o Meet. Se guarda cifrada. */
+  meetingLink: string;
+}
+
+/**
+ * Respuesta de `POST /classrooms`.
+ *
+ * Devuelve el aula ya creada —con su `id`, su `status` y su `teacherId` reales—
+ * para que la pantalla anuncie el resultado con el dato del servidor y pueda
+ * navegar al detalle sin una segunda petición.
+ */
+export interface CreateClassroomResponse {
+  classroom: Classroom;
+}
+
 /** Códigos de error estables que la API puede devolver en `ApiError.code`. */
 export const ApiErrorCode = {
   VALIDATION_ERROR: 'VALIDATION_ERROR',

@@ -2,8 +2,11 @@ import { describe, expect, it } from 'vitest';
 
 import {
   ApiErrorCode,
+  ClassroomStatus,
   CommunicationPreference,
+  EnglishLevel,
   HearingLossLevel,
+  MeetingProvider,
   UserRole,
   UserStatus,
 } from './index';
@@ -29,6 +32,9 @@ const ENUMS_DEL_CONTRATO = {
   UserStatus,
   HearingLossLevel,
   CommunicationPreference,
+  EnglishLevel,
+  ClassroomStatus,
+  MeetingProvider,
 };
 
 describe('enums del contrato', () => {
@@ -61,6 +67,30 @@ describe('enums del contrato', () => {
    */
   it('REJECTED y SUSPENDED son estados distintos, no alias', () => {
     expect(UserStatus.REJECTED).not.toBe(UserStatus.SUSPENDED);
+  });
+
+  it('EnglishLevel son los tres niveles con los que el estudiante elige', () => {
+    expect(Object.values(EnglishLevel)).toEqual(['BEGINNER', 'INTERMEDIATE', 'ADVANCED']);
+  });
+
+  /**
+   * `DRAFT` y `COMPLETED` no tienen escritor en Fase 1 (D15 y D16), pero SÍ
+   * tienen que seguir en el enum: la columna de la BD los declara y borrarlos de
+   * aquí desincronizaría el contrato con `schema.prisma`, que es justo lo que el
+   * test de arriba no puede detectar solo.
+   */
+  it('ClassroomStatus mantiene los cuatro estados, incluidos los que nadie escribe todavía', () => {
+    expect(Object.values(ClassroomStatus)).toEqual([
+      'DRAFT',
+      'PUBLISHED',
+      'CANCELLED',
+      'COMPLETED',
+    ]);
+  });
+
+  it('MeetingProvider incluye MANUAL, que es el único que la Fase 1 escribe', () => {
+    expect(MeetingProvider.MANUAL).toBe('MANUAL');
+    expect(Object.values(MeetingProvider)).toHaveLength(4);
   });
 });
 

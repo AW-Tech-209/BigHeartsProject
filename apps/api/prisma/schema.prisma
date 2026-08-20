@@ -66,6 +66,39 @@ enum CommunicationPreference {
   SPOKEN_AUDIO
 }
 
+/// Nivel de inglés del aula. Coincide con `EnglishLevel` de @academia/types.
+enum EnglishLevel {
+  BEGINNER
+  INTERMEDIATE
+  ADVANCED
+}
+
+/// Estado del aula. Coincide con `ClassroomStatus` de @academia/types.
+///
+/// En Fase 1 solo hay dos escritores: la creación la deja `PUBLISHED` (D15) y
+/// HU-202 la pasa a `CANCELLED`. `DRAFT` está reservado para Fase 1.5 y
+/// `COMPLETED` lo escribirá HU-404 al marcar asistencia (D16) — hasta entonces
+/// "ya terminó" se DERIVA del tiempo, así que una consulta escrita contra
+/// `status = COMPLETED` no devolvería nunca nada.
+enum ClassroomStatus {
+  DRAFT
+  PUBLISHED
+  CANCELLED
+  COMPLETED
+}
+
+/// De dónde salió el enlace de la reunión. Coincide con `MeetingProvider`.
+///
+/// En Fase 1 SIEMPRE es `MANUAL`: el profesor crea la sala en Zoom o Meet y
+/// pega el enlace. Los otros tres se declaran desde ya para que integrar
+/// generación automática en Fase 1.5 no exija alterar el tipo con datos dentro.
+enum MeetingProvider {
+  MANUAL
+  DAILY
+  GOOGLE_MEET
+  ZOOM
+}
+
 /// Usuario de la plataforma. Modelo base de la HU-001, ampliado en la HU de
 /// registro con estado de cuenta y preferencias de accesibilidad.
 model User {
@@ -89,6 +122,9 @@ model User {
   /// Sesiones (refresh tokens) emitidas para este usuario. Al borrar el usuario
   /// se borran en cascada.
   refreshTokens RefreshToken[]
+
+  /// Aulas que imparte, si es profesor. Ver la nota de borrado en `Classroom`.
+  classrooms Classroom[]
 
   @@map("users")
 }
@@ -117,4 +153,76 @@ model RefreshToken {
 
   @@index([userId])
   @@map("refresh_tokens")
+}
+
+/// Aula virtual: una clase con horario, cupo y sala de videollamada (HU-201).
+///
+/// La plataforma NO hace la videollamada. Lo que gestiona este modelo es quién
+/// entra, cuándo y cuántos — y por eso las tres columnas delicadas son
+/// `meetingLink`, `scheduledAt` y `currentBookings`.
+model Classroom {
+  id String @id @default(uuid()) @db.Uuid
+
+  /// Dueño del aula. Solo él la edita o la cancela (HU-202), y solo él ve el
+  /// enlace fuera de la ventana de acceso (§4.1).
+  ///
+  /// `onDelete: Restrict` a propósito: borrar a un profesor NO puede llevarse
+  /// por delante las clases que otros reservaron. Un profesor que se va se
+  /// suspende (`UserStatus.SUSPENDED`); sus aulas se cancelan una a una, que es
+  /// lo que deja a los estudiantes enterados en vez de con una clase que
+  /// desapareció sin explicación.
+  teacherId String @map("teacher_id") @db.Uuid
+  teacher   User   @relation(fields: [teacherId], references: [id], onDelete: Restrict)
+
+  title       String
+  description String
+  level       EnglishLevel
+
+  /// Cupo máximo de estudiantes.
+  maxStudents Int @map("max_students")
+
+  /// Reservas CONFIRMED vigentes. Es el contador de la invariante de cupos
+  /// (§4.2): **solo se muta dentro de la transacción que bloquea esta fila con
+  /// `SELECT … FOR UPDATE`**, nunca en un `update` suelto.
+  ///
+  /// Existe desde el Sprint 2 aunque nadie lo mueva hasta el Sprint 3: añadirlo
+  /// después sería otra migración, y la regla más crítica del sistema estaba ya
+  /// especificada contra esta columna.
+  currentBookings Int @default(0) @map("current_bookings")
+
+  /// Inicio de la clase. `timestamptz` en UTC, sin excepciones (§4.7). Toda
+  /// comparación temporal se hace en el servidor contra el reloj de la BD; el
+  /// del cliente no decide nada.
+  scheduledAt     DateTime @map("scheduled_at") @db.Timestamptz(3)
+  durationMinutes Int      @map("duration_minutes")
+
+  /// Enlace de la videollamada, **CIFRADO con AES-256-GCM** (§4.1). En esta
+  /// columna nunca hay una URL legible: quien lea la base de datos por su
+  /// cuenta —un backup, un SELECT de soporte, una fuga— no obtiene ninguna
+  /// sala. El formato lo fija `MeetingLinkCipher`: `v1.<iv>.<tag>.<texto>`.
+  ///
+  /// Es texto y no `Bytes` para que siga siendo inspeccionable con las
+  /// herramientas normales (Prisma Studio, psql) sin dejar de ser ilegible.
+  meetingLink String @map("meeting_link")
+
+  /// En Fase 1 siempre `MANUAL`. Ver el enum.
+  meetingProvider MeetingProvider @default(MANUAL) @map("meeting_provider")
+
+  /// Nace `PUBLISHED`: no hay flujo de borrador en Fase 1 (D15).
+  status ClassroomStatus @default(PUBLISHED)
+
+  /// Gancho para Fase 1.5. **En Fase 1 no hay NINGUNA lógica de recurrencia**:
+  /// nadie construye series ni instancias a partir de esta columna.
+  isRecurring Boolean @default(false) @map("is_recurring")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  /// Las aulas de un profesor, para «Mis aulas».
+  @@index([teacherId])
+  /// El listado público (HU-203): aulas publicadas ordenadas por horario. El
+  /// orden de las columnas importa — `status` filtra por igualdad y
+  /// `scheduledAt` por rango, así que la de igualdad va primero.
+  @@index([status, scheduledAt])
+  @@map("classrooms")
 }

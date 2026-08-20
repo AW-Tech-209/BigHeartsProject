@@ -5,6 +5,7 @@ import { RedirectIfAuthenticated } from '@/features/auth/components/redirect-if-
 import { RequireAuth } from '@/features/auth/components/require-auth';
 import { AdminPage } from '@/pages/AdminPage';
 import { AulasPage } from '@/pages/AulasPage';
+import { CrearAulaPage } from '@/pages/CrearAulaPage';
 import { HomePage } from '@/pages/HomePage';
 import { LoginPage } from '@/pages/LoginPage';
 import { MisAulasPage } from '@/pages/MisAulasPage';
@@ -104,6 +105,20 @@ export function AppRouter() {
           element={
             <RequireAuth roles={[UserRole.TEACHER]}>
               <MisAulasPage />
+            </RequireAuth>
+          }
+        />
+
+        {/*
+          Crear un aula (HU-201). Cuelga de `/mis-aulas` porque es donde el
+          profesor gestiona su trabajo, y no de `/aulas`, que es el catálogo que
+          mira el estudiante.
+        */}
+        <Route
+          path="/mis-aulas/nueva"
+          element={
+            <RequireAuth roles={[UserRole.TEACHER]}>
+              <CrearAulaPage />
             </RequireAuth>
           }
         />

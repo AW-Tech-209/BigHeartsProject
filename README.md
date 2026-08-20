@@ -114,6 +114,8 @@ cp apps/api/.env.example apps/api/.env
 Tienes que definir, como mínimo:
 
 - `JWT_SECRET` — 32 caracteres o más.
+- `MEETING_LINK_KEY` — clave AES-256-GCM del enlace de reunión: 64 caracteres hexadecimales
+  exactos (`openssl rand -hex 32`).
 - `DATABASE_URL` y `DIRECT_URL` — conexión a PostgreSQL (ver la sección siguiente).
 
 Si falta cualquier variable obligatoria, o alguna está malformada, la app **se niega a arrancar**

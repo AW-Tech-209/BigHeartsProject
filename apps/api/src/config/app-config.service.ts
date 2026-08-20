@@ -32,6 +32,14 @@ export class AppConfigService {
     return this.config.get('JWT_SECRET', { infer: true });
   }
 
+  /**
+   * Clave AES-256-GCM del enlace de reunión, en hexadecimal (64 caracteres).
+   * La consume `MeetingLinkCipher`; nadie más debería leerla.
+   */
+  get meetingLinkKey(): string {
+    return this.config.get('MEETING_LINK_KEY', { infer: true });
+  }
+
   /** Vida del Access Token JWT (formato `ms`, p. ej. `15m`). */
   get jwtAccessExpiresIn(): string {
     return this.config.get('JWT_ACCESS_EXPIRES_IN', { infer: true });
