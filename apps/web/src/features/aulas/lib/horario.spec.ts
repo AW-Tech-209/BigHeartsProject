@@ -73,10 +73,18 @@ describe('describirHorario', () => {
   /**
    * La regla que no se negocia: **la zona va siempre**. Una hora sin zona es la
    * forma más barata de que un estudiante llegue una hora tarde a su clase.
+   *
+   * No se busca la palabra «hora»: en CI el proceso corre en UTC, y ahí `Intl`
+   * nombra la zona «tiempo universal coordinado», un nombre real que no la
+   * contiene. Lo que hace falta comprobar es que el paréntesis final trae un
+   * NOMBRE largo, no solo la sigla `(UTC)` — que técnicamente nombra la zona
+   * pero no es lo que pide el microcopy (`(hora de Colombia)`).
    */
-  it('nombra la zona horaria entre paréntesis', () => {
-    expect(texto).toMatch(/\(.+\)$/);
-    expect(texto).toMatch(/hora/i);
+  it('nombra la zona horaria entre paréntesis, con su nombre largo', () => {
+    const nombreDeZona = texto.match(/\((.+)\)$/)?.[1];
+
+    expect(nombreDeZona).toBeTruthy();
+    expect(nombreDeZona!.length).toBeGreaterThan(3);
   });
 
   it('no imprime «Invalid Date» ante una fecha rota', () => {

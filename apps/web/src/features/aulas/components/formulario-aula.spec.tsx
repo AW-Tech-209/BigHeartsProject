@@ -152,7 +152,11 @@ describe('FormularioAula — confirmación del horario (B5, AC6)', () => {
     const confirmacion = await screen.findByText(/jueves,? 12 de agosto de 2027/i);
 
     expect(confirmacion.textContent).toMatch(/6:00/);
-    expect(confirmacion.textContent).toMatch(/\(.*hora.*\)/i);
+    // El nombre de la zona no siempre contiene la palabra «hora» —en CI el
+    // proceso corre en UTC, y ahí es «tiempo universal coordinado»—, así que se
+    // comprueba que el paréntesis trae un nombre largo, no la sigla sola.
+    const nombreDeZona = confirmacion.textContent?.match(/\((.+)\)$/)?.[1];
+    expect(nombreDeZona?.length ?? 0).toBeGreaterThan(3);
   });
 });
 
