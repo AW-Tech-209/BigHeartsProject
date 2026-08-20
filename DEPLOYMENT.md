@@ -56,14 +56,15 @@ Para que **un fallo bloquee el merge**, hay que activar la protección de rama (
 
 En el servicio → **Environment**, rellena las marcadas `sync: false` en el blueprint:
 
-| Variable         | Valor                                                                                            |
-| ---------------- | ------------------------------------------------------------------------------------------------ |
-| `DATABASE_URL`   | Supabase → pooler (6543, `?pgbouncer=true`). La misma de tu `.env` local.                        |
-| `DIRECT_URL`     | Supabase → conexión directa (5432).                                                              |
-| `JWT_SECRET`     | Genera uno nuevo: `openssl rand -base64 48`.                                                     |
-| `CORS_ORIGIN`    | La URL del frontend en Vercel (la tendrás tras el paso 3). Ej: `https://academia-web.vercel.app` |
-| `ADMIN_EMAIL`    | Email del Admin que crea el seed. **No uses el de dev** (`admin@academia.local`).                |
-| `ADMIN_PASSWORD` | Contraseña del Admin del seed. Genera una fuerte, no la de dev.                                  |
+| Variable           | Valor                                                                                                                                            |
+| ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `DATABASE_URL`     | Supabase → pooler (6543, `?pgbouncer=true`). La misma de tu `.env` local.                                                                        |
+| `DIRECT_URL`       | Supabase → conexión directa (5432).                                                                                                              |
+| `JWT_SECRET`       | Genera uno nuevo: `openssl rand -base64 48`.                                                                                                     |
+| `MEETING_LINK_KEY` | Clave AES-256-GCM del enlace de reunión: `openssl rand -hex 32` (64 hex exactos). **Guárdala**: cambiarla deja ilegibles los enlaces ya creados. |
+| `CORS_ORIGIN`      | La URL del frontend en Vercel (la tendrás tras el paso 3). Ej: `https://academia-web.vercel.app`                                                 |
+| `ADMIN_EMAIL`      | Email del Admin que crea el seed. **No uses el de dev** (`admin@academia.local`).                                                                |
+| `ADMIN_PASSWORD`   | Contraseña del Admin del seed. Genera una fuerte, no la de dev.                                                                                  |
 
 `NODE_ENV=staging`, `NODE_VERSION=22` y `PORT` ya los gestiona Render (los dos primeros vía el
 blueprint, `PORT` lo inyecta Render solo).

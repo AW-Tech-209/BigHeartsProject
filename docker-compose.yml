@@ -60,6 +60,11 @@ services:
       TSC_WATCHDIRECTORY: DynamicPriorityPolling
       # En dev el secreto no es sensible; en staging/prod va por el entorno real.
       JWT_SECRET: ${JWT_SECRET:-dev-only-secret-no-usar-en-produccion-1234}
+      # Clave AES-256-GCM del enlace de reunión (64 hex = 32 bytes). El valor de
+      # dev es fijo A PROPÓSITO: si cambiara en cada `up`, los enlaces sembrados
+      # o creados ayer dejarían de descifrarse y parecería un bug del cifrado.
+      # En staging/prod va por secreto real (`openssl rand -hex 32`).
+      MEETING_LINK_KEY: ${MEETING_LINK_KEY:-6465762d6f6e6c792d6d656574696e672d6c696e6b2d6b65792d6e6f2d70726f}
       # Dentro de la red de Docker, la BD se resuelve por el nombre del servicio
       # (`postgres`), no por localhost. Sin pooler, así que url y directUrl
       # apuntan al mismo sitio.

@@ -39,6 +39,31 @@ export const envSchema = z.object({
   JWT_SECRET: z.string().min(32, 'debe tener al menos 32 caracteres'),
 
   /**
+   * Clave AES-256-GCM con la que se cifra `Classroom.meetingLink`
+   * (`docs/ARQUITECTURA.md` §4.1). OBLIGATORIA y sin default, por el mismo
+   * motivo que `JWT_SECRET`: una clave por defecto convertiría el cifrado en
+   * decorado el día que alguien despliegue sin configurarla.
+   *
+   * Se exige **64 caracteres hexadecimales = 32 bytes exactos**, que es lo que
+   * AES-256 necesita, en vez de "una cadena larga". Con una longitud libre
+   * habría que derivar la clave o rellenarla, y ambas cosas esconden un error de
+   * configuración detrás de un cifrado más débil de lo que el nombre promete.
+   * Aquí una clave mal puesta se detecta al arrancar, no al descifrar.
+   *
+   *   openssl rand -hex 32
+   *
+   * ⚠️ Cambiarla deja ILEGIBLES los enlaces ya guardados: no hay rotación de
+   * claves en Fase 1 (el prefijo `v1.` del texto cifrado es el gancho para
+   * añadirla sin migrar datos).
+   */
+  MEETING_LINK_KEY: z
+    .string()
+    .regex(
+      /^[0-9a-fA-F]{64}$/,
+      'debe ser una clave de 64 caracteres hexadecimales (32 bytes). Genérala con: openssl rand -hex 32',
+    ),
+
+  /**
    * Vida del Access Token JWT. Formato de `ms`/jsonwebtoken (p. ej. `15m`, `1h`).
    * Corto a propósito: si se roba, caduca pronto. La sesión larga la sostiene el
    * refresh token. Opcional: por defecto 15 minutos.

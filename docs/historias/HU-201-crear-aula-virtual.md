@@ -5,7 +5,7 @@
 | **Sprint**       | Sprint 2 — Gestión de Aulas                       |
 | **Prioridad**    | 🔴 Crítica                                        |
 | **Estimación**   | 4 días (3.5 originales + el servicio de cifrado)  |
-| **Estado**       | ⬜ Pendiente                                      |
+| **Estado**       | ✅ Terminada (2026-08-20)                         |
 | **Rama**         | `hu-201-crear-aula-virtual-<persona>`             |
 | **Colaboración** | Vertical slice compartido                         |
 | **Depende de**   | HU-102, HU-104                                    |
@@ -51,7 +51,7 @@ dependencias nuevas ni extensiones de PostgreSQL.
 
 ## 🤝 Task de contrato — va primero
 
-- [ ] **T0** — En `packages/types`: enums `EnglishLevel` (`BEGINNER | INTERMEDIATE | ADVANCED`),
+- [x] **T0** — En `packages/types`: enums `EnglishLevel` (`BEGINNER | INTERMEDIATE | ADVANCED`),
       `ClassroomStatus` (`DRAFT | PUBLISHED | CANCELLED | COMPLETED`) y `MeetingProvider`;
       `CreateClassroomInput`; el tipo `Classroom` **sin `meetingLink`** por defecto (mismo patrón
       que `User` sin `password`), con el enlace como campo opcional que **se omite** cuando no
@@ -59,57 +59,57 @@ dependencias nuevas ni extensiones de PostgreSQL.
 
 ## 🔧 Tasks — Dev A (backend)
 
-- [ ] **A1** — Modelo `Classroom` en Prisma: `teacherId`, `title`, `description`, `level`,
+- [x] **A1** — Modelo `Classroom` en Prisma: `teacherId`, `title`, `description`, `level`,
       `maxStudents`, **`currentBookings` (default 0)**, `scheduledAt` (**`timestamptz`**),
       `durationMinutes`, `meetingLink`, `meetingProvider`, `status`, `isRecurring`, timestamps.
       Índices por `teacherId` y por `(status, scheduledAt)`. Migración versionada.
-- [ ] **A2** — `MEETING_LINK_KEY` en `config/env.schema.ts` (obligatoria, sin default, longitud
+- [x] **A2** — `MEETING_LINK_KEY` en `config/env.schema.ts` (obligatoria, sin default, longitud
       validada) **y** en `.env.example`. Sin ella la app no arranca — igual que con `JWT_SECRET`.
-- [ ] **A3** — Servicio de cifrado AES-256-GCM (`crypto` de Node) que guarde IV + tag +
+- [x] **A3** — Servicio de cifrado AES-256-GCM (`crypto` de Node) que guarde IV + tag +
       ciphertext. Con tests de ida y vuelta y de manipulación del tag.
-- [ ] **A4** — `POST /classrooms` con `@Roles('TEACHER')`. `teacherId` sale **del token**, nunca
+- [x] **A4** — `POST /classrooms` con `@Roles('TEACHER')`. `teacherId` sale **del token**, nunca
       del cuerpo. `status` nace `PUBLISHED`, `currentBookings` en `0`, `meetingProvider` en
       `MANUAL`.
-- [ ] **A5** — El profesor debe estar `ACTIVE`. Un `TEACHER` con `PENDING` o `REJECTED` recibe
+- [x] **A5** — El profesor debe estar `ACTIVE`. Un `TEACHER` con `PENDING` o `REJECTED` recibe
       `403`, no un aula creada.
-- [ ] **A6** — `CreateClassroomDto` con `class-validator`: `scheduledAt` futuro, `maxStudents > 0`,
+- [x] **A6** — `CreateClassroomDto` con `class-validator`: `scheduledAt` futuro, `maxStudents > 0`,
       `durationMinutes > 0`, `meetingLink` con formato de URL, `title` no vacío.
-- [ ] **A7** — Tests: creación correcta, cada validación, autorización por rol y por estado.
+- [x] **A7** — Tests: creación correcta, cada validación, autorización por rol y por estado.
 
 ## 🔧 Tasks — Dev B (frontend)
 
-- [ ] **B1** — `features/aulas/` con `api/`, `components/`, `hooks/`, `lib/`.
-- [ ] **B2** — Formulario accesible: `<label>` visible en todos los campos, error junto al campo
+- [x] **B1** — `features/aulas/` con `api/`, `components/`, `hooks/`, `lib/`.
+- [x] **B2** — Formulario accesible: `<label>` visible en todos los campos, error junto al campo
       con `aria-invalid` + `aria-describedby` + ícono, y los 4 estados.
-- [ ] **B3** — Campo de enlace con ayuda contextual permanente:
+- [x] **B3** — Campo de enlace con ayuda contextual permanente:
       `Pega aquí el enlace de la reunión que creaste en Zoom o Meet.` Explica también que los
       estudiantes solo lo verán 30 minutos antes — es la promesa central del producto y el profesor
       debe entenderla al pegarlo.
-- [ ] **B4** — Selectores de nivel, fecha, hora y duración operables **solo con teclado**. Nada de
+- [x] **B4** — Selectores de nivel, fecha, hora y duración operables **solo con teclado**. Nada de
       date-pickers que exijan ratón.
-- [ ] **B5** — La fecha elegida se confirma en texto completo con zona explícita antes de enviar:
+- [x] **B5** — La fecha elegida se confirma en texto completo con zona explícita antes de enviar:
       `Martes 12 de agosto, 6:00 p. m. (hora de Colombia)`.
-- [ ] **B6** — Éxito: anunciar por `aria-live` y redirigir al detalle del aula (HU-204).
+- [x] **B6** — Éxito: anunciar por `aria-live` y redirigir al detalle del aula (HU-204).
 
 ## ✅ Criterios de aceptación
 
-- [ ] **AC1** — Un profesor `ACTIVE` crea un aula y la respuesta es `201`, con `teacherId` igual al
+- [x] **AC1** — Un profesor `ACTIVE` crea un aula y la respuesta es `201`, con `teacherId` igual al
       usuario del token, `status = PUBLISHED` y `currentBookings = 0`.
-- [ ] **AC2** — **El enlace no es legible en la base de datos.** Consultando la columna
+- [x] **AC2** — **El enlace no es legible en la base de datos.** Consultando la columna
       directamente se obtiene texto cifrado, no la URL. Verificado con un test.
-- [ ] **AC3** — Enviar `teacherId` en el cuerpo no tiene ningún efecto: el aula se asigna siempre
+- [x] **AC3** — Enviar `teacherId` en el cuerpo no tiene ningún efecto: el aula se asigna siempre
       al usuario del token.
-- [ ] **AC4** — **Validaciones:** `scheduledAt` en el pasado, `maxStudents ≤ 0`,
+- [x] **AC4** — **Validaciones:** `scheduledAt` en el pasado, `maxStudents ≤ 0`,
       `durationMinutes ≤ 0` o `meetingLink` sin formato de URL responden `VALIDATION_ERROR` con
       `details.fields[]`, y el formulario pinta el error bajo el campo correspondiente.
-- [ ] **AC5** — **Autorización:** un `STUDENT` recibe `403`. Un `TEACHER` con estado `PENDING` o
+- [x] **AC5** — **Autorización:** un `STUDENT` recibe `403`. Un `TEACHER` con estado `PENDING` o
       `REJECTED` también recibe `403`.
-- [ ] **AC6** — **Tiempo:** `scheduledAt` se persiste en UTC, y la interfaz lo muestra en la zona
+- [x] **AC6** — **Tiempo:** `scheduledAt` se persiste en UTC, y la interfaz lo muestra en la zona
       del usuario con la zona nombrada de forma explícita.
-- [ ] **AC7** — La app **no arranca** si falta `MEETING_LINK_KEY`, y el mensaje dice cuál falta.
-- [ ] **AC8** — **Accesibilidad:** el formulario completo se rellena y se envía solo con teclado,
+- [x] **AC7** — La app **no arranca** si falta `MEETING_LINK_KEY`, y el mensaje dice cuál falta.
+- [x] **AC8** — **Accesibilidad:** el formulario completo se rellena y se envía solo con teclado,
       con foco visible; funciona en `.dark` y `.hc`; cumple el checklist del skill `bighearts-ui`.
-- [ ] **AC9** — **Verificación automática:** `typecheck`, `lint`, `format:check`, `build` y
+- [x] **AC9** — **Verificación automática:** `typecheck`, `lint`, `format:check`, `build` y
       `test --workspace @academia/api` en verde.
 
 ## 🚫 Fuera de alcance
@@ -123,4 +123,63 @@ dependencias nuevas ni extensiones de PostgreSQL.
 
 ## Notas de implementación
 
-_Se rellena al cerrar._
+### Decisiones que la HU no traía tomadas
+
+1. **`description` es obligatoria y no vacía.** `ARQUITECTURA.md` §7.2 la modela como columna sin
+   `?`, pero A6 y AC4 no la listaban entre las validaciones. Se resuelve del lado de §7.2: es el
+   texto con el que un estudiante decide si la clase es para él, y una clase sin él es una tarjeta
+   que no dice nada. Añade una validación que el AC4 no enumeraba.
+2. **El éxito redirige a `/mis-aulas`, no al detalle del aula.** B6 pide el detalle, que es HU-204 y
+   no existe: la ruta `/aulas/:id` todavía cae en el 404. Mandar allí a quien acaba de publicar su
+   primera clase enseña justo la desconfianza que D18 quería evitar. El destino definitivo está
+   comentado en `CrearAulaPage.tsx`.
+3. **La zona horaria es obligatoria en `scheduledAt`.** `2027-08-12T18:00:00` sin sufijo se
+   interpreta en la zona local del proceso, así que la misma cadena sería un instante distinto en un
+   portátil y en Render. El DTO exige `Z` o `±HH:MM`.
+4. **`new Date` no rechaza el 31 de febrero: lo desborda al 3 de marzo.** Sin comprobación de vuelta,
+   un profesor que se equivoca de día publica la clase en otro y la API responde 201. Se valida en
+   los dos lados (`es-instante-futuro.validator.ts` y `horario.ts`), cada uno con su test.
+
+### Choques con el repo, resueltos a favor del repo
+
+- **AC3 dice que mandar `teacherId` "no tiene ningún efecto"; en realidad se rechaza.** El
+  `ValidationPipe` global corre con `forbidNonWhitelisted`, así que el campo devuelve
+  `VALIDATION_ERROR` (400) en vez de ignorarse. Es la política ya documentada para `/users/me`
+  (`contrato-api.md` §6) y la garantía que importa —el aula se asigna siempre al usuario del token—
+  se cumple, y más fuerte. No se aflojó el pipe.
+- **T0 pedía "los códigos de error nuevos"; no se añadió ninguno.** `ACCOUNT_PENDING`,
+  `ACCOUNT_REJECTED` y `ACCOUNT_SUSPENDED` ya existen, dicen exactamente lo que bloquea y el
+  frontend ya los distingue desde el login. Un `TEACHER_NOT_ACTIVE` habría duplicado esa distinción
+  en dos vocabularios que luego hay que mantener sincronizados.
+
+### Lo que se decidió sobre la marcha
+
+- **El estado `ACTIVE` se comprueba contra la BD, no contra el token.** El access token lleva
+  `status`, pero es una foto de hasta 15 minutos: un profesor suspendido hace cinco seguiría
+  publicando aulas que otros pueden reservar. Cuesta una consulta por creación.
+- **`MEETING_LINK_KEY` son 64 hex exactos**, no "una cadena larga" al estilo de `JWT_SECRET`:
+  AES-256 necesita 32 bytes, y aceptar otra longitud obligaría a derivar o rellenar la clave.
+- **El formato cifrado lleva prefijo de versión** (`v1.<iv>.<tag>.<ciphertext>`) para que añadir
+  rotación de claves en el futuro no obligue a migrar filas.
+- **La respuesta de creación NO incluye el enlace**, ni siquiera al profesor dueño, aunque §4.1 le
+  dé derecho a verlo siempre: acaba de escribirlo. `toPublicClassroom` lo omite por defecto y HU-204
+  añadirá la clave cuando implemente la decisión de revelado.
+- **`ClassroomsModule` exporta `MeetingLinkCipher`** para que HU-303 pueda descifrar sin un helper
+  global: el alcance del secreto queda visible en el grafo de módulos.
+- **El botón de crear vive solo en el estado vacío de «Mis aulas»** mientras esa pantalla no tenga
+  listado. Repetirlo en la cabecera dejaría dos acciones primarias compitiendo, que es lo que
+  prohíbe `layout-y-composicion.md`. HU-203 lo mueve a la cabecera al traer la rejilla.
+
+### Verificado a mano contra PostgreSQL, además de con tests
+
+`POST /classrooms` real contra el Postgres de Docker: 201 con `PUBLISHED`/`currentBookings 0`, y
+`SELECT meeting_link FROM classrooms` devuelve `v1.Y+IteAd+...` — cero filas contienen la URL.
+`teacherId` en el cuerpo → 400. Estudiante → 403 `INSUFFICIENT_ROLE`. Profesor `PENDING`/`REJECTED`/
+`SUSPENDED` con token emitido mientras estaba `ACTIVE` → 403 con su código propio. Arranque sin
+`MEETING_LINK_KEY` → la app se niega y nombra la variable.
+
+### Pendiente para otras HUs
+
+- El listado de «Mis aulas» sigue mostrando su estado vacío aunque el profesor ya tenga clases
+  creadas (HU-203).
+- `ACCESS_WINDOW_MINUTES` no se introdujo: no hace falta hasta HU-303, que es quien abre la ventana.

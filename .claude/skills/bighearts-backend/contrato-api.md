@@ -111,6 +111,22 @@ Back-office, todos con `@Roles(UserRole.ADMIN)` en la clase del controlador (HU-
 | POST   | `/admin/teachers/:id/approve` | — (ruta)  | `{ user }`             |
 | POST   | `/admin/teachers/:id/reject`  | — (ruta)  | `{ user }`             |
 
+Aulas (HU-201):
+
+| Método | Ruta          | Entrada                | `data`          | Rol                |
+| ------ | ------------- | ---------------------- | --------------- | ------------------ |
+| POST   | `/classrooms` | `CreateClassroomInput` | `{ classroom }` | `TEACHER` `ACTIVE` |
+
+**`@Roles` va en el MÉTODO, no en la clase** —al revés que en `AdminController`— porque el listado
+y el detalle (HU-203, HU-204) los ve cualquier usuario autenticado: un `@Roles(TEACHER)` de clase
+cerraría el catálogo a los estudiantes. **El `teacherId` sale del token** y no se declara en el DTO;
+mandarlo en el cuerpo lo rechaza el `whitelist` del ValidationPipe con `VALIDATION_ERROR`, igual que
+en `/users/me`. **El estado `ACTIVE` del profesor se comprueba contra la BD, no contra el token**: el
+access token vive 15 minutos, así que un profesor suspendido hace cinco seguiría publicando clases.
+Los tres estados devuelven su código propio (`ACCOUNT_PENDING`, `ACCOUNT_REJECTED`,
+`ACCOUNT_SUSPENDED`); esta HU **no añadió códigos nuevos**. La respuesta **nunca incluye
+`meetingLink`**: revelarlo es competencia de HU-204 y HU-303.
+
 **Dos rutas, no un `PATCH` con el estado en el cuerpo.** Un cuerpo con `status` permitiría pedir
 cualquier `UserStatus` —`SUSPENDED` incluido— y obligaría al servidor a defenderse de estados que
 esa pantalla nunca debe poder pedir. Con una ruta por desenlace, las únicas transiciones
@@ -135,7 +151,13 @@ arranca sin ellas.
 
 Ya definidas: `NODE_ENV`, `PORT`, `JWT_SECRET`, `JWT_ACCESS_EXPIRES_IN`, `REFRESH_TOKEN_TTL_DAYS`,
 `AUTH_THROTTLE_TTL`, `AUTH_THROTTLE_LIMIT`, `DATABASE_URL`, `DIRECT_URL`, `CORS_ORIGIN`,
-`TEACHER_APPROVAL_REQUIRED`.
+`TEACHER_APPROVAL_REQUIRED`, **`MEETING_LINK_KEY`** (obligatoria, HU-201).
 
-Pendientes de introducir (ver `docs/ARQUITECTURA.md` §6.4): `MEETING_LINK_KEY` (obligatoria),
-`ACCESS_WINDOW_MINUTES` (30), `CANCELLATION_WINDOW_MINUTES` (60).
+`MEETING_LINK_KEY` se valida como **64 caracteres hexadecimales = 32 bytes exactos**, no como "una
+cadena larga": AES-256 necesita esa longitud, y aceptar cualquier otra obligaría a derivar o rellenar
+la clave, escondiendo un error de configuración detrás de un cifrado más débil de lo que su nombre
+promete. Se genera con `openssl rand -hex 32`. **Cambiarla deja ilegibles los enlaces ya guardados**:
+no hay rotación de claves en Fase 1 (el prefijo `v1.` del texto cifrado es el gancho para añadirla).
+
+Pendientes de introducir (ver `docs/ARQUITECTURA.md` §6.4): `ACCESS_WINDOW_MINUTES` (30),
+`CANCELLATION_WINDOW_MINUTES` (60).

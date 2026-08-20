@@ -314,19 +314,19 @@ juntos.
 
 ### 6.1 Módulos
 
-| Módulo          | Responsabilidad                                                                     | Estado  |
-| --------------- | ----------------------------------------------------------------------------------- | ------- |
-| `config`        | Validación del entorno con Zod y config global.                                     | ✅      |
-| `prisma`        | `PrismaService` global.                                                             | ✅      |
-| `common`        | Filtro de excepciones, interceptor de respuesta, factoría de errores de validación. | ✅      |
-| `health`        | `GET /health` — proceso + BD.                                                       | ✅      |
-| `auth`          | Registro, login, refresh, logout, guards.                                           | ✅      |
-| `users`         | Perfil propio (`GET`/`PATCH /users/me`). La gestión de terceros vive en `admin`.    | ✅      |
-| `classrooms`    | Aulas, horarios, cupos, enlace.                                                     | ⬜ Stub |
-| `bookings`      | Reservas, concurrencia, cancelaciones.                                              | ⬜ Stub |
-| `sessions`      | Reservado (ver nota).                                                               | ⬜ Stub |
-| `notifications` | Emails transaccionales y recordatorios.                                             | ⬜ Stub |
-| `admin`         | Aprobación de profesores, back-office.                                              | ⬜ Stub |
+| Módulo          | Responsabilidad                                                                     | Estado                                                                              |
+| --------------- | ----------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
+| `config`        | Validación del entorno con Zod y config global.                                     | ✅                                                                                  |
+| `prisma`        | `PrismaService` global.                                                             | ✅                                                                                  |
+| `common`        | Filtro de excepciones, interceptor de respuesta, factoría de errores de validación. | ✅                                                                                  |
+| `health`        | `GET /health` — proceso + BD.                                                       | ✅                                                                                  |
+| `auth`          | Registro, login, refresh, logout, guards.                                           | ✅                                                                                  |
+| `users`         | Perfil propio (`GET`/`PATCH /users/me`). La gestión de terceros vive en `admin`.    | ✅                                                                                  |
+| `classrooms`    | Aulas, horarios, cupos, enlace. Incluye `MeetingLinkCipher` (§4.1), que exporta.    | 🟨 Creación (HU-201). Listado y detalle en HU-203/HU-204.                           |
+| `bookings`      | Reservas, concurrencia, cancelaciones.                                              | ⬜ Stub                                                                             |
+| `sessions`      | Reservado (ver nota).                                                               | ⬜ Stub                                                                             |
+| `notifications` | Emails transaccionales y recordatorios.                                             | 🟨 Puerto + `LoggingNotificationService` (HU-104, D14). Adaptador real en Sprint 4. |
+| `admin`         | Aprobación de profesores, back-office.                                              | ✅ HU-104                                                                           |
 
 > **Nota de auditoría — `SessionsModule` no tiene datos que gobernar.** El `.docx` lo declaraba
 > como módulo pero **nunca definió una entidad `Session`**: el historial y la asistencia viven en
@@ -372,13 +372,20 @@ bajo cada input.
 infiere de ahí, así que esquema y tipos no pueden desincronizarse. Si falta una obligatoria o está
 malformada, **la app se niega a arrancar** y dice cuál.
 
-Variables que introduce esta auditoría y aún no existen en el esquema:
+Variables que introdujo esta auditoría:
 
-| Variable                      | Por defecto     | Para qué                                 |
-| ----------------------------- | --------------- | ---------------------------------------- |
-| `MEETING_LINK_KEY`            | — (obligatoria) | Clave AES-256-GCM del enlace (§4.1).     |
-| `ACCESS_WINDOW_MINUTES`       | `30`            | Apertura de la ventana de acceso (§4.1). |
-| `CANCELLATION_WINDOW_MINUTES` | `60`            | Límite de cancelación (§4.3).            |
+| Variable                      | Por defecto     | Estado                                                                  |
+| ----------------------------- | --------------- | ----------------------------------------------------------------------- |
+| `MEETING_LINK_KEY`            | — (obligatoria) | ✅ **En el esquema desde HU-201.** Clave AES-256-GCM del enlace (§4.1). |
+| `ACCESS_WINDOW_MINUTES`       | `30`            | ⬜ Pendiente. La introduce HU-303, que abre la ventana (§4.1).          |
+| `CANCELLATION_WINDOW_MINUTES` | `60`            | ⬜ Pendiente. La introduce el Sprint 3 (§4.3).                          |
+
+`MEETING_LINK_KEY` se valida como **64 caracteres hexadecimales**, los 32 bytes exactos que pide
+AES-256, y no como "una cadena larga" al estilo de `JWT_SECRET`. Aceptar cualquier longitud
+obligaría a derivar o rellenar la clave, y las dos cosas convierten un error de configuración en un
+cifrado más débil de lo que el nombre de la variable promete. Se genera con `openssl rand -hex 32`.
+**No hay rotación de claves en Fase 1**: cambiarla deja ilegibles los enlaces ya guardados. El
+prefijo `v1.` del formato cifrado existe para poder añadirla sin migrar filas.
 
 **`/health` es una readiness probe**, no un ping: la API arranca aunque la BD esté caída y devuelve
 `503 DATABASE_UNAVAILABLE` hasta que vuelve, en vez de entrar en crash-loop.
@@ -398,12 +405,26 @@ Convenciones: `id` UUID v4, nombres de tabla en plural, columnas mapeadas a `sna
 **`RefreshToken`** — `id`, `tokenHash` (SHA-256, único), `userId`, `expiresAt`, `revokedAt?`,
 `createdAt`. Solo se guarda el hash: si se filtra la BD, los tokens no son reutilizables.
 
+**`Classroom`** — implementado en HU-201 con todos los campos de §7.2. Notas de implementación:
+
+- **`meetingLink` guarda texto cifrado**, con formato `v1.<iv>.<tag>.<ciphertext>` en base64
+  (AES-256-GCM, IV de 96 bits aleatorio por escritura). Lo produce `MeetingLinkCipher`, en
+  `apps/api/src/classrooms/`. GCM y no CBC porque el tag detecta manipulación: sin él, quien pudiera
+  escribir en la BD cambiaría el enlace de una clase por el suyo y el descifrado devolvería la URL
+  falsa sin avisar.
+- `scheduledAt` es `TIMESTAMPTZ(3)`; el resto de fechas usa el `timestamp(3)` por defecto de Prisma.
+- La relación con `User` es `onDelete: Restrict`: borrar un profesor no puede llevarse por delante
+  clases que otros reservaron. Un profesor que se va se suspende y sus aulas se cancelan una a una.
+- **El enlace no viaja en la respuesta de creación**, ni siquiera al profesor dueño: ya lo escribió
+  él. La regla de quién puede verlo la implementa HU-204 y la completa HU-303, en un solo método.
+
 > **Nota de auditoría.** El `.docx` §12.1 describía el refresh token en BD pero **no lo modelaba**
 > en §8. Ya existe y está documentado aquí.
 
 ### 7.2 Planificado — Fase 1
 
-**`Classroom`**
+**`Classroom`** — ✅ **implementado en HU-201**; la tabla de abajo es su especificación, y las notas
+de implementación están en §7.1.
 
 | Campo                  | Tipo                                                | Nota                                                                  |
 | ---------------------- | --------------------------------------------------- | --------------------------------------------------------------------- |
