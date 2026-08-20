@@ -1,11 +1,16 @@
-import { Body, Controller, HttpCode, HttpStatus, Post } from '@nestjs/common';
-import { type CreateClassroomResponse, UserRole } from '@academia/types';
+import { Body, Controller, Get, HttpCode, HttpStatus, Post, Query } from '@nestjs/common';
+import {
+  type CreateClassroomResponse,
+  type ListClassroomsResponse,
+  UserRole,
+} from '@academia/types';
 
 import type { AuthenticatedUser } from '../auth/auth.types';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { ClassroomsService } from './classrooms.service';
 import { CreateClassroomDto } from './dto/create-classroom.dto';
+import { ListClassroomsDto } from './dto/list-classrooms.dto';
 
 /**
  * Aulas virtuales.
@@ -36,5 +41,17 @@ export class ClassroomsController {
   ): Promise<CreateClassroomResponse> {
     const classroom = await this.classroomsService.createClassroom(teacher, dto);
     return { classroom };
+  }
+
+  /**
+   * GET /classrooms — catálogo de aulas disponibles (HU-203).
+   *
+   * Sin `@Roles`: la ve cualquier usuario con sesión válida, estudiante,
+   * profesor o administrador — es justo el catálogo del que un estudiante
+   * elige su clase.
+   */
+  @Get()
+  async list(@Query() query: ListClassroomsDto): Promise<ListClassroomsResponse> {
+    return this.classroomsService.listClassrooms(query);
   }
 }

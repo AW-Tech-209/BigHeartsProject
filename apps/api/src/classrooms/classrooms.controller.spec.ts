@@ -8,6 +8,7 @@ import { RolesGuard } from '../auth/guards/roles.guard';
 import { ClassroomsController } from './classrooms.controller';
 import type { ClassroomsService } from './classrooms.service';
 import type { CreateClassroomDto } from './dto/create-classroom.dto';
+import type { ListClassroomsDto } from './dto/list-classrooms.dto';
 
 const profesor: AuthenticatedUser = {
   id: '11111111-1111-4111-8111-111111111111',
@@ -21,9 +22,10 @@ function setup() {
     id: '33333333-3333-4333-8333-333333333333',
     status: ClassroomStatus.PUBLISHED,
   });
-  const service = { createClassroom } as unknown as ClassroomsService;
+  const listClassrooms = vi.fn().mockResolvedValue({ items: [], total: 0, page: 1, pageSize: 20 });
+  const service = { createClassroom, listClassrooms } as unknown as ClassroomsService;
 
-  return { controller: new ClassroomsController(service), createClassroom };
+  return { controller: new ClassroomsController(service), createClassroom, listClassrooms };
 }
 
 describe('ClassroomsController — forma de la respuesta', () => {
@@ -100,4 +102,46 @@ describe('ClassroomsController — autorización por rol (AC5)', () => {
       expect(excepcion.getResponse?.().code).toBe(ApiErrorCode.INSUFFICIENT_ROLE);
     }
   });
+});
+
+describe('ClassroomsController.list — GET /classrooms (HU-203)', () => {
+  it('delega el query en el servicio y devuelve su respuesta tal cual', async () => {
+    const { controller, listClassrooms } = setup();
+    const respuesta = {
+      items: [{ id: '1' }],
+      total: 1,
+      page: 1,
+      pageSize: 20,
+    };
+    listClassrooms.mockResolvedValue(respuesta);
+    const query = { level: 'BEGINNER' } as unknown as ListClassroomsDto;
+
+    await expect(controller.list(query)).resolves.toEqual(respuesta);
+    expect(listClassrooms).toHaveBeenCalledWith(query);
+  });
+
+  /**
+   * A diferencia de `create`, el listado no lleva `@Roles`: lo ve cualquier
+   * usuario autenticado (estudiante, profesor o administrador). Con el guard
+   * real, sin metadato en el handler, `canActivate` deja pasar a los tres.
+   */
+  it.each([UserRole.STUDENT, UserRole.TEACHER, UserRole.ADMIN])(
+    'no exige ningún rol concreto: deja pasar a %s',
+    (role) => {
+      const guard = new RolesGuard(new Reflector());
+      const user: AuthenticatedUser = {
+        id: `id-${role}`,
+        email: 'u@academia.local',
+        role,
+        status: UserStatus.ACTIVE,
+      };
+      const contexto = {
+        getHandler: () => ClassroomsController.prototype.list,
+        getClass: () => ClassroomsController,
+        switchToHttp: () => ({ getRequest: () => ({ user }) }),
+      } as unknown as ExecutionContext;
+
+      expect(guard.canActivate(contexto)).toBe(true);
+    },
+  );
 });

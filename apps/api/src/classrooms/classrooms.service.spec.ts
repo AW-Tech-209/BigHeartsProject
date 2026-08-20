@@ -218,3 +218,159 @@ describe('ClassroomsService.createClassroom', () => {
     });
   });
 });
+
+/** Fila cruda tal y como la devolvería Prisma, con el `include` del profesor. */
+function filaDeAula(overrides: Record<string, unknown> = {}) {
+  return {
+    id: '44444444-4444-4444-8444-444444444444',
+    teacherId: PROFESOR_ID,
+    title: 'Conversación cotidiana',
+    description: 'Practicamos saludos y presentaciones.',
+    level: EnglishLevel.BEGINNER,
+    maxStudents: 8,
+    currentBookings: 2,
+    scheduledAt: new Date('2099-08-12T23:00:00.000Z'),
+    durationMinutes: 60,
+    meetingLink: 'v1.iv.tag.texto',
+    meetingProvider: MeetingProvider.MANUAL,
+    status: ClassroomStatus.PUBLISHED,
+    isRecurring: false,
+    createdAt: new Date('2026-08-01T10:00:00.000Z'),
+    updatedAt: new Date('2026-08-01T10:00:00.000Z'),
+    teacher: { firstName: 'Paula', lastName: 'Profesora' },
+    ...overrides,
+  };
+}
+
+/** Monta el servicio con un Prisma falso, solo para `listClassrooms`. */
+function setupParaListado(
+  filas: ReturnType<typeof filaDeAula>[] = [filaDeAula()],
+  total = filas.length,
+) {
+  const findMany = vi.fn().mockResolvedValue(filas);
+  const count = vi.fn().mockResolvedValue(total);
+  const prisma = { classroom: { findMany, count } } as unknown as PrismaService;
+  const cipher = new MeetingLinkCipher({ meetingLinkKey: 'a'.repeat(64) } as AppConfigService);
+
+  return { service: new ClassroomsService(prisma, cipher), findMany, count };
+}
+
+/** El `where` con el que se llamó a `findMany` (idéntico al de `count`). */
+function whereDe(findMany: ReturnType<typeof setupParaListado>['findMany']) {
+  return (findMany.mock.calls[0]?.[0] as { where: { AND: Record<string, unknown>[] } }).where.AND;
+}
+
+describe('ClassroomsService.listClassrooms', () => {
+  // AC1: solo PUBLISHED con scheduledAt futuro.
+  it('excluye siempre CANCELLED y lo ya pasado, publicadas y futuras', async () => {
+    const { service, findMany, count } = setupParaListado();
+
+    await service.listClassrooms({});
+
+    const and = whereDe(findMany);
+    expect(and).toContainEqual({ status: ClassroomStatus.PUBLISHED });
+    expect(and.some((c) => 'scheduledAt' in c && (c.scheduledAt as { gt: Date }).gt)).toBe(true);
+    expect(count).toHaveBeenCalledWith({ where: { AND: and } });
+  });
+
+  // AC3: filtro de nivel, solo.
+  it('filtra por nivel cuando se pide', async () => {
+    const { service, findMany } = setupParaListado();
+
+    await service.listClassrooms({ level: EnglishLevel.ADVANCED });
+
+    expect(whereDe(findMany)).toContainEqual({ level: EnglishLevel.ADVANCED });
+  });
+
+  // AC3: filtro de rango de fechas, solo.
+  it('filtra por desde y hasta cuando se piden', async () => {
+    const { service, findMany } = setupParaListado();
+
+    await service.listClassrooms({
+      desde: '2099-01-01T00:00:00.000Z',
+      hasta: '2099-12-31T23:59:59.000Z',
+    });
+
+    const and = whereDe(findMany);
+    expect(and).toContainEqual({ scheduledAt: { gte: new Date('2099-01-01T00:00:00.000Z') } });
+    expect(and).toContainEqual({ scheduledAt: { lte: new Date('2099-12-31T23:59:59.000Z') } });
+  });
+
+  // AC3: nivel y rango combinados, sin que uno tape al otro.
+  it('combina nivel y rango de fechas en la misma consulta', async () => {
+    const { service, findMany } = setupParaListado();
+
+    await service.listClassrooms({
+      level: EnglishLevel.INTERMEDIATE,
+      desde: '2099-01-01T00:00:00.000Z',
+    });
+
+    const and = whereDe(findMany);
+    expect(and).toContainEqual({ level: EnglishLevel.INTERMEDIATE });
+    expect(and).toContainEqual({ scheduledAt: { gte: new Date('2099-01-01T00:00:00.000Z') } });
+  });
+
+  // AC3: orden ascendente por scheduledAt.
+  it('ordena por scheduledAt ascendente', async () => {
+    const { service, findMany } = setupParaListado();
+
+    await service.listClassrooms({});
+
+    expect(findMany.mock.calls[0]?.[0]).toMatchObject({ orderBy: { scheduledAt: 'asc' } });
+  });
+
+  describe('paginación (A4)', () => {
+    it('usa página 1 y el tamaño por defecto cuando no se piden', async () => {
+      const { service, findMany } = setupParaListado();
+
+      const resultado = await service.listClassrooms({});
+
+      expect(findMany.mock.calls[0]?.[0]).toMatchObject({ skip: 0, take: 20 });
+      expect(resultado.page).toBe(1);
+      expect(resultado.pageSize).toBe(20);
+    });
+
+    it('calcula el skip a partir de la página pedida', async () => {
+      const { service, findMany } = setupParaListado();
+
+      const resultado = await service.listClassrooms({ page: 3, pageSize: 10 });
+
+      expect(findMany.mock.calls[0]?.[0]).toMatchObject({ skip: 20, take: 10 });
+      expect(resultado.page).toBe(3);
+      expect(resultado.pageSize).toBe(10);
+    });
+
+    it('devuelve el total real de la consulta, no el largo de la página', async () => {
+      const { service } = setupParaListado([filaDeAula(), filaDeAula({ id: 'otra-aula' })], 47);
+
+      const resultado = await service.listClassrooms({ pageSize: 2 });
+
+      expect(resultado.total).toBe(47);
+      expect(resultado.items).toHaveLength(2);
+    });
+  });
+
+  // AC2, con el mecanismo real de por qué es imposible: toClassroomListItem
+  // pasa por toPublicClassroom, que nunca copia el campo.
+  it('ningún item de la respuesta trae meetingLink', async () => {
+    const { service } = setupParaListado();
+
+    const resultado = await service.listClassrooms({});
+
+    for (const item of resultado.items) {
+      expect(item).not.toHaveProperty('meetingLink');
+    }
+    expect(JSON.stringify(resultado)).not.toContain('v1.iv.tag.texto');
+  });
+
+  // A3: el nombre del profesor viaja plano, sin objeto anidado ni el resto de su perfil.
+  it('incluye el nombre del profesor de cada aula', async () => {
+    const { service } = setupParaListado([
+      filaDeAula({ teacher: { firstName: 'Ana', lastName: 'Restrepo' } }),
+    ]);
+
+    const [item] = (await service.listClassrooms({})).items;
+
+    expect(item).toMatchObject({ teacherFirstName: 'Ana', teacherLastName: 'Restrepo' });
+  });
+});
