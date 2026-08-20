@@ -7,7 +7,7 @@
 
 services:
   - type: web
-    name: academia-api-staging
+    name: bighearts-api-staging
     runtime: node
     region: ohio # us-east, cerca de Supabase (us-east-2), menos latencia
     plan: free
@@ -44,6 +44,18 @@ services:
       - key: NODE_VERSION
         value: '22'
       # Render inyecta PORT automáticamente; la app lo lee vía ConfigService.
+      #
+      # Sesión y rate limiting (HU-102). No son secretos: mismos valores que
+      # apps/api/.env.example. Todos tienen default en env.schema.ts, así que
+      # son opcionales; se listan aquí explícitos por trazabilidad.
+      - key: JWT_ACCESS_EXPIRES_IN
+        value: 15m
+      - key: REFRESH_TOKEN_TTL_DAYS
+        value: '30'
+      - key: AUTH_THROTTLE_TTL
+        value: '60'
+      - key: AUTH_THROTTLE_LIMIT
+        value: '5'
       #
       # Secretos: se rellenan en el panel de Render (sync: false = no en el repo).
       - key: DATABASE_URL # Supabase pooler (6543, pgbouncer) — runtime

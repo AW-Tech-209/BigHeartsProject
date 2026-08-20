@@ -50,7 +50,13 @@ Para que **un fallo bloquee el merge**, hay que activar la protección de rama (
 
 1. Render → **New → Blueprint**.
 2. Conecta el repositorio `AW-Tech-209/BigHeartsProject`.
-3. Render detecta [render.yaml](render.yaml) y propone el servicio `academia-api-staging`. Aplícalo.
+3. Render detecta [render.yaml](render.yaml) y propone el servicio `bighearts-api-staging`. Aplícalo.
+
+> **Si falla la sincronización del Blueprint** (Render da un error genérico, sin detalle): lo más
+> habitual es que ya exista un Blueprint sincronizado con este repo (aunque el servicio esté
+> borrado). Ve a Render → **Blueprints** y comprueba si hay uno colgando antes de crear otro; si lo
+> hay, bórralo primero. Si vuelve a fallar, revisa el tab **Events** de ese Blueprint — ahí sí queda
+> el detalle del error, aunque el toast no lo muestre.
 
 ### 2.2. Variables de entorno (secretos)
 
@@ -83,7 +89,7 @@ claro y el deploy falla — es intencional, para no arrancar en staging/prod sin
 > **Free tier:** el servicio se **duerme tras ~15 min** sin tráfico y el primer request tarda
 > ~30-60s en despertar. Es normal; el frontend reintenta el health-check.
 
-Cuando termine, anota la URL pública: `https://academia-api-staging.onrender.com` (o la que asigne).
+Cuando termine, anota la URL pública: `https://bighearts-api-staging.onrender.com` (o la que asigne).
 
 ---
 
@@ -145,11 +151,11 @@ Con ambos desplegados:
    pulsa **Reintentar**.
 3. Comprobación directa del backend:
    ```bash
-   curl https://academia-api-staging.onrender.com/health
+   curl https://bighearts-api-staging.onrender.com/health
    ```
 4. Comprobación de CORS (debe devolver la cabecera con tu origen de Vercel):
    ```bash
-   curl -s -D - -o /dev/null https://academia-api-staging.onrender.com/health \
+   curl -s -D - -o /dev/null https://bighearts-api-staging.onrender.com/health \
      -H "Origin: https://academia-web.vercel.app" | grep -i access-control-allow-origin
    ```
 
