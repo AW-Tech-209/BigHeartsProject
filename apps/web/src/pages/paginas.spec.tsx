@@ -4,6 +4,7 @@ import type { ReactElement } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { getPendingTeachers } from '@/features/admin/api/get-pending-teachers';
+import { getClassrooms } from '@/features/aulas/api/get-classrooms';
 import { getProfile } from '@/features/profile/api/get-profile';
 import { httpClient } from '@/lib/http-client';
 import { esperarSinFallosDeAccesibilidad } from '@/test/accesibilidad';
@@ -33,6 +34,7 @@ import { RegisterPage } from './RegisterPage';
 vi.mock('@/lib/http-client', () => ({ httpClient: { get: vi.fn() } }));
 vi.mock('@/features/profile/api/get-profile', () => ({ getProfile: vi.fn() }));
 vi.mock('@/features/admin/api/get-pending-teachers', () => ({ getPendingTeachers: vi.fn() }));
+vi.mock('@/features/aulas/api/get-classrooms', () => ({ getClassrooms: vi.fn() }));
 
 const TEMAS: Tema[] = ['light', 'dark', 'hc'];
 
@@ -80,6 +82,8 @@ beforeEach(() => {
   // La cola vacía es el estado normal de esta pantalla; el resto de sus estados
   // se prueban en `AdminPage.spec.tsx`.
   vi.mocked(getPendingTeachers).mockResolvedValue({ teachers: [] });
+  // Igual para el catálogo: el resto de sus estados se prueban en `AulasPage.spec.tsx`.
+  vi.mocked(getClassrooms).mockResolvedValue({ items: [], total: 0, page: 1, pageSize: 20 });
 });
 
 describe.each(PAGINAS)('$nombre', ({ elemento, h1, rol }) => {

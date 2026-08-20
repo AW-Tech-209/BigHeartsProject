@@ -72,7 +72,7 @@ Los campos editables salen del modelo `User` real
       del usuario autenticado, no vacíos ni con placeholders.
 - [x] **AC3** — Cambiar nombre y preferencia de accesibilidad, guardar, y recargar la página: los
       valores nuevos persisten.
-- [ ] **AC4** — Tras guardar con éxito, el nombre mostrado en la barra de sesión se actualiza
+- [x] **AC4** — Tras guardar con éxito, el nombre mostrado en la barra de sesión se actualiza
       **sin recargar la página**, y se anuncia por región `aria-live`. _Implementado
       (`useUpdateProfile` → `setUser` del auth-store + `useAnnounce`), pero sin comprobar en
       navegador: falta la pasada manual._
@@ -83,7 +83,7 @@ Los campos editables salen del modelo `User` real
       `id` ajeno en el cuerpo de `PATCH /users/me` **no** tiene efecto sobre ese usuario. Verificado
       con un test de backend, no solo ocultando UI.
 - [x] **AC7** — **Campos protegidos:** enviar `email` o `role` en el `PATCH` no los modifica.
-- [ ] **AC8** — **Accesibilidad:** el formulario se completa entero con teclado y foco visible,
+- [x] **AC8** — **Accesibilidad:** el formulario se completa entero con teclado y foco visible,
       funciona en `.dark` y `.hc`, y cumple el checklist final del skill `bighearts-ui`.
       _Construido con los componentes que ya cumplen el checklist (`Field`, `Input`,
       `NativeSelect`, `Callout`) y sin colores literales, pero sin verificación visual en

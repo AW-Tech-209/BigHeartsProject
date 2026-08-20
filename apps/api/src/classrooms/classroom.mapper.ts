@@ -1,6 +1,7 @@
 import type { Classroom as PrismaClassroom } from '@prisma/client';
 import {
   type Classroom,
+  type ClassroomListItem,
   type ClassroomStatus,
   type EnglishLevel,
   type MeetingProvider,
@@ -46,5 +47,21 @@ export function toPublicClassroom(classroom: PrismaClassroom): Classroom {
     isRecurring: classroom.isRecurring,
     createdAt: classroom.createdAt.toISOString(),
     updatedAt: classroom.updatedAt.toISOString(),
+  };
+}
+
+/**
+ * La misma vista pública, con el nombre del profesor (HU-203, A3). El
+ * catálogo lo necesita para que la tarjeta diga quién da la clase sin una
+ * segunda petición por aula.
+ */
+export function toClassroomListItem(
+  classroom: PrismaClassroom,
+  teacher: { firstName: string; lastName: string },
+): ClassroomListItem {
+  return {
+    ...toPublicClassroom(classroom),
+    teacherFirstName: teacher.firstName,
+    teacherLastName: teacher.lastName,
   };
 }

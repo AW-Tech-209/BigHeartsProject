@@ -1,7 +1,10 @@
 import { Injectable } from '@nestjs/common';
+import type { Prisma } from '@prisma/client';
 import {
   type Classroom,
+  CLASSROOMS_PAGE_SIZE_DEFAULT,
   ClassroomStatus,
+  type ListClassroomsResponse,
   MeetingProvider,
   UserRole,
   UserStatus,
@@ -10,9 +13,10 @@ import {
 import type { AuthenticatedUser } from '../auth/auth.types';
 import { insufficientRole } from '../auth/auth.errors';
 import { PrismaService } from '../prisma/prisma.service';
-import { toPublicClassroom } from './classroom.mapper';
+import { toClassroomListItem, toPublicClassroom } from './classroom.mapper';
 import { teacherNotActive, teacherProfileNotFound } from './classrooms.errors';
 import type { CreateClassroomDto } from './dto/create-classroom.dto';
+import type { ListClassroomsDto } from './dto/list-classrooms.dto';
 import { MeetingLinkCipher } from './meeting-link.cipher';
 
 @Injectable()
@@ -58,6 +62,54 @@ export class ClassroomsService {
     });
 
     return toPublicClassroom(classroom);
+  }
+
+  /**
+   * Catálogo de aulas disponibles (HU-203, A1–A4). Sin `@Roles`: la ve
+   * cualquier usuario autenticado.
+   *
+   * Solo lectura: a diferencia de `createClassroom`, no hay
+   * `SELECT … FOR UPDATE` porque nada se muta aquí (§4.2 solo lo exige para
+   * la transacción que escribe `currentBookings`).
+   */
+  async listClassrooms(query: ListClassroomsDto): Promise<ListClassroomsResponse> {
+    const page = query.page ?? 1;
+    const pageSize = query.pageSize ?? CLASSROOMS_PAGE_SIZE_DEFAULT;
+
+    // `scheduledAt` aparece dos veces a propósito: como cláusulas separadas
+    // del array `AND`, no como dos claves del mismo objeto (que se pisarían
+    // entre sí). Así "excluir lo ya pasado" y el rango desde/hasta se
+    // combinan sin que uno tape al otro.
+    const where: Prisma.ClassroomWhereInput = {
+      AND: [
+        { status: ClassroomStatus.PUBLISHED },
+        // A2: fuera también lo que ya pasó, no solo lo CANCELLED — `COMPLETED`
+        // no tiene escritor todavía (D16), así que filtrar solo por estado
+        // dejaría clases viejas en la lista.
+        { scheduledAt: { gt: new Date() } },
+        ...(query.level ? [{ level: query.level }] : []),
+        ...(query.desde ? [{ scheduledAt: { gte: new Date(query.desde) } }] : []),
+        ...(query.hasta ? [{ scheduledAt: { lte: new Date(query.hasta) } }] : []),
+      ],
+    };
+
+    const [rows, total] = await Promise.all([
+      this.prisma.classroom.findMany({
+        where,
+        include: { teacher: { select: { firstName: true, lastName: true } } },
+        orderBy: { scheduledAt: 'asc' },
+        skip: (page - 1) * pageSize,
+        take: pageSize,
+      }),
+      this.prisma.classroom.count({ where }),
+    ]);
+
+    return {
+      items: rows.map((row) => toClassroomListItem(row, row.teacher)),
+      total,
+      page,
+      pageSize,
+    };
   }
 
   /**

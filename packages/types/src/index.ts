@@ -329,6 +329,54 @@ export interface CreateClassroomResponse {
   classroom: Classroom;
 }
 
+/** Tamaño de página por defecto de `GET /classrooms` cuando no se pide uno. */
+export const CLASSROOMS_PAGE_SIZE_DEFAULT = 20;
+
+/**
+ * Tope máximo de `pageSize` que acepta `GET /classrooms`. Sin él, cualquiera
+ * podría pedir diez mil filas de un tirón (HU-203, A4).
+ */
+export const CLASSROOMS_PAGE_SIZE_MAX = 100;
+
+/**
+ * Query de `GET /classrooms` (HU-203). Todos los campos son opcionales y
+ * combinables entre sí: sin ninguno, devuelve la primera página del catálogo
+ * completo.
+ */
+export interface ListClassroomsQuery {
+  level?: EnglishLevel;
+  /** ISO 8601. Cota inferior de `scheduledAt`, combinable con `hasta`. */
+  desde?: string;
+  /** ISO 8601. Cota superior de `scheduledAt`, combinable con `desde`. */
+  hasta?: string;
+  page?: number;
+  pageSize?: number;
+}
+
+/**
+ * Una fila del listado: el aula pública más el nombre de su profesor.
+ *
+ * Es deliberadamente `Classroom` + dos campos planos, no un objeto `teacher`
+ * anidado — mismo patrón de aplanado que el resto del tipo, y evita que el
+ * frontend reciba (y tenga que ignorar) el email o el id del profesor, que
+ * esta pantalla no necesita.
+ */
+export interface ClassroomListItem extends Classroom {
+  teacherFirstName: string;
+  teacherLastName: string;
+}
+
+/**
+ * Respuesta de `GET /classrooms`. Paginación por página, no por cursor
+ * (decisión de HU-203: propuesta mía, no estaba fijada en ningún otro sitio).
+ */
+export interface ListClassroomsResponse {
+  items: ClassroomListItem[];
+  total: number;
+  page: number;
+  pageSize: number;
+}
+
 /** Códigos de error estables que la API puede devolver en `ApiError.code`. */
 export const ApiErrorCode = {
   VALIDATION_ERROR: 'VALIDATION_ERROR',
@@ -434,3 +482,10 @@ export type ApiResponse<TData = unknown> =
       error: ApiError;
       timestamp: string;
     };
+
+/**
+ * `derivarEstadoAula()` y los tipos de los 9 estados de UI viven en su propio
+ * archivo (HU-203): es lógica de negocio compartida con sus propios tests, no
+ * un tipo más de este archivo.
+ */
+export * from './estado-aula';
