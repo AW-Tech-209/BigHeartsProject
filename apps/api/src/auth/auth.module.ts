@@ -6,6 +6,7 @@ import { AppConfigService } from '../config/app-config.service';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
+import { RolesGuard } from './guards/roles.guard';
 import { TokenService } from './token.service';
 
 /**
@@ -17,6 +18,10 @@ import { TokenService } from './token.service';
  *
  * El JwtAuthGuard se registra como APP_GUARD: es GLOBAL, así que protege toda la
  * API por defecto y solo deja pasar las rutas marcadas con `@Public()`.
+ *
+ * El RolesGuard va DETRÁS, y el orden importa: NestJS ejecuta los APP_GUARD en
+ * el orden en que se declaran, y el segundo necesita el `request.user` que
+ * planta el primero. Si se invierten, toda ruta con `@Roles` responde 401.
  */
 @Module({
   imports: [
@@ -33,6 +38,11 @@ import { TokenService } from './token.service';
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService, TokenService, { provide: APP_GUARD, useClass: JwtAuthGuard }],
+  providers: [
+    AuthService,
+    TokenService,
+    { provide: APP_GUARD, useClass: JwtAuthGuard },
+    { provide: APP_GUARD, useClass: RolesGuard },
+  ],
 })
 export class AuthModule {}

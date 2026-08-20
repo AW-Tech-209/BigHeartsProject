@@ -1,5 +1,5 @@
 import { ApiErrorCode } from '@academia/types';
-import { Ban, CircleAlert, Clock, type LucideIcon, WifiOff } from 'lucide-react';
+import { Ban, CircleAlert, CircleSlash, Clock, type LucideIcon, WifiOff } from 'lucide-react';
 
 import { ApiClientError } from '@/lib/api-error';
 
@@ -60,6 +60,22 @@ export function toLoginErrorNotice(error: unknown): LoginErrorNotice {
         message:
           'Un administrador debe aprobar tu cuenta antes de que puedas entrar. Te avisaremos por correo cuando esté lista.',
         announcement: 'Tu cuenta está pendiente de aprobación.',
+      };
+
+    /*
+      Tiene su propio caso y no comparte el de SUSPENDED a propósito (D13):
+      esta cuenta NUNCA estuvo activa, así que «un administrador suspendió tu
+      cuenta» sería falso. `destructive` y no `attention`, porque aquí no falta
+      esperar: la decisión ya se tomó.
+    */
+    case ApiErrorCode.ACCOUNT_REJECTED:
+      return {
+        variant: 'destructive',
+        icon: CircleSlash,
+        title: 'Tu solicitud no fue aprobada',
+        message:
+          'Un administrador revisó tu solicitud de cuenta de profesor y no la aprobó, así que no puedes entrar. Escribe al equipo de soporte si crees que es un error.',
+        announcement: 'Tu solicitud de cuenta de profesor no fue aprobada.',
       };
 
     case ApiErrorCode.TOO_MANY_REQUESTS:

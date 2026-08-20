@@ -3,11 +3,13 @@ import { screen } from '@testing-library/react';
 import type { ReactElement } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { getPendingTeachers } from '@/features/admin/api/get-pending-teachers';
 import { getProfile } from '@/features/profile/api/get-profile';
 import { httpClient } from '@/lib/http-client';
 import { esperarSinFallosDeAccesibilidad } from '@/test/accesibilidad';
 import { renderConProviders, type Tema } from '@/test/render-con-providers';
 import { darSesion, usuarioDePrueba } from '@/test/sesion';
+import { AdminPage } from './AdminPage';
 import { AulasPage } from './AulasPage';
 import { HomePage } from './HomePage';
 import { LoginPage } from './LoginPage';
@@ -30,6 +32,7 @@ import { RegisterPage } from './RegisterPage';
  */
 vi.mock('@/lib/http-client', () => ({ httpClient: { get: vi.fn() } }));
 vi.mock('@/features/profile/api/get-profile', () => ({ getProfile: vi.fn() }));
+vi.mock('@/features/admin/api/get-pending-teachers', () => ({ getPendingTeachers: vi.fn() }));
 
 const TEMAS: Tema[] = ['light', 'dark', 'hc'];
 
@@ -62,12 +65,21 @@ const PAGINAS: CasoDePagina[] = [
     rol: UserRole.STUDENT,
   },
   { nombre: 'MisAulasPage', elemento: <MisAulasPage />, h1: 'Mis aulas', rol: UserRole.TEACHER },
+  {
+    nombre: 'AdminPage',
+    elemento: <AdminPage />,
+    h1: 'Profesores pendientes',
+    rol: UserRole.ADMIN,
+  },
 ];
 
 beforeEach(() => {
   vi.clearAllMocks();
   vi.mocked(httpClient.get).mockResolvedValue({ status: 'ok', uptime: 1 });
   vi.mocked(getProfile).mockResolvedValue({ user: usuarioDePrueba() });
+  // La cola vacía es el estado normal de esta pantalla; el resto de sus estados
+  // se prueban en `AdminPage.spec.tsx`.
+  vi.mocked(getPendingTeachers).mockResolvedValue({ teachers: [] });
 });
 
 describe.each(PAGINAS)('$nombre', ({ elemento, h1, rol }) => {

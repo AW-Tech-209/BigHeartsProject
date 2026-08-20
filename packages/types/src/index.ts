@@ -32,11 +32,19 @@ export type RegisterableRole = UserRole.STUDENT | UserRole.TEACHER;
  * Estado de la cuenta.
  *  - ACTIVE: puede usar la plataforma.
  *  - PENDING: registrada pero a la espera de aprobación (profesores).
- *  - SUSPENDED: deshabilitada por un administrador.
+ *  - REJECTED: el administrador denegó la solicitud; nunca llegó a estar activa.
+ *  - SUSPENDED: estaba activa y un administrador la deshabilitó.
+ *
+ * `REJECTED` y `SUSPENDED` son estados DISTINTOS a propósito (decisión D13 de
+ * `docs/ARQUITECTURA.md` §4.5). Reutilizar `SUSPENDED` para un rechazo
+ * obligaría a decirle a un profesor "tu cuenta fue suspendida" cuando nunca
+ * estuvo activa, y el microcopy de este producto es deliberadamente literal:
+ * quien lee español como segunda lengua paga cara esa imprecisión.
  */
 export enum UserStatus {
   ACTIVE = 'ACTIVE',
   PENDING = 'PENDING',
+  REJECTED = 'REJECTED',
   SUSPENDED = 'SUSPENDED',
 }
 
@@ -128,6 +136,35 @@ export interface ProfileResponse {
 }
 
 /**
+ * Respuesta de `GET /admin/teachers/pending`.
+ *
+ * Es una lista sin paginar a propósito: el número de profesores esperando
+ * aprobación se mide en decenas, no en miles, y una cola de aprobación que
+ * crece sin límite es un problema de operación, no de paginación. Si algún día
+ * hiciera falta, se añade con el formato que se acuerde para el listado de
+ * aulas (`docs/ARQUITECTURA.md` §14.6 nº6), no con uno propio.
+ *
+ * Los elementos son `User` completos —no un subconjunto— porque el
+ * administrador decide con el nombre, el email y la fecha de solicitud, y todos
+ * viven ya en la vista pública. `status` siempre vale `PENDING` y `role`
+ * siempre `TEACHER`: filtrar es trabajo del servidor, no de la tabla.
+ */
+export interface PendingTeachersResponse {
+  teachers: User[];
+}
+
+/**
+ * Respuesta de `POST /admin/teachers/:id/approve` y `.../reject`.
+ *
+ * Devuelve el profesor YA con su estado nuevo, para que la pantalla pueda
+ * anunciar el resultado con el dato del servidor en vez de con lo que creía
+ * haber pedido.
+ */
+export interface TeacherApprovalResponse {
+  user: User;
+}
+
+/**
  * Cuerpo de la petición de login (`POST /auth/login`).
  *
  * Solo email y contraseña: el resto de la sesión (tokens) lo emite el backend.
@@ -172,8 +209,30 @@ export const ApiErrorCode = {
   ACCOUNT_SUSPENDED: 'ACCOUNT_SUSPENDED',
   /** La cuenta está pendiente de aprobación (profesor). No puede iniciar sesión aún. */
   ACCOUNT_PENDING: 'ACCOUNT_PENDING',
+  /**
+   * El administrador denegó la solicitud de registro del profesor.
+   *
+   * Es un código propio y NO `ACCOUNT_SUSPENDED`: los dos impiden entrar, pero
+   * dicen cosas distintas y el frontend muestra mensajes distintos. Ver D13.
+   */
+  ACCOUNT_REJECTED: 'ACCOUNT_REJECTED',
+  /**
+   * Se pidió un cambio de estado que las reglas de §4.5 no permiten: aprobar o
+   * rechazar a alguien que no es profesor, o que ya no está `PENDING`.
+   *
+   * Es 409 y no 404: el usuario existe, lo que no existe es la transición.
+   */
+  INVALID_STATUS_TRANSITION: 'INVALID_STATUS_TRANSITION',
   /** Falta el token, o es inválido/expirado, en una ruta protegida. */
   UNAUTHENTICATED: 'UNAUTHENTICATED',
+  /**
+   * Hay sesión válida, pero el rol no alcanza para este endpoint.
+   *
+   * Distinto de `UNAUTHENTICATED` (que se resuelve iniciando sesión) y de
+   * `PROFILE_FORBIDDEN` (que es del dominio del perfil ajeno): aquí la sesión
+   * es correcta y volver a entrar no cambiaría nada. Lo emite el `RolesGuard`.
+   */
+  INSUFFICIENT_ROLE: 'INSUFFICIENT_ROLE',
   /** El refresh token no existe, expiró, o ya fue revocado/usado. */
   INVALID_REFRESH_TOKEN: 'INVALID_REFRESH_TOKEN',
   /**

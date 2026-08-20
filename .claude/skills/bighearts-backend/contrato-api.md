@@ -47,9 +47,16 @@ mensaje mostrar a partir del código, **nunca** parseando `message`.
   revelan si el email existe.
 
 Códigos ya existentes: `VALIDATION_ERROR`, `EMAIL_ALREADY_EXISTS`, `INVALID_CREDENTIALS`,
-`ACCOUNT_SUSPENDED`, `ACCOUNT_PENDING`, `UNAUTHENTICATED`, `INVALID_REFRESH_TOKEN`,
-`PROFILE_FORBIDDEN`, `USER_NOT_FOUND`, `TOO_MANY_REQUESTS`, `DATABASE_UNAVAILABLE`,
-`INTERNAL_ERROR`. Los del dominio de reservas están en `reglas-reservas.md` §7.
+`ACCOUNT_SUSPENDED`, `ACCOUNT_PENDING`, `ACCOUNT_REJECTED`, `UNAUTHENTICATED`,
+`INSUFFICIENT_ROLE`, `INVALID_REFRESH_TOKEN`, `PROFILE_FORBIDDEN`, `USER_NOT_FOUND`,
+`INVALID_STATUS_TRANSITION`, `TOO_MANY_REQUESTS`, `DATABASE_UNAVAILABLE`, `INTERNAL_ERROR`. Los
+del dominio de reservas están en `reglas-reservas.md` §7.
+
+Tres que se confunden con facilidad y no son intercambiables:
+
+- `UNAUTHENTICATED` (401) — no hay sesión válida. Entrar lo arregla.
+- `INSUFFICIENT_ROLE` (403) — hay sesión, pero el rol no alcanza. Entrar no arregla nada.
+- `ACCOUNT_*` (403) — las credenciales eran correctas; lo que bloquea es el estado de la cuenta.
 
 `PROFILE_FORBIDDEN` está **reservado y sin emisor**: `/users/me` deriva el id del token, así que no
 existe petición capaz de provocarlo. Lo usará `AdminModule` cuando haya edición de perfiles
@@ -95,6 +102,20 @@ parcial de `bookings`) van en SQL dentro de la migración, con un comentario que
 | GET    | `/users/me`      | — (token)            | `{ user }`                     | —                         |
 | PATCH  | `/users/me`      | `UpdateProfileInput` | `{ user }`                     | —                         |
 | GET    | `/health`        | —                    | `{ status, uptime, database }` | —                         |
+
+Back-office, todos con `@Roles(UserRole.ADMIN)` en la clase del controlador (HU-104):
+
+| Método | Ruta                          | Entrada   | `data`                 |
+| ------ | ----------------------------- | --------- | ---------------------- |
+| GET    | `/admin/teachers/pending`     | — (token) | `{ teachers: User[] }` |
+| POST   | `/admin/teachers/:id/approve` | — (ruta)  | `{ user }`             |
+| POST   | `/admin/teachers/:id/reject`  | — (ruta)  | `{ user }`             |
+
+**Dos rutas, no un `PATCH` con el estado en el cuerpo.** Un cuerpo con `status` permitiría pedir
+cualquier `UserStatus` —`SUSPENDED` incluido— y obligaría al servidor a defenderse de estados que
+esa pantalla nunca debe poder pedir. Con una ruta por desenlace, las únicas transiciones
+alcanzables son las dos que §4.5 declara válidas. El `:id` pasa por un `ParseUUIDPipe` cuyo fallo
+se traduce a `USER_NOT_FOUND`: sin él, un id malformado llega a una columna `@db.Uuid` y responde 500.
 
 **`/users/me` y el id del token.** Las rutas del perfil propio son `/me` y **no existe
 `/users/:id`**: el id sale siempre de `@CurrentUser()`. No es una comodidad, es la autorización —

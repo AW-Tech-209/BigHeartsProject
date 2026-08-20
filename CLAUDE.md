@@ -38,8 +38,9 @@ Seed: un usuario por rol, contraseña `Password123!` (ver `README.md`).
 ## Estructura
 
 ```
-apps/api/src/     config · prisma · common · health · auth ✅
-                  users ✅ · classrooms · bookings · sessions · notifications · admin ⬜ (stubs)
+apps/api/src/     config · prisma · common · health · auth ✅ · users ✅ · admin ✅
+                  notifications ✅ (solo el puerto + adaptador de registro)
+                  classrooms · bookings · sessions ⬜ (stubs)
 apps/web/src/     app/ (providers, router) · pages/ · features/<dominio>/{api,components,hooks,lib}
                   components/ui/ (shadcn+Base UI) · components/layout/ (shell, cabecera, rejilla)
                   components/dominio/ (EstadoVacio, ilustraciones) · hooks/ · lib/ · stores/
@@ -88,8 +89,8 @@ rompa por desconocimiento.
 4. Un estudiante **no puede** tener dos reservas `CONFIRMED` con horarios solapados. Se valida
    dentro de la transacción, no antes.
 5. `scheduledAt` es **`timestamptz` en UTC**. Toda comparación temporal ocurre en el servidor.
-6. La autorización se decide **siempre en el servidor**. El frontend replica la lógica solo para
-   ocultar UI.
+6. La autorización se decide **siempre en el servidor**: `@Roles(...)` sobre el controlador y el
+   `RolesGuard` global. El frontend replica la lógica solo para ocultar UI.
 7. Los secretos van por entorno, validados en `config/env.schema.ts`. Nunca en el código.
 
 **UI y accesibilidad** → skill `bighearts-ui` (léelo antes de tocar cualquier componente)

@@ -46,3 +46,24 @@ export const accountPending = (): ForbiddenException =>
     code: ApiErrorCode.ACCOUNT_PENDING,
     message: 'Tu cuenta está pendiente de aprobación. Te avisaremos por correo cuando esté lista.',
   });
+
+/**
+ * Un administrador denegó la solicitud de registro del profesor.
+ *
+ * El mensaje NO dice "suspendida": esta cuenta nunca estuvo activa, y decirle
+ * lo contrario al usuario sería falso. Es el motivo entero de que `REJECTED`
+ * exista como estado propio (D13).
+ */
+export const accountRejected = (): ForbiddenException =>
+  new ForbiddenException({
+    code: ApiErrorCode.ACCOUNT_REJECTED,
+    message:
+      'Tu solicitud de cuenta de profesor no fue aprobada. Escribe al equipo de soporte si crees que es un error.',
+  });
+
+/** Hay sesión, pero el rol no alcanza para el endpoint. Lo lanza el RolesGuard. */
+export const insufficientRole = (): ForbiddenException =>
+  new ForbiddenException({
+    code: ApiErrorCode.INSUFFICIENT_ROLE,
+    message: 'Tu cuenta no tiene permiso para esta acción.',
+  });

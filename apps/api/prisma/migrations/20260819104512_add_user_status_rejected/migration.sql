@@ -1,0 +1,11 @@
+-- AlterEnum
+-- Añade el estado REJECTED a UserStatus (HU-104, decisión D13).
+--
+-- Es un ADD VALUE y no un tipo nuevo: en PostgreSQL 12+ esta sentencia puede
+-- correr dentro de la transacción de la migración siempre que el valor añadido
+-- no se USE en la misma transacción, y aquí no se usa — no hay UPDATE de filas
+-- existentes, porque ninguna cuenta anterior a esta migración fue rechazada.
+--
+-- Ningún dato se altera: las cuentas PENDING siguen PENDING hasta que un
+-- administrador las apruebe o las rechace desde /admin/teachers/:id/*.
+ALTER TYPE "UserStatus" ADD VALUE 'REJECTED';

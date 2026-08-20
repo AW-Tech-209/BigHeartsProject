@@ -216,6 +216,47 @@ describe('AuthService.login', () => {
 
     await expect(service.login(loginDto())).rejects.toBeInstanceOf(ForbiddenException);
   });
+
+  // AC3 de la HU-104. El código y el mensaje son PROPIOS: a un profesor
+  // rechazado no se le puede decir que su cuenta está suspendida, porque nunca
+  // llegó a estar activa (D13).
+  it('rechaza una cuenta REJECTED con 403 ACCOUNT_REJECTED', async () => {
+    const { service } = setup({ foundUser: dbUser({ status: UserStatus.REJECTED }) });
+
+    await expect(service.login(loginDto())).rejects.toBeInstanceOf(ForbiddenException);
+    await expect(service.login(loginDto())).rejects.toMatchObject({
+      response: { code: ApiErrorCode.ACCOUNT_REJECTED },
+    });
+  });
+
+  it('el mensaje de REJECTED es distinto del de SUSPENDED (AC3)', async () => {
+    const { service: rechazada } = setup({ foundUser: dbUser({ status: UserStatus.REJECTED }) });
+    const { service: suspendida } = setup({ foundUser: dbUser({ status: UserStatus.SUSPENDED }) });
+
+    const mensaje = async (servicio: typeof rechazada): Promise<string> => {
+      try {
+        await servicio.login(loginDto());
+      } catch (error) {
+        return ((error as ForbiddenException).getResponse() as { message: string }).message;
+      }
+      throw new Error('Se esperaba un rechazo y no lo hubo.');
+    };
+
+    expect(await mensaje(rechazada)).not.toBe(await mensaje(suspendida));
+    expect(await mensaje(rechazada)).not.toMatch(/suspendida/i);
+  });
+
+  // Un profesor aprobado entra con normalidad: es la otra mitad del AC2. La
+  // primera mitad (que el estado pase a ACTIVE) vive en `admin.service.spec.ts`.
+  it('un profesor ACTIVE inicia sesión sin que el estado lo bloquee (AC2)', async () => {
+    const { service } = setup({
+      foundUser: dbUser({ role: UserRole.TEACHER, status: UserStatus.ACTIVE }),
+    });
+
+    await expect(service.login(loginDto())).resolves.toMatchObject({
+      session: { accessToken: 'access-jwt' },
+    });
+  });
 });
 
 describe('AuthService.refresh', () => {

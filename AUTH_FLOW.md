@@ -101,19 +101,26 @@ expulsaría a login a usuarios que sí la tienen.
 - **Detección de reuso**: si se presenta un refresh token **ya revocado** (señal
   de robo), se revoca **toda la familia** de sesiones activas del usuario.
 - **Estados de cuenta**: solo `ACTIVE` inicia/mantiene sesión. `SUSPENDED` →
-  `ACCOUNT_SUSPENDED` (403); `PENDING` → `ACCOUNT_PENDING` (403). El estado se
+  `ACCOUNT_SUSPENDED` (403); `PENDING` → `ACCOUNT_PENDING` (403); `REJECTED` →
+  `ACCOUNT_REJECTED` (403). Los tres códigos son distintos porque dicen cosas
+  distintas: esperar, te denegaron, te la quitaron (decisión D13). El estado se
   recomprueba en cada `refresh` (una suspensión corta la sesión al renovar).
 - **Cierre por defecto**: `JwtAuthGuard` global protege TODA la API; solo pasan
   las rutas marcadas `@Public()` (registro, login, refresh, logout, health).
+- **Autorización por rol**: `RolesGuard`, también global, se registra **detrás**
+  del `JwtAuthGuard` y solo actúa donde hay `@Roles(...)`. Sin ese decorador un
+  endpoint únicamente exige sesión. Rol insuficiente → `INSUFFICIENT_ROLE` (403),
+  distinto de `UNAUTHENTICATED`: volver a entrar no lo arregla.
 - **Rate limiting**: `AuthThrottlerGuard` en `login` y `register`
   (`AUTH_THROTTLE_LIMIT` intentos por IP cada `AUTH_THROTTLE_TTL` s;
   por defecto 5/60). Excedido → `TOO_MANY_REQUESTS` (429).
 
 ## Códigos de error nuevos (`ApiErrorCode`)
 
-`INVALID_CREDENTIALS`, `ACCOUNT_SUSPENDED`, `ACCOUNT_PENDING`, `UNAUTHENTICATED`,
-`INVALID_REFRESH_TOKEN`, `TOO_MANY_REQUESTS`. El frontend decide el mensaje según
-el `code` (no según el texto).
+`INVALID_CREDENTIALS`, `ACCOUNT_SUSPENDED`, `ACCOUNT_PENDING`, `ACCOUNT_REJECTED`,
+`UNAUTHENTICATED`, `INSUFFICIENT_ROLE`, `INVALID_REFRESH_TOKEN`,
+`TOO_MANY_REQUESTS`. El frontend decide el mensaje según el `code` (no según el
+texto).
 
 ## Cookies según entorno
 

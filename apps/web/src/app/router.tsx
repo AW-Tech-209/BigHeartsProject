@@ -3,6 +3,7 @@ import { BrowserRouter, Route, Routes } from 'react-router-dom';
 
 import { RedirectIfAuthenticated } from '@/features/auth/components/redirect-if-authenticated';
 import { RequireAuth } from '@/features/auth/components/require-auth';
+import { AdminPage } from '@/pages/AdminPage';
 import { AulasPage } from '@/pages/AulasPage';
 import { HomePage } from '@/pages/HomePage';
 import { LoginPage } from '@/pages/LoginPage';
@@ -50,6 +51,25 @@ export function AppRouter() {
           element={
             <RequireAuth>
               <PerfilPage />
+            </RequireAuth>
+          }
+        />
+
+        {/*
+          Aprobación de profesores (HU-104). No está en la barra de navegación
+          —los destinos de ADMIN son Aulas · Panel · Perfil— sino colgada de la
+          tarjeta «Administración» del panel, que ya la anunciaba. Se entra
+          desde ahí.
+
+          El `roles` evita ofrecer una pantalla que acabaría en 403; quien
+          escriba la URL a mano igualmente recibe `INSUFFICIENT_ROLE` del
+          servidor, que es quien decide.
+        */}
+        <Route
+          path="/admin"
+          element={
+            <RequireAuth roles={[UserRole.ADMIN]}>
+              <AdminPage />
             </RequireAuth>
           }
         />

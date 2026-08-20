@@ -1,8 +1,11 @@
 import { UserRole } from '@academia/types';
-import { BookOpen, CalendarCheck, ShieldCheck } from 'lucide-react';
+import { ArrowRight, BookOpen, CalendarCheck, ShieldCheck } from 'lucide-react';
+import type { ReactNode } from 'react';
+import { Link } from 'react-router-dom';
 
 import { AppShell } from '@/components/layout/app-shell';
 import { PaginaCabecera } from '@/components/layout/pagina-cabecera';
+import { Button } from '@/components/ui/button';
 import { Callout } from '@/components/ui/callout';
 import { Card } from '@/components/ui/card';
 import { RoleGate } from '@/features/auth/components/role-gate';
@@ -51,11 +54,24 @@ export function PanelPage() {
         />
       </RoleGate>
 
+      {/*
+        La entrada a `/admin`. Esta tarjeta ya prometía la aprobación de
+        profesores desde HU-206; con HU-104 la promesa existe, así que se
+        cumple aquí en vez de añadir un cuarto destino a la barra: los destinos
+        de ADMIN son tres (Aulas · Panel · Perfil) y el panel es el sitio
+        natural del que cuelga el back-office.
+      */}
       <RoleGate roles={[UserRole.ADMIN]}>
         <PanelSection
           icon={ShieldCheck}
           title="Administración"
-          body="Aquí aprobarás las cuentas de profesor pendientes y gestionarás a los usuarios de la plataforma."
+          body="Revisa las cuentas de profesor que esperan tu aprobación. Hasta que las apruebes, esas personas no pueden entrar a la plataforma."
+          accion={
+            <Button render={<Link to="/admin" />} className="h-11 gap-2 px-5 text-base">
+              Ver profesores pendientes
+              <ArrowRight aria-hidden="true" strokeWidth={2} className="size-5" />
+            </Button>
+          }
         />
       </RoleGate>
     </AppShell>
@@ -66,10 +82,13 @@ function PanelSection({
   icon: Icon,
   title,
   body,
+  accion,
 }: {
   icon: typeof BookOpen;
   title: string;
   body: string;
+  /** La salida de la sección, si ya existe la pantalla a la que lleva. */
+  accion?: ReactNode;
 }) {
   return (
     <Card className="p-5 sm:p-6">
@@ -79,6 +98,7 @@ function PanelSection({
           {title}
         </h2>
         <p className="max-w-[65ch] text-base text-muted-foreground">{body}</p>
+        {accion}
       </section>
     </Card>
   );

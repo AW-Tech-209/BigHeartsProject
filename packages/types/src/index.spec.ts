@@ -49,7 +49,18 @@ describe('enums del contrato', () => {
   });
 
   it('UserStatus no incluye ADMIN ni roles: son ejes distintos', () => {
-    expect(Object.values(UserStatus)).toEqual(['ACTIVE', 'PENDING', 'SUSPENDED']);
+    expect(Object.values(UserStatus)).toEqual(['ACTIVE', 'PENDING', 'REJECTED', 'SUSPENDED']);
+  });
+
+  /**
+   * `REJECTED` y `SUSPENDED` son estados SEPARADOS y tienen que seguir
+   * siéndolo (decisión D13, `docs/ARQUITECTURA.md` §4.5). Colapsarlos ahorraría
+   * una migración y obligaría a decirle a un profesor rechazado que su cuenta
+   * «fue suspendida», que es falso: nunca llegó a estar activa. Este test
+   * existe para que ese ahorro no se cuele sin que nadie lo note.
+   */
+  it('REJECTED y SUSPENDED son estados distintos, no alias', () => {
+    expect(UserStatus.REJECTED).not.toBe(UserStatus.SUSPENDED);
   });
 });
 
