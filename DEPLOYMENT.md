@@ -56,20 +56,28 @@ Para que **un fallo bloquee el merge**, hay que activar la protección de rama (
 
 En el servicio → **Environment**, rellena las marcadas `sync: false` en el blueprint:
 
-| Variable       | Valor                                                                                            |
-| -------------- | ------------------------------------------------------------------------------------------------ |
-| `DATABASE_URL` | Supabase → pooler (6543, `?pgbouncer=true`). La misma de tu `.env` local.                        |
-| `DIRECT_URL`   | Supabase → conexión directa (5432).                                                              |
-| `JWT_SECRET`   | Genera uno nuevo: `openssl rand -base64 48`.                                                     |
-| `CORS_ORIGIN`  | La URL del frontend en Vercel (la tendrás tras el paso 3). Ej: `https://academia-web.vercel.app` |
+| Variable         | Valor                                                                                            |
+| ---------------- | ------------------------------------------------------------------------------------------------ |
+| `DATABASE_URL`   | Supabase → pooler (6543, `?pgbouncer=true`). La misma de tu `.env` local.                        |
+| `DIRECT_URL`     | Supabase → conexión directa (5432).                                                              |
+| `JWT_SECRET`     | Genera uno nuevo: `openssl rand -base64 48`.                                                     |
+| `CORS_ORIGIN`    | La URL del frontend en Vercel (la tendrás tras el paso 3). Ej: `https://academia-web.vercel.app` |
+| `ADMIN_EMAIL`    | Email del Admin que crea el seed. **No uses el de dev** (`admin@academia.local`).                |
+| `ADMIN_PASSWORD` | Contraseña del Admin del seed. Genera una fuerte, no la de dev.                                  |
 
 `NODE_ENV=staging`, `NODE_VERSION=22` y `PORT` ya los gestiona Render (los dos primeros vía el
 blueprint, `PORT` lo inyecta Render solo).
 
-### 2.3. Migraciones
+### 2.3. Migraciones y seed
 
-No hay que hacer nada: el `startCommand` corre `prisma migrate deploy` antes de arrancar, en cada
-deploy. Es idempotente.
+No hay que hacer nada: el `startCommand` corre `prisma migrate deploy` y luego el seed
+(`npm run db:seed`) antes de arrancar, en cada deploy. Ambos son idempotentes: las migraciones ya
+aplicadas no se reaplican, y el seed hace `upsert` por email (nunca pisa un Admin existente ni
+crea usuarios de prueba en `NODE_ENV=production`; en staging sí los crea, ver `seedTestUsers` en
+`apps/api/prisma/seed.ts`).
+
+Si `ADMIN_EMAIL`/`ADMIN_PASSWORD` no están seteados en el paso 2.2, el seed aborta con un error
+claro y el deploy falla — es intencional, para no arrancar en staging/prod sin Admin.
 
 > **Free tier:** el servicio se **duerme tras ~15 min** sin tráfico y el primer request tarda
 > ~30-60s en despertar. Es normal; el frontend reintenta el health-check.
