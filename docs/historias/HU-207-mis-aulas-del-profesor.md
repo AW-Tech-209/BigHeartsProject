@@ -78,7 +78,7 @@ que prohíbe `layout-y-composicion.md`. En el vacío se queda; en cuanto hay lis
 ## 🤝 Task de contrato — va primero
 
 - [ ] **T0** — En `packages/types`: el filtro `EstadoTemporalAula` (`proximas | pasadas |
-  canceladas | todas`) y el tipo de respuesta de la vista del profesor —lo del listado, más
+canceladas | todas`) y el tipo de respuesta de la vista del profesor —lo del listado, más
       `currentBookings` y `maxStudents` explícitos—. Reutiliza el tipo de aula de HU-201; no
       declares uno paralelo. Luego `npm run build:types`.
 

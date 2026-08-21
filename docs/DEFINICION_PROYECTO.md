@@ -190,6 +190,16 @@ objetivo es que la academia pueda dejar de operar por WhatsApp desde el primer d
   minutos), con el enlace **cifrado en reposo**.
 - Notificaciones por email: confirmación, cancelación y recordatorios (24 h y 30 min antes).
 - Historial de clases para estudiante y profesor, y **marcado manual de asistencia por el profesor**.
+- **Cada rol ve lo suyo:** el estudiante explora el catálogo; el profesor tiene su listado de aulas
+  propias, incluidas canceladas y pasadas; el administrador supervisa **todas las aulas de la
+  academia**, de todos los profesores, en solo lectura.
+
+> **Nota de auditoría (2026-08-20) — ampliación del alcance.** La supervisión global del
+> administrador **no estaba en esta lista**. Se añade porque §3 promete que ese rol «gestiona la
+> operación global del servicio» y, tal como estaba el alcance, no podía ver ni una sola clase: el
+> catálogo le mostraba lo mismo que a un estudiante. Era una incoherencia entre lo que el documento
+> dice del rol y lo que el rol podía hacer. Se implementa en HU-210, en solo lectura: el
+> administrador **no** edita ni cancela el trabajo de un profesor en Fase 1.
 
 ### 5.2 Fuera del alcance de esta fase
 

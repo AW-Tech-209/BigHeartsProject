@@ -251,6 +251,39 @@ reservas `CONFIRMED` con aviso pendiente. Implicaciones:
 
 ---
 
+### 4.8 Visibilidad y acciones por rol
+
+Los tres roles comparten los mismos datos de aula; lo que cambia es **qué subconjunto ven y qué
+pueden hacer con él**. Un endpoint por propósito, nunca uno con dos comportamientos según quién
+llama.
+
+| Vista       | Endpoint                | Quién                           | Qué incluye                             |
+| ----------- | ----------------------- | ------------------------------- | --------------------------------------- |
+| Catálogo    | `GET /classrooms`       | Cualquier sesión                | Solo `PUBLISHED` y futuras              |
+| Mis aulas   | `GET /classrooms/mias`  | `TEACHER`, acotado **al token** | Las suyas: también canceladas y pasadas |
+| Supervisión | `GET /admin/classrooms` | `ADMIN`                         | **Todas**, de todos los profesores      |
+
+**Reglas que no se negocian:**
+
+1. **Solo `STUDENT` reserva.** `POST /bookings` nace con `@Roles(STUDENT)`. Ningún otro rol ve
+   jamás una acción de reservar: el elemento **no se pinta**, no se pinta deshabilitado.
+2. **El `meetingLink` no viaja en ningún listado.** Ni al profesor dueño, ni al administrador. Se
+   revela solo en el detalle y bajo la ventana de §4.1. La regla no tiene excepción por rol, y
+   menos para el rol con más poder.
+3. **El alcance sale del token, nunca de un parámetro.** No existe `?teacherId=` ni `?todas=true`.
+   Un endpoint que cambia de alcance según un parámetro es por donde se cuelan los fallos de
+   autorización.
+4. **El administrador es solo lectura sobre aulas ajenas** en Fase 1. No edita ni cancela el
+   trabajo de un profesor. Dar ese poder necesita una decisión de producto que no está tomada.
+5. **`/panel` es el inicio de todos los roles**, y su contenido cambia según quién entra. Para el
+   `ADMIN`, ese inicio **es** su panel de operación.
+
+> **Decisión D18 (2026-08-20).** El catálogo es único y la presentación varía por rol: el profesor
+> ve sus propias clases marcadas y con acceso a gestionarlas, no a reservarlas. Se resolvió así en
+> vez de darle una pantalla aparte porque ver la oferta completa es lo que le permite **coordinar
+> horarios** con el resto de la academia, que es donde se producen los choques cuando hay varias
+> clases del mismo nivel.
+
 ## 5. Estructura del monorepo
 
 ```
@@ -848,6 +881,9 @@ choque entre lo que la HU pedía y lo que el repo o estos documentos dicen.
 | D15 | El aula nace `PUBLISHED`                                                                                                   | §7.2  | HU-201 no decía en qué estado se crea, y `DRAFT` no tenía flujo de publicación en ninguna HU del sprint.                                                                                        |
 | D16 | `COMPLETED` sin escritor; se deriva por tiempo hasta HU-404                                                                | §7.2  | HU-202 prohibía editar aulas `COMPLETED`, una regla que nunca se dispararía.                                                                                                                    |
 | D17 | Vitest + Testing Library + `axe` en `apps/web` y `packages/types`, bloqueando en CI                                        | §10.2 | La T0 de HU-203 pedía tests unitarios en un workspace sin runner, y HU-103 cerró con dos AC de accesibilidad sin verificar.                                                                     |
+| D18 | Catálogo único con presentación por rol; solo `STUDENT` reserva                                                            | §4.8  | El profesor veía su propia clase igual que un estudiante, y HU-301 le habría pintado un botón de reservar encima.                                                                               |
+| D19 | `/panel` es el inicio de cada rol; para el `ADMIN` es su panel de operación, y `/admin` redirige                           | §4.8  | El administrador aterrizaba en un panel genérico con su trabajo real escondido tras una tarjeta.                                                                                                |
+| D20 | Vista de supervisión `GET /admin/classrooms`, solo lectura                                                                 | §4.8  | La Definición promete que el admin «gestiona la operación global» y no podía ver ni una clase. Amplía el alcance de Fase 1.                                                                     |
 | D18 | Las rutas `/aulas`, `/mis-clases` y `/mis-aulas` se registran en HU-206, con su estado vacío, antes de tener contenido     | §9    | Son destinos de la barra de navegación desde HU-206, y un enlace visible que cae en un 404 enseña al usuario a desconfiar de la navegación. HU-201, HU-203 y el Sprint 3 rellenan el contenido. |
 | D19 | El diccionario visual de estados de aula vive en `components/dominio/estado-aula-variantes.ts`, separado de `<EstadoAula>` | §7.3  | El AC9 de HU-206 exigía verificar la regla del sólido, pero el componente es de HU-203. Separar la tabla visual del componente permite testear la regla antes de que exista quien la obedece.   |
 | D20 | `<SessionBar>` desaparece: identidad y «Cerrar sesión» se absorben en la barra del shell                                   | §9    | Migrar las pantallas privadas al shell dejaba dos cabeceras apiladas. Un menú de avatar habría añadido estado oculto, que es justo lo que la navegación de HU-206 prohíbe.                      |
