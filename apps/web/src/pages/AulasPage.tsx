@@ -132,6 +132,17 @@ export function AulasPage() {
       {/* Estado 4 — la lista. */}
       {!isPending && !isError && data && data.items.length > 0 && (
         <>
+          {/*
+            El encabezado de la rejilla existe para que el orden de niveles no
+            salte del <h1> de la página al <h3> de la tarjeta —`axe` lo marca
+            como `heading-order`, y quien navega por encabezados con lector de
+            pantalla se queda sin el peldaño intermedio—. Va `sr-only` porque
+            visualmente la cabecera ya dice qué es esta pantalla. Detectado al
+            correr `axe` sobre la rejilla CON datos en HU-207; hasta entonces
+            solo se había verificado su estado vacío.
+          */}
+          <h2 className="sr-only">Aulas publicadas</h2>
+
           <RejillaAulas>
             {data.items.map((item) => (
               <TarjetaAula key={item.id} classroom={item} />

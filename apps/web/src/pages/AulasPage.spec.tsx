@@ -10,7 +10,8 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { getClassrooms } from '@/features/aulas/api/get-classrooms';
 import { ApiClientError } from '@/lib/api-error';
-import { renderConProviders } from '@/test/render-con-providers';
+import { esperarSinFallosDeAccesibilidad } from '@/test/accesibilidad';
+import { renderConProviders, type Tema } from '@/test/render-con-providers';
 import { darSesion } from '@/test/sesion';
 import { AulasPage } from './AulasPage';
 
@@ -168,6 +169,29 @@ describe('AulasPage — anuncio del resultado (AC9)', () => {
     await waitFor(() =>
       expect(regionViva()).toHaveTextContent('No se encontraron aulas con esos filtros.'),
     );
+  });
+});
+
+/**
+ * `axe` sobre el catálogo **con contenido**.
+ *
+ * `paginas.spec.tsx` ya recorre `/aulas` en los tres temas, pero siempre en su
+ * estado vacío, que es al que se cae sin datos. La rejilla solo aparece con
+ * respuesta, y es ahí donde se destapó el salto de `<h1>` a `<h3>` que arregló
+ * HU-207.
+ */
+describe('AulasPage — accesibilidad con datos', () => {
+  const TEMAS: Tema[] = ['light', 'dark', 'hc'];
+
+  it.each(TEMAS)('la rejilla con aulas sale limpia en el tema %s', async (tema) => {
+    vi.mocked(getClassrooms).mockResolvedValue(
+      respuesta([aula(), aula({ id: 'aula-2', title: 'Inglés de negocios' })]),
+    );
+
+    const { container } = renderConProviders(<AulasPage />, { tema });
+
+    await screen.findByRole('article', { name: 'Conversación cotidiana' });
+    await esperarSinFallosDeAccesibilidad(container);
   });
 });
 

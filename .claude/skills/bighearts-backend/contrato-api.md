@@ -111,11 +111,24 @@ Back-office, todos con `@Roles(UserRole.ADMIN)` en la clase del controlador (HU-
 | POST   | `/admin/teachers/:id/approve` | — (ruta)  | `{ user }`             |
 | POST   | `/admin/teachers/:id/reject`  | — (ruta)  | `{ user }`             |
 
-Aulas (HU-201):
+Aulas (HU-201, HU-203, HU-207):
 
-| Método | Ruta          | Entrada                | `data`          | Rol                |
-| ------ | ------------- | ---------------------- | --------------- | ------------------ |
-| POST   | `/classrooms` | `CreateClassroomInput` | `{ classroom }` | `TEACHER` `ACTIVE` |
+| Método | Ruta               | Entrada                | `data`                             | Rol                |
+| ------ | ------------------ | ---------------------- | ---------------------------------- | ------------------ |
+| POST   | `/classrooms`      | `CreateClassroomInput` | `{ classroom }`                    | `TEACHER` `ACTIVE` |
+| GET    | `/classrooms`      | `ListClassroomsQuery`  | `{ items, total, page, pageSize }` | Cualquier sesión   |
+| GET    | `/classrooms/mias` | `MisAulasQuery`        | `{ items, total, page, pageSize }` | `TEACHER`          |
+
+**`/classrooms/mias` va declarada ANTES que cualquier `@Get(':id')`**: Nest resuelve por orden de
+registro, y un `:id` por encima se tragaría `mias` como si fuera un identificador.
+
+**El alcance sale del token, y por eso `MisAulasQuery` no declara `teacherId`.** No existe
+`?teacherId=`; el `whitelist` del ValidationPipe rechaza el campo con `VALIDATION_ERROR` si alguien
+lo intenta (§4.8, regla 3). Su filtro `estado` (`EstadoTemporalAula`) define **tres grupos disjuntos
+y exhaustivos** —`canceladas` es por estado y gana sobre la fecha, así que una cancelada del mes que
+viene no cuenta como próxima— y `todas` es su unión, servida como **dos listas concatenadas**:
+próximas ascendente y después el historial descendente. Los `items` son `Classroom`, sin el nombre
+del profesor: es quien pregunta. **`meetingLink` no viaja tampoco aquí**, ni al dueño.
 
 **`@Roles` va en el MÉTODO, no en la clase** —al revés que en `AdminController`— porque el listado
 y el detalle (HU-203, HU-204) los ve cualquier usuario autenticado: un `@Roles(TEACHER)` de clase

@@ -8,7 +8,7 @@
 | **Estado**       | ⬜ Pendiente                                   |
 | **Rama**         | `hu-204-detalle-de-aula-<persona>`             |
 | **Colaboración** | Paralelo con contrato acordado                 |
-| **Depende de**   | HU-203                                         |
+| **Depende de**   | HU-203 (✅), HU-207 (✅)                       |
 | **Labels**       | `sprint-2` `prioridad:alta` `fullstack` `a11y` |
 
 > **Como** estudiante o profesor,
@@ -46,6 +46,29 @@ Quien tenga el enlace de la página debe poder entender qué pasó, no toparse c
 producto se juega la confianza del usuario, y un 404 aquí parece un error de la plataforma.
 **Sin enlace de reunión, en ningún caso.**
 
+### ⚠️ Deuda heredada de HU-207 — el AC9 que esta HU tiene que cerrar
+
+**HU-207 cerró con su AC9 SIN CUMPLIR, y es esta HU la que lo cierra.** Aquel AC pedía que pulsar
+una tarjeta de «Mis aulas» llevara al detalle del aula, pero esta HU —la que trae ese detalle— no
+existía: no hay ruta ni pantalla, así que enlazar habría mandado al profesor a la página 404. Se
+decidió **no pintar un enlace roto** (`AppRoutes` documenta por qué: un enlace visible que cae en un
+404 enseña a desconfiar de la navegación) y dejar la deuda anotada aquí.
+
+Lo que esta HU tiene que hacer, además de su propio alcance:
+
+1. **Registrar la ruta del detalle** en `app/router.tsx`, colgando de `/aulas/:id` para cualquier
+   sesión. En el backend, `@Get(':id')` va **debajo** de `@Get('mias')` en `ClassroomsController`:
+   Nest resuelve por orden de registro y un `:id` por encima se tragaría `mias`.
+2. **Convertir la tarjeta en enlace al detalle**, en `<TarjetaAula>` y por tanto en las dos
+   perspectivas (catálogo y profesor). El título del aula es el enlace, no la tarjeta entera: el
+   `<article>` ya tiene `aria-labelledby` apuntando al `<h3>`, así que envolverlo todo duplicaría el
+   nombre accesible. La tarjeta lleva `focus-within:ring-2` (`patrones-dominio.md`).
+3. **No meter las acciones de gestión en la tarjeta.** Editar y cancelar viven aquí, en el detalle:
+   multiplicarlas por seis tarjetas rompe la regla de una acción primaria por pantalla.
+4. Al cerrarlo, **marcar el AC9 de HU-207 como cumplido** en su archivo y quitar esta sección.
+
+Aquí es **B6** y **AC8**.
+
 ## 🤝 Task de contrato — va primero
 
 - [ ] **T0** — En `packages/types`: el tipo `ClassroomDetail` (todo lo del listado + `description` + los datos del profesor + `meetingLink` **opcional y omitido** cuando no aplica + el campo
@@ -75,6 +98,8 @@ producto se juega la confianza del usuario, y un 404 aquí parece un error de la
       deshabilitado**: el skill prohíbe deshabilitar sin explicar, y aquí no hay nada que explicar
       todavía.
 - [ ] **B5** — Los 4 estados: cargando, no encontrada, error y contenido.
+- [ ] **B6** — **Saldar la deuda del AC9 de HU-207**: registrar la ruta y convertir el título de
+      `<TarjetaAula>` en enlace al detalle, en las dos perspectivas. Ver la sección de arriba.
 
 ## ✅ Criterios de aceptación
 
@@ -94,7 +119,10 @@ producto se juega la confianza del usuario, y un 404 aquí parece un error de la
 - [ ] **AC7** — **Accesibilidad:** un solo `<h1>`, el foco salta a él al navegar, la página se
       recorre entera con teclado con foco visible, funciona en `.dark` y `.hc`, y cumple el
       checklist del skill `bighearts-ui`.
-- [ ] **AC8** — **Verificación automática:** `typecheck`, `lint`, `format:check`, `build` y
+- [ ] **AC8** — **Cierra el AC9 de HU-207:** pulsar una tarjeta en `/mis-aulas` y en `/aulas` lleva
+      al detalle de esa aula, y desde el detalle el dueño puede editar y cancelar (HU-202). Con el
+      AC marcado también en el archivo de HU-207.
+- [ ] **AC9** — **Verificación automática:** `typecheck`, `lint`, `format:check`, `build` y
       `test --workspace @academia/api` en verde.
 
 ## 🚫 Fuera de alcance

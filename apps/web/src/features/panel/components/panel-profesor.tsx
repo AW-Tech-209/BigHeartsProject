@@ -1,4 +1,4 @@
-import { CLASSROOMS_PAGE_SIZE_MAX } from '@academia/types';
+import { EstadoTemporalAula } from '@academia/types';
 import { CalendarCheck, RotateCw } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
@@ -8,8 +8,7 @@ import { RejillaAulas } from '@/components/layout/rejilla-aulas';
 import { Button } from '@/components/ui/button';
 import { Callout } from '@/components/ui/callout';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useAuth } from '@/features/auth/hooks/use-auth';
-import { useClassrooms } from '@/features/aulas/hooks/use-classrooms';
+import { useMisAulas } from '@/features/aulas/hooks/use-mis-aulas';
 
 /** Cuántas clases próximas caben en el inicio: una fila de la rejilla en escritorio. */
 const PROXIMAS_VISIBLES = 3;
@@ -17,30 +16,23 @@ const PROXIMAS_VISIBLES = 3;
 /**
  * El inicio del profesor: las clases que va a impartir.
  *
- * ⚠️ **De dónde sale el dato, y por qué es provisional.**
- * `ARQUITECTURA.md` §4.8 dice que las aulas de un profesor se leen por
- * `GET /classrooms/mias`, acotado al token — y su regla 3 prohíbe un
- * `?teacherId=`. Ese endpoint es la task A1 de HU-207 y **todavía no existe**,
- * mientras que HU-209 es de alcance frontend. Así que, hasta que aterrice, esto
- * lee el catálogo público (que ya viene ordenado por fecha, solo `PUBLISHED` y
- * solo futuras) y **compara `teacherId` contra el usuario de la sesión en el
- * cliente** — el mismo mecanismo que fija la decisión 2 de HU-208.
+ * **De dónde sale el dato.** `GET /classrooms/mias` con el filtro `proximas`
+ * (HU-207): ya viene acotado al token y ordenado con la más cercana primero, así
+ * que aquí no hay nada que filtrar ni que ordenar — solo pedir tres.
  *
- * La limitación que eso deja: si las clases de este profesor cayeran fuera de
- * las {@link CLASSROOMS_PAGE_SIZE_MAX} próximas de TODA la academia, aquí se
- * vería el vacío teniéndolas. **Cuando HU-207 exista, esta consulta se sustituye
- * por `GET /classrooms/mias` y la limitación desaparece.** No repliques este
- * filtro en cliente en ninguna pantalla nueva.
+ * Hasta HU-207 esto leía el catálogo público y comparaba `teacherId` contra la
+ * sesión **en el cliente**, con la limitación de que las clases del profesor
+ * podían caer fuera de la página que devolvía el catálogo y el panel mostraba el
+ * vacío teniéndolas. Eso ya no pasa, y **no es un patrón a replicar**: el
+ * alcance de una lista lo decide el servidor (`ARQUITECTURA.md` §4.8, regla 3).
  */
 export function PanelProfesor() {
-  const { user } = useAuth();
-  const { data, isPending, isError, refetch, isRefetching } = useClassrooms({
-    pageSize: CLASSROOMS_PAGE_SIZE_MAX,
+  const { data, isPending, isError, refetch, isRefetching } = useMisAulas({
+    estado: EstadoTemporalAula.PROXIMAS,
+    pageSize: PROXIMAS_VISIBLES,
   });
 
-  const proximas = (data?.items ?? [])
-    .filter((aula) => aula.teacherId === user?.id)
-    .slice(0, PROXIMAS_VISIBLES);
+  const proximas = data?.items ?? [];
 
   const crearUnaClase = (
     <Button render={<Link to="/mis-aulas/nueva" />} className="h-12 px-6 text-base">
@@ -115,7 +107,10 @@ export function PanelProfesor() {
       {!isPending && !isError && proximas.length > 0 && (
         <RejillaAulas>
           {proximas.map((aula) => (
-            <TarjetaAula key={aula.id} classroom={aula} />
+            // Misma perspectiva que «Mis aulas»: es el profesor mirando sus
+            // propias clases, así que la tarjeta responde su pregunta —cuánta
+            // gente viene— y no la del estudiante —cuánto queda—.
+            <TarjetaAula key={aula.id} classroom={aula} perspectiva="profesor" />
           ))}
         </RejillaAulas>
       )}

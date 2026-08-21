@@ -2,6 +2,7 @@ import { Body, Controller, Get, HttpCode, HttpStatus, Post, Query } from '@nestj
 import {
   type CreateClassroomResponse,
   type ListClassroomsResponse,
+  type MisAulasResponse,
   UserRole,
 } from '@academia/types';
 
@@ -11,6 +12,7 @@ import { Roles } from '../auth/decorators/roles.decorator';
 import { ClassroomsService } from './classrooms.service';
 import { CreateClassroomDto } from './dto/create-classroom.dto';
 import { ListClassroomsDto } from './dto/list-classrooms.dto';
+import { ListMisAulasDto } from './dto/list-mis-aulas.dto';
 
 /**
  * Aulas virtuales.
@@ -53,5 +55,29 @@ export class ClassroomsController {
   @Get()
   async list(@Query() query: ListClassroomsDto): Promise<ListClassroomsResponse> {
     return this.classroomsService.listClassrooms(query);
+  }
+
+  /**
+   * GET /classrooms/mias — el registro del profesor (HU-207).
+   *
+   * Devuelve **todas** sus aulas: publicadas, canceladas y ya pasadas. No es el
+   * catálogo con otro filtro, es otra vista (§4.8): el catálogo existe para
+   * descubrir una clase, esta para gestionar las propias.
+   *
+   * El `teacherId` sale de `@CurrentUser()`. **No hay ni habrá
+   * `?teacherId=`**: un endpoint que cambia de alcance según un parámetro es
+   * por donde se cuelan los fallos de autorización (§4.8, regla 3).
+   *
+   * ⚠️ **Esta ruta tiene que declararse ANTES que cualquier `@Get(':id')`.**
+   * Nest resuelve por orden de registro, así que un `:id` por encima se tragaría
+   * `mias` como si fuera un identificador. HU-204 añade ese detalle: va debajo.
+   */
+  @Get('mias')
+  @Roles(UserRole.TEACHER)
+  async listMias(
+    @CurrentUser() teacher: AuthenticatedUser,
+    @Query() query: ListMisAulasDto,
+  ): Promise<MisAulasResponse> {
+    return this.classroomsService.listMisAulas(teacher, query);
   }
 }
