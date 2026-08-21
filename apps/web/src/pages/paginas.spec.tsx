@@ -10,7 +10,6 @@ import { httpClient } from '@/lib/http-client';
 import { esperarSinFallosDeAccesibilidad } from '@/test/accesibilidad';
 import { renderConProviders, type Tema } from '@/test/render-con-providers';
 import { darSesion, usuarioDePrueba } from '@/test/sesion';
-import { AdminPage } from './AdminPage';
 import { AulasPage } from './AulasPage';
 import { HomePage } from './HomePage';
 import { LoginPage } from './LoginPage';
@@ -46,12 +45,36 @@ type CasoDePagina = {
   rol: UserRole | null;
 };
 
-/** Las seis pantallas que ya existían, más las tres que estrena esta HU. */
+/**
+ * Las pantallas del producto.
+ *
+ * `PanelPage` aparece **tres veces, una por rol** (HU-209): es una sola ruta con
+ * tres contenidos, así que el contrato estructural —un `<h1>`, foco, `axe` en
+ * los tres temas— hay que verificarlo en los tres, no solo en el del estudiante.
+ * Es también donde se cubre el AC9 de la HU.
+ */
 const PAGINAS: CasoDePagina[] = [
   { nombre: 'HomePage', elemento: <HomePage />, h1: 'Academia', rol: null },
   { nombre: 'LoginPage', elemento: <LoginPage />, h1: 'Inicia sesión', rol: null },
   { nombre: 'RegisterPage', elemento: <RegisterPage />, h1: 'Crea tu cuenta', rol: null },
-  { nombre: 'PanelPage', elemento: <PanelPage />, h1: 'Hola, Ana', rol: UserRole.STUDENT },
+  {
+    nombre: 'PanelPage (estudiante)',
+    elemento: <PanelPage />,
+    h1: 'Hola, Ana',
+    rol: UserRole.STUDENT,
+  },
+  {
+    nombre: 'PanelPage (profesor)',
+    elemento: <PanelPage />,
+    h1: 'Hola, Ana',
+    rol: UserRole.TEACHER,
+  },
+  {
+    nombre: 'PanelPage (administrador)',
+    elemento: <PanelPage />,
+    h1: 'Hola, Ana',
+    rol: UserRole.ADMIN,
+  },
   { nombre: 'PerfilPage', elemento: <PerfilPage />, h1: 'Tu perfil', rol: UserRole.STUDENT },
   {
     nombre: 'NotFoundPage',
@@ -67,20 +90,14 @@ const PAGINAS: CasoDePagina[] = [
     rol: UserRole.STUDENT,
   },
   { nombre: 'MisAulasPage', elemento: <MisAulasPage />, h1: 'Mis aulas', rol: UserRole.TEACHER },
-  {
-    nombre: 'AdminPage',
-    elemento: <AdminPage />,
-    h1: 'Profesores pendientes',
-    rol: UserRole.ADMIN,
-  },
 ];
 
 beforeEach(() => {
   vi.clearAllMocks();
   vi.mocked(httpClient.get).mockResolvedValue({ status: 'ok', uptime: 1 });
   vi.mocked(getProfile).mockResolvedValue({ user: usuarioDePrueba() });
-  // La cola vacía es el estado normal de esta pantalla; el resto de sus estados
-  // se prueban en `AdminPage.spec.tsx`.
+  // La cola vacía es el estado normal del panel del administrador; el resto de
+  // sus estados se prueban en `aprobaciones-pendientes.spec.tsx`.
   vi.mocked(getPendingTeachers).mockResolvedValue({ teachers: [] });
   // Igual para el catálogo: el resto de sus estados se prueban en `AulasPage.spec.tsx`.
   vi.mocked(getClassrooms).mockResolvedValue({ items: [], total: 0, page: 1, pageSize: 20 });

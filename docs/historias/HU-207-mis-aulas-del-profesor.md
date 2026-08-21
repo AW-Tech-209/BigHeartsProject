@@ -56,6 +56,8 @@ Reutiliza los componentes de HU-203; no duplica su endpoint.
   `<EstadoVacio>` — ya están en la pantalla.
 - **Habilita:** HU-204 y HU-202. Sin este listado, el detalle del aula propia y sus acciones de
   edición no tienen punto de entrada.
+- **⚠️ Salda una deuda de HU-209.** El panel del profesor ya está construido y **hoy lee una fuente
+  provisional**, a la espera de este endpoint. Ver T6.
 
 ### Decisiones de auditoría (2026-08-19)
 
@@ -117,6 +119,29 @@ canceladas | todas`) y el tipo de respuesta de la vista del profesor —lo del l
 - [ ] **T5** — Corregir el comentario de `MisAulasPage.tsx` que atribuye este listado a HU-203.
       Documenta la relación real: HU-203 es el listado público, esta HU es la vista del profesor.
 
+- [ ] **T6** — **Sacar al panel del profesor de su fuente provisional.** Ver el detalle debajo.
+
+### T6 en detalle — la deuda que dejó HU-209
+
+`features/panel/components/panel-profesor.tsx` muestra hoy las próximas clases del profesor
+**filtrando el catálogo público por `teacherId` en el cliente**, porque `GET /classrooms/mias` no
+existía cuando se construyó el panel. Es una ventana aproximada: si las clases del profesor caen
+fuera de las `CLASSROOMS_PAGE_SIZE_MAX` próximas de **toda** la academia, el panel muestra el vacío
+teniéndolas — exactamente la clase de mentira que originó HU-209.
+
+Con este endpoint en pie:
+
+1. Cambiar la consulta a `GET /classrooms/mias` con el filtro `proximas`, que ya viene acotado al
+   token y ordenado ascendente. **Se acabó el filtro en cliente**: borrar el `.filter()` por
+   `teacherId` y la dependencia de `useAuth` que existe solo para eso.
+2. Borrar del comentario del componente el bloque _«⚠️ De dónde sale el dato, y por qué es
+   provisional»_ y sustituirlo por la referencia a este endpoint.
+3. Quitar de `ARQUITECTURA.md` §9 la nota **«Deuda conocida de HU-209»**, que existe solo para
+   señalar esto.
+4. Los tests del panel del profesor en `pages/PanelPage.spec.tsx` pasan a mockear la frontera de red
+   nueva. El caso «descarta las de otro profesor» **deja de aplicar al cliente**: el alcance lo
+   garantiza el servidor y se prueba en A6/AC3.
+
 ## ✅ Criterios de aceptación
 
 - [ ] **AC1** — Un profesor con tres aulas creadas las ve **las tres** en `/mis-aulas`. Ya no
@@ -142,7 +167,10 @@ canceladas | todas`) y el tipo de respuesta de la vista del profesor —lo del l
 - [ ] **AC12** — **Accesibilidad:** la rejilla y los filtros se recorren con teclado con foco
       visible, el cambio de resultados se anuncia por `aria-live`, `axe` limpio, y funciona en
       `.dark` y `.hc`.
-- [ ] **AC13** — **Verificación automática:** `typecheck`, `lint`, `format:check`, `build` y
+- [ ] **AC13** — **El panel del profesor (`/panel`) lee de `GET /classrooms/mias`**, no del catálogo
+      público. `grep -rn "teacherId ===" apps/web/src` no devuelve nada en
+      `features/panel/`, y la nota «Deuda conocida de HU-209» ya no está en `ARQUITECTURA.md` §9.
+- [ ] **AC14** — **Verificación automática:** `typecheck`, `lint`, `format:check`, `build` y
       `npm run test` en verde.
 
 ## 🚫 Fuera de alcance

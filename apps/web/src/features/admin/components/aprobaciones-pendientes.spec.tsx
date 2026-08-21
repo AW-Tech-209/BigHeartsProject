@@ -1,4 +1,4 @@
-import { UserRole, UserStatus, type User } from '@academia/types';
+﻿import { UserRole, UserStatus, type User } from '@academia/types';
 import { screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -7,7 +7,7 @@ import { resolveTeacher } from '@/features/admin/api/resolve-teacher';
 import { ApiClientError } from '@/lib/api-error';
 import { renderConProviders } from '@/test/render-con-providers';
 import { darSesion } from '@/test/sesion';
-import { AdminPage } from './AdminPage';
+import { AprobacionesPendientes } from './aprobaciones-pendientes';
 
 // Se mockea la frontera de red del feature, no axios: es donde acaba el dominio.
 vi.mock('@/features/admin/api/get-pending-teachers', () => ({
@@ -41,11 +41,11 @@ function regionViva() {
   return screen.getByRole('status');
 }
 
-describe('AdminPage — los cuatro estados (B6)', () => {
+describe('Aprobaciones pendientes — los cuatro estados (B6)', () => {
   it('cargando: lo dice con texto, no con un spinner mudo', () => {
     vi.mocked(getPendingTeachers).mockReturnValue(new Promise(() => undefined));
 
-    renderConProviders(<AdminPage />);
+    renderConProviders(<AprobacionesPendientes />);
 
     expect(screen.getByText('Cargando los profesores pendientes…')).toBeInTheDocument();
   });
@@ -53,7 +53,7 @@ describe('AdminPage — los cuatro estados (B6)', () => {
   it('vacío: invita a entender por qué no hay nada, sin lamentarlo', async () => {
     vi.mocked(getPendingTeachers).mockResolvedValue({ teachers: [] });
 
-    renderConProviders(<AdminPage />);
+    renderConProviders(<AprobacionesPendientes />);
 
     expect(await screen.findByText('No hay profesores esperando aprobación.')).toBeInTheDocument();
     expect(screen.queryByRole('table')).toBeNull();
@@ -64,7 +64,7 @@ describe('AdminPage — los cuatro estados (B6)', () => {
       new ApiClientError({ code: 'NETWORK_ERROR', message: 'No pudimos conectar.' }),
     );
 
-    renderConProviders(<AdminPage />);
+    renderConProviders(<AprobacionesPendientes />);
 
     expect(await screen.findByText('No pudimos cargar la lista')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /volver a cargar/i })).toBeInTheDocument();
@@ -73,21 +73,21 @@ describe('AdminPage — los cuatro estados (B6)', () => {
   it('éxito: pinta la tabla con quien espera', async () => {
     vi.mocked(getPendingTeachers).mockResolvedValue({ teachers: [profesor()] });
 
-    renderConProviders(<AdminPage />);
+    renderConProviders(<AprobacionesPendientes />);
 
     expect(await screen.findByRole('table')).toBeInTheDocument();
     expect(screen.getByRole('rowheader')).toHaveTextContent('Paula Profesora');
   });
 });
 
-describe('AdminPage — tras la acción (B5, AC7)', () => {
+describe('Aprobaciones pendientes — tras la acción (B5, AC7)', () => {
   it('aprobar anuncia el resultado por la región viva y recarga la lista', async () => {
     vi.mocked(getPendingTeachers).mockResolvedValue({ teachers: [profesor()] });
     vi.mocked(resolveTeacher).mockResolvedValue({
       user: profesor({ status: UserStatus.ACTIVE }),
     });
 
-    const { user } = renderConProviders(<AdminPage />);
+    const { user } = renderConProviders(<AprobacionesPendientes />);
 
     await user.click(await screen.findByRole('button', { name: 'Aprobar a Paula Profesora' }));
     await user.click(await screen.findByRole('button', { name: 'Aprobar profesor' }));
@@ -117,7 +117,7 @@ describe('AdminPage — tras la acción (B5, AC7)', () => {
       user: profesor({ status: UserStatus.REJECTED }),
     });
 
-    const { user } = renderConProviders(<AdminPage />);
+    const { user } = renderConProviders(<AprobacionesPendientes />);
 
     await user.click(await screen.findByRole('button', { name: 'Rechazar a Paula Profesora' }));
     await user.click(await screen.findByRole('button', { name: 'Rechazar profesor' }));
@@ -148,7 +148,7 @@ describe('AdminPage — tras la acción (B5, AC7)', () => {
       ),
     );
 
-    const { user } = renderConProviders(<AdminPage />);
+    const { user } = renderConProviders(<AprobacionesPendientes />);
 
     await user.click(await screen.findByRole('button', { name: 'Aprobar a Paula Profesora' }));
     await user.click(await screen.findByRole('button', { name: 'Aprobar profesor' }));
