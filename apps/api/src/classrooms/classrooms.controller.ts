@@ -1,5 +1,16 @@
-import { Body, Controller, Get, HttpCode, HttpStatus, Post, Query } from '@nestjs/common';
 import {
+  Body,
+  Controller,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Param,
+  ParseUUIDPipe,
+  Post,
+  Query,
+} from '@nestjs/common';
+import {
+  type ClassroomDetailResponse,
   type CreateClassroomResponse,
   type ListClassroomsResponse,
   type MisAulasResponse,
@@ -10,9 +21,28 @@ import type { AuthenticatedUser } from '../auth/auth.types';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { ClassroomsService } from './classrooms.service';
+import { classroomNotFound } from './classrooms.errors';
 import { CreateClassroomDto } from './dto/create-classroom.dto';
 import { ListClassroomsDto } from './dto/list-classrooms.dto';
 import { ListMisAulasDto } from './dto/list-mis-aulas.dto';
+
+/**
+ * Valida que el `:id` de la ruta tenga forma de UUID **antes** de que llegue a
+ * Prisma, y trata el fallo como «no existe».
+ *
+ * Sin esto, `/classrooms/hola` llega a un `findUnique` sobre una columna
+ * `@db.Uuid`, Postgres rechaza el literal y la respuesta es un 500. Mismo patrón
+ * y mismo motivo que `idDeProfesor` en `AdminController`: desde fuera, un id
+ * malformado y uno inexistente son el mismo hecho.
+ *
+ * Se instancia una sola vez, arriba del todo: un `new` dentro de `@Param()`
+ * construiría un pipe por petición, y los decoradores se evalúan al definir la
+ * clase, así que declararlo debajo no compila.
+ *
+ * Se exporta para que el spec pueda comprobar esa traducción: es una garantía
+ * del AC3, no un detalle interno.
+ */
+export const idDeAula = new ParseUUIDPipe({ exceptionFactory: () => classroomNotFound() });
 
 /**
  * Aulas virtuales.
@@ -68,9 +98,10 @@ export class ClassroomsController {
    * `?teacherId=`**: un endpoint que cambia de alcance según un parámetro es
    * por donde se cuelan los fallos de autorización (§4.8, regla 3).
    *
-   * ⚠️ **Esta ruta tiene que declararse ANTES que cualquier `@Get(':id')`.**
-   * Nest resuelve por orden de registro, así que un `:id` por encima se tragaría
-   * `mias` como si fuera un identificador. HU-204 añade ese detalle: va debajo.
+   * ⚠️ **Esta ruta tiene que declararse ANTES que `@Get(':id')`.** Nest resuelve
+   * por orden de registro, así que un `:id` por encima se tragaría `mias` como
+   * si fuera un identificador. El detalle de HU-204 va justo debajo, y
+   * `classrooms.controller.spec.ts` vigila que ese orden no se invierta.
    */
   @Get('mias')
   @Roles(UserRole.TEACHER)
@@ -79,5 +110,25 @@ export class ClassroomsController {
     @Query() query: ListMisAulasDto,
   ): Promise<MisAulasResponse> {
     return this.classroomsService.listMisAulas(teacher, query);
+  }
+
+  /**
+   * GET /classrooms/:id — el detalle completo de un aula (HU-204).
+   *
+   * **Va la última a propósito**: es la ruta más genérica del controlador y
+   * cualquier `@Get('<literal>')` que se añada mañana tiene que quedar por
+   * encima de ella, o dejará de existir.
+   *
+   * Sin `@Roles`: la ve cualquier usuario con sesión válida. Lo que cambia según
+   * quién pregunta no es el acceso a la pantalla sino **un campo** —el
+   * `meetingLink`—, y esa decisión la toma el servicio, no un decorador.
+   */
+  @Get(':id')
+  async detail(
+    @CurrentUser() viewer: AuthenticatedUser,
+    @Param('id', idDeAula) classroomId: string,
+  ): Promise<ClassroomDetailResponse> {
+    const classroom = await this.classroomsService.getClassroomDetail(viewer, classroomId);
+    return { classroom };
   }
 }

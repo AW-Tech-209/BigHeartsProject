@@ -133,6 +133,22 @@ Aquí está su especificación técnica.
 | Fuera de la ventana | El campo **no viaja en la respuesta**. No se envía cifrado ni vacío: se omite. El frontend nunca debe recibir algo que no puede mostrar.                        |
 | Dónde se decide     | En el **servidor**, siempre. El frontend replica la lógica solo para pintar el estado, nunca como control de acceso.                                            |
 
+> **Decisión D25 (2026-08-21, HU-204).** El enlace se revela **solo en `GET /classrooms/:id`**, y la
+> decisión vive en **un único método privado del servicio** (`revelarElEnlace()`). En el Sprint 2 su
+> regla completa es «el que pide es el profesor dueño»: la otra mitad de esta tabla —el estudiante
+> con `Booking.status = CONFIRMED` dentro de la ventana— no tiene forma de evaluarse porque `Booking`
+> no existe hasta el Sprint 3. **HU-303 extiende ese método, no el endpoint.**
+>
+> Y una regla que esta tabla no cubría: **un aula `CANCELLED` no revela su enlace a nadie, ni al
+> profesor dueño.** Esa reunión no va a ocurrir; dar la URL solo serviría para que alguien entre a
+> una sala que ya nadie atiende.
+
+> **Decisión D26 (2026-08-21, HU-204).** **Un aula `CANCELLED` se puede abrir en su detalle**,
+> aunque no aparezca en el catálogo. Quien llegue con el enlace guardado de la página tiene que
+> poder entender qué pasó, y un 404 ahí se lee como un fallo de la plataforma justo cuando el usuario
+> está confundido. `CLASSROOM_NOT_FOUND` queda reservado al id que no existe —y al malformado, que
+> desde fuera es el mismo hecho—.
+
 ### 4.2 Cupos y concurrencia
 
 El punto técnicamente más crítico de la Fase 1. Dos estudiantes pidiendo el último cupo a la vez
@@ -557,6 +573,12 @@ de implementación están en §7.1.
 | `reminder24hSentAt?`, `reminder30mSentAt?` | `timestamptz`                                        | Idempotencia del cron (§4.6).                                   |
 
 Índices: el único parcial de §4.3, más `(classroomId)` y `(studentId, status)` para el historial.
+
+> **`BookingStatus` ya existe en `@academia/types` desde HU-204**, con estos cuatro miembros y sin
+> gemelo todavía en `schema.prisma`. Se adelantó para poder tipar `ClassroomDetail.myBookingStatus`
+> —el campo que el detalle devuelve en `null` durante todo el Sprint 2—, de modo que HU-301 solo
+> tenga que empezar a rellenarlo en vez de cambiar la forma del contrato. Cuando llegue el modelo, el
+> enum de Prisma se crea contra esa lista, no contra otra.
 
 > **Nota de auditoría — dos máquinas de estado.** El `.docx` describía los estados del aula como
 > `activa / pausada / finalizada` en §4.2 y como `DRAFT / PUBLISHED / CANCELLED / COMPLETED` en

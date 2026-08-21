@@ -88,6 +88,16 @@ subir el umbral):
   el problema es el componente, no el test — y ese es justo el fallo que queremos que salte.
 - **Los tres modos de color** se montan con `renderConProviders(ui, { tema: 'dark' | 'hc' })`
   cuando el componente cambie de aspecto entre ellos.
+- **Una pantalla cuyo `<h1>` dependa de un parámetro de la ruta se monta sobre `<AppRoutes />`**,
+  con `renderConProviders(<AppRoutes />, { ruta: '/aulas/xxx' })`. Montarla suelta deja `useParams()`
+  vacío y el test acaba probando otra cosa. Patrón: `pages/AulaDetallePage.spec.tsx`, que además
+  cubre así la navegación real desde la tarjeta. Por eso esas páginas **no** entran en la tabla de
+  `pages/paginas.spec.tsx`, que monta cada elemento por su cuenta.
+- **`testTimeout` está en 15 s en `apps/web/vitest.config.ts`, no en los 5 s por defecto.** Los
+  recorridos con teclado escriben carácter a carácter con temporizadores reales y rondan los 4 s;
+  con los workers compitiendo por CPU, el límite de 5 s convertía cada archivo de test nuevo en un
+  fallo aparentemente ajeno. Si un test tuyo se acerca a ese techo, el problema es el test, no el
+  límite.
 
 **Lo que `axe` NO cubre, y por tanto sigue siendo manual (§4):** que el orden del foco tenga
 sentido, que un lector de pantalla lea algo comprensible, que el texto se entienda, y el contraste

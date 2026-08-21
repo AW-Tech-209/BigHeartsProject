@@ -27,6 +27,23 @@ export default mergeConfig(
       setupFiles: ['./src/test/setup.ts'],
       include: ['src/**/*.{spec,test}.{ts,tsx}'],
       css: false,
+      /*
+        15 s, no los 5 s por defecto.
+
+        Los tests de recorrido con teclado escriben con `user-event`, que teclea
+        carácter a carácter con temporizadores reales: el de `FormularioAula`
+        —once campos— ronda los 4 s él solo, y con los workers de Vitest
+        compitiendo por CPU se pasaba de 5 s y fallaba. Era un fallo latente que
+        se disparaba al añadir cualquier archivo de test nuevo, no un problema
+        del formulario: aparece o no según cuántos tests corran a la vez, que es
+        la peor forma de romperse.
+
+        No se sube para tapar un test lento: se sube porque el límite estaba por
+        debajo de lo que este tipo de test cuesta de verdad, y en un producto
+        para personas sordas el recorrido con teclado no es un test que se pueda
+        aligerar quitándole pasos. Detectado en HU-204.
+      */
+      testTimeout: 15_000,
     },
   }),
 );

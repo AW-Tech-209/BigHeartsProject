@@ -54,6 +54,12 @@ type CasoDePagina = {
  * tres contenidos, así que el contrato estructural —un `<h1>`, foco, `axe` en
  * los tres temas— hay que verificarlo en los tres, no solo en el del estudiante.
  * Es también donde se cubre el AC9 de la HU.
+ *
+ * **`AulaDetallePage` no está en esta lista, y no es un olvido** (HU-204): su
+ * `<h1>` sale de un `:id` de la ruta, así que montarla suelta —como hace este
+ * archivo— dejaría `useParams()` vacío. Su contrato estructural se verifica en
+ * `AulaDetallePage.spec.tsx`, sobre `<AppRoutes />` y en sus cuatro estados,
+ * que además tienen cada uno su propio `<h1>`.
  */
 const PAGINAS: CasoDePagina[] = [
   { nombre: 'HomePage', elemento: <HomePage />, h1: 'Academia', rol: null },

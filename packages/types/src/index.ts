@@ -378,6 +378,69 @@ export interface ListClassroomsResponse {
 }
 
 /**
+ * Estado de la reserva de un estudiante en un aula. Especificado en
+ * `docs/ARQUITECTURA.md` §7.2, tabla de `Booking`.
+ *
+ * **En el Sprint 2 nadie lo escribe y no tiene gemelo en `schema.prisma`**: el
+ * modelo `Booking` no existe hasta el Sprint 3. Se declara aquí porque HU-204
+ * necesita nombrar el tipo del campo `myBookingStatus`, y dejarlo sin tipar
+ * obligaría a HU-301 a cambiar la forma del contrato en vez de solo empezar a
+ * rellenarlo. Cuando llegue el modelo, este enum y el de Prisma se crean como
+ * gemelos, con estos mismos miembros.
+ *
+ * `ATTENDED` y `NO_SHOW` los fija el profesor al marcar asistencia (HU-404).
+ */
+export enum BookingStatus {
+  CONFIRMED = 'CONFIRMED',
+  CANCELLED = 'CANCELLED',
+  ATTENDED = 'ATTENDED',
+  NO_SHOW = 'NO_SHOW',
+}
+
+/**
+ * El aula completa que devuelve `GET /classrooms/:id` (HU-204).
+ *
+ * Es `ClassroomListItem` —el aula pública más el nombre de su profesor— y no
+ * un tipo paralelo: el detalle enseña **lo mismo que la tarjeta y algo más**,
+ * así que heredarlo garantiza que un campo añadido al listado no se olvide
+ * aquí. `description` ya viaja en `Classroom` desde HU-201.
+ *
+ * Lo que el detalle añade son las dos cosas que **solo** se deciden mirando
+ * quién pregunta:
+ *
+ *  - **`meetingLink`** (heredado de `Classroom`, opcional). Es el único
+ *    endpoint que puede revelarlo (§4.8, regla 2: no viaja en ningún listado).
+ *    Cuando no corresponde, **la clave se omite del JSON**: ni `null`, ni
+ *    cifrada, ni escondida en otro campo.
+ *  - **`myBookingStatus`**, abajo.
+ */
+export interface ClassroomDetail extends ClassroomListItem {
+  /**
+   * La reserva de **quien pide**, si tiene alguna. `null` si no la tiene.
+   *
+   * **En el Sprint 2 siempre llega `null`** y eso no es un olvido: `Booking` no
+   * existe todavía. Lo rellena HU-301, y HU-303 lo usa para abrir la ventana de
+   * acceso al enlace.
+   *
+   * Va en `null` y no omitido —al revés que `meetingLink`— a propósito: omitir
+   * significa «no te corresponde saberlo», y aquí el hecho es «no hay reserva».
+   * Son dos respuestas distintas y el frontend las trata distinto.
+   */
+  myBookingStatus: BookingStatus | null;
+}
+
+/**
+ * Respuesta de `GET /classrooms/:id`.
+ *
+ * Envuelta en `{ classroom }` y no devuelta plana, como `CreateClassroomResponse`:
+ * un objeto con nombre deja sitio para añadir datos hermanos —los estudiantes
+ * inscritos de HU-304— sin cambiar la forma de lo que ya lee el frontend.
+ */
+export interface ClassroomDetailResponse {
+  classroom: ClassroomDetail;
+}
+
+/**
  * Filtro temporal de «Mis aulas» (`GET /classrooms/mias`, HU-207).
  *
  * Los tres primeros valores son **disjuntos y exhaustivos**: cada aula del
@@ -491,6 +554,19 @@ export const ApiErrorCode = {
    * borre la cuenta.
    */
   USER_NOT_FOUND: 'USER_NOT_FOUND',
+  /**
+   * No hay ningún aula con ese identificador (HU-204).
+   *
+   * Lo emite también un `id` con forma inválida: desde fuera, «ese uuid no
+   * existe» y «eso no es un uuid» son el mismo hecho —ahí no hay nada—, y
+   * distinguirlos solo serviría para confirmarle a quien sondea que acertó con
+   * el formato. Es el mismo criterio que `USER_NOT_FOUND` en `/admin/teachers`.
+   *
+   * **Un aula `CANCELLED` NO lo emite:** existe, se abre y muestra su estado
+   * (decisión de auditoría 3 de HU-204). Un 404 ahí parecería un fallo de la
+   * plataforma justo cuando el usuario necesita entender qué pasó.
+   */
+  CLASSROOM_NOT_FOUND: 'CLASSROOM_NOT_FOUND',
   /** Se superó el límite de peticiones (rate limiting). */
   TOO_MANY_REQUESTS: 'TOO_MANY_REQUESTS',
   DATABASE_UNAVAILABLE: 'DATABASE_UNAVAILABLE',

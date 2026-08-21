@@ -33,6 +33,25 @@ export const teacherProfileNotFound = (): NotFoundException =>
   });
 
 /**
+ * No hay ningún aula con ese identificador (HU-204, A3).
+ *
+ * Lo emite tanto un uuid que no existe como uno con forma inválida —el
+ * `ParseUUIDPipe` del controlador lo traduce aquí—: desde fuera los dos son el
+ * mismo hecho, «ahí no hay nada», y separarlos solo le confirmaría a quien
+ * sondea que acertó con el formato. Mismo criterio que `teacherNotFound()` en
+ * `admin/`.
+ *
+ * **Un aula `CANCELLED` no pasa por aquí.** Existe, se abre y muestra su estado:
+ * quien tenga el enlace de la página tiene que poder entender qué pasó, y un 404
+ * ahí se lee como un fallo de la plataforma.
+ */
+export const classroomNotFound = (): NotFoundException =>
+  new NotFoundException({
+    code: ApiErrorCode.CLASSROOM_NOT_FOUND,
+    message: 'No encontramos esta clase. Puede que ya no esté disponible.',
+  });
+
+/**
  * Traduce el estado de la cuenta del profesor al 403 que le corresponde.
  *
  * Los tres mensajes son distintos porque los tres hechos son distintos, y el

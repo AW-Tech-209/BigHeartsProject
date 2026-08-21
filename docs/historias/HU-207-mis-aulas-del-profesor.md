@@ -1,15 +1,15 @@
 # HU-207 — Mis aulas: listado del profesor
 
-| Campo            | Valor                                             |
-| ---------------- | ------------------------------------------------- |
-| **Sprint**       | Sprint 2 — Gestión de Aulas                       |
-| **Prioridad**    | 🔴 Crítica                                        |
-| **Estimación**   | 2 días                                            |
-| **Estado**       | ✅ Completada (2026-08-21), salvo AC9             |
-| **Rama**         | `hu-207-mis-aulas-del-profesor-<persona>`         |
-| **Colaboración** | Paralelo con contrato acordado                    |
-| **Depende de**   | HU-201 (✅), HU-206 (✅), HU-203 (✅)             |
-| **Labels**       | `sprint-2` `prioridad:critica` `fullstack` `a11y` |
+| Campo            | Valor                                              |
+| ---------------- | -------------------------------------------------- |
+| **Sprint**       | Sprint 2 — Gestión de Aulas                        |
+| **Prioridad**    | 🔴 Crítica                                         |
+| **Estimación**   | 2 días                                             |
+| **Estado**       | ✅ Completada (2026-08-21); AC9 cerrado por HU-204 |
+| **Rama**         | `hu-207-mis-aulas-del-profesor-<persona>`          |
+| **Colaboración** | Paralelo con contrato acordado                     |
+| **Depende de**   | HU-201 (✅), HU-206 (✅), HU-203 (✅)              |
+| **Labels**       | `sprint-2` `prioridad:critica` `fullstack` `a11y`  |
 
 > **Como** profesor,
 > **Quiero** ver todas las aulas que he creado, incluidas las pasadas y las canceladas,
@@ -106,12 +106,11 @@ canceladas | todas`) y el tipo de respuesta de la vista del profesor —lo del l
       igual que en HU-203.
 - [x] **B3** — La tarjeta en esta pantalla muestra **inscritos sobre cupo** (`3 de 10 inscritos`)
       en vez del cupo disponible: al profesor le importa cuánta gente viene, no cuánto queda.
-- [ ] **B4** — Cada tarjeta enlaza al detalle del aula (HU-204), que es donde viven editar y
+- [x] **B4** — Cada tarjeta enlaza al detalle del aula (HU-204), que es donde viven editar y
       cancelar. **No metas las acciones en la tarjeta**: multiplicarlas por seis tarjetas rompe la
       regla de una acción primaria por pantalla.
-      → **La segunda mitad se cumplió; el enlace no.** HU-204 no existe: no hay ruta ni pantalla de
-      detalle, así que enlazar habría mandado al profesor a un 404. **Pasa a HU-204 (su B6/AC9),**
-      donde queda documentado. Ver AC9.
+      → La segunda mitad se cumplió aquí; **el enlace lo añadió HU-204** (su B6), que es la HU que
+      trajo la ruta `/aulas/:id` y la pantalla a la que apunta. Ver AC9.
 - [x] **B5** — Mover `Crear una clase` a `<PaginaCabecera>` y **quitarlo del estado vacío** cuando
       haya lista. Decisión 4.
 - [x] **B6** — Los 4 estados: cargando con texto, vacío (ya existe), error, y lista.
@@ -161,14 +160,15 @@ Con este endpoint en pie:
       el enlace y abrirlo reproduce la misma vista.
 - [x] **AC7** — El orden es próximas ascendente y pasadas descendente.
 - [x] **AC8** — Cada tarjeta muestra **inscritos sobre cupo**, no cupos disponibles.
-- [ ] **AC9** — Pulsar una tarjeta lleva al detalle del aula, desde donde el dueño puede editar y
+- [x] **AC9** — Pulsar una tarjeta lleva al detalle del aula, desde donde el dueño puede editar y
       cancelar (HU-204 y HU-202).
-      → **NO CUMPLIDO, y a propósito.** Este AC depende de una pantalla que HU-204 todavía no ha
-      construido: no hay ruta `/aulas/:id` ni vista de detalle. Enlazar de todos modos habría dejado
-      cada tarjeta cayendo en el 404, que es exactamente lo que `app/router.tsx` documenta como
-      prohibido —«un enlace visible que cae en un 404 enseña al usuario a desconfiar de la
-      navegación»—. **La deuda está anotada en `HU-204-detalle-de-aula.md`**, con la tarea concreta
-      (B6) y su propio AC9, y es esa HU la que marca este casilla al cerrarse.
+      → **Cumplido por HU-204 (2026-08-21), en su B6.** La ruta `/aulas/:id` existe y el título de
+      cada tarjeta es su enlace, en las dos perspectivas; `AulaDetallePage.spec.tsx` lo prueba
+      pulsando la tarjeta sobre `<AppRoutes />` desde `/mis-aulas` y desde `/aulas`.
+      **La segunda mitad —«desde donde el dueño puede editar y cancelar»— sigue pendiente de
+      HU-202**, que aún no existe: no hay endpoint de edición ni de cancelación. El detalle deja el
+      hueco preparado en `<AccionesDeAula>` y no pinta botones que caerían en un 404, por el mismo
+      motivo por el que este AC estuvo abierto. Ver el AC5 y el AC8 de HU-204.
 - [x] **AC10** — **Una sola acción primaria:** con lista, `Crear una clase` está en la cabecera y
       **no** se repite en ningún otro punto de la pantalla.
 - [x] **AC11** — El estado de cada aula viene de `derivarEstadoAula()` de `@academia/types`, sin una
@@ -237,5 +237,7 @@ una.
 
 ### Lo que quedó pendiente
 
-- **AC9 y la mitad de B4** — el enlace de la tarjeta al detalle. Depende de HU-204, que no existe.
-  Documentado allí como B6 y AC9. Nada más quedó fuera.
+- ~~**AC9 y la mitad de B4** — el enlace de la tarjeta al detalle. Depende de HU-204, que no
+  existe.~~ **Saldado por HU-204 el 2026-08-21** (su B6): la ruta `/aulas/:id` existe y el título de
+  la tarjeta enlaza a ella. Lo único que sigue abierto de ese AC es «editar y cancelar desde el
+  detalle», que es HU-202 y nunca fue trabajo de esta HU. Nada más quedó fuera.
