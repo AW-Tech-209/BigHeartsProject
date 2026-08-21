@@ -3,6 +3,7 @@ import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 
 import { RedirectIfAuthenticated } from '@/features/auth/components/redirect-if-authenticated';
 import { RequireAuth } from '@/features/auth/components/require-auth';
+import { AulaDetallePage } from '@/pages/AulaDetallePage';
 import { AulasPage } from '@/pages/AulasPage';
 import { CrearAulaPage } from '@/pages/CrearAulaPage';
 import { HomePage } from '@/pages/HomePage';
@@ -116,6 +117,28 @@ export function AppRoutes() {
         element={
           <RequireAuth roles={[UserRole.TEACHER]}>
             <MisAulasPage />
+          </RequireAuth>
+        }
+      />
+
+      {/*
+        El detalle de un aula (HU-204). **Para cualquier sesión**, no solo para
+        el dueño: es la pantalla a la que lleva cada tarjeta del catálogo, y de
+        la que colgarán el botón de reservar (HU-301) y la ventana de acceso al
+        enlace (HU-303).
+
+        Cuelga de `/aulas/:id` y no de `/mis-aulas/:id` porque el aula es una
+        sola cosa mirada por tres roles; una URL por rol daría tres direcciones
+        para la misma clase y ninguna se podría compartir.
+
+        Sin `roles`: quien decide qué ve cada quien es el servidor, y lo que
+        cambia por rol no es la pantalla sino un campo de la respuesta.
+      */}
+      <Route
+        path="/aulas/:id"
+        element={
+          <RequireAuth>
+            <AulaDetallePage />
           </RequireAuth>
         }
       />

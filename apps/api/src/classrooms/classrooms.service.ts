@@ -1,8 +1,9 @@
 import { Injectable } from '@nestjs/common';
-import type { Prisma } from '@prisma/client';
+import type { Classroom as PrismaClassroom, Prisma } from '@prisma/client';
 import {
   type Classroom,
   CLASSROOMS_PAGE_SIZE_DEFAULT,
+  type ClassroomDetail,
   ClassroomStatus,
   ESTADO_TEMPORAL_POR_DEFECTO,
   EstadoTemporalAula,
@@ -16,8 +17,8 @@ import {
 import type { AuthenticatedUser } from '../auth/auth.types';
 import { insufficientRole } from '../auth/auth.errors';
 import { PrismaService } from '../prisma/prisma.service';
-import { toClassroomListItem, toPublicClassroom } from './classroom.mapper';
-import { teacherNotActive, teacherProfileNotFound } from './classrooms.errors';
+import { toClassroomDetail, toClassroomListItem, toPublicClassroom } from './classroom.mapper';
+import { classroomNotFound, teacherNotActive, teacherProfileNotFound } from './classrooms.errors';
 import type { CreateClassroomDto } from './dto/create-classroom.dto';
 import type { ListClassroomsDto } from './dto/list-classrooms.dto';
 import type { ListMisAulasDto } from './dto/list-mis-aulas.dto';
@@ -114,6 +115,71 @@ export class ClassroomsService {
       page,
       pageSize,
     };
+  }
+
+  /**
+   * Detalle de un aula (HU-204, A1). Lo ve **cualquier usuario autenticado**:
+   * es la pantalla a la que lleva cada tarjeta del catálogo.
+   *
+   * Un aula `CANCELLED` **se devuelve igual**, con su estado (A3). No aparece
+   * en el catálogo, pero quien tenga el enlace de la página debe poder entender
+   * qué pasó en vez de toparse con un 404 —que se lee como un fallo de la
+   * plataforma justo cuando el usuario está confundido—.
+   *
+   * `myBookingStatus` llega `null` sin consultar nada: el modelo `Booking` no
+   * existe hasta el Sprint 3. Lo rellena HU-301.
+   */
+  async getClassroomDetail(
+    viewer: AuthenticatedUser,
+    classroomId: string,
+  ): Promise<ClassroomDetail> {
+    const classroom = await this.prisma.classroom.findUnique({
+      where: { id: classroomId },
+      include: { teacher: { select: { firstName: true, lastName: true } } },
+    });
+
+    if (!classroom) {
+      throw classroomNotFound();
+    }
+
+    const puedeVerlo = this.revelarElEnlace(viewer, classroom);
+
+    return toClassroomDetail(classroom, classroom.teacher, {
+      // Se descifra SOLO si va a viajar: sin esta condición, el texto en claro
+      // existiría en memoria en cada petición de cualquier usuario, y bastaría
+      // un log de la variable para filtrarlo.
+      ...(puedeVerlo && { meetingLink: this.meetingLinks.decrypt(classroom.meetingLink) }),
+      myBookingStatus: null,
+    });
+  }
+
+  /**
+   * **El único punto del servidor que decide si el enlace viaja** (A2, §4.1).
+   *
+   * En el Sprint 2 la regla completa es «el que pide es el profesor dueño».
+   * `Booking` no existe todavía, así que la otra mitad de §4.1 —un estudiante
+   * con reserva `CONFIRMED`, y solo desde `scheduledAt − ACCESS_WINDOW_MINUTES`—
+   * no tiene forma de evaluarse.
+   *
+   * **HU-303 extiende ESTE método**, no el endpoint: le añade la rama del
+   * estudiante y la comparación temporal contra el reloj del servidor. Si
+   * alguien necesita revelar el enlace desde otro sitio, la respuesta es llamar
+   * aquí, nunca escribir una segunda condición — un permiso decidido en dos
+   * lugares acaba divergiendo, y este es el dato más sensible del producto.
+   *
+   * **Un aula cancelada no revela su enlace a nadie, ni al dueño** (decisión de
+   * auditoría 3 de HU-204). Esa reunión no va a ocurrir: dar la URL solo
+   * serviría para que alguien entre a una sala que ya nadie atiende.
+   *
+   * No hace falta comprobar el rol: solo un `TEACHER` puede ser `teacherId` de
+   * un aula, así que la identidad ya lo implica.
+   */
+  private revelarElEnlace(viewer: AuthenticatedUser, classroom: PrismaClassroom): boolean {
+    if (classroom.status === ClassroomStatus.CANCELLED) {
+      return false;
+    }
+
+    return viewer.id === classroom.teacherId;
   }
 
   /**

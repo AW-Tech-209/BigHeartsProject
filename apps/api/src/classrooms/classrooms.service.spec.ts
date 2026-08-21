@@ -643,3 +643,167 @@ describe('ClassroomsService.listMisAulas — el enlace nunca viaja (A4, AC5)', (
     expect(JSON.stringify(resultado)).not.toContain('v1.iv.tag.texto');
   });
 });
+
+/* ------------------------------------------------------------------------- *
+ * Detalle — GET /classrooms/:id (HU-204)
+ * ------------------------------------------------------------------------- */
+
+const ESTUDIANTE_ID = '55555555-5555-4555-8555-555555555555';
+const ADMIN_ID = '66666666-6666-4666-8666-666666666666';
+
+const otroProfesor: AuthenticatedUser = {
+  id: OTRO_PROFESOR_ID,
+  email: 'otro@academia.local',
+  role: UserRole.TEACHER,
+  status: UserStatus.ACTIVE,
+};
+
+const estudiante: AuthenticatedUser = {
+  id: ESTUDIANTE_ID,
+  email: 'ana@academia.local',
+  role: UserRole.STUDENT,
+  status: UserStatus.ACTIVE,
+};
+
+const administradora: AuthenticatedUser = {
+  id: ADMIN_ID,
+  email: 'admin@academia.local',
+  role: UserRole.ADMIN,
+  status: UserStatus.ACTIVE,
+};
+
+/**
+ * Monta el servicio para el detalle, con el enlace **cifrado de verdad**.
+ *
+ * Se usa el cipher real y no un doble a propósito: lo que estos tests afirman
+ * es que quien no debe verlo no recibe *ni la URL ni el texto cifrado*, y con
+ * un valor falso en la columna la mitad de esa comprobación sería vacía.
+ *
+ * `aula: null` simula un `id` que no existe.
+ */
+function setupDetalle(aula: Record<string, unknown> | null = {}) {
+  const cipher = new MeetingLinkCipher({ meetingLinkKey: 'a'.repeat(64) } as AppConfigService);
+  const cifrado = cipher.encrypt(ENLACE);
+
+  const findUnique = vi
+    .fn()
+    .mockResolvedValue(aula === null ? null : filaDeAula({ meetingLink: cifrado, ...aula }));
+  const prisma = { classroom: { findUnique } } as unknown as PrismaService;
+
+  return { service: new ClassroomsService(prisma, cipher), findUnique, cifrado };
+}
+
+const ID_DEL_AULA = '44444444-4444-4444-8444-444444444444';
+
+describe('ClassroomsService.getClassroomDetail — el aula completa (A1, AC1)', () => {
+  it('devuelve el aula con su profesor, su descripción y sus datos de horario', async () => {
+    const { service } = setupDetalle({ teacher: { firstName: 'Ana', lastName: 'Restrepo' } });
+
+    const classroom = await service.getClassroomDetail(profesorDelToken, ID_DEL_AULA);
+
+    expect(classroom).toMatchObject({
+      id: ID_DEL_AULA,
+      title: 'Conversación cotidiana',
+      description: 'Practicamos saludos y presentaciones.',
+      level: EnglishLevel.BEGINNER,
+      maxStudents: 8,
+      currentBookings: 2,
+      durationMinutes: 60,
+      teacherFirstName: 'Ana',
+      teacherLastName: 'Restrepo',
+    });
+    // §4.7: el instante viaja en UTC, con la `Z` explícita.
+    expect(classroom.scheduledAt).toBe('2099-08-12T23:00:00.000Z');
+  });
+
+  it('busca exactamente por el id pedido, con el nombre del profesor', async () => {
+    const { service, findUnique } = setupDetalle();
+
+    await service.getClassroomDetail(estudiante, ID_DEL_AULA);
+
+    expect(findUnique).toHaveBeenCalledWith({
+      where: { id: ID_DEL_AULA },
+      include: { teacher: { select: { firstName: true, lastName: true } } },
+    });
+  });
+
+  /**
+   * Decisión de auditoría 2 de la HU: el campo existe en el contrato y llega
+   * vacío. `null` y no ausente — «no tienes reserva» es un hecho, no un «no te
+   * corresponde saberlo».
+   */
+  it('myBookingStatus llega en null: Booking no existe hasta el Sprint 3', async () => {
+    const { service } = setupDetalle();
+
+    const classroom = await service.getClassroomDetail(estudiante, ID_DEL_AULA);
+
+    expect(classroom.myBookingStatus).toBeNull();
+  });
+});
+
+describe('ClassroomsService.getClassroomDetail — quién ve el enlace (A2, AC2)', () => {
+  it('el profesor dueño lo recibe descifrado', async () => {
+    const { service } = setupDetalle();
+
+    const classroom = await service.getClassroomDetail(profesorDelToken, ID_DEL_AULA);
+
+    expect(classroom.meetingLink).toBe(ENLACE);
+  });
+
+  /**
+   * La garantía central de la HU, rol por rol. **Ni la clave en `null`, ni el
+   * texto cifrado, ni la URL en ninguna parte del JSON**: §4.1 pide que el campo
+   * no viaje, no que viaje vacío.
+   *
+   * El administrador está en la lista a propósito: §4.8 regla 2 dice que la
+   * regla no tiene excepción por rol, «y menos para el rol con más poder».
+   */
+  it.each([
+    ['otro profesor', () => otroProfesor],
+    ['un estudiante', () => estudiante],
+    ['un administrador', () => administradora],
+  ])('%s recibe una respuesta SIN la clave meetingLink', async (_quien, usuario) => {
+    const { service, cifrado } = setupDetalle();
+
+    const classroom = await service.getClassroomDetail(usuario(), ID_DEL_AULA);
+
+    expect(classroom).not.toHaveProperty('meetingLink');
+    expect(Object.keys(classroom)).not.toContain('meetingLink');
+    expect(JSON.stringify(classroom)).not.toContain(ENLACE);
+    expect(JSON.stringify(classroom)).not.toContain(cifrado);
+  });
+});
+
+describe('ClassroomsService.getClassroomDetail — aula cancelada e id inexistente (A3, AC3, AC4)', () => {
+  /**
+   * AC4. La cancelada **se abre**: no aparece en el catálogo, pero quien tenga
+   * el enlace de la página tiene que poder entender qué pasó (decisión de
+   * auditoría 3). Un 404 aquí se lee como un fallo de la plataforma.
+   */
+  it('un aula CANCELLED se devuelve con su estado, no con un 404', async () => {
+    const { service } = setupDetalle({ status: ClassroomStatus.CANCELLED });
+
+    const classroom = await service.getClassroomDetail(estudiante, ID_DEL_AULA);
+
+    expect(classroom.status).toBe(ClassroomStatus.CANCELLED);
+    expect(classroom.id).toBe(ID_DEL_AULA);
+  });
+
+  // «Sin enlace de reunión, en ningún caso»: esa reunión no va a ocurrir.
+  it('un aula CANCELLED no revela el enlace NI a su dueño', async () => {
+    const { service, cifrado } = setupDetalle({ status: ClassroomStatus.CANCELLED });
+
+    const classroom = await service.getClassroomDetail(profesorDelToken, ID_DEL_AULA);
+
+    expect(classroom).not.toHaveProperty('meetingLink');
+    expect(JSON.stringify(classroom)).not.toContain(cifrado);
+  });
+
+  it('un id que no existe responde CLASSROOM_NOT_FOUND', async () => {
+    const { service } = setupDetalle(null);
+
+    expect(await codigoDe(service.getClassroomDetail(estudiante, ID_DEL_AULA))).toBe(
+      ApiErrorCode.CLASSROOM_NOT_FOUND,
+    );
+  });
+});

@@ -81,6 +81,57 @@ describe('<TarjetaAula /> — anatomía (layout-y-composicion.md)', () => {
   });
 });
 
+/**
+ * HU-204, B6 — la deuda que HU-207 dejó anotada: la tarjeta lleva al detalle.
+ *
+ * Se comprueba en el componente y no solo en la página porque las **dos**
+ * perspectivas tienen que enlazar: es la misma tarjeta la que sirve al catálogo
+ * y a «Mis aulas».
+ */
+describe('<TarjetaAula /> — el título enlaza al detalle (B6, AC8)', () => {
+  it.each(['catalogo', 'profesor'] as const)(
+    'en la perspectiva %s, el título es un enlace a /aulas/:id',
+    (perspectiva) => {
+      renderConProviders(
+        <TarjetaAula classroom={aula({ id: 'aula-42' })} perspectiva={perspectiva} ahora={AHORA} />,
+      );
+
+      expect(screen.getByRole('link', { name: 'Conversación cotidiana' })).toHaveAttribute(
+        'href',
+        '/aulas/aula-42',
+      );
+    },
+  );
+
+  it('se alcanza con el teclado y deja el foco dentro de la tarjeta', async () => {
+    const { user } = renderConProviders(<TarjetaAula classroom={aula()} ahora={AHORA} />);
+
+    await user.tab();
+
+    const enlace = screen.getByRole('link', { name: 'Conversación cotidiana' });
+    expect(enlace).toHaveFocus();
+    // El anillo de foco lo pinta la tarjeta, no el enlace: `focus-within` es lo
+    // que hace visible CUÁL de las seis tarjetas de la rejilla tiene el foco.
+    expect(screen.getByRole('article', { name: 'Conversación cotidiana' })).toHaveClass(
+      'focus-within:ring-2',
+    );
+  });
+
+  /**
+   * El `<article>` ya toma su nombre del `<h3>` por `aria-labelledby`. Si el
+   * enlace envolviera la tarjeta entera, su texto accesible arrastraría la
+   * fecha, el estado y el cupo, y el nombre del aula se anunciaría dos veces.
+   */
+  it('el enlace es solo el título: no arrastra la fecha ni el estado', () => {
+    renderConProviders(<TarjetaAula classroom={aula()} ahora={AHORA} />);
+
+    expect(screen.getAllByRole('link')).toHaveLength(1);
+    expect(screen.getByRole('link', { name: 'Conversación cotidiana' })).toHaveTextContent(
+      /^Conversación cotidiana$/,
+    );
+  });
+});
+
 describe('<TarjetaAula /> — el estado se deriva, no se reimplementa (B3, AC5)', () => {
   it('un aula CANCELLED se pinta como cancelada, aunque tenga cupo libre', () => {
     renderConProviders(

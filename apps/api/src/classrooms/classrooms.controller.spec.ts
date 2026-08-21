@@ -5,7 +5,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 import type { AuthenticatedUser } from '../auth/auth.types';
 import { RolesGuard } from '../auth/guards/roles.guard';
-import { ClassroomsController } from './classrooms.controller';
+import { ClassroomsController, idDeAula } from './classrooms.controller';
 import type { ClassroomsService } from './classrooms.service';
 import type { CreateClassroomDto } from './dto/create-classroom.dto';
 import type { ListClassroomsDto } from './dto/list-classrooms.dto';
@@ -18,6 +18,8 @@ const profesor: AuthenticatedUser = {
   status: UserStatus.ACTIVE,
 };
 
+const ID_DEL_AULA = '44444444-4444-4444-8444-444444444444';
+
 function setup() {
   const createClassroom = vi.fn().mockResolvedValue({
     id: '33333333-3333-4333-8333-333333333333',
@@ -25,13 +27,23 @@ function setup() {
   });
   const listClassrooms = vi.fn().mockResolvedValue({ items: [], total: 0, page: 1, pageSize: 20 });
   const listMisAulas = vi.fn().mockResolvedValue({ items: [], total: 0, page: 1, pageSize: 20 });
-  const service = { createClassroom, listClassrooms, listMisAulas } as unknown as ClassroomsService;
+  const getClassroomDetail = vi.fn().mockResolvedValue({
+    id: '44444444-4444-4444-8444-444444444444',
+    myBookingStatus: null,
+  });
+  const service = {
+    createClassroom,
+    listClassrooms,
+    listMisAulas,
+    getClassroomDetail,
+  } as unknown as ClassroomsService;
 
   return {
     controller: new ClassroomsController(service),
     createClassroom,
     listClassrooms,
     listMisAulas,
+    getClassroomDetail,
   };
 }
 
@@ -199,5 +211,80 @@ describe('ClassroomsController.listMias — GET /classrooms/mias (HU-207)', () =
         expect(excepcion.getResponse?.().code).toBe(ApiErrorCode.INSUFFICIENT_ROLE);
       }
     });
+  });
+});
+
+describe('ClassroomsController.detail — GET /classrooms/:id (HU-204)', () => {
+  it('devuelve `{ classroom }`, como declara ClassroomDetailResponse', async () => {
+    const { controller } = setup();
+
+    await expect(controller.detail(profesor, ID_DEL_AULA)).resolves.toEqual({
+      classroom: { id: ID_DEL_AULA, myBookingStatus: null },
+    });
+  });
+
+  /**
+   * AC2, en la costura donde se decide. El controlador pasa el usuario del
+   * TOKEN: es lo único con lo que el servicio puede decidir si el enlace viaja.
+   * Si alguien cambiara esta llamada por algo sacado de la ruta o del query,
+   * ningún test del servicio se pondría rojo.
+   */
+  it('pasa al servicio el usuario del token y el id de la ruta', async () => {
+    const { controller, getClassroomDetail } = setup();
+
+    await controller.detail(profesor, ID_DEL_AULA);
+
+    expect(getClassroomDetail).toHaveBeenCalledWith(profesor, ID_DEL_AULA);
+    expect(getClassroomDetail.mock.calls[0]?.[0]).toBe(profesor);
+  });
+
+  /**
+   * AC3, primera mitad. Un id malformado **no** puede acabar en un 500: sin el
+   * pipe, el literal llega a una columna `@db.Uuid` y Postgres lo rechaza.
+   */
+  it('traduce un id que no es un uuid a 404 CLASSROOM_NOT_FOUND', async () => {
+    try {
+      await idDeAula.transform('hola', { type: 'param', data: 'id' });
+      throw new Error('Se esperaba un 404 y el pipe dejó pasar el valor.');
+    } catch (error) {
+      const excepcion = error as { getStatus?: () => number; getResponse?: () => { code: string } };
+      expect(excepcion.getStatus?.()).toBe(404);
+      expect(excepcion.getResponse?.().code).toBe(ApiErrorCode.CLASSROOM_NOT_FOUND);
+    }
+  });
+
+  /**
+   * Sin `@Roles`: el detalle lo ve cualquier usuario autenticado. Lo que cambia
+   * por rol no es el acceso a la pantalla sino un campo —`meetingLink`—, y esa
+   * decisión vive en el servicio.
+   */
+  it.each([UserRole.STUDENT, UserRole.TEACHER, UserRole.ADMIN])(
+    'no exige ningún rol concreto: deja pasar a %s',
+    (role) => {
+      const guard = new RolesGuard(new Reflector());
+
+      expect(guard.canActivate(contextoDeRol(ClassroomsController.prototype.detail, role))).toBe(
+        true,
+      );
+    },
+  );
+});
+
+/**
+ * La trampa que `contrato-api.md` §6 documenta y que esta HU podía disparar:
+ * **Nest resuelve por orden de registro**, así que un `@Get(':id')` declarado
+ * por encima de `@Get('mias')` se tragaría `mias` como si fuera un
+ * identificador — y «Mis aulas» empezaría a responder 404 sin que nada más
+ * cambiara.
+ *
+ * El orden de `getOwnPropertyNames` sobre el prototipo es el de declaración, así
+ * que esto vigila la posición real de los dos métodos en el archivo.
+ */
+describe('ClassroomsController — orden de rutas', () => {
+  it('declara `mias` ANTES que `:id`', () => {
+    const metodos = Object.getOwnPropertyNames(ClassroomsController.prototype);
+
+    expect(metodos.indexOf('listMias')).toBeGreaterThan(-1);
+    expect(metodos.indexOf('listMias')).toBeLessThan(metodos.indexOf('detail'));
   });
 });

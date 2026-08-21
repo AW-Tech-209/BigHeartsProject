@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import {
   ApiErrorCode,
+  BookingStatus,
   ClassroomStatus,
   CommunicationPreference,
   EnglishLevel,
@@ -91,6 +92,18 @@ describe('enums del contrato', () => {
   it('MeetingProvider incluye MANUAL, que es el único que la Fase 1 escribe', () => {
     expect(MeetingProvider.MANUAL).toBe('MANUAL');
     expect(Object.values(MeetingProvider)).toHaveLength(4);
+  });
+
+  /**
+   * `BookingStatus` está fuera de `ENUMS_DEL_CONTRATO` porque **todavía no
+   * tiene gemelo en `schema.prisma`**: el modelo `Booking` llega en el Sprint 3.
+   * Se declara desde HU-204 para poder tipar `ClassroomDetail.myBookingStatus`,
+   * y sus miembros son los que fija `docs/ARQUITECTURA.md` §7.2 — este test es
+   * lo que hará que la migración de HU-301 se escriba contra ellos y no contra
+   * otros inventados por el camino.
+   */
+  it('BookingStatus son los cuatro estados que §7.2 especifica para Booking', () => {
+    expect(Object.values(BookingStatus)).toEqual(['CONFIRMED', 'CANCELLED', 'ATTENDED', 'NO_SHOW']);
   });
 });
 

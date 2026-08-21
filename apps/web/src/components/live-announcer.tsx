@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 
 import { AnnouncerContext } from './announcer-context';
 
@@ -17,6 +17,11 @@ export function LiveAnnouncerProvider({ children }: { children: ReactNode }) {
     window.clearTimeout(timeout.current);
     timeout.current = window.setTimeout(() => setMessage(next), 60);
   }, []);
+
+  // Sin esto, un `announce()` disparado justo antes de desmontar deja un
+  // setTimeout vivo que intenta hacer setState tras el unmount — en tests eso
+  // dispara después de que jsdom ya se destruyó (`window is not defined`).
+  useEffect(() => () => window.clearTimeout(timeout.current), []);
 
   return (
     <AnnouncerContext.Provider value={{ announce }}>

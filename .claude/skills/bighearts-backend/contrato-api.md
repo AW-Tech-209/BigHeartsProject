@@ -49,8 +49,8 @@ mensaje mostrar a partir del código, **nunca** parseando `message`.
 Códigos ya existentes: `VALIDATION_ERROR`, `EMAIL_ALREADY_EXISTS`, `INVALID_CREDENTIALS`,
 `ACCOUNT_SUSPENDED`, `ACCOUNT_PENDING`, `ACCOUNT_REJECTED`, `UNAUTHENTICATED`,
 `INSUFFICIENT_ROLE`, `INVALID_REFRESH_TOKEN`, `PROFILE_FORBIDDEN`, `USER_NOT_FOUND`,
-`INVALID_STATUS_TRANSITION`, `TOO_MANY_REQUESTS`, `DATABASE_UNAVAILABLE`, `INTERNAL_ERROR`. Los
-del dominio de reservas están en `reglas-reservas.md` §7.
+`CLASSROOM_NOT_FOUND`, `INVALID_STATUS_TRANSITION`, `TOO_MANY_REQUESTS`, `DATABASE_UNAVAILABLE`,
+`INTERNAL_ERROR`. Los del dominio de reservas están en `reglas-reservas.md` §7.
 
 Tres que se confunden con facilidad y no son intercambiables:
 
@@ -111,16 +111,34 @@ Back-office, todos con `@Roles(UserRole.ADMIN)` en la clase del controlador (HU-
 | POST   | `/admin/teachers/:id/approve` | — (ruta)  | `{ user }`             |
 | POST   | `/admin/teachers/:id/reject`  | — (ruta)  | `{ user }`             |
 
-Aulas (HU-201, HU-203, HU-207):
+Aulas (HU-201, HU-203, HU-207, HU-204):
 
 | Método | Ruta               | Entrada                | `data`                             | Rol                |
 | ------ | ------------------ | ---------------------- | ---------------------------------- | ------------------ |
 | POST   | `/classrooms`      | `CreateClassroomInput` | `{ classroom }`                    | `TEACHER` `ACTIVE` |
 | GET    | `/classrooms`      | `ListClassroomsQuery`  | `{ items, total, page, pageSize }` | Cualquier sesión   |
 | GET    | `/classrooms/mias` | `MisAulasQuery`        | `{ items, total, page, pageSize }` | `TEACHER`          |
+| GET    | `/classrooms/:id`  | — (ruta)               | `{ classroom: ClassroomDetail }`   | Cualquier sesión   |
 
-**`/classrooms/mias` va declarada ANTES que cualquier `@Get(':id')`**: Nest resuelve por orden de
-registro, y un `:id` por encima se tragaría `mias` como si fuera un identificador.
+**`/classrooms/mias` va declarada ANTES que `/classrooms/:id`**: Nest resuelve por orden de
+registro, y un `:id` por encima se tragaría `mias` como si fuera un identificador. `:id` es la ruta
+más genérica del controlador, así que va la última y cualquier `@Get('<literal>')` nuevo tiene que
+quedar por encima. `classrooms.controller.spec.ts` vigila ese orden.
+
+**`GET /classrooms/:id` es el ÚNICO endpoint que puede revelar `meetingLink`** (§4.8 regla 2: no
+viaja en ningún listado). Quién lo ve se decide en **un solo método privado del servicio**,
+`revelarElEnlace()`: hoy «el que pide es el profesor dueño», y **HU-303 extiende ese método**, no el
+endpoint —le añade la rama del estudiante con reserva `CONFIRMED` dentro de los 30 minutos previos—.
+Cuando no corresponde, la clave **se añade condicionalmente al objeto, no se asigna a `undefined`**:
+§4.1 pide que el campo no viaje, no que viaje vacío. **Un aula `CANCELLED` no revela el enlace a
+nadie, ni al dueño.**
+
+Un aula `CANCELLED` **sí se devuelve**, con su estado: no aparece en el catálogo, pero quien tenga
+el enlace de la página tiene que poder entender qué pasó. El 404 `CLASSROOM_NOT_FOUND` es solo para
+el id inexistente, y también para el malformado —un `ParseUUIDPipe` con `exceptionFactory`, igual que
+`idDeProfesor` en `AdminController`—. `ClassroomDetail.myBookingStatus` llega **`null` en todo el
+Sprint 2** (`Booking` no existe); lo rellena HU-301. Va en `null` y no omitido, al revés que el
+enlace: omitir significa «no te corresponde saberlo», `null` significa «no hay reserva».
 
 **El alcance sale del token, y por eso `MisAulasQuery` no declara `teacherId`.** No existe
 `?teacherId=`; el `whitelist` del ValidationPipe rechaza el campo con `VALIDATION_ERROR` si alguien
@@ -137,8 +155,9 @@ mandarlo en el cuerpo lo rechaza el `whitelist` del ValidationPipe con `VALIDATI
 en `/users/me`. **El estado `ACTIVE` del profesor se comprueba contra la BD, no contra el token**: el
 access token vive 15 minutos, así que un profesor suspendido hace cinco seguiría publicando clases.
 Los tres estados devuelven su código propio (`ACCOUNT_PENDING`, `ACCOUNT_REJECTED`,
-`ACCOUNT_SUSPENDED`); esta HU **no añadió códigos nuevos**. La respuesta **nunca incluye
-`meetingLink`**: revelarlo es competencia de HU-204 y HU-303.
+`ACCOUNT_SUSPENDED`); HU-201 **no añadió códigos nuevos**. La respuesta de crear y la de los dos
+listados **nunca incluyen `meetingLink`**: revelarlo es competencia del detalle (arriba) y de
+HU-303.
 
 **Dos rutas, no un `PATCH` con el estado en el cuerpo.** Un cuerpo con `status` permitiría pedir
 cualquier `UserStatus` —`SUSPENDED` incluido— y obligaría al servidor a defenderse de estados que

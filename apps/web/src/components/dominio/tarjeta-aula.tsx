@@ -4,6 +4,7 @@ import {
   derivarEstadoAula,
   type EstadoAula as EstadoAulaTipo,
 } from '@academia/types';
+import { Link } from 'react-router-dom';
 
 import { describirDuracion, describirHorario } from '@/features/aulas/lib/horario';
 import { nivelesDeIngles } from '@/features/aulas/lib/niveles';
@@ -95,6 +96,11 @@ export function TarjetaAula({
       aria-labelledby={tituloId}
       className={cn(
         'relative overflow-hidden rounded-xl border border-border bg-card p-4 pl-5',
+        // El anillo va en la TARJETA aunque el foco lo reciba el enlace del
+        // título (`patrones-dominio.md`): un anillo de 3px alrededor de tres
+        // palabras se pierde en una rejilla de seis, y lo que el usuario
+        // necesita saber es qué tarjeta tiene el foco, no qué texto.
+        'focus-within:ring-2 focus-within:ring-ring',
         className,
       )}
     >
@@ -110,8 +116,24 @@ export function TarjetaAula({
         */}
         <p className="text-xs text-muted-foreground">{describirHorario(classroom.scheduledAt)}</p>
 
+        {/*
+          **El enlace al detalle es el título, no la tarjeta entera** (HU-204,
+          B6). El `<article>` ya toma su nombre accesible del `<h3>` por
+          `aria-labelledby`: envolverlo todo en un `<a>` haría que un lector de
+          pantalla anunciara el nombre del aula dos veces y metiera la fecha, el
+          estado y el cupo dentro del texto del enlace.
+
+          Es un `<a>` de navegación, nunca un `<div onClick>`: así funciona el
+          Tab, el Enter, «abrir en otra pestaña» y el menú contextual sin que
+          haya que reimplementar ninguno.
+        */}
         <h3 id={tituloId} className="text-base font-medium text-foreground">
-          {classroom.title}
+          <Link
+            to={`/aulas/${classroom.id}`}
+            className="rounded-sm underline-offset-4 outline-none hover:underline"
+          >
+            {classroom.title}
+          </Link>
         </h3>
 
         <p className="text-[13px] text-muted-foreground">{lineaSecundaria}</p>
