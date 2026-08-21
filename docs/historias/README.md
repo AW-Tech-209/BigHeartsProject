@@ -70,38 +70,46 @@ cuerpo del issue.
 
 ## Estado
 
-| HU                                             | Título                                        | Estado                                |
-| ---------------------------------------------- | --------------------------------------------- | ------------------------------------- |
-| HU-001…004                                     | Sprint 0 — Fundación técnica                  | ✅ Completo (anterior a esta carpeta) |
-| HU-101, 102                                    | Registro y login con sesión persistente       | ✅ Completo (anterior a esta carpeta) |
-| [HU-103](./HU-103-perfil-de-usuario.md)        | Ver y editar el perfil de usuario             | 🔄 En revisión                        |
-| [HU-104](./HU-104-aprobacion-de-profesores.md) | Aprobación de profesores por el administrador | ✅ Completada                         |
-| [HU-201](./HU-201-crear-aula-virtual.md)       | Crear aula virtual con enlace manual          | ✅ Terminada                          |
-| [HU-202](./HU-202-editar-cancelar-aula.md)     | Editar o cancelar un aula propia              | ⬜ Pendiente                          |
-| [HU-203](./HU-203-listado-de-aulas.md)         | Listado de aulas con filtros                  | ⬜ Pendiente                          |
-| [HU-204](./HU-204-detalle-de-aula.md)          | Detalle de un aula                            | ⬜ Pendiente                          |
-| [HU-205](./HU-205-tests-de-frontend.md)        | Infraestructura de tests de frontend y tipos  | ✅ Completada                         |
-| [HU-206](./HU-206-sistema-visual-y-shell.md)   | Sistema visual y shell de la aplicación       | ✅ Completada                         |
-| [HU-207](./HU-207-mis-aulas-del-profesor.md)   | Mis aulas: listado del profesor               | ⬜ Pendiente                          |
-| HU-301…304                                     | Sprint 3 — Sistema de reservas                | ⬜ Sin convertir a `.md`              |
-| HU-401…404                                     | Sprint 4 — Notificaciones e historial         | ⬜ Sin convertir a `.md`              |
+| HU                                               | Título                                        | Estado                                |
+| ------------------------------------------------ | --------------------------------------------- | ------------------------------------- |
+| HU-001…004                                       | Sprint 0 — Fundación técnica                  | ✅ Completo (anterior a esta carpeta) |
+| HU-101, 102                                      | Registro y login con sesión persistente       | ✅ Completo (anterior a esta carpeta) |
+| [HU-103](./HU-103-perfil-de-usuario.md)          | Ver y editar el perfil de usuario             | 🔄 En revisión                        |
+| [HU-104](./HU-104-aprobacion-de-profesores.md)   | Aprobación de profesores por el administrador | ✅ Completada                         |
+| [HU-201](./HU-201-crear-aula-virtual.md)         | Crear aula virtual con enlace manual          | ✅ Terminada                          |
+| [HU-202](./HU-202-editar-cancelar-aula.md)       | Editar o cancelar un aula propia              | ⬜ Pendiente                          |
+| [HU-203](./HU-203-listado-de-aulas.md)           | Listado de aulas con filtros                  | ✅ Completada                         |
+| [HU-204](./HU-204-detalle-de-aula.md)            | Detalle de un aula                            | ⬜ Pendiente                          |
+| [HU-205](./HU-205-tests-de-frontend.md)          | Infraestructura de tests de frontend y tipos  | ✅ Completada                         |
+| [HU-206](./HU-206-sistema-visual-y-shell.md)     | Sistema visual y shell de la aplicación       | ✅ Completada                         |
+| [HU-207](./HU-207-mis-aulas-del-profesor.md)     | Mis aulas: listado del profesor               | ⬜ Pendiente                          |
+| [HU-208](./HU-208-catalogo-por-rol.md)           | El catálogo de aulas distingue quién lo mira  | ⬜ Pendiente                          |
+| [HU-209](./HU-209-panel-de-inicio-por-rol.md)    | Panel de inicio por rol                       | ⬜ Pendiente                          |
+| [HU-210](./HU-210-supervision-de-aulas-admin.md) | Supervisión de aulas para el administrador    | ⬜ Pendiente                          |
+| HU-301…304                                       | Sprint 3 — Sistema de reservas                | ⬜ Sin convertir a `.md`              |
+| HU-401…404                                       | Sprint 4 — Notificaciones e historial         | ⬜ Sin convertir a `.md`              |
 
 **Orden del Sprint 2:**
 
 ```
-HU-205 ✅ ─► HU-206 ✅ ─► HU-104 ✅ ─► HU-201 ✅ ─► HU-203 ─► HU-207 ─► HU-204 ─► HU-202
+… HU-201 ✅ ─► HU-203 ✅ ─► HU-209 ─► HU-207 ─► HU-204 ─► HU-208 ─► HU-202 ─► HU-210
 ```
 
-**Quedan cuatro**, en este orden:
+**Quedan seis.** Tres salieron de la revisión del 2026-08-20, cuando se vio que el producto no
+distinguía bien entre lo que ve cada rol:
 
-- **HU-203** crea `derivarEstadoAula()` y los componentes de dominio (`<TarjetaAula>`,
-  `<EstadoAula>`, `<IndicadorCupo>`). Todo lo que viene después los reutiliza.
-- **HU-207** arregla un hueco real: `MisAulasPage` existe y la navegación del profesor la enlaza,
-  pero hoy es un estado vacío permanente. Sin ella, HU-204 y HU-202 no tienen punto de entrada
-  para el profesor.
+- **HU-209 va primera y es la más urgente**: `PanelPage` afirma hoy que el profesor no puede crear
+  aulas y que no hay aulas publicadas. Las dos frases son falsas desde hace dos historias. Una
+  mentira en pantalla se arregla antes que cualquier función nueva.
+- **HU-207** desbloquea al profesor: `/mis-aulas` existe y la navegación la enlaza, pero es un
+  estado vacío permanente.
 - **HU-204** es el detalle, y desde ahí se llega a editar y cancelar.
-- **HU-202 va al final** pese a su número: necesita el formulario de 201, el listado de 203 para
-  verificar su AC2, y el botón de entrada de 204. **El número identifica, no ordena.**
+- **HU-208** marca las clases propias del profesor en el catálogo. Va antes de HU-301 sí o sí: si
+  no, el botón de reservar aparecerá sobre la clase del propio profesor.
+- **HU-202 va al final** de las de aulas pese a su número: necesita 201, 203 y 204. **El número
+  identifica, no ordena.**
+- **HU-210** cierra el sprint: amplía el alcance con la supervisión del administrador y necesita el
+  panel de HU-209 como punto de entrada.
 
 Pendiente aparte: **HU-103** sigue en revisión, con AC4 y AC8 sin la pasada manual. Ahora que
 HU-205 dejó `axe` y los tres temas montados, esa verificación se puede automatizar en vez de

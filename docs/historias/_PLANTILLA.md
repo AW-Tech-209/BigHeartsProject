@@ -1,14 +1,15 @@
 # HU-XXX — Título corto de la historia
 
-| Campo            | Valor                                                                         |
-| ---------------- | ----------------------------------------------------------------------------- |
-| **Sprint**       | Sprint 2 — Gestión de Aulas                                                   |
-| **Prioridad**    | 🔴 Crítica · 🟠 Alta · 🟡 Media · 🟢 Baja                                     |
-| **Estimación**   | 2.5 días                                                                      |
-| **Estado**       | ⬜ Pendiente · 🔄 En curso · ✅ Completada                                    |
-| **Rama**         | `hu-XXX-slug-corto-persona`                                                   |
-| **Colaboración** | Paralelo con contrato acordado · Secuencial (A → B) · Solo Dev A · Solo Dev B |
-| **Depende de**   | HU-XXX (o "ninguna")                                                          |
+| Campo               | Valor                                                      |
+| ------------------- | ---------------------------------------------------------- |
+| **Sprint**          | Sprint 2 — Gestión de Aulas                                |
+| **Prioridad**       | 🔴 Crítica · 🟠 Alta · 🟡 Media · 🟢 Baja                  |
+| **Estimación**      | 2.5 días                                                   |
+| **Estado**          | ⬜ Pendiente · 🔄 En curso · ✅ Completada                 |
+| **Rama**            | `hu-XXX-slug-corto-persona`                                |
+| **Alcance técnico** | backend · frontend · fullstack                             |
+| **Depende de**      | HU-XXX (o "ninguna")                                       |
+| **Labels**          | `sprint-N` `prioridad:<nivel>` `<capa>` `[a11y]` `[infra]` |
 
 > **Como** \<rol\>,
 > **Quiero** \<qué\>,
@@ -23,29 +24,39 @@ bien. Si una decisión de arquitectura la condiciona, **enlázala** en vez de co
 
 - **Reglas de arquitectura implicadas:** `docs/ARQUITECTURA.md` §X.
 - **Skills que aplican:** `bighearts-backend` · `bighearts-ui`.
+- **Reutiliza:** componentes, helpers o endpoints que ya existen y **no** hay que rehacer.
 - **Decisiones pendientes que bloquean esta HU:** ninguna.
   Si hay alguna de `docs/ARQUITECTURA.md` §14.6, o algo que la HU da por hecho y no existe en el
   repo (una dependencia, una columna, un servicio externo), **nómbralo aquí**. `/hu` se detiene a
   preguntarlo en vez de inventarlo.
 
-## 🤝 Task de contrato — va primero
+## 🔧 Tasks
 
-- [ ] **T0** — Tipos, enums y códigos de error nuevos en `packages/types` + `npm run build:types`.
+**Una sola persona implementa la HU de punta a punta.** Las tasks van numeradas `T1…Tn` en el
+orden en que se hacen, agrupadas por capa. Los subtítulos nombran la **capa**, no a quién le toca.
 
-> Esta task existe siempre que la HU cruce back y front, y **la hace una sola persona antes de que
-> las otras dos empiecen en paralelo**. Es lo que hace real el "paralelo con contrato acordado":
-> sin ella, Dev A y Dev B escriben contra un contrato imaginario y el merge duele.
-> Si la HU es de una sola capa, bórrala.
+### Contrato — va primero
 
-## 🔧 Tasks — Dev A (backend)
+- [ ] **T1** — Tipos, enums y códigos de error nuevos en `packages/types` + `npm run build:types`.
 
-- [ ] …
-- [ ] …
+> Existe siempre que la HU cruce back y front. **Va primera**, aunque la implemente la misma
+> persona: escribir el contrato antes obliga a decidir la forma de los datos una vez, en vez de
+> negociarla dos veces contra uno mismo. Si la HU es de una sola capa, borra esta sección.
 
-## 🔧 Tasks — Dev B (frontend)
+### Backend
 
-- [ ] …
-- [ ] …
+- [ ] **T2** — …
+- [ ] **T3** — …
+
+### Frontend
+
+- [ ] **T4** — …
+- [ ] **T5** — …
+
+### Documentación
+
+- [ ] **Tn** — Actualizar lo que esta HU deje desactualizado (tabla de §6 del skill
+      `bighearts-dod`).
 
 ## ✅ Criterios de aceptación
 
@@ -58,8 +69,8 @@ Cada uno debe ser **verificable**: alguien tiene que poder decir "cumple" o "no 
       \<qué ve el usuario\>.
 - [ ] **AC4** — **Autorización:** \<quién no puede hacer qué\>, verificado en el backend.
 - [ ] **AC5** — **Accesibilidad:** la pantalla cumple el checklist del skill `bighearts-ui`
-      (teclado con foco visible, los 4 estados, `.dark` y `.hc`, contraste, `aria-live`), y los
-      componentes nuevos pasan `esperarSinFallosDeAccesibilidad()` (`bighearts-dod` §5).
+      (teclado con foco visible, los 4 estados, `.dark` y `.hc`, contraste, `aria-live`), y `axe`
+      sale limpio.
 - [ ] **AC6** — **Verificación automática:** `typecheck`, `lint`, `format:check`, `build` y
       `npm run test` (los tres workspaces) en verde.
 
