@@ -53,9 +53,13 @@ export type ParametrosDerivarEstadoAula = {
   tieneReservaConfirmada?: boolean;
   /**
    * El estado de cuenta del profesor, **solo cuando quien mira es el dueño
-   * del aula**. Igual que `tieneReservaConfirmada`, en Sprint 2 siempre llega
-   * `undefined`: "Mis aulas" (la única pantalla que podría poblarlo) es una HU
-   * aparte, fuera de alcance de HU-203.
+   * del aula**. En el Sprint 2 siempre llega `undefined`, incluso desde «Mis
+   * aulas» (HU-207), y no es un olvido: hoy **no existe forma de que un
+   * profesor `PENDING` tenga aulas que mirar**. El login le responde
+   * `ACCOUNT_PENDING` y `POST /classrooms` comprueba `ACTIVE` contra la BD, así
+   * que el estado `pendiente-aprobacion` no tiene ningún caso alcanzable que lo
+   * produzca. El parámetro se queda porque la regla de §7.3 lo declara y porque
+   * una aprobación revocable lo haría alcanzable sin tocar la firma.
    */
   estadoDelProfesorQueMira?: UserStatus;
   accessWindowMinutes?: number;

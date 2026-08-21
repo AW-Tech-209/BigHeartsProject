@@ -79,17 +79,31 @@ El enlace solo se revela 30 minutos antes de la clase. Componente con 5 fases:
 
 ## `<IndicadorCupo />`
 
-Nunca porcentajes ni gráficas circulares. Siempre conteo literal:
+Nunca porcentajes ni gráficas circulares. Siempre conteo literal, en **dos variantes** según quién
+mira — los mismos dos números contados al revés:
 
 ```
-👥 14 de 20 lugares ocupados · Quedan 6
+variante="cupos"      👥 14 de 20 lugares ocupados · Quedan 6
+variante="inscritos"  👥 14 de 20 inscritos
 ```
 
-- `role="progressbar"` con `aria-valuemin/max/now` y
-  `aria-valuetext="Quedan 6 de 20 lugares"`.
-- Color: `success` con >3 libres, `attention` con 1-3 libres, `muted` con 0.
-- Con 0 cupos el texto cambia a `Sin cupos disponibles` y el botón de reservar se **oculta**
-  (nunca deshabilitado sin explicación).
+- `role="progressbar"` con `aria-valuemin/max/now` y `aria-valuetext`.
+- **`cupos`** (por defecto) responde la pregunta del estudiante —¿me da tiempo a reservar?—.
+  Color: `success` con >3 libres, `attention` con 1-3 libres, `muted` con 0. Con 0 cupos el texto
+  cambia a `Sin cupos disponibles` y el botón de reservar se **oculta** (nunca deshabilitado sin
+  explicación).
+- **`inscritos`** (HU-207) responde la del profesor —¿cuánta gente viene?—. Tono **siempre neutro**:
+  «cuánta gente viene» no es ni una urgencia ni un logro, y teñirlo le inventaría al profesor una
+  alarma que nadie decidió.
+
+### La tarjeta cambia de pregunta, no de aspecto
+
+`<TarjetaAula perspectiva="profesor">` (HU-207) usa la variante `inscritos` y **omite el badge de
+`<EstadoAula>` cuando el estado sale del cupo** (`disponible`, `ultimos-cupos`, `llena`): «Quedan 2
+cupos» y «8 de 10 inscritos» en la misma tarjeta son la misma cuenta dicha dos veces y al revés. Los
+estados de ciclo de vida —`cancelada`, `finalizada`, `en-curso`— **sí conservan su badge**: no salen
+del cupo y sin él la tarjeta no diría qué pasó. **El riel de 4px lleva el estado derivado en las dos
+perspectivas**, sin excepción.
 
 ## Acciones destructivas
 

@@ -1,32 +1,34 @@
 import {
-  type ClassroomListItem,
+  type Classroom,
   ClassroomStatus,
   EnglishLevel,
+  EstadoTemporalAula,
   MeetingProvider,
   type User,
   UserRole,
   UserStatus,
 } from '@academia/types';
-import { screen } from '@testing-library/react';
+import { screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { AppRoutes } from '@/app/router';
 import { getPendingTeachers } from '@/features/admin/api/get-pending-teachers';
-import { getClassrooms } from '@/features/aulas/api/get-classrooms';
+import { getMisAulas } from '@/features/aulas/api/get-mis-aulas';
 import { ApiClientError } from '@/lib/api-error';
 import { esperarSinFallosDeAccesibilidad } from '@/test/accesibilidad';
 import { renderConProviders, type Tema } from '@/test/render-con-providers';
 import { darSesion } from '@/test/sesion';
 import { PanelPage } from './PanelPage';
 
-// Las dos fronteras de red que el panel puede tocar, una por rol.
+// Las dos fronteras de red que el panel puede tocar, una por rol. Desde HU-207
+// la del profesor es `GET /classrooms/mias`, no el catálogo público.
 vi.mock('@/features/admin/api/get-pending-teachers', () => ({ getPendingTeachers: vi.fn() }));
-vi.mock('@/features/aulas/api/get-classrooms', () => ({ getClassrooms: vi.fn() }));
+vi.mock('@/features/aulas/api/get-mis-aulas', () => ({ getMisAulas: vi.fn() }));
 
 /** El id que `usuarioDePrueba` le da al profesor de la sesión. */
 const PROFESOR_DE_LA_SESION = 'user-teacher';
 
-function aula(overrides: Partial<ClassroomListItem> = {}): ClassroomListItem {
+function aula(overrides: Partial<Classroom> = {}): Classroom {
   return {
     id: 'aula-1',
     teacherId: PROFESOR_DE_LA_SESION,
@@ -42,14 +44,12 @@ function aula(overrides: Partial<ClassroomListItem> = {}): ClassroomListItem {
     isRecurring: false,
     createdAt: '2026-08-01T10:00:00.000Z',
     updatedAt: '2026-08-01T10:00:00.000Z',
-    teacherFirstName: 'Ana',
-    teacherLastName: 'García',
     ...overrides,
   };
 }
 
-function respuesta(items: ClassroomListItem[]) {
-  return { items, total: items.length, page: 1, pageSize: 100 };
+function respuesta(items: Classroom[]) {
+  return { items, total: items.length, page: 1, pageSize: 3 };
 }
 
 /** Una solicitud de cuenta de profesor esperando decisión. */
@@ -78,7 +78,7 @@ const TITULO_DEL_PANEL = {
 beforeEach(() => {
   vi.clearAllMocks();
   vi.mocked(getPendingTeachers).mockResolvedValue({ teachers: [] });
-  vi.mocked(getClassrooms).mockResolvedValue(respuesta([]));
+  vi.mocked(getMisAulas).mockResolvedValue(respuesta([]));
 });
 
 describe('PanelPage — cada rol ve su panel, y solo el suyo (AC2, AC3, AC4)', () => {
@@ -169,7 +169,7 @@ describe('PanelPage — una sola acción primaria por panel (AC7)', () => {
 
   it('el profesor CON clases sigue teniendo exactamente una, no dos', async () => {
     darSesion(UserRole.TEACHER);
-    vi.mocked(getClassrooms).mockResolvedValue(respuesta([aula()]));
+    vi.mocked(getMisAulas).mockResolvedValue(respuesta([aula()]));
 
     renderConProviders(<PanelPage />);
 
@@ -177,13 +177,37 @@ describe('PanelPage — una sola acción primaria por panel (AC7)', () => {
   });
 });
 
-describe('Panel del profesor — sus clases, no las de la academia entera (AC3)', () => {
-  it('lista las suyas y descarta las de otro profesor', async () => {
+/**
+ * El alcance ya **no se decide aquí** (HU-207, T6).
+ *
+ * Hasta HU-207 el panel leía el catálogo público y comparaba `teacherId` contra
+ * la sesión en el cliente, así que tenía sentido probar que descartaba las
+ * ajenas. Ahora pide `GET /classrooms/mias`, que viene acotado al token: esa
+ * garantía se prueba en el servidor (A6, AC3) y aquí lo único verificable —y lo
+ * único que puede romperse— es que el panel pida la consulta correcta y no
+ * vuelva a filtrar por su cuenta.
+ */
+describe('Panel del profesor — el alcance lo pone el servidor (T6, AC13)', () => {
+  it('pide sus próximas clases al endpoint acotado al token, sin filtrar en cliente', async () => {
     darSesion(UserRole.TEACHER);
-    vi.mocked(getClassrooms).mockResolvedValue(
+    vi.mocked(getMisAulas).mockResolvedValue(respuesta([aula()]));
+
+    renderConProviders(<PanelPage />);
+
+    await waitFor(() =>
+      expect(getMisAulas).toHaveBeenCalledWith({
+        estado: EstadoTemporalAula.PROXIMAS,
+        pageSize: 3,
+      }),
+    );
+  });
+
+  it('pinta lo que devuelve el servidor, sin descartar ninguna fila', async () => {
+    darSesion(UserRole.TEACHER);
+    vi.mocked(getMisAulas).mockResolvedValue(
       respuesta([
-        aula({ id: 'mia', title: 'Mi clase de conversación' }),
-        aula({ id: 'ajena', teacherId: 'otro-profe', title: 'Clase de otro profesor' }),
+        aula({ id: 'una', title: 'Mi clase de conversación' }),
+        aula({ id: 'otra', title: 'Mi clase de negocios' }),
       ]),
     );
 
@@ -192,18 +216,9 @@ describe('Panel del profesor — sus clases, no las de la academia entera (AC3)'
     expect(
       await screen.findByRole('heading', { level: 3, name: 'Mi clase de conversación' }),
     ).toBeInTheDocument();
-    expect(screen.queryByRole('heading', { level: 3, name: 'Clase de otro profesor' })).toBeNull();
-  });
-
-  it('con clases solo ajenas, el vacío invita a publicar la primera', async () => {
-    darSesion(UserRole.TEACHER);
-    vi.mocked(getClassrooms).mockResolvedValue(
-      respuesta([aula({ teacherId: 'otro-profe', title: 'Clase de otro profesor' })]),
-    );
-
-    renderConProviders(<PanelPage />);
-
-    expect(await screen.findByText('No tienes clases publicadas')).toBeInTheDocument();
+    expect(
+      screen.getByRole('heading', { level: 3, name: 'Mi clase de negocios' }),
+    ).toBeInTheDocument();
   });
 });
 
@@ -211,7 +226,7 @@ describe('Panel del profesor — los cuatro estados (T7)', () => {
   beforeEach(() => darSesion(UserRole.TEACHER));
 
   it('cargando: lo dice con texto, no con un spinner mudo', () => {
-    vi.mocked(getClassrooms).mockReturnValue(new Promise(() => undefined));
+    vi.mocked(getMisAulas).mockReturnValue(new Promise(() => undefined));
 
     renderConProviders(<PanelPage />);
 
@@ -219,7 +234,7 @@ describe('Panel del profesor — los cuatro estados (T7)', () => {
   });
 
   it('error: explica y ofrece volver a cargar', async () => {
-    vi.mocked(getClassrooms).mockRejectedValue(
+    vi.mocked(getMisAulas).mockRejectedValue(
       new ApiClientError({ code: 'NETWORK_ERROR', message: 'No pudimos conectar.' }),
     );
 
@@ -236,7 +251,7 @@ describe('Panel del profesor — los cuatro estados (T7)', () => {
   });
 
   it('lista: pinta la tarjeta del aula', async () => {
-    vi.mocked(getClassrooms).mockResolvedValue(respuesta([aula()]));
+    vi.mocked(getMisAulas).mockResolvedValue(respuesta([aula()]));
 
     renderConProviders(<PanelPage />);
 
@@ -259,7 +274,7 @@ describe('PanelPage — accesibilidad con datos (AC9)', () => {
 
   it.each(TEMAS)('el profesor con clases sale limpio en el tema %s', async (tema) => {
     darSesion(UserRole.TEACHER);
-    vi.mocked(getClassrooms).mockResolvedValue(respuesta([aula()]));
+    vi.mocked(getMisAulas).mockResolvedValue(respuesta([aula()]));
 
     const { container } = renderConProviders(<PanelPage />, { tema });
 

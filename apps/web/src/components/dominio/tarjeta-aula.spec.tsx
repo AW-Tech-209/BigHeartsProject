@@ -99,11 +99,88 @@ describe('<TarjetaAula /> — el estado se deriva, no se reimplementa (B3, AC5)'
   });
 });
 
+/**
+ * La perspectiva del profesor (HU-207, B3/AC8). La misma tarjeta responde otra
+ * pregunta: no «¿me da tiempo a reservar?» sino «¿cuánta gente viene?».
+ */
+describe('<TarjetaAula perspectiva="profesor" /> — la vista del dueño (AC8)', () => {
+  function tarjetaDelProfesor(overrides: Partial<ClassroomListItem> = {}) {
+    return renderConProviders(
+      <TarjetaAula classroom={aula(overrides)} perspectiva="profesor" ahora={AHORA} />,
+    );
+  }
+
+  it('muestra inscritos sobre cupo', () => {
+    tarjetaDelProfesor({ currentBookings: 3, maxStudents: 10 });
+
+    expect(screen.getByText('3 de 10 inscritos')).toBeInTheDocument();
+  });
+
+  /**
+   * El AC8 dice «no cupos disponibles», y el único estado cuyo texto los
+   * menciona es `ultimos-cupos`. Con 8 de 10 ocupadas el catálogo diría «Quedan
+   * 2 cupos»: aquí ese badge se calla y habla el conteo de inscritos, para que
+   * la tarjeta no cuente lo mismo dos veces y al revés.
+   */
+  it('con pocos cupos libres no dice «Quedan N cupos»: dice cuántos vienen', () => {
+    tarjetaDelProfesor({ currentBookings: 8, maxStudents: 10 });
+
+    expect(screen.queryByText('Quedan 2 cupos')).not.toBeInTheDocument();
+    expect(screen.getByText('8 de 10 inscritos')).toBeInTheDocument();
+  });
+
+  it('un aula llena tampoco muestra el badge de cupo', () => {
+    tarjetaDelProfesor({ currentBookings: 10, maxStudents: 10 });
+
+    expect(screen.queryByText('Sin cupos')).not.toBeInTheDocument();
+    expect(screen.getByText('10 de 10 inscritos')).toBeInTheDocument();
+  });
+
+  /**
+   * AC2: los estados de ciclo de vida SÍ conservan su badge, con color + ícono
+   * + texto. No salen del cupo, y sin él la tarjeta no diría qué pasó.
+   */
+  it.each([
+    [ClassroomStatus.CANCELLED, 'Clase cancelada'],
+    [ClassroomStatus.COMPLETED, 'Clase finalizada'],
+  ])('un aula %s conserva su badge de estado', (status, texto) => {
+    tarjetaDelProfesor({ status });
+
+    expect(screen.getByText(texto)).toBeInTheDocument();
+    // Y sigue diciendo cuánta gente había: es su registro.
+    expect(screen.getByText('2 de 10 inscritos')).toBeInTheDocument();
+  });
+
+  it('el riel sigue llevando el color del estado derivado', () => {
+    const { container } = tarjetaDelProfesor({ status: ClassroomStatus.CANCELLED });
+
+    expect(container.querySelector('span[aria-hidden="true"]')).toHaveClass('bg-destructive');
+  });
+
+  // En «Mis aulas» el dueño es quien mira: su propio nombre en cada tarjeta es
+  // ruido. En su lugar va la duración, que es lo que le falta para planificar.
+  it('no repite el nombre del profesor; muestra nivel y duración', () => {
+    tarjetaDelProfesor();
+
+    expect(screen.queryByText(/Ana Restrepo/)).not.toBeInTheDocument();
+    expect(screen.getByText('Intermedio · 1 hora')).toBeInTheDocument();
+  });
+});
+
 describe('<TarjetaAula /> — accesibilidad automática', () => {
   it.each(TEMAS)('sin violaciones en el tema %s', async (tema) => {
     const { container } = renderConProviders(<TarjetaAula classroom={aula()} ahora={AHORA} />, {
       tema,
     });
+
+    await esperarSinFallosDeAccesibilidad(container);
+  });
+
+  it.each(TEMAS)('la perspectiva del profesor, sin violaciones en el tema %s', async (tema) => {
+    const { container } = renderConProviders(
+      <TarjetaAula classroom={aula()} perspectiva="profesor" ahora={AHORA} />,
+      { tema },
+    );
 
     await esperarSinFallosDeAccesibilidad(container);
   });

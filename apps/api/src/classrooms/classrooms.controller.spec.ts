@@ -9,6 +9,7 @@ import { ClassroomsController } from './classrooms.controller';
 import type { ClassroomsService } from './classrooms.service';
 import type { CreateClassroomDto } from './dto/create-classroom.dto';
 import type { ListClassroomsDto } from './dto/list-classrooms.dto';
+import type { ListMisAulasDto } from './dto/list-mis-aulas.dto';
 
 const profesor: AuthenticatedUser = {
   id: '11111111-1111-4111-8111-111111111111',
@@ -23,9 +24,31 @@ function setup() {
     status: ClassroomStatus.PUBLISHED,
   });
   const listClassrooms = vi.fn().mockResolvedValue({ items: [], total: 0, page: 1, pageSize: 20 });
-  const service = { createClassroom, listClassrooms } as unknown as ClassroomsService;
+  const listMisAulas = vi.fn().mockResolvedValue({ items: [], total: 0, page: 1, pageSize: 20 });
+  const service = { createClassroom, listClassrooms, listMisAulas } as unknown as ClassroomsService;
 
-  return { controller: new ClassroomsController(service), createClassroom, listClassrooms };
+  return {
+    controller: new ClassroomsController(service),
+    createClassroom,
+    listClassrooms,
+    listMisAulas,
+  };
+}
+
+/** Contexto de ejecución para el `RolesGuard`, sobre el handler que se indique. */
+function contextoDeRol(handler: (...args: never[]) => unknown, role: UserRole): ExecutionContext {
+  const user: AuthenticatedUser = {
+    id: `id-${role}`,
+    email: 'u@academia.local',
+    role,
+    status: UserStatus.ACTIVE,
+  };
+
+  return {
+    getHandler: () => handler,
+    getClass: () => ClassroomsController,
+    switchToHttp: () => ({ getRequest: () => ({ user }) }),
+  } as unknown as ExecutionContext;
 }
 
 describe('ClassroomsController — forma de la respuesta', () => {
@@ -64,21 +87,8 @@ describe('ClassroomsController — forma de la respuesta', () => {
  */
 describe('ClassroomsController — autorización por rol (AC5)', () => {
   const guard = new RolesGuard(new Reflector());
-
-  function contextoPara(role: UserRole): ExecutionContext {
-    const user: AuthenticatedUser = {
-      id: `id-${role}`,
-      email: 'u@academia.local',
-      role,
-      status: UserStatus.ACTIVE,
-    };
-
-    return {
-      getHandler: () => ClassroomsController.prototype.create,
-      getClass: () => ClassroomsController,
-      switchToHttp: () => ({ getRequest: () => ({ user }) }),
-    } as unknown as ExecutionContext;
-  }
+  const contextoPara = (role: UserRole) =>
+    contextoDeRol(ClassroomsController.prototype.create, role);
 
   it('deja pasar a TEACHER', () => {
     expect(guard.canActivate(contextoPara(UserRole.TEACHER))).toBe(true);
@@ -129,19 +139,65 @@ describe('ClassroomsController.list — GET /classrooms (HU-203)', () => {
     'no exige ningún rol concreto: deja pasar a %s',
     (role) => {
       const guard = new RolesGuard(new Reflector());
-      const user: AuthenticatedUser = {
-        id: `id-${role}`,
-        email: 'u@academia.local',
-        role,
-        status: UserStatus.ACTIVE,
-      };
-      const contexto = {
-        getHandler: () => ClassroomsController.prototype.list,
-        getClass: () => ClassroomsController,
-        switchToHttp: () => ({ getRequest: () => ({ user }) }),
-      } as unknown as ExecutionContext;
 
-      expect(guard.canActivate(contexto)).toBe(true);
+      expect(guard.canActivate(contextoDeRol(ClassroomsController.prototype.list, role))).toBe(
+        true,
+      );
     },
   );
+});
+
+describe('ClassroomsController.listMias — GET /classrooms/mias (HU-207)', () => {
+  /**
+   * AC3, en la costura donde se decide: el controlador pasa el usuario del
+   * TOKEN. Si alguien cambiara esta llamada por algo sacado del query, el
+   * servicio no tendría forma de notarlo — y un profesor leería las aulas de
+   * otro sin que ningún test del servicio se pusiera rojo.
+   */
+  it('pasa al servicio el usuario del token, no nada del query', async () => {
+    const { controller, listMisAulas } = setup();
+    const query = { estado: 'proximas', teacherId: 'otro-profesor' } as unknown as ListMisAulasDto;
+
+    await controller.listMias(profesor, query);
+
+    expect(listMisAulas).toHaveBeenCalledWith(profesor, query);
+    expect(listMisAulas.mock.calls[0]?.[0]).toBe(profesor);
+  });
+
+  it('devuelve la respuesta del servicio tal cual, sin envolverla otra vez', async () => {
+    const { controller, listMisAulas } = setup();
+    const respuesta = { items: [{ id: '1' }], total: 1, page: 1, pageSize: 20 };
+    listMisAulas.mockResolvedValue(respuesta);
+
+    await expect(controller.listMias(profesor, {} as ListMisAulasDto)).resolves.toEqual(respuesta);
+  });
+
+  describe('autorización por rol (AC4)', () => {
+    const guard = new RolesGuard(new Reflector());
+
+    it('deja pasar a TEACHER', () => {
+      expect(
+        guard.canActivate(contextoDeRol(ClassroomsController.prototype.listMias, UserRole.TEACHER)),
+      ).toBe(true);
+    });
+
+    /**
+     * AC4 para el estudiante, y también para el administrador: «mis aulas» es
+     * la vista del dueño, y un administrador no tiene aulas propias. Su vista de
+     * supervisión es otro endpoint (`GET /admin/classrooms`, D20).
+     */
+    it.each([UserRole.STUDENT, UserRole.ADMIN])('responde 403 INSUFFICIENT_ROLE a %s', (role) => {
+      try {
+        guard.canActivate(contextoDeRol(ClassroomsController.prototype.listMias, role));
+        throw new Error('Se esperaba un 403 y el guard dejó pasar.');
+      } catch (error) {
+        const excepcion = error as {
+          getStatus?: () => number;
+          getResponse?: () => { code: string };
+        };
+        expect(excepcion.getStatus?.()).toBe(403);
+        expect(excepcion.getResponse?.().code).toBe(ApiErrorCode.INSUFFICIENT_ROLE);
+      }
+    });
+  });
 });

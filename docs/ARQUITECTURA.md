@@ -289,6 +289,14 @@ llama.
 5. **`/panel` es el inicio de todos los roles**, y su contenido cambia según quién entra. Para el
    `ADMIN`, ese inicio **es** su panel de operación.
 
+> **Decisión D24 (2026-08-21, HU-207).** El filtro temporal de «Mis aulas» tiene **tres grupos
+> disjuntos y exhaustivos** —`proximas`, `pasadas`, `canceladas`— y `todas` es su unión. El estado
+> gana sobre la fecha: **una clase cancelada del mes que viene cuenta como `canceladas`, no como
+> `proximas`**, porque no hay nada que preparar. Se decidió así para que los tres filtros sumen
+> exactamente el total y ninguna aula aparezca dos veces. `todas` se sirve como dos listas
+> concatenadas —próximas ascendente, historial descendente— porque el orden que pide el profesor
+> cambia de sentido en `now`, y eso no es un `ORDER BY`.
+
 > **Decisión D18 (2026-08-20).** El catálogo es único y la presentación varía por rol: el profesor
 > ve sus propias clases marcadas y con acceso a gestionarlas, no a reservarlas. Se resolvió así en
 > vez de darle una pantalla aparte porque ver la oferta completa es lo que le permite **coordinar
@@ -648,31 +656,25 @@ regla del sólido, estilo de ilustración— vive en `layout-y-composicion.md` d
 tabla; están separados para que un test pueda montar las rutas reales dentro de un `<MemoryRouter>`
 y verificar a dónde lleva de verdad una URL.
 
-| Ruta               | Sesión                | Qué es                                                       |
-| ------------------ | --------------------- | ------------------------------------------------------------ |
-| `/`                | Pública               | Portada.                                                     |
-| `/login`           | Pública               | Redirige al panel si ya hay sesión.                          |
-| `/registro`        | Pública               | —                                                            |
-| `/panel`           | Cualquier rol         | **El inicio de los tres roles.** Ver abajo.                  |
-| `/perfil`          | Cualquier rol         | —                                                            |
-| `/aulas`           | Cualquier rol         | Catálogo único, presentación por rol (D18).                  |
-| `/mis-clases`      | `STUDENT`             | Reservas del estudiante (contenido en Sprint 3).             |
-| `/mis-aulas`       | `TEACHER`             | Listado del profesor (contenido en HU-207).                  |
-| `/mis-aulas/nueva` | `TEACHER`             | Crear un aula (HU-201).                                      |
-| `/admin`           | La que exija `/panel` | **Redirección a `/panel`.** No es una pantalla desde HU-209. |
-| `*`                | Pública               | 404.                                                         |
+| Ruta               | Sesión                | Qué es                                                        |
+| ------------------ | --------------------- | ------------------------------------------------------------- |
+| `/`                | Pública               | Portada.                                                      |
+| `/login`           | Pública               | Redirige al panel si ya hay sesión.                           |
+| `/registro`        | Pública               | —                                                             |
+| `/panel`           | Cualquier rol         | **El inicio de los tres roles.** Ver abajo.                   |
+| `/perfil`          | Cualquier rol         | —                                                             |
+| `/aulas`           | Cualquier rol         | Catálogo único, presentación por rol (D18).                   |
+| `/mis-clases`      | `STUDENT`             | Reservas del estudiante (contenido en Sprint 3).              |
+| `/mis-aulas`       | `TEACHER`             | Listado del profesor, con filtro temporal en la URL (HU-207). |
+| `/mis-aulas/nueva` | `TEACHER`             | Crear un aula (HU-201).                                       |
+| `/admin`           | La que exija `/panel` | **Redirección a `/panel`.** No es una pantalla desde HU-209.  |
+| `*`                | Pública               | 404.                                                          |
 
 **`/panel` es una ruta con tres contenidos** (D19). `<RoleGate>` monta uno solo, así que las
 consultas de los otros dos no se disparan: el estudiante ve sus reservas o el camino al catálogo, el
 profesor sus próximas clases o el camino a crear una, y el administrador **la aprobación de
 profesores como contenido principal** — que antes vivía en `/admin`, detrás de una tarjeta. `/admin`
 no se elimina para que ningún marcador antiguo se rompa.
-
-> **Deuda conocida de HU-209.** El panel del profesor deriva sus próximas clases del catálogo
-> público filtrando `teacherId` en el cliente, porque `GET /classrooms/mias` (§4.8) es de HU-207 y
-> todavía no existe. Es una ventana aproximada y está marcada como tal en
-> `features/panel/components/panel-profesor.tsx`: **cuando HU-207 aterrice, esa consulta se
-> sustituye.** No es un patrón a replicar.
 
 En escritorio y en móvil **solo se monta una de las dos barras** (`useEsMovil`), no las dos con una
 oculta por CSS: con ambas en el DOM, un lector de pantalla leería cada destino dos veces.

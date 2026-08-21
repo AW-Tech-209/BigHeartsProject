@@ -377,6 +377,66 @@ export interface ListClassroomsResponse {
   pageSize: number;
 }
 
+/**
+ * Filtro temporal de «Mis aulas» (`GET /classrooms/mias`, HU-207).
+ *
+ * Los tres primeros valores son **disjuntos y exhaustivos**: cada aula del
+ * profesor cae en uno y solo en uno, y `todas` es su unión. Esa disyunción es
+ * la especificación, no un detalle:
+ *
+ *  - `canceladas` — `status = CANCELLED`, **sea cual sea su fecha**. Una clase
+ *    cancelada la semana que viene no es una próxima: no hay nada que preparar.
+ *  - `pasadas` — no cancelada y con el horario ya cumplido.
+ *  - `proximas` — no cancelada y con el horario por venir.
+ *
+ * Los valores van en minúscula y en español porque viajan **en la URL** y el
+ * profesor los ve al copiar el enlace (`?estado=canceladas`). El resto de enums
+ * del contrato son espejos de columnas de la BD; este no lo es.
+ */
+export enum EstadoTemporalAula {
+  PROXIMAS = 'proximas',
+  PASADAS = 'pasadas',
+  CANCELADAS = 'canceladas',
+  TODAS = 'todas',
+}
+
+/** El filtro con el que se abre «Mis aulas» si nadie pide otro (A2). */
+export const ESTADO_TEMPORAL_POR_DEFECTO = EstadoTemporalAula.TODAS;
+
+/**
+ * Query de `GET /classrooms/mias` (HU-207).
+ *
+ * **No declara `teacherId`, y eso es la autorización.** El alcance sale del
+ * token; sin forma de nombrar a un tercero no hay aulas ajenas que proteger
+ * (`ARQUITECTURA.md` §4.8, regla 3). Es la misma decisión que en `/users/me`.
+ */
+export interface MisAulasQuery {
+  /** Por defecto, `todas`: es el registro del profesor, no su agenda. */
+  estado?: EstadoTemporalAula;
+  page?: number;
+  pageSize?: number;
+}
+
+/**
+ * Respuesta de `GET /classrooms/mias`. Mismo formato de paginación que el
+ * catálogo (A5): un solo contrato de listado en toda la API.
+ *
+ * Los elementos son `Classroom` a secas —el tipo de HU-201—, **no
+ * `ClassroomListItem`**: el nombre del profesor que el catálogo necesita para
+ * la tarjeta aquí sobra, porque el profesor es quien pide. `maxStudents` y
+ * `currentBookings` ya viajan en él, que es lo que la tarjeta de esta pantalla
+ * convierte en «3 de 10 inscritos».
+ *
+ * **`meetingLink` no viaja**, ni siquiera al dueño: es un listado, y §4.8
+ * regla 2 no admite excepción por rol. Lo revela el detalle (HU-204).
+ */
+export interface MisAulasResponse {
+  items: Classroom[];
+  total: number;
+  page: number;
+  pageSize: number;
+}
+
 /** Códigos de error estables que la API puede devolver en `ApiError.code`. */
 export const ApiErrorCode = {
   VALIDATION_ERROR: 'VALIDATION_ERROR',
