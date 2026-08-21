@@ -197,6 +197,17 @@ Un estudiante no puede tener dos reservas `CONFIRMED` cuyos intervalos
 `[scheduledAt, scheduledAt + durationMinutes)` se solapen. Se valida **dentro de la transacción de
 reserva** (§4.2), no antes: comprobarlo fuera deja una carrera abierta.
 
+**Y un profesor no puede tener dos aulas `PUBLISHED` solapadas.** Nadie está en dos videollamadas a
+la vez. Se valida al crear **y al editar**; las canceladas no ocupan horario. En los dos casos el
+intervalo es cerrado por la izquierda y abierto por la derecha: una clase que termina a las 18:00 y
+otra que empieza a las 18:00 **no** se solapan.
+
+Además, un aula tiene **antelación mínima** (`CLASS_MIN_LEAD_MINUTES`, 60) y **duración máxima**
+(`CLASS_MAX_DURATION_MINUTES`, 240). La antelación no es capricho: por debajo de la ventana de
+acceso de §4.1, el enlace se revelaría en el mismo instante en que se publica la clase, y el
+recordatorio de 24 h de §4.6 no llegaría nunca. Es un **aviso confirmable**, no un bloqueo — publicar
+con poca antelación solo perjudica al propio profesor. El solapamiento sí bloquea.
+
 ### 4.5 Registro y aprobación
 
 - Estudiantes: nacen `ACTIVE`.
@@ -283,6 +294,38 @@ llama.
 > vez de darle una pantalla aparte porque ver la oferta completa es lo que le permite **coordinar
 > horarios** con el resto de la academia, que es donde se producen los choques cuando hay varias
 > clases del mismo nivel.
+
+### 4.9 Accesibilidad declarada del aula
+
+**Es lo que separa a BigHearts de una academia de inglés cualquiera.** El estudiante declara su
+`communicationPreference` al registrarse; el aula declara en qué modos se imparte. Sin esa segunda
+mitad, la primera no sirve para nada y el catálogo filtra por nivel y horario como filtraría
+cualquier otro producto.
+
+| Campo                | Qué es                                                                                                                                    |
+| -------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| `communicationModes` | Conjunto de `CommunicationPreference`. **Obligatorio y no vacío** en las aulas nuevas. Un aula puede impartirse en varios modos a la vez. |
+| `hasInterpreter`     | Hay intérprete de lengua de señas. Distinto de impartir en señas.                                                                         |
+| `hasLiveCaptions`    | Hay subtítulos en vivo.                                                                                                                   |
+| `hasVisualMaterials` | Hay materiales visuales de apoyo.                                                                                                         |
+| `meetingProvider`    | A qué plataforma apunta el enlace (Zoom · Meet · Otra). Los subtítulos automáticos no funcionan igual en todas.                           |
+
+**Reglas:**
+
+1. **Se destaca, no se filtra.** El catálogo muestra **todas** las clases y marca las que coinciden
+   con la preferencia del estudiante. Ocultarle clases por su preferencia sería decidir por él, y
+   este producto existe para lo contrario. El filtro existe y **no viene puesto**.
+2. **Nunca se marca una clase como vetada.** La coincidencia es información, no una puerta. Un
+   estudiante puede reservar cualquier clase.
+3. **A un aula sin modos declarados no se le inventa uno.** Las creadas antes de HU-211 quedan
+   «sin indicar» y el profesor las completa. Rellenar la migración con un valor por defecto sería
+   mentirle al estudiante sobre algo de lo que depende para seguir la clase.
+4. **La declaración es de buena fe.** La plataforma no audita que el profesor cumpla lo que dice.
+
+> **Decisión D21 (2026-08-20).** Se reutiliza el enum `CommunicationPreference` para el aula en vez
+> de crear uno paralelo, para que el emparejamiento sea directo:
+> `modosDelAula.includes(preferenciaDelEstudiante)`. La función vive en `@academia/types` y la usan
+> las dos apps, como `derivarEstadoAula()`.
 
 ## 5. Estructura del monorepo
 
@@ -473,6 +516,10 @@ de implementación están en §7.1.
 | `meetingProvider`      | enum `MANUAL \| DAILY \| GOOGLE_MEET \| ZOOM`       | En Fase 1 siempre `MANUAL`.                                           |
 | `status`               | enum `DRAFT \| PUBLISHED \| CANCELLED \| COMPLETED` | Nace `PUBLISHED` (D15). `DRAFT` y `COMPLETED` sin escritor en Fase 1. |
 | `isRecurring`          | bool, default false                                 | Gancho para Fase 1.5. **Sin regla de recurrencia en Fase 1.**         |
+| `communicationModes`   | enum `CommunicationPreference[]`                    | **Obligatorio y no vacío** en aulas nuevas (§4.9).                    |
+| `hasInterpreter`       | bool, default false                                 | Intérprete de lengua de señas.                                        |
+| `hasLiveCaptions`      | bool, default false                                 | Subtítulos en vivo.                                                   |
+| `hasVisualMaterials`   | bool, default false                                 | Materiales visuales de apoyo.                                         |
 
 > **Decisión D15 (2026-08-18) — el aula nace `PUBLISHED`.** `POST /classrooms` la publica de
 > inmediato; no hay flujo de borrador en Fase 1. Crear un aula tiene que costar menos que abrir un
@@ -874,19 +921,22 @@ en marcha se reducen a invariantes + enlace a `DEPLOYMENT.md`, `AUTH_FLOW.md` y 
 Tomadas al convertir HU-104 y las cuatro HUs del Sprint 2 a `docs/historias/`. Cada una nació de un
 choque entre lo que la HU pedía y lo que el repo o estos documentos dicen.
 
-| #   | Decisión                                                                                                                   | Dónde | Motivó                                                                                                                                                                                          |
-| --- | -------------------------------------------------------------------------------------------------------------------------- | ----- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| D13 | `REJECTED` como estado propio de `UserStatus`                                                                              | §4.5  | HU-104 mandaba el rechazo a `SUSPENDED`, lo que obligaba a mentirle al usuario sobre su estado.                                                                                                 |
-| D14 | `NotificationService` como puerto, con `LoggingNotificationService` en Fase 1                                              | §4.6  | HU-104 pedía email y no existe infraestructura de correo.                                                                                                                                       |
-| D15 | El aula nace `PUBLISHED`                                                                                                   | §7.2  | HU-201 no decía en qué estado se crea, y `DRAFT` no tenía flujo de publicación en ninguna HU del sprint.                                                                                        |
-| D16 | `COMPLETED` sin escritor; se deriva por tiempo hasta HU-404                                                                | §7.2  | HU-202 prohibía editar aulas `COMPLETED`, una regla que nunca se dispararía.                                                                                                                    |
-| D17 | Vitest + Testing Library + `axe` en `apps/web` y `packages/types`, bloqueando en CI                                        | §10.2 | La T0 de HU-203 pedía tests unitarios en un workspace sin runner, y HU-103 cerró con dos AC de accesibilidad sin verificar.                                                                     |
-| D18 | Catálogo único con presentación por rol; solo `STUDENT` reserva                                                            | §4.8  | El profesor veía su propia clase igual que un estudiante, y HU-301 le habría pintado un botón de reservar encima.                                                                               |
-| D19 | `/panel` es el inicio de cada rol; para el `ADMIN` es su panel de operación, y `/admin` redirige                           | §4.8  | El administrador aterrizaba en un panel genérico con su trabajo real escondido tras una tarjeta.                                                                                                |
-| D20 | Vista de supervisión `GET /admin/classrooms`, solo lectura                                                                 | §4.8  | La Definición promete que el admin «gestiona la operación global» y no podía ver ni una clase. Amplía el alcance de Fase 1.                                                                     |
-| D18 | Las rutas `/aulas`, `/mis-clases` y `/mis-aulas` se registran en HU-206, con su estado vacío, antes de tener contenido     | §9    | Son destinos de la barra de navegación desde HU-206, y un enlace visible que cae en un 404 enseña al usuario a desconfiar de la navegación. HU-201, HU-203 y el Sprint 3 rellenan el contenido. |
-| D19 | El diccionario visual de estados de aula vive en `components/dominio/estado-aula-variantes.ts`, separado de `<EstadoAula>` | §7.3  | El AC9 de HU-206 exigía verificar la regla del sólido, pero el componente es de HU-203. Separar la tabla visual del componente permite testear la regla antes de que exista quien la obedece.   |
-| D20 | `<SessionBar>` desaparece: identidad y «Cerrar sesión» se absorben en la barra del shell                                   | §9    | Migrar las pantallas privadas al shell dejaba dos cabeceras apiladas. Un menú de avatar habría añadido estado oculto, que es justo lo que la navegación de HU-206 prohíbe.                      |
+| #   | Decisión                                                                                                                   | Dónde  | Motivó                                                                                                                                                                                          |
+| --- | -------------------------------------------------------------------------------------------------------------------------- | ------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| D13 | `REJECTED` como estado propio de `UserStatus`                                                                              | §4.5   | HU-104 mandaba el rechazo a `SUSPENDED`, lo que obligaba a mentirle al usuario sobre su estado.                                                                                                 |
+| D14 | `NotificationService` como puerto, con `LoggingNotificationService` en Fase 1                                              | §4.6   | HU-104 pedía email y no existe infraestructura de correo.                                                                                                                                       |
+| D15 | El aula nace `PUBLISHED`                                                                                                   | §7.2   | HU-201 no decía en qué estado se crea, y `DRAFT` no tenía flujo de publicación en ninguna HU del sprint.                                                                                        |
+| D16 | `COMPLETED` sin escritor; se deriva por tiempo hasta HU-404                                                                | §7.2   | HU-202 prohibía editar aulas `COMPLETED`, una regla que nunca se dispararía.                                                                                                                    |
+| D17 | Vitest + Testing Library + `axe` en `apps/web` y `packages/types`, bloqueando en CI                                        | §10.2  | La T0 de HU-203 pedía tests unitarios en un workspace sin runner, y HU-103 cerró con dos AC de accesibilidad sin verificar.                                                                     |
+| D18 | Catálogo único con presentación por rol; solo `STUDENT` reserva                                                            | §4.8   | El profesor veía su propia clase igual que un estudiante, y HU-301 le habría pintado un botón de reservar encima.                                                                               |
+| D19 | `/panel` es el inicio de cada rol; para el `ADMIN` es su panel de operación, y `/admin` redirige                           | §4.8   | El administrador aterrizaba en un panel genérico con su trabajo real escondido tras una tarjeta.                                                                                                |
+| D20 | Vista de supervisión `GET /admin/classrooms`, solo lectura                                                                 | §4.8   | La Definición promete que el admin «gestiona la operación global» y no podía ver ni una clase. Amplía el alcance de Fase 1.                                                                     |
+| D21 | El aula declara sus modos de comunicación y apoyos; se destaca la coincidencia, no se filtra                               | §4.9   | La preferencia del estudiante no se usaba en ninguna parte: el catálogo filtraba por nivel y horario como una academia genérica.                                                                |
+| D22 | No solapamiento **del profesor**, antelación mínima y duración máxima                                                      | §4.4   | Se podía publicar una clase imposible: dos a la vez, de diez mil minutos, o con dos minutos de antelación.                                                                                      |
+| D23 | Duplicar un aula, sin reabrir la recurrencia                                                                               | HU-213 | La Definición §8.2 declara la adopción del profesor como riesgo y crear un aula son once campos, incluido volver a pegar el enlace.                                                             |
+| D18 | Las rutas `/aulas`, `/mis-clases` y `/mis-aulas` se registran en HU-206, con su estado vacío, antes de tener contenido     | §9     | Son destinos de la barra de navegación desde HU-206, y un enlace visible que cae en un 404 enseña al usuario a desconfiar de la navegación. HU-201, HU-203 y el Sprint 3 rellenan el contenido. |
+| D19 | El diccionario visual de estados de aula vive en `components/dominio/estado-aula-variantes.ts`, separado de `<EstadoAula>` | §7.3   | El AC9 de HU-206 exigía verificar la regla del sólido, pero el componente es de HU-203. Separar la tabla visual del componente permite testear la regla antes de que exista quien la obedece.   |
+| D20 | `<SessionBar>` desaparece: identidad y «Cerrar sesión» se absorben en la barra del shell                                   | §9     | Migrar las pantallas privadas al shell dejaba dos cabeceras apiladas. Un menú de avatar habría añadido estado oculto, que es justo lo que la navegación de HU-206 prohíbe.                      |
 
 Correcciones aplicadas a las HUs al convertirlas, sin necesidad de decisión nueva:
 

@@ -190,9 +190,20 @@ objetivo es que la academia pueda dejar de operar por WhatsApp desde el primer d
   minutos), con el enlace **cifrado en reposo**.
 - Notificaciones por email: confirmación, cancelación y recordatorios (24 h y 30 min antes).
 - Historial de clases para estudiante y profesor, y **marcado manual de asistencia por el profesor**.
+- **Cada aula declara cómo se imparte:** en qué modos de comunicación (lengua de señas, lectura
+  labial, texto escrito, audio), si hay intérprete, subtítulos en vivo o materiales visuales, y a
+  qué plataforma de videollamada apunta. El catálogo lo muestra, permite filtrar por ello y
+  **destaca** las clases que coinciden con la preferencia del estudiante.
 - **Cada rol ve lo suyo:** el estudiante explora el catálogo; el profesor tiene su listado de aulas
   propias, incluidas canceladas y pasadas; el administrador supervisa **todas las aulas de la
   academia**, de todos los profesores, en solo lectura.
+
+> **Nota de auditoría (2026-08-20) — la accesibilidad declarada del aula.** No estaba en ninguna
+> parte: el estudiante declaraba su preferencia de comunicación al registrarse y ese dato **no se
+> usaba en el producto**. El catálogo filtraba por nivel y horario, exactamente igual que lo haría
+> una academia de inglés para oyentes. Un estudiante cuya lengua es de señas no tenía forma de
+> saber qué clase podía seguir sin reservarla y entrar a la videollamada — es decir, la fricción
+> que este producto existe para eliminar. Se implementa en HU-211.
 
 > **Nota de auditoría (2026-08-20) — ampliación del alcance.** La supervisión global del
 > administrador **no estaba en esta lista**. Se añade porque §3 promete que ese rol «gestiona la

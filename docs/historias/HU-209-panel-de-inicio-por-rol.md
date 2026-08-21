@@ -61,6 +61,9 @@ exactamente lo que produjo esta HU.
       un commit más de lo necesario.
 - [ ] **T2** — Panel del **estudiante**: sus próximas clases reservadas, o un vacío que lleve al
       catálogo. Acción primaria única: `Explorar clases`.
+      **⚠️ En el Sprint 2 no existen las reservas**, así que este panel siempre mostrará el vacío.
+      Su texto **no puede prometer reservar**: manda a explorar y a ver el detalle, que es lo único
+      que el estudiante puede hacer hoy. Cuando HU-301 aterrice, se completa.
 - [ ] **T3** — Panel del **profesor**: sus próximas clases a impartir, o un vacío que lleve a
       crear. Acción primaria única: `Crear una clase`.
 - [ ] **T4** — Panel del **administrador**: los profesores pendientes de aprobación **en primer
@@ -86,6 +89,10 @@ exactamente lo que produjo esta HU.
       devuelve nada.
 - [ ] **AC2** — Un **estudiante** en `/panel` ve sus próximas clases reservadas, o un vacío que
       lleva al catálogo. No ve nada del profesor ni del administrador.
+- [ ] **AC2b** — **El vacío del estudiante no promete lo que el sprint no entrega.** Como todavía
+      no hay reservas, su texto invita a explorar el catálogo y ver el detalle de una clase, **no a
+      reservarla**. Mandarle a un sitio donde no puede hacer nada es el mismo fallo que produjo
+      esta HU.
 - [ ] **AC3** — Un **profesor** en `/panel` ve sus próximas clases a impartir, o un vacío que lleva
       a crear una.
 - [ ] **AC4** — Un **administrador** en `/panel` ve los profesores pendientes **como contenido
