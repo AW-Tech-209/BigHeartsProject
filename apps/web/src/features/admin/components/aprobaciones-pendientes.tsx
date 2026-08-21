@@ -1,32 +1,39 @@
 import type { User } from '@academia/types';
-import { LoaderCircle, RotateCw } from 'lucide-react';
+import { LoaderCircle, RotateCw, ShieldCheck } from 'lucide-react';
 import { useState } from 'react';
 
 import { EstadoVacio } from '@/components/dominio/estado-vacio';
-import { AppShell } from '@/components/layout/app-shell';
-import { PaginaCabecera } from '@/components/layout/pagina-cabecera';
 import { Button } from '@/components/ui/button';
 import { Callout } from '@/components/ui/callout';
 import { Card } from '@/components/ui/card';
-import { PendingTeachersTable } from '@/features/admin/components/pending-teachers-table';
-import { usePendingTeachers } from '@/features/admin/hooks/use-pending-teachers';
-import { useResolveTeacher } from '@/features/admin/hooks/use-resolve-teacher';
-import type { TeacherResolution } from '@/features/admin/lib/teacher-resolution';
 import { ApiClientError } from '@/lib/api-error';
+import { usePendingTeachers } from '../hooks/use-pending-teachers';
+import { useResolveTeacher } from '../hooks/use-resolve-teacher';
+import type { TeacherResolution } from '../lib/teacher-resolution';
+import { PendingTeachersTable } from './pending-teachers-table';
 
 /**
  * Aprobación de profesores (HU-104).
  *
- * Es la pantalla que desbloquea el Sprint 2: sin ella no hay ningún profesor
+ * Es la operación que desbloquea el Sprint 2: sin ella no hay ningún profesor
  * `ACTIVE` que pueda crear un aula.
  *
+ * **Vivía en `/admin` y ahora es el contenido principal de `/panel`** (HU-209,
+ * D19 de `ARQUITECTURA.md` §4.8). El cambio es de ubicación, no de conducta: la
+ * lógica de resolución, los códigos de error y el anuncio por región viva son
+ * exactamente los de HU-104. Si algo de esto se comporta distinto que antes, es
+ * un fallo, no una mejora.
+ *
  * Los cuatro estados que exige la guía de UI están todos aquí: `cargando`,
- * `vacío` —el caso normal en una plataforma sana, no un error—, `error` de
+ * `vacío` —el caso normal en una academia sana, no un error—, `error` de
  * lectura y `éxito`. El resultado de cada acción se anuncia por región viva
  * desde `useResolveTeacher`, no desde aquí: el anuncio pertenece al momento en
  * que el servidor confirma, no al momento en que se pinta.
+ *
+ * Es una `<section>` con `<h2>`, no una página con `<h1>`: el único `<h1>` de
+ * `/panel` es el saludo de `<PaginaCabecera>`.
  */
-export function AdminPage() {
+export function AprobacionesPendientes() {
   const { data: teachers, isPending, isError, error, refetch, isRefetching } = usePendingTeachers();
   const resolve = useResolveTeacher();
 
@@ -41,7 +48,7 @@ export function AdminPage() {
    * dejaría abierto tapando el aviso de error que se pinta abajo.
    *
    * El fallo no se pierde: `resolve.isError` lo recoge y lo explica en la
-   * página, que es donde se puede leer.
+   * pantalla, que es donde se puede leer.
    */
   function resolver(teacher: User, resolution: TeacherResolution): Promise<void> {
     setResolvingId(teacher.id);
@@ -54,12 +61,20 @@ export function AdminPage() {
   }
 
   return (
-    <AppShell>
-      <PaginaCabecera
-        titulo="Profesores pendientes"
-        tituloDocumento="Profesores pendientes"
-        contexto="Revisa quién pidió una cuenta de profesor. Hasta que apruebes su cuenta no puede entrar a la plataforma."
-      />
+    <section aria-labelledby="panel-aprobaciones" className="space-y-4">
+      <div className="space-y-2">
+        <h2
+          id="panel-aprobaciones"
+          className="flex items-center gap-2 text-xl font-medium text-foreground"
+        >
+          <ShieldCheck aria-hidden="true" strokeWidth={2} className="size-5 shrink-0" />
+          Profesores pendientes
+        </h2>
+        <p className="max-w-[65ch] text-base text-muted-foreground">
+          Revisa quién pidió una cuenta de profesor. Hasta que apruebes su cuenta no puede entrar a
+          la plataforma.
+        </p>
+      </div>
 
       {/* Estado 1 — cargando. Con texto, nunca un spinner mudo. */}
       {isPending && (
@@ -137,7 +152,7 @@ export function AdminPage() {
         </Callout>
       )}
 
-      {/* Estado 3 — vacío. Es el estado SANO de esta pantalla: no hay nadie
+      {/* Estado 3 — vacío. Es el estado SANO de esta operación: no hay nadie
           bloqueado esperando. Por eso el texto no lamenta nada ni ofrece una
           acción de salida: no falta nada que hacer. */}
       {teachers?.length === 0 && (
@@ -151,6 +166,6 @@ export function AdminPage() {
       {teachers && teachers.length > 0 && (
         <PendingTeachersTable teachers={teachers} resolvingId={resolvingId} onResolve={resolver} />
       )}
-    </AppShell>
+    </section>
   );
 }

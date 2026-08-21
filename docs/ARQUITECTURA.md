@@ -622,8 +622,9 @@ apps/web/src/
 ├── index.css           Tailwind v4 + tema (@theme) + tokens de color.
 ├── app/                Cableado transversal: App, providers, router.
 ├── pages/              Un componente por ruta.
-├── features/           Módulos de dominio: auth/ (y aulas/, reservas/… por venir),
-│                       cada uno con api/, components/, hooks/, lib/.
+├── features/           Módulos de dominio: auth/, admin/, aulas/, profile/, panel/
+│                       (y reservas/… por venir), cada uno con api/, components/,
+│                       hooks/, lib/.
 ├── components/
 │   ├── ui/             Primitivas de shadcn sobre Base UI.
 │   ├── layout/         El shell y la composición de página (HU-206): AppShell,
@@ -636,12 +637,42 @@ apps/web/src/
 └── stores/             Zustand: sesión en memoria y preferencias.
 ```
 
-**El shell (HU-206).** Las nueve pantallas se montan sobre `<AppShell>`: marca, navegación superior
+**El shell (HU-206).** Todas las pantallas se montan sobre `<AppShell>`: marca, navegación superior
 por rol —tres o cuatro destinos, **nunca lateral y nunca tras una hamburguesa**—, barra inferior
 fija en móvil, y un `<main>` al que apunta el `<SkipLink>`. `<PaginaCabecera>` pone el único `<h1>`
 de la pantalla y es quien llama a `usePageTitle`, así que ninguna página puede olvidarse de mover el
 foco al cambiar de ruta. La especificación visual completa —anatomía, rejilla de 1/2/3 columnas,
 regla del sólido, estilo de ilustración— vive en `layout-y-composicion.md` del skill `bighearts-ui`.
+
+**Las rutas (actualizado en HU-209).** `<AppRouter>` monta el `<BrowserRouter>` y `<AppRoutes>` la
+tabla; están separados para que un test pueda montar las rutas reales dentro de un `<MemoryRouter>`
+y verificar a dónde lleva de verdad una URL.
+
+| Ruta               | Sesión                | Qué es                                                       |
+| ------------------ | --------------------- | ------------------------------------------------------------ |
+| `/`                | Pública               | Portada.                                                     |
+| `/login`           | Pública               | Redirige al panel si ya hay sesión.                          |
+| `/registro`        | Pública               | —                                                            |
+| `/panel`           | Cualquier rol         | **El inicio de los tres roles.** Ver abajo.                  |
+| `/perfil`          | Cualquier rol         | —                                                            |
+| `/aulas`           | Cualquier rol         | Catálogo único, presentación por rol (D18).                  |
+| `/mis-clases`      | `STUDENT`             | Reservas del estudiante (contenido en Sprint 3).             |
+| `/mis-aulas`       | `TEACHER`             | Listado del profesor (contenido en HU-207).                  |
+| `/mis-aulas/nueva` | `TEACHER`             | Crear un aula (HU-201).                                      |
+| `/admin`           | La que exija `/panel` | **Redirección a `/panel`.** No es una pantalla desde HU-209. |
+| `*`                | Pública               | 404.                                                         |
+
+**`/panel` es una ruta con tres contenidos** (D19). `<RoleGate>` monta uno solo, así que las
+consultas de los otros dos no se disparan: el estudiante ve sus reservas o el camino al catálogo, el
+profesor sus próximas clases o el camino a crear una, y el administrador **la aprobación de
+profesores como contenido principal** — que antes vivía en `/admin`, detrás de una tarjeta. `/admin`
+no se elimina para que ningún marcador antiguo se rompa.
+
+> **Deuda conocida de HU-209.** El panel del profesor deriva sus próximas clases del catálogo
+> público filtrando `teacherId` en el cliente, porque `GET /classrooms/mias` (§4.8) es de HU-207 y
+> todavía no existe. Es una ventana aproximada y está marcada como tal en
+> `features/panel/components/panel-profesor.tsx`: **cuando HU-207 aterrice, esa consulta se
+> sustituye.** No es un patrón a replicar.
 
 En escritorio y en móvil **solo se monta una de las dos barras** (`useEsMovil`), no las dos con una
 oculta por CSS: con ambas en el DOM, un lector de pantalla leería cada destino dos veces.
