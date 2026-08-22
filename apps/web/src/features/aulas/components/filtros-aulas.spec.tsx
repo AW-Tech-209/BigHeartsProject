@@ -1,5 +1,5 @@
 import type { ListClassroomsQuery } from '@academia/types';
-import { EnglishLevel } from '@academia/types';
+import { CommunicationPreference, EnglishLevel } from '@academia/types';
 import { screen } from '@testing-library/react';
 import { useState } from 'react';
 import { describe, expect, it, vi } from 'vitest';
@@ -44,11 +44,13 @@ function montar(inicial: ListClassroomsQuery = {}) {
 }
 
 describe('<FiltrosAulas /> — controles y teclado (B4)', () => {
-  it('los tres controles se llegan con Tab, en orden', async () => {
+  it('los cuatro controles se llegan con Tab, en orden', async () => {
     const { user } = montar();
 
     await user.tab();
     expect(screen.getByLabelText('Nivel')).toHaveFocus();
+    await user.tab();
+    expect(screen.getByLabelText('Modo de comunicación')).toHaveFocus();
     await user.tab();
     expect(screen.getByLabelText('Desde')).toHaveFocus();
     await user.tab();
@@ -69,6 +71,34 @@ describe('<FiltrosAulas /> — controles y teclado (B4)', () => {
     await user.selectOptions(screen.getByLabelText('Nivel'), 'Todos los niveles');
 
     expect(onChange).toHaveBeenCalledWith({ level: undefined });
+  });
+
+  // AC5, AC9: el filtro de modo existe, no viene puesto y se combina con los demás.
+  it('"Todos los modos" es el valor inicial: AC5, no se filtra por defecto', () => {
+    montar();
+
+    expect(screen.getByLabelText('Modo de comunicación')).toHaveValue('');
+  });
+
+  it('elegir un modo avisa con el modo elegido', async () => {
+    const { user, onChange } = montar();
+
+    await user.selectOptions(
+      screen.getByLabelText('Modo de comunicación'),
+      CommunicationPreference.SIGN_LANGUAGE,
+    );
+
+    expect(onChange).toHaveBeenCalledWith({
+      communicationMode: CommunicationPreference.SIGN_LANGUAGE,
+    });
+  });
+
+  it('volver a "Todos los modos" limpia el filtro', async () => {
+    const { user, onChange } = montar({ communicationMode: CommunicationPreference.LIP_READING });
+
+    await user.selectOptions(screen.getByLabelText('Modo de comunicación'), 'Todos los modos');
+
+    expect(onChange).toHaveBeenCalledWith({ communicationMode: undefined });
   });
 
   it('escribir una fecha "desde" avisa con el valor completo', async () => {

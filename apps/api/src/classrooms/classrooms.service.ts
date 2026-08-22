@@ -8,7 +8,6 @@ import {
   ESTADO_TEMPORAL_POR_DEFECTO,
   EstadoTemporalAula,
   type ListClassroomsResponse,
-  MeetingProvider,
   type MisAulasResponse,
   UserRole,
   UserStatus,
@@ -18,10 +17,16 @@ import type { AuthenticatedUser } from '../auth/auth.types';
 import { insufficientRole } from '../auth/auth.errors';
 import { PrismaService } from '../prisma/prisma.service';
 import { toClassroomDetail, toClassroomListItem, toPublicClassroom } from './classroom.mapper';
-import { classroomNotFound, teacherNotActive, teacherProfileNotFound } from './classrooms.errors';
+import {
+  classroomForbidden,
+  classroomNotFound,
+  teacherNotActive,
+  teacherProfileNotFound,
+} from './classrooms.errors';
 import type { CreateClassroomDto } from './dto/create-classroom.dto';
 import type { ListClassroomsDto } from './dto/list-classrooms.dto';
 import type { ListMisAulasDto } from './dto/list-mis-aulas.dto';
+import type { UpdateClassroomAccessibilityDto } from './dto/update-classroom-accessibility.dto';
 import { MeetingLinkCipher } from './meeting-link.cipher';
 
 @Injectable()
@@ -55,12 +60,22 @@ export class ClassroomsService {
         durationMinutes: input.durationMinutes,
         // El dato más sensible del producto no toca la BD en claro (§4.1).
         meetingLink: this.meetingLinks.encrypt(input.meetingLink),
+        // Desde HU-211 lo elige el profesor (Zoom, Meet u otra) — ya no lo fija
+        // el servidor. El DTO solo acepta las tres opciones ofrecidas.
+        meetingProvider: input.meetingProvider,
 
-        // Los tres campos que decide el servidor. Se escriben EXPLÍCITAMENTE
+        // Obligatorio y no vacío: lo exige el DTO (§4.9, AC1). Se escribe tal
+        // cual llega, sin normalizar duplicados — dos veces el mismo modo no
+        // cambia el resultado de `coincideConLaPreferencia()`.
+        communicationModes: input.communicationModes,
+        hasInterpreter: input.hasInterpreter ?? false,
+        hasLiveCaptions: input.hasLiveCaptions ?? false,
+        hasVisualMaterials: input.hasVisualMaterials ?? false,
+
+        // Los dos campos que decide el servidor. Se escriben EXPLÍCITAMENTE
         // aunque el esquema ya los tenga como default: así el valor con el que
         // nace un aula se lee aquí, y un cambio de default en una migración
         // futura no altera en silencio el comportamiento de este endpoint.
-        meetingProvider: MeetingProvider.MANUAL,
         status: ClassroomStatus.PUBLISHED,
         currentBookings: 0,
       },
@@ -95,6 +110,12 @@ export class ClassroomsService {
         ...(query.level ? [{ level: query.level }] : []),
         ...(query.desde ? [{ scheduledAt: { gte: new Date(query.desde) } }] : []),
         ...(query.hasta ? [{ scheduledAt: { lte: new Date(query.hasta) } }] : []),
+        // AC9: combinable con los demás. No viene puesto por defecto en
+        // ninguna pantalla (§4.9, regla 1) — quien lo manda es el filtro
+        // explícito del catálogo, nunca un valor implícito de este método.
+        ...(query.communicationMode
+          ? [{ communicationModes: { has: query.communicationMode } }]
+          : []),
       ],
     };
 
@@ -180,6 +201,49 @@ export class ClassroomsService {
     }
 
     return viewer.id === classroom.teacherId;
+  }
+
+  /**
+   * `PATCH /classrooms/:id` — completa o corrige los 5 campos de accesibilidad
+   * de un aula ya creada (HU-211, T4).
+   *
+   * **Deliberadamente acotado.** No es la edición general del aula —título,
+   * horario, cupo, enlace—: esa es HU-202, todavía pendiente, y este mismo
+   * endpoint es el que ella va a extender con el resto de campos editables, no
+   * uno que vaya a reemplazar (decisión D25 de `ARQUITECTURA.md`).
+   *
+   * Sin comprobación de `now ≥ scheduledAt` ni de `status = CANCELLED`: es
+   * metadata declarativa que no afecta horario ni cupo, así que no hay
+   * invariante que la bloquee — a diferencia de la edición general, que sí
+   * tendrá esa regla cuando llegue HU-202.
+   */
+  async updateClassroomAccessibility(
+    teacher: AuthenticatedUser,
+    classroomId: string,
+    dto: UpdateClassroomAccessibilityDto,
+  ): Promise<Classroom> {
+    const classroom = await this.prisma.classroom.findUnique({ where: { id: classroomId } });
+
+    if (!classroom) {
+      throw classroomNotFound();
+    }
+
+    if (classroom.teacherId !== teacher.id) {
+      throw classroomForbidden();
+    }
+
+    const actualizada = await this.prisma.classroom.update({
+      where: { id: classroomId },
+      data: {
+        communicationModes: dto.communicationModes,
+        ...(dto.hasInterpreter !== undefined && { hasInterpreter: dto.hasInterpreter }),
+        ...(dto.hasLiveCaptions !== undefined && { hasLiveCaptions: dto.hasLiveCaptions }),
+        ...(dto.hasVisualMaterials !== undefined && { hasVisualMaterials: dto.hasVisualMaterials }),
+        ...(dto.meetingProvider !== undefined && { meetingProvider: dto.meetingProvider }),
+      },
+    });
+
+    return toPublicClassroom(actualizada);
   }
 
   /**

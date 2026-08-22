@@ -3,7 +3,7 @@
 // la app; este spec no pasa por ahí, así que lo trae él mismo.
 import 'reflect-metadata';
 
-import { CLASSROOMS_PAGE_SIZE_MAX, EnglishLevel } from '@academia/types';
+import { CLASSROOMS_PAGE_SIZE_MAX, CommunicationPreference, EnglishLevel } from '@academia/types';
 import { plainToInstance } from 'class-transformer';
 import { validate } from 'class-validator';
 import { describe, expect, it } from 'vitest';
@@ -28,6 +28,7 @@ describe('ListClassroomsDto (validación)', () => {
         level: EnglishLevel.INTERMEDIATE,
         desde: '2099-01-01T00:00:00.000Z',
         hasta: '2099-12-31T23:59:59.000Z',
+        communicationMode: CommunicationPreference.SIGN_LANGUAGE,
         page: '2',
         pageSize: '10',
       }),
@@ -36,6 +37,19 @@ describe('ListClassroomsDto (validación)', () => {
 
   it('rechaza un nivel que no es de la lista', async () => {
     expect(await camposInvalidos({ level: 'EXPERTO' })).toContain('level');
+  });
+
+  // AC9: el filtro de modo es opcional y combinable, igual que los demás.
+  it('rechaza un modo de comunicación que no es de la lista', async () => {
+    expect(await camposInvalidos({ communicationMode: 'TELEPATIA' })).toContain(
+      'communicationMode',
+    );
+  });
+
+  it('acepta un modo de comunicación válido, solo', async () => {
+    expect(
+      await camposInvalidos({ communicationMode: CommunicationPreference.WRITTEN_TEXT }),
+    ).toHaveLength(0);
   });
 
   it.each(['no-es-fecha', '2099-13-40'])(

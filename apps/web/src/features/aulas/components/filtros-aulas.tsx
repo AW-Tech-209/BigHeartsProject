@@ -1,8 +1,13 @@
-import { type EnglishLevel, type ListClassroomsQuery } from '@academia/types';
+import {
+  type CommunicationPreference,
+  type EnglishLevel,
+  type ListClassroomsQuery,
+} from '@academia/types';
 
 import { Field } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { NativeSelect } from '@/components/ui/native-select';
+import { communicationPreferenceLabels } from '@/features/auth/lib/accessibility-labels';
 import { nivelesDeIngles } from '../lib/niveles';
 
 type FiltrosAulasProps = {
@@ -20,7 +25,9 @@ type FiltrosAulasProps = {
  * query: la página 3 de un resultado que acaba de reducirse no tiene sentido.
  */
 export function FiltrosAulas({ value, onChange }: FiltrosAulasProps) {
-  function actualizar(cambio: Partial<Pick<ListClassroomsQuery, 'level' | 'desde' | 'hasta'>>) {
+  function actualizar(
+    cambio: Partial<Pick<ListClassroomsQuery, 'level' | 'communicationMode' | 'desde' | 'hasta'>>,
+  ) {
     const { page: _page, ...resto } = value;
     onChange({ ...resto, ...cambio });
   }
@@ -38,6 +45,26 @@ export function FiltrosAulas({ value, onChange }: FiltrosAulasProps) {
           {Object.entries(nivelesDeIngles).map(([nivel, { nombre }]) => (
             <option key={nivel} value={nivel}>
               {nombre}
+            </option>
+          ))}
+        </NativeSelect>
+      </Field>
+
+      {/* AC5: no viene puesto por defecto — «Todos los modos» es el valor inicial. */}
+      <Field id="filtro-modo" label="Modo de comunicación" className="w-56">
+        <NativeSelect
+          value={value.communicationMode ?? ''}
+          onChange={(event) =>
+            actualizar({
+              communicationMode: (event.target.value || undefined) as
+                CommunicationPreference | undefined,
+            })
+          }
+        >
+          <option value="">Todos los modos</option>
+          {Object.entries(communicationPreferenceLabels).map(([modo, etiqueta]) => (
+            <option key={modo} value={modo}>
+              {etiqueta}
             </option>
           ))}
         </NativeSelect>

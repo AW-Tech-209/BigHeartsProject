@@ -1,6 +1,7 @@
 import {
   type ClassroomListItem,
   ClassroomStatus,
+  CommunicationPreference,
   EnglishLevel,
   MeetingProvider,
 } from '@academia/types';
@@ -28,6 +29,10 @@ function aula(overrides: Partial<ClassroomListItem> = {}): ClassroomListItem {
     meetingProvider: MeetingProvider.MANUAL,
     status: ClassroomStatus.PUBLISHED,
     isRecurring: false,
+    communicationModes: [],
+    hasInterpreter: false,
+    hasLiveCaptions: false,
+    hasVisualMaterials: false,
     createdAt: '2026-08-01T10:00:00.000Z',
     updatedAt: '2026-08-01T10:00:00.000Z',
     teacherFirstName: 'Ana',
@@ -215,6 +220,145 @@ describe('<TarjetaAula perspectiva="profesor" /> — la vista del dueño (AC8)',
 
     expect(screen.queryByText(/Ana Restrepo/)).not.toBeInTheDocument();
     expect(screen.getByText('Intermedio · 1 hora')).toBeInTheDocument();
+  });
+});
+
+/**
+ * HU-211: el modo de comunicación en la tarjeta (T10), la marca de
+ * coincidencia (T12) y la vía para completar un aula «sin indicar» (T15).
+ */
+describe('<TarjetaAula /> — accesibilidad declarada del aula (T10, T12, T15)', () => {
+  it('sin modos declarados, muestra «Modo sin indicar»', () => {
+    renderConProviders(<TarjetaAula classroom={aula({ communicationModes: [] })} ahora={AHORA} />);
+
+    expect(screen.getByText('Modo sin indicar')).toBeInTheDocument();
+  });
+
+  it('con un modo declarado, lo muestra con su etiqueta', () => {
+    renderConProviders(
+      <TarjetaAula
+        classroom={aula({ communicationModes: [CommunicationPreference.SIGN_LANGUAGE] })}
+        ahora={AHORA}
+      />,
+    );
+
+    expect(screen.getByText('Lengua de signos')).toBeInTheDocument();
+  });
+
+  // El orden CANÓNICO decide, no el de inserción: dos aulas con los mismos
+  // modos en distinto orden tienen que mostrar el mismo "modo principal".
+  it('con varios modos, el principal es siempre el mismo sin importar el orden de llegada', () => {
+    const { rerender } = renderConProviders(
+      <TarjetaAula
+        classroom={aula({
+          communicationModes: [
+            CommunicationPreference.WRITTEN_TEXT,
+            CommunicationPreference.SIGN_LANGUAGE,
+          ],
+        })}
+        ahora={AHORA}
+      />,
+    );
+    expect(screen.getByText('Lengua de signos')).toBeInTheDocument();
+    expect(screen.queryByText('Texto escrito')).not.toBeInTheDocument();
+
+    rerender(
+      <TarjetaAula
+        classroom={aula({
+          communicationModes: [
+            CommunicationPreference.SIGN_LANGUAGE,
+            CommunicationPreference.WRITTEN_TEXT,
+          ],
+        })}
+        ahora={AHORA}
+      />,
+    );
+    expect(screen.getByText('Lengua de signos')).toBeInTheDocument();
+    expect(screen.queryByText('Texto escrito')).not.toBeInTheDocument();
+  });
+
+  // AC4: solo marca las que coinciden, y nunca con una marca negativa.
+  it('coincide con la preferencia del estudiante: muestra la marca', () => {
+    renderConProviders(
+      <TarjetaAula
+        classroom={aula({ communicationModes: [CommunicationPreference.SIGN_LANGUAGE] })}
+        preferenciaEstudiante={CommunicationPreference.SIGN_LANGUAGE}
+        ahora={AHORA}
+      />,
+    );
+
+    expect(screen.getByText('Coincide con tu preferencia')).toBeInTheDocument();
+  });
+
+  it('no coincide: no muestra la marca, y ninguna marca negativa la sustituye', () => {
+    renderConProviders(
+      <TarjetaAula
+        classroom={aula({ communicationModes: [CommunicationPreference.LIP_READING] })}
+        preferenciaEstudiante={CommunicationPreference.SIGN_LANGUAGE}
+        ahora={AHORA}
+      />,
+    );
+
+    expect(screen.queryByText('Coincide con tu preferencia')).not.toBeInTheDocument();
+  });
+
+  // AC6: sin preferencia declarada, nunca hay marca.
+  it('sin preferencia declarada, no hay marca aunque el aula tenga modos', () => {
+    renderConProviders(
+      <TarjetaAula
+        classroom={aula({ communicationModes: [CommunicationPreference.SIGN_LANGUAGE] })}
+        ahora={AHORA}
+      />,
+    );
+
+    expect(screen.queryByText('Coincide con tu preferencia')).not.toBeInTheDocument();
+  });
+
+  it('en la perspectiva del profesor nunca aparece la marca de coincidencia', () => {
+    renderConProviders(
+      <TarjetaAula
+        classroom={aula({ communicationModes: [CommunicationPreference.SIGN_LANGUAGE] })}
+        perspectiva="profesor"
+        preferenciaEstudiante={CommunicationPreference.SIGN_LANGUAGE}
+        ahora={AHORA}
+      />,
+    );
+
+    expect(screen.queryByText('Coincide con tu preferencia')).not.toBeInTheDocument();
+  });
+
+  it('el profesor ve «Completar accesibilidad» cuando su aula no tiene modos', () => {
+    renderConProviders(
+      <TarjetaAula
+        classroom={aula({ id: 'aula-42', communicationModes: [] })}
+        perspectiva="profesor"
+        ahora={AHORA}
+      />,
+    );
+
+    expect(screen.getByRole('link', { name: 'Completar accesibilidad' })).toHaveAttribute(
+      'href',
+      '/mis-aulas/aula-42/accesibilidad',
+    );
+  });
+
+  it('el profesor NO ve el enlace cuando su aula ya declaró modos', () => {
+    renderConProviders(
+      <TarjetaAula
+        classroom={aula({ communicationModes: [CommunicationPreference.SIGN_LANGUAGE] })}
+        perspectiva="profesor"
+        ahora={AHORA}
+      />,
+    );
+
+    expect(screen.queryByRole('link', { name: 'Completar accesibilidad' })).not.toBeInTheDocument();
+  });
+
+  // El catálogo es del estudiante: la acción de gestión del profesor no le sirve.
+  it('en el catálogo (perspectiva estudiante) nunca aparece «Completar accesibilidad»', () => {
+    renderConProviders(<TarjetaAula classroom={aula({ communicationModes: [] })} ahora={AHORA} />);
+
+    expect(screen.queryByRole('link', { name: 'Completar accesibilidad' })).not.toBeInTheDocument();
   });
 });
 

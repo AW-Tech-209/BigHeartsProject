@@ -49,8 +49,9 @@ mensaje mostrar a partir del código, **nunca** parseando `message`.
 Códigos ya existentes: `VALIDATION_ERROR`, `EMAIL_ALREADY_EXISTS`, `INVALID_CREDENTIALS`,
 `ACCOUNT_SUSPENDED`, `ACCOUNT_PENDING`, `ACCOUNT_REJECTED`, `UNAUTHENTICATED`,
 `INSUFFICIENT_ROLE`, `INVALID_REFRESH_TOKEN`, `PROFILE_FORBIDDEN`, `USER_NOT_FOUND`,
-`CLASSROOM_NOT_FOUND`, `INVALID_STATUS_TRANSITION`, `TOO_MANY_REQUESTS`, `DATABASE_UNAVAILABLE`,
-`INTERNAL_ERROR`. Los del dominio de reservas están en `reglas-reservas.md` §7.
+`CLASSROOM_NOT_FOUND`, `CLASSROOM_FORBIDDEN`, `INVALID_STATUS_TRANSITION`, `TOO_MANY_REQUESTS`,
+`DATABASE_UNAVAILABLE`, `INTERNAL_ERROR`. Los del dominio de reservas están en
+`reglas-reservas.md` §7.
 
 Tres que se confunden con facilidad y no son intercambiables:
 
@@ -111,14 +112,23 @@ Back-office, todos con `@Roles(UserRole.ADMIN)` en la clase del controlador (HU-
 | POST   | `/admin/teachers/:id/approve` | — (ruta)  | `{ user }`             |
 | POST   | `/admin/teachers/:id/reject`  | — (ruta)  | `{ user }`             |
 
-Aulas (HU-201, HU-203, HU-207, HU-204):
+Aulas (HU-201, HU-203, HU-207, HU-204, HU-211):
 
-| Método | Ruta               | Entrada                | `data`                             | Rol                |
-| ------ | ------------------ | ---------------------- | ---------------------------------- | ------------------ |
-| POST   | `/classrooms`      | `CreateClassroomInput` | `{ classroom }`                    | `TEACHER` `ACTIVE` |
-| GET    | `/classrooms`      | `ListClassroomsQuery`  | `{ items, total, page, pageSize }` | Cualquier sesión   |
-| GET    | `/classrooms/mias` | `MisAulasQuery`        | `{ items, total, page, pageSize }` | `TEACHER`          |
-| GET    | `/classrooms/:id`  | — (ruta)               | `{ classroom: ClassroomDetail }`   | Cualquier sesión   |
+| Método | Ruta               | Entrada                             | `data`                             | Rol                |
+| ------ | ------------------ | ----------------------------------- | ---------------------------------- | ------------------ |
+| POST   | `/classrooms`      | `CreateClassroomInput`              | `{ classroom }`                    | `TEACHER` `ACTIVE` |
+| GET    | `/classrooms`      | `ListClassroomsQuery`               | `{ items, total, page, pageSize }` | Cualquier sesión   |
+| GET    | `/classrooms/mias` | `MisAulasQuery`                     | `{ items, total, page, pageSize }` | `TEACHER`          |
+| GET    | `/classrooms/:id`  | — (ruta)                            | `{ classroom: ClassroomDetail }`   | Cualquier sesión   |
+| PATCH  | `/classrooms/:id`  | `UpdateClassroomAccessibilityInput` | `{ classroom }`                    | `TEACHER` (dueño)  |
+
+**`PATCH /classrooms/:id` es deliberadamente acotado a los 5 campos de accesibilidad**
+(`communicationModes`, los tres apoyos, `meetingProvider`) — decisión D25 de `ARQUITECTURA.md`. No
+es la edición general del aula (título, horario, cupo, enlace), que trae HU-202: esa HU **extiende
+este mismo endpoint**, no abre uno paralelo. Solo el profesor dueño puede llamarlo; cualquier otro
+recibe `CLASSROOM_FORBIDDEN` (403) — código nuevo de esta HU, que HU-202 reutiliza sin cambiarlo.
+Un id inexistente responde `CLASSROOM_NOT_FOUND`, igual que el detalle. Sin la regla "no editar si
+ya empezó": es metadata declarativa, ninguna invariante la bloquea.
 
 **`/classrooms/mias` va declarada ANTES que `/classrooms/:id`**: Nest resuelve por orden de
 registro, y un `:id` por encima se tragaría `mias` como si fuera un identificador. `:id` es la ruta

@@ -1,4 +1,10 @@
-import { ApiErrorCode, ClassroomStatus, EnglishLevel, MeetingProvider } from '@academia/types';
+import {
+  ApiErrorCode,
+  ClassroomStatus,
+  CommunicationPreference,
+  EnglishLevel,
+  MeetingProvider,
+} from '@academia/types';
 import { screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -21,9 +27,13 @@ const AULA_CREADA = {
   currentBookings: 0,
   scheduledAt: '2027-08-12T23:00:00.000Z',
   durationMinutes: 60,
-  meetingProvider: MeetingProvider.MANUAL,
+  meetingProvider: MeetingProvider.GOOGLE_MEET,
   status: ClassroomStatus.PUBLISHED,
   isRecurring: false,
+  communicationModes: [CommunicationPreference.SIGN_LANGUAGE],
+  hasInterpreter: false,
+  hasLiveCaptions: false,
+  hasVisualMaterials: false,
   createdAt: '2026-08-20T10:00:00.000Z',
   updatedAt: '2026-08-20T10:00:00.000Z',
 };
@@ -41,7 +51,8 @@ function montar(tema: Tema = 'light') {
  * Si un control dejara de ser alcanzable con Tab, o dejara de aceptar texto,
  * esta función falla.
  */
-async function rellenarConTeclado(user: ReturnType<typeof montar>['user']) {
+/** Rellena todo EXCEPTO el modo de comunicación — para probar AC1 por separado. */
+async function rellenarSinModo(user: ReturnType<typeof montar>['user']) {
   await user.click(screen.getByLabelText(/nombre de la clase/i));
   await user.keyboard('Conversación cotidiana');
 
@@ -63,6 +74,14 @@ async function rellenarConTeclado(user: ReturnType<typeof montar>['user']) {
 
   await user.click(screen.getByLabelText(/enlace de la reunión/i));
   await user.keyboard('https://meet.google.com/abc-defg-hij');
+}
+
+async function rellenarConTeclado(user: ReturnType<typeof montar>['user']) {
+  await rellenarSinModo(user);
+
+  // T8: obligatorio. `Tab` desde el enlace pasa por la plataforma —que ya
+  // tiene un valor por defecto válido— y llega a las tarjetas de modo.
+  await user.click(screen.getByLabelText(/lengua de signos/i));
 }
 
 /**
@@ -228,6 +247,19 @@ describe('FormularioAula — errores de validación (AC4)', () => {
     await user.click(screen.getByRole('button', { name: /publicar la clase/i }));
 
     expect(await screen.findByText(/tiene que empezar en el futuro/i)).toBeInTheDocument();
+    expect(createClassroomMock).not.toHaveBeenCalled();
+  });
+
+  // AC1: sin ningún modo de comunicación, el aula no se envía.
+  it('rechaza el envío sin ningún modo de comunicación elegido', async () => {
+    const { user } = montar();
+
+    await rellenarSinModo(user);
+    await user.click(screen.getByRole('button', { name: /publicar la clase/i }));
+
+    expect(
+      await screen.findByText('Elige al menos un modo en que se imparte la clase.'),
+    ).toBeInTheDocument();
     expect(createClassroomMock).not.toHaveBeenCalled();
   });
 

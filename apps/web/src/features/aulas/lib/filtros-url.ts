@@ -1,4 +1,4 @@
-import { EnglishLevel, type ListClassroomsQuery } from '@academia/types';
+import { CommunicationPreference, EnglishLevel, type ListClassroomsQuery } from '@academia/types';
 
 /**
  * Traducción entre los filtros del catálogo y la URL (AC4): copiar el enlace
@@ -24,6 +24,11 @@ export function parseListClassroomsQuery(searchParams: URLSearchParams): ListCla
     query.level = level;
   }
 
+  const communicationMode = searchParams.get('communicationMode');
+  if (communicationMode && esModoValido(communicationMode)) {
+    query.communicationMode = communicationMode;
+  }
+
   const desde = searchParams.get('desde');
   if (desde) query.desde = desde;
 
@@ -44,6 +49,7 @@ export function buildSearchParams(query: ListClassroomsQuery): URLSearchParams {
   const params = new URLSearchParams();
 
   if (query.level) params.set('level', query.level);
+  if (query.communicationMode) params.set('communicationMode', query.communicationMode);
   if (query.desde) params.set('desde', query.desde);
   if (query.hasta) params.set('hasta', query.hasta);
   // La página 1 es el default: omitirla mantiene la URL limpia cuando no
@@ -56,11 +62,15 @@ export function buildSearchParams(query: ListClassroomsQuery): URLSearchParams {
 
 /** ¿Hay algún filtro de contenido activo? (la página no cuenta como filtro). */
 export function hayFiltrosActivos(query: ListClassroomsQuery): boolean {
-  return Boolean(query.level || query.desde || query.hasta);
+  return Boolean(query.level || query.communicationMode || query.desde || query.hasta);
 }
 
 function esNivelValido(value: string): value is EnglishLevel {
   return (Object.values(EnglishLevel) as string[]).includes(value);
+}
+
+function esModoValido(value: string): value is CommunicationPreference {
+  return (Object.values(CommunicationPreference) as string[]).includes(value);
 }
 
 function enteroPositivo(value: string | null): number | undefined {

@@ -235,12 +235,21 @@ export enum ClassroomStatus {
 }
 
 /**
- * De dónde salió el enlace de la videollamada. Coincide con `MeetingProvider`
- * de `schema.prisma`.
+ * A qué plataforma apunta el enlace de la videollamada. Coincide con
+ * `MeetingProvider` de `schema.prisma`.
  *
- * En Fase 1 **siempre** es `MANUAL`: el profesor crea la reunión en Zoom o Meet
- * y pega el enlace. Los otros tres valores existen para que integrar generación
- * automática (Fase 1.5) no obligue a una migración de enum con datos dentro.
+ * Hasta HU-211 este campo siempre valía `MANUAL` y no significaba nada: el
+ * profesor pegaba el enlace y ya. Desde HU-211 el profesor lo declara al crear
+ * la clase, porque los subtítulos automáticos no funcionan igual en todas las
+ * plataformas y el estudiante necesita saberlo para prepararse. El mecanismo
+ * NO cambia — el enlace se sigue pegando a mano en los tres casos — solo pasa
+ * a decir a qué plataforma apunta:
+ *  - `ZOOM` / `GOOGLE_MEET` — el enlace es de esa plataforma.
+ *  - `MANUAL` — "otra": cualquier plataforma que no sea Zoom o Meet. Es el
+ *    valor con el que nacieron las aulas de antes de HU-211, y sigue siendo
+ *    cierto para ellas (decisión 5: no se les inventa una plataforma).
+ *  - `DAILY` — reservado, **sin escritor**. Gancho para cuando Fase 1.5
+ *    integre generación automática; no se ofrece como opción manual.
  */
 export enum MeetingProvider {
   MANUAL = 'MANUAL',
@@ -286,6 +295,23 @@ export interface Classroom {
   status: ClassroomStatus;
   /** Gancho de Fase 1.5. En Fase 1 no hay ninguna regla de recurrencia. */
   isRecurring: boolean;
+  /**
+   * En qué modos se imparte la clase (HU-211, `ARQUITECTURA.md` §4.9).
+   *
+   * **Array vacío significa «el profesor no lo ha indicado», nunca «no se
+   * imparte en ningún modo».** Las aulas creadas antes de HU-211 se migran así
+   * a propósito (decisión 5 de la HU): inventarles un modo por defecto sería
+   * mentirle al estudiante sobre algo de lo que depende para seguir la clase.
+   * Puede tener varios modos a la vez — una clase en señas con subtítulos en
+   * vivo declara los dos — por eso es un conjunto y no un valor único.
+   */
+  communicationModes: CommunicationPreference[];
+  /** Hay intérprete de lengua de señas. Distinto de impartirse en señas. */
+  hasInterpreter: boolean;
+  /** Hay subtítulos en vivo durante la clase. */
+  hasLiveCaptions: boolean;
+  /** Hay materiales visuales de apoyo. */
+  hasVisualMaterials: boolean;
   /** Presente SOLO cuando el servidor decide revelarlo. Ver arriba. */
   meetingLink?: string;
   createdAt: string;
@@ -301,7 +327,6 @@ export interface Classroom {
  *    profesor publicara clases a nombre de otro.
  *  - `status` nace `PUBLISHED` (D15) y `currentBookings` en `0`: no son
  *    decisiones del formulario.
- *  - `meetingProvider` es `MANUAL` en toda la Fase 1.
  *  - `isRecurring` no se ofrece: la columna existe, la funcionalidad no.
  *
  * Añadir un campo a este tipo es autorizar a que el cliente lo decida.
@@ -316,6 +341,24 @@ export interface CreateClassroomInput {
   durationMinutes: number;
   /** URL de la reunión que el profesor creó en Zoom o Meet. Se guarda cifrada. */
   meetingLink: string;
+  /**
+   * Obligatorio y no vacío (HU-211, AC1): un aula nueva no puede quedar «sin
+   * indicar». Las que ya existían antes de esta HU sí pueden estarlo — esta
+   * regla es solo de creación, `UpdateClassroomAccessibilityInput` es la vía
+   * para completarlas.
+   */
+  communicationModes: CommunicationPreference[];
+  /** Los tres apoyos son opcionales: por defecto, ninguno. */
+  hasInterpreter?: boolean;
+  hasLiveCaptions?: boolean;
+  hasVisualMaterials?: boolean;
+  /**
+   * Solo `MANUAL` (Otra), `GOOGLE_MEET` o `ZOOM`. `DAILY` no se ofrece: está
+   * reservado para cuando Fase 1.5 genere el enlace automáticamente, y no
+   * tiene sentido como respuesta a "¿a qué plataforma apunta el enlace que
+   * acabas de pegar?".
+   */
+  meetingProvider: MeetingProvider;
 }
 
 /**
@@ -349,6 +392,13 @@ export interface ListClassroomsQuery {
   desde?: string;
   /** ISO 8601. Cota superior de `scheduledAt`, combinable con `desde`. */
   hasta?: string;
+  /**
+   * Solo aulas que incluyan este modo entre las suyas (HU-211, AC9). Combinable
+   * con `level`, `desde` y `hasta`. **No viene puesto por defecto en ninguna
+   * pantalla**: el catálogo destaca la coincidencia, no filtra por ella
+   * (`ARQUITECTURA.md` §4.9, regla 1).
+   */
+  communicationMode?: CommunicationPreference;
   page?: number;
   pageSize?: number;
 }
@@ -438,6 +488,34 @@ export interface ClassroomDetail extends ClassroomListItem {
  */
 export interface ClassroomDetailResponse {
   classroom: ClassroomDetail;
+}
+
+/**
+ * Cuerpo de `PATCH /classrooms/:id` (HU-211).
+ *
+ * **Deliberadamente acotado a los 5 campos de accesibilidad.** Esta HU no trae
+ * la edición general del aula —título, horario, cupo, enlace—: eso es HU-202
+ * (`CLASSROOM_NOT_EDITABLE`, edición completa), todavía pendiente. Este mismo
+ * endpoint es el que HU-202 va a extender con el resto de campos editables, no
+ * uno que vaya a reemplazar; ver la decisión D25 de `ARQUITECTURA.md`.
+ *
+ * `communicationModes` es obligatorio y no vacío igual que en la creación: la
+ * única razón de que este endpoint exista en el Sprint 2 es sacar a un aula de
+ * «sin indicar», y un `PATCH` que lo dejara vacío no cumpliría ese propósito.
+ * Los apoyos y la plataforma son opcionales porque completarlos no es la parte
+ * obligatoria del gesto — omitir uno lo deja como estaba.
+ */
+export interface UpdateClassroomAccessibilityInput {
+  communicationModes: CommunicationPreference[];
+  hasInterpreter?: boolean;
+  hasLiveCaptions?: boolean;
+  hasVisualMaterials?: boolean;
+  meetingProvider?: MeetingProvider;
+}
+
+/** Respuesta de `PATCH /classrooms/:id`. Devuelve el aula ya actualizada. */
+export interface UpdateClassroomAccessibilityResponse {
+  classroom: Classroom;
 }
 
 /**
@@ -567,6 +645,12 @@ export const ApiErrorCode = {
    * plataforma justo cuando el usuario necesita entender qué pasó.
    */
   CLASSROOM_NOT_FOUND: 'CLASSROOM_NOT_FOUND',
+  /**
+   * Quien pide `PATCH /classrooms/:id` no es el profesor dueño del aula
+   * (HU-211). Es 403 y no 404: el aula existe y quien pregunta lo sabe —la
+   * vio en el catálogo—, lo que falta es el permiso, no el dato.
+   */
+  CLASSROOM_FORBIDDEN: 'CLASSROOM_FORBIDDEN',
   /** Se superó el límite de peticiones (rate limiting). */
   TOO_MANY_REQUESTS: 'TOO_MANY_REQUESTS',
   DATABASE_UNAVAILABLE: 'DATABASE_UNAVAILABLE',
@@ -625,3 +709,10 @@ export type ApiResponse<TData = unknown> =
  * un tipo más de este archivo.
  */
 export * from './estado-aula';
+
+/**
+ * `coincideConLaPreferencia()` (HU-211) vive en su propio archivo por el mismo
+ * motivo que `derivarEstadoAula()`: es lógica de negocio compartida con sus
+ * propios tests.
+ */
+export * from './accesibilidad-aula';

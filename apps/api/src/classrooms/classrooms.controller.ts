@@ -6,6 +6,7 @@ import {
   HttpStatus,
   Param,
   ParseUUIDPipe,
+  Patch,
   Post,
   Query,
 } from '@nestjs/common';
@@ -14,6 +15,7 @@ import {
   type CreateClassroomResponse,
   type ListClassroomsResponse,
   type MisAulasResponse,
+  type UpdateClassroomAccessibilityResponse,
   UserRole,
 } from '@academia/types';
 
@@ -25,6 +27,7 @@ import { classroomNotFound } from './classrooms.errors';
 import { CreateClassroomDto } from './dto/create-classroom.dto';
 import { ListClassroomsDto } from './dto/list-classrooms.dto';
 import { ListMisAulasDto } from './dto/list-mis-aulas.dto';
+import { UpdateClassroomAccessibilityDto } from './dto/update-classroom-accessibility.dto';
 
 /**
  * Valida que el `:id` de la ruta tenga forma de UUID **antes** de que llegue a
@@ -129,6 +132,33 @@ export class ClassroomsController {
     @Param('id', idDeAula) classroomId: string,
   ): Promise<ClassroomDetailResponse> {
     const classroom = await this.classroomsService.getClassroomDetail(viewer, classroomId);
+    return { classroom };
+  }
+
+  /**
+   * PATCH /classrooms/:id — completa o corrige los 5 campos de accesibilidad
+   * de un aula ya creada (HU-211).
+   *
+   * **No es la edición general del aula.** Ese endpoint —título, horario,
+   * cupo, enlace— lo trae HU-202, todavía pendiente, y extenderá este mismo
+   * método y esta misma ruta con el resto de campos editables (decisión D25 de
+   * `ARQUITECTURA.md`), no lo reemplazará.
+   *
+   * Solo el profesor dueño puede completarla: cualquier otro recibe
+   * `CLASSROOM_FORBIDDEN` (403), decidido en el servicio.
+   */
+  @Patch(':id')
+  @Roles(UserRole.TEACHER)
+  async updateAccessibility(
+    @CurrentUser() teacher: AuthenticatedUser,
+    @Param('id', idDeAula) classroomId: string,
+    @Body() dto: UpdateClassroomAccessibilityDto,
+  ): Promise<UpdateClassroomAccessibilityResponse> {
+    const classroom = await this.classroomsService.updateClassroomAccessibility(
+      teacher,
+      classroomId,
+      dto,
+    );
     return { classroom };
   }
 }

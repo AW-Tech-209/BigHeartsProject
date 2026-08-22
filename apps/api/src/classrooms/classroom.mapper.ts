@@ -5,6 +5,7 @@ import {
   type ClassroomDetail,
   type ClassroomListItem,
   type ClassroomStatus,
+  type CommunicationPreference,
   type EnglishLevel,
   type MeetingProvider,
 } from '@academia/types';
@@ -45,6 +46,12 @@ export function toPublicClassroom(classroom: PrismaClassroom): Classroom {
     meetingProvider: classroom.meetingProvider as MeetingProvider,
     status: classroom.status as ClassroomStatus,
     isRecurring: classroom.isRecurring,
+    // Array vacío = «sin indicar» (HU-211, decisión 5): las aulas de antes de
+    // esta HU llegan aquí igual, sin que este mapeador les invente un modo.
+    communicationModes: classroom.communicationModes as CommunicationPreference[],
+    hasInterpreter: classroom.hasInterpreter,
+    hasLiveCaptions: classroom.hasLiveCaptions,
+    hasVisualMaterials: classroom.hasVisualMaterials,
     createdAt: classroom.createdAt.toISOString(),
     updatedAt: classroom.updatedAt.toISOString(),
   };

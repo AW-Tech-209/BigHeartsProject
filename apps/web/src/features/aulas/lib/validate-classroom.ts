@@ -1,4 +1,4 @@
-import type { EnglishLevel } from '@academia/types';
+import type { CommunicationPreference, EnglishLevel, MeetingProvider } from '@academia/types';
 
 import { aInstanteISO } from './horario';
 
@@ -21,6 +21,12 @@ export type ClassroomFormValues = {
   hora: string;
   durationMinutes: string;
   meetingLink: string;
+  /** Obligatorio y no vacío (HU-211, AC1): un aula nueva no puede quedar «sin indicar». */
+  communicationModes: CommunicationPreference[];
+  hasInterpreter: boolean;
+  hasLiveCaptions: boolean;
+  hasVisualMaterials: boolean;
+  meetingProvider: MeetingProvider;
 };
 
 /**
@@ -89,6 +95,12 @@ export function validateClassroom(values: ClassroomFormValues): ClassroomFieldEr
   } else if (!esUrlDeReunion(values.meetingLink.trim())) {
     errors.meetingLink =
       'Pega el enlace completo, empezando por https:// (por ejemplo, https://meet.google.com/abc-defg-hij).';
+  }
+
+  // AC1: sin al menos un modo, el aula quedaría «sin indicar» al nacer, y eso
+  // solo se permite en las que ya existían antes de HU-211.
+  if (values.communicationModes.length === 0) {
+    errors.communicationModes = 'Elige al menos un modo en que se imparte la clase.';
   }
 
   return errors;

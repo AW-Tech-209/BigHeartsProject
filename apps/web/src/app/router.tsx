@@ -5,6 +5,7 @@ import { RedirectIfAuthenticated } from '@/features/auth/components/redirect-if-
 import { RequireAuth } from '@/features/auth/components/require-auth';
 import { AulaDetallePage } from '@/pages/AulaDetallePage';
 import { AulasPage } from '@/pages/AulasPage';
+import { CompletarAccesibilidadPage } from '@/pages/CompletarAccesibilidadPage';
 import { CrearAulaPage } from '@/pages/CrearAulaPage';
 import { HomePage } from '@/pages/HomePage';
 import { LoginPage } from '@/pages/LoginPage';
@@ -153,6 +154,20 @@ export function AppRoutes() {
         element={
           <RequireAuth roles={[UserRole.TEACHER]}>
             <CrearAulaPage />
+          </RequireAuth>
+        }
+      />
+
+      {/*
+        Completar o corregir la accesibilidad de un aula ya creada (HU-211).
+        Es la vía por la que un aula «sin indicar» deja de estarlo — no es la
+        edición general del aula, que trae HU-202.
+      */}
+      <Route
+        path="/mis-aulas/:id/accesibilidad"
+        element={
+          <RequireAuth roles={[UserRole.TEACHER]}>
+            <CompletarAccesibilidadPage />
           </RequireAuth>
         }
       />

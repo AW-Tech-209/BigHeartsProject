@@ -1,8 +1,40 @@
-import { type CreateClassroomInput, EnglishLevel } from '@academia/types';
+import {
+  CommunicationPreference,
+  type CreateClassroomInput,
+  EnglishLevel,
+  MeetingProvider,
+} from '@academia/types';
 import { Transform } from 'class-transformer';
-import { IsEnum, IsInt, IsNotEmpty, IsString, IsUrl, Max, MaxLength, Min } from 'class-validator';
+import {
+  ArrayNotEmpty,
+  IsArray,
+  IsBoolean,
+  IsEnum,
+  IsIn,
+  IsInt,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  IsUrl,
+  Max,
+  MaxLength,
+  Min,
+} from 'class-validator';
 
 import { EsInstanteFuturo } from './es-instante-futuro.validator';
+
+/**
+ * Las únicas plataformas que se ofrecen al crear un aula. `MeetingProvider`
+ * tiene un cuarto valor, `DAILY`, reservado para cuando Fase 1.5 genere el
+ * enlace automáticamente — no tiene sentido como respuesta a "¿a qué
+ * plataforma apunta el enlace que acabas de pegar?", así que no se valida con
+ * `@IsEnum(MeetingProvider)` sino con esta lista explícita.
+ */
+export const PLATAFORMAS_OFRECIDAS = [
+  MeetingProvider.MANUAL,
+  MeetingProvider.GOOGLE_MEET,
+  MeetingProvider.ZOOM,
+];
 
 /** Normaliza strings: recorta espacios. */
 const trim = ({ value }: { value: unknown }): unknown =>
@@ -76,4 +108,30 @@ export class CreateClassroomDto implements CreateClassroomInput {
   )
   @MaxLength(2048, { message: 'El enlace es demasiado largo.' })
   meetingLink!: string;
+
+  // Obligatorio y no vacío (§4.9, AC1): un aula nueva no puede quedar «sin
+  // indicar». Es la mitad que le faltaba al catálogo para dejar de filtrar
+  // como una academia de inglés cualquiera.
+  @IsArray()
+  @ArrayNotEmpty({ message: 'Elige al menos un modo en que se imparte la clase.' })
+  @IsEnum(CommunicationPreference, {
+    each: true,
+    message: 'Elige modos de comunicación válidos.',
+  })
+  communicationModes!: CommunicationPreference[];
+
+  @IsOptional()
+  @IsBoolean({ message: 'Indica si hay intérprete de lengua de señas.' })
+  hasInterpreter?: boolean;
+
+  @IsOptional()
+  @IsBoolean({ message: 'Indica si hay subtítulos en vivo.' })
+  hasLiveCaptions?: boolean;
+
+  @IsOptional()
+  @IsBoolean({ message: 'Indica si hay materiales visuales de apoyo.' })
+  hasVisualMaterials?: boolean;
+
+  @IsIn(PLATAFORMAS_OFRECIDAS, { message: 'Elige la plataforma: Zoom, Meet u otra.' })
+  meetingProvider!: MeetingProvider;
 }
