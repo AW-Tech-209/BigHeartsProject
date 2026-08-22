@@ -1,4 +1,4 @@
-import { type ForbiddenException, NotFoundException } from '@nestjs/common';
+import { ForbiddenException, NotFoundException } from '@nestjs/common';
 import { ApiErrorCode, UserStatus } from '@academia/types';
 
 import {
@@ -49,6 +49,20 @@ export const classroomNotFound = (): NotFoundException =>
   new NotFoundException({
     code: ApiErrorCode.CLASSROOM_NOT_FOUND,
     message: 'No encontramos esta clase. Puede que ya no esté disponible.',
+  });
+
+/**
+ * Quien pide `PATCH /classrooms/:id` no es el profesor dueño del aula
+ * (HU-211).
+ *
+ * Es 403 y no 404: el aula existe y quien pregunta ya la vio en el catálogo
+ * para saber su id, lo que falta es el permiso, no el dato — mismo criterio
+ * que separa `CLASSROOM_NOT_FOUND` de un intento de acceso indebido.
+ */
+export const classroomForbidden = (): ForbiddenException =>
+  new ForbiddenException({
+    code: ApiErrorCode.CLASSROOM_FORBIDDEN,
+    message: 'Esta aula no es tuya.',
   });
 
 /**

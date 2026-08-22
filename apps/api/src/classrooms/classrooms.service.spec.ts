@@ -2,6 +2,7 @@ import type { ForbiddenException } from '@nestjs/common';
 import {
   ApiErrorCode,
   ClassroomStatus,
+  CommunicationPreference,
   EnglishLevel,
   EstadoTemporalAula,
   MeetingProvider,
@@ -16,6 +17,7 @@ import type { PrismaService } from '../prisma/prisma.service';
 import { ClassroomsService } from './classrooms.service';
 import type { CreateClassroomDto } from './dto/create-classroom.dto';
 import type { ListMisAulasDto } from './dto/list-mis-aulas.dto';
+import type { UpdateClassroomAccessibilityDto } from './dto/update-classroom-accessibility.dto';
 import { MeetingLinkCipher } from './meeting-link.cipher';
 
 const PROFESOR_ID = '11111111-1111-4111-8111-111111111111';
@@ -39,6 +41,8 @@ function entrada(overrides: Partial<CreateClassroomDto> = {}): CreateClassroomDt
     scheduledAt: '2027-08-12T23:00:00.000Z',
     durationMinutes: 60,
     meetingLink: ENLACE,
+    communicationModes: [CommunicationPreference.WRITTEN_TEXT],
+    meetingProvider: MeetingProvider.GOOGLE_MEET,
     ...overrides,
   };
 }
@@ -95,7 +99,7 @@ beforeEach(() => vi.clearAllMocks());
 
 describe('ClassroomsService.createClassroom', () => {
   // AC1: el aula nace publicada, sin reservas y a nombre de quien la pidió.
-  it('crea el aula PUBLISHED, con 0 reservas, proveedor MANUAL y el profesor del token', async () => {
+  it('crea el aula PUBLISHED, con 0 reservas y el profesor del token', async () => {
     const { service, create } = setup();
 
     const classroom = await service.createClassroom(profesorDelToken, entrada());
@@ -104,11 +108,63 @@ describe('ClassroomsService.createClassroom', () => {
       teacherId: PROFESOR_ID,
       status: ClassroomStatus.PUBLISHED,
       currentBookings: 0,
-      meetingProvider: MeetingProvider.MANUAL,
     });
     expect(classroom.teacherId).toBe(PROFESOR_ID);
     expect(classroom.status).toBe(ClassroomStatus.PUBLISHED);
     expect(classroom.currentBookings).toBe(0);
+  });
+
+  // AC1, T3: los 5 campos de accesibilidad se escriben tal y como llegan del
+  // DTO. `meetingProvider` ya no lo fija el servidor: lo elige el profesor.
+  it('escribe los modos, los apoyos y la plataforma que declaró el profesor', async () => {
+    const { service, create } = setup();
+
+    const classroom = await service.createClassroom(
+      profesorDelToken,
+      entrada({
+        communicationModes: [
+          CommunicationPreference.SIGN_LANGUAGE,
+          CommunicationPreference.LIP_READING,
+        ],
+        hasInterpreter: true,
+        meetingProvider: MeetingProvider.ZOOM,
+      }),
+    );
+
+    expect(datosEscritos(create)).toMatchObject({
+      communicationModes: [
+        CommunicationPreference.SIGN_LANGUAGE,
+        CommunicationPreference.LIP_READING,
+      ],
+      hasInterpreter: true,
+      hasLiveCaptions: false,
+      hasVisualMaterials: false,
+      meetingProvider: MeetingProvider.ZOOM,
+    });
+    expect(classroom.communicationModes).toEqual([
+      CommunicationPreference.SIGN_LANGUAGE,
+      CommunicationPreference.LIP_READING,
+    ]);
+  });
+
+  // Los tres apoyos son opcionales (§4.9): omitirlos los deja en `false`, no
+  // en `undefined` — la columna es `Boolean`, no admite un tercer estado.
+  it('los apoyos omitidos se escriben en false, no en undefined', async () => {
+    const { service, create } = setup();
+    const {
+      hasInterpreter: _h,
+      hasLiveCaptions: _l,
+      hasVisualMaterials: _v,
+      ...sinApoyos
+    } = entrada();
+
+    await service.createClassroom(profesorDelToken, sinApoyos as CreateClassroomDto);
+
+    expect(datosEscritos(create)).toMatchObject({
+      hasInterpreter: false,
+      hasLiveCaptions: false,
+      hasVisualMaterials: false,
+    });
   });
 
   /**
@@ -237,6 +293,10 @@ function filaDeAula(overrides: Record<string, unknown> = {}) {
     meetingProvider: MeetingProvider.MANUAL,
     status: ClassroomStatus.PUBLISHED,
     isRecurring: false,
+    communicationModes: [CommunicationPreference.WRITTEN_TEXT],
+    hasInterpreter: false,
+    hasLiveCaptions: false,
+    hasVisualMaterials: false,
     createdAt: new Date('2026-08-01T10:00:00.000Z'),
     updatedAt: new Date('2026-08-01T10:00:00.000Z'),
     teacher: { firstName: 'Paula', lastName: 'Profesora' },
@@ -310,6 +370,53 @@ describe('ClassroomsService.listClassrooms', () => {
     const and = whereDe(findMany);
     expect(and).toContainEqual({ level: EnglishLevel.INTERMEDIATE });
     expect(and).toContainEqual({ scheduledAt: { gte: new Date('2099-01-01T00:00:00.000Z') } });
+  });
+
+  // AC9: el filtro por modo de comunicación existe y se combina con los demás.
+  it('filtra por modo de comunicación cuando se pide', async () => {
+    const { service, findMany } = setupParaListado();
+
+    await service.listClassrooms({ communicationMode: CommunicationPreference.SIGN_LANGUAGE });
+
+    expect(whereDe(findMany)).toContainEqual({
+      communicationModes: { has: CommunicationPreference.SIGN_LANGUAGE },
+    });
+  });
+
+  it('combina el modo de comunicación con nivel y rango de fechas', async () => {
+    const { service, findMany } = setupParaListado();
+
+    await service.listClassrooms({
+      level: EnglishLevel.INTERMEDIATE,
+      desde: '2099-01-01T00:00:00.000Z',
+      communicationMode: CommunicationPreference.LIP_READING,
+    });
+
+    const and = whereDe(findMany);
+    expect(and).toContainEqual({ level: EnglishLevel.INTERMEDIATE });
+    expect(and).toContainEqual({ scheduledAt: { gte: new Date('2099-01-01T00:00:00.000Z') } });
+    expect(and).toContainEqual({
+      communicationModes: { has: CommunicationPreference.LIP_READING },
+    });
+  });
+
+  // Sin el filtro, no se le añade ninguna cláusula de por sí: AC5, no se
+  // filtra por defecto.
+  it('sin communicationMode no añade ninguna cláusula de modo', async () => {
+    const { service, findMany } = setupParaListado();
+
+    await service.listClassrooms({});
+
+    expect(whereDe(findMany).some((clausula) => 'communicationModes' in clausula)).toBe(false);
+  });
+
+  // AC7: una aula sembrada antes de HU-211 —modos sin indicar— se sirve igual.
+  it('un aula sin modos declarados se sirve con communicationModes: [], sin romper', async () => {
+    const { service } = setupParaListado([filaDeAula({ communicationModes: [] })]);
+
+    const [item] = (await service.listClassrooms({})).items;
+
+    expect(item).toMatchObject({ communicationModes: [] });
   });
 
   // AC3: orden ascendente por scheduledAt.
@@ -805,5 +912,92 @@ describe('ClassroomsService.getClassroomDetail — aula cancelada e id inexisten
     expect(await codigoDe(service.getClassroomDetail(estudiante, ID_DEL_AULA))).toBe(
       ApiErrorCode.CLASSROOM_NOT_FOUND,
     );
+  });
+});
+
+/* ------------------------------------------------------------------------- *
+ * PATCH /classrooms/:id — completar accesibilidad (HU-211, T4)
+ * ------------------------------------------------------------------------- */
+
+function entradaAccesibilidad(
+  overrides: Partial<UpdateClassroomAccessibilityDto> = {},
+): UpdateClassroomAccessibilityDto {
+  return {
+    communicationModes: [CommunicationPreference.SIGN_LANGUAGE],
+    ...overrides,
+  };
+}
+
+/** Monta el servicio solo con lo que necesita `updateClassroomAccessibility`. */
+function setupActualizarAccesibilidad(aula: Record<string, unknown> | null) {
+  const findUnique = vi.fn().mockResolvedValue(aula === null ? null : filaDeAula(aula));
+  const update = vi
+    .fn()
+    .mockImplementation(({ data }: { data: Record<string, unknown> }) =>
+      Promise.resolve(filaDeAula({ ...aula, ...data })),
+    );
+  const prisma = { classroom: { findUnique, update } } as unknown as PrismaService;
+  const cipher = new MeetingLinkCipher({ meetingLinkKey: 'a'.repeat(64) } as AppConfigService);
+
+  return { service: new ClassroomsService(prisma, cipher), findUnique, update };
+}
+
+describe('ClassroomsService.updateClassroomAccessibility', () => {
+  it('el dueño completa los modos de un aula «sin indicar»', async () => {
+    const { service, update } = setupActualizarAccesibilidad({
+      teacherId: PROFESOR_ID,
+      communicationModes: [],
+    });
+
+    const classroom = await service.updateClassroomAccessibility(
+      profesorDelToken,
+      ID_DEL_AULA,
+      entradaAccesibilidad({ communicationModes: [CommunicationPreference.SIGN_LANGUAGE] }),
+    );
+
+    expect(update.mock.calls[0]?.[0]).toMatchObject({
+      where: { id: ID_DEL_AULA },
+      data: { communicationModes: [CommunicationPreference.SIGN_LANGUAGE] },
+    });
+    expect(classroom.communicationModes).toEqual([CommunicationPreference.SIGN_LANGUAGE]);
+  });
+
+  it('omitir un apoyo o la plataforma los deja como estaban', async () => {
+    const { service, update } = setupActualizarAccesibilidad({ teacherId: PROFESOR_ID });
+
+    await service.updateClassroomAccessibility(
+      profesorDelToken,
+      ID_DEL_AULA,
+      entradaAccesibilidad({ hasInterpreter: true }),
+    );
+
+    const data = update.mock.calls[0]?.[0].data as Record<string, unknown>;
+    expect(data).toHaveProperty('hasInterpreter', true);
+    expect(data).not.toHaveProperty('hasLiveCaptions');
+    expect(data).not.toHaveProperty('hasVisualMaterials');
+    expect(data).not.toHaveProperty('meetingProvider');
+  });
+
+  // La garantía de propiedad de la HU: solo el dueño completa su aula.
+  it('otro profesor recibe CLASSROOM_FORBIDDEN, y no se escribe nada', async () => {
+    const { service, update } = setupActualizarAccesibilidad({ teacherId: PROFESOR_ID });
+
+    expect(
+      await codigoDe(
+        service.updateClassroomAccessibility(otroProfesor, ID_DEL_AULA, entradaAccesibilidad()),
+      ),
+    ).toBe(ApiErrorCode.CLASSROOM_FORBIDDEN);
+    expect(update).not.toHaveBeenCalled();
+  });
+
+  it('un id que no existe responde CLASSROOM_NOT_FOUND', async () => {
+    const { service, update } = setupActualizarAccesibilidad(null);
+
+    expect(
+      await codigoDe(
+        service.updateClassroomAccessibility(profesorDelToken, ID_DEL_AULA, entradaAccesibilidad()),
+      ),
+    ).toBe(ApiErrorCode.CLASSROOM_NOT_FOUND);
+    expect(update).not.toHaveBeenCalled();
   });
 });

@@ -3,6 +3,7 @@ import {
   type Classroom,
   type CreateClassroomInput,
   EnglishLevel,
+  MeetingProvider,
   type ValidationErrorDetail,
 } from '@academia/types';
 import { CalendarClock, LoaderCircle, Lock } from 'lucide-react';
@@ -18,11 +19,13 @@ import { ApiClientError } from '@/lib/api-error';
 import { useCreateClassroom } from '../hooks/use-create-classroom';
 import { aInstanteISO, describirDuracion, describirHorario } from '../lib/horario';
 import { duracionesDisponibles, nivelesDeIngles } from '../lib/niveles';
+import { etiquetaPlataformaReunion, PLATAFORMAS_OFRECIDAS } from '../lib/plataforma-reunion';
 import {
   type ClassroomFieldErrors,
   type ClassroomFormValues,
   validateClassroom,
 } from '../lib/validate-classroom';
+import { SeccionAccesibilidadAula } from './seccion-accesibilidad-aula';
 
 /** Orden visual de los campos: guía el foco al primer error. */
 const ORDEN_DE_CAMPOS: (keyof ClassroomFormValues)[] = [
@@ -34,6 +37,7 @@ const ORDEN_DE_CAMPOS: (keyof ClassroomFormValues)[] = [
   'durationMinutes',
   'maxStudents',
   'meetingLink',
+  'communicationModes',
 ];
 
 const VALORES_INICIALES: ClassroomFormValues = {
@@ -45,6 +49,11 @@ const VALORES_INICIALES: ClassroomFormValues = {
   hora: '',
   durationMinutes: '60',
   meetingLink: '',
+  communicationModes: [],
+  hasInterpreter: false,
+  hasLiveCaptions: false,
+  hasVisualMaterials: false,
+  meetingProvider: MeetingProvider.GOOGLE_MEET,
 };
 
 /**
@@ -62,6 +71,8 @@ const CAMPO_DEL_BACKEND: Record<string, keyof ClassroomFormValues> = {
   scheduledAt: 'fecha',
   durationMinutes: 'durationMinutes',
   meetingLink: 'meetingLink',
+  communicationModes: 'communicationModes',
+  meetingProvider: 'meetingProvider',
 };
 
 export function FormularioAula({ onCreada }: { onCreada: (classroom: Classroom) => void }) {
@@ -162,6 +173,11 @@ export function FormularioAula({ onCreada }: { onCreada: (classroom: Classroom) 
       scheduledAt,
       durationMinutes: Number(values.durationMinutes),
       meetingLink: values.meetingLink.trim(),
+      communicationModes: values.communicationModes,
+      hasInterpreter: values.hasInterpreter,
+      hasLiveCaptions: values.hasLiveCaptions,
+      hasVisualMaterials: values.hasVisualMaterials,
+      meetingProvider: values.meetingProvider,
     };
 
     mutation.mutate(input, {
@@ -328,6 +344,45 @@ export function FormularioAula({ onCreada }: { onCreada: (classroom: Classroom) 
           onChange={(event) => updateField('meetingLink', event.target.value)}
         />
       </Field>
+
+      {/*
+        T9: junto al campo del enlace, no dentro de la sección de
+        accesibilidad — es sobre ESTE enlace, no un dato del aula en general.
+      */}
+      <Field
+        id="meetingProvider"
+        label="Plataforma de la reunión"
+        required
+        error={errors.meetingProvider}
+        description="Los subtítulos automáticos no funcionan igual en todas las plataformas: el estudiante lo necesita saber para prepararse."
+      >
+        <NativeSelect
+          name="meetingProvider"
+          value={values.meetingProvider}
+          onChange={(event) =>
+            updateField(
+              'meetingProvider',
+              event.target.value as ClassroomFormValues['meetingProvider'],
+            )
+          }
+        >
+          {PLATAFORMAS_OFRECIDAS.map((plataforma) => (
+            <option key={plataforma} value={plataforma}>
+              {etiquetaPlataformaReunion[plataforma]}
+            </option>
+          ))}
+        </NativeSelect>
+      </Field>
+
+      <SeccionAccesibilidadAula
+        values={values}
+        onChange={(patch) => {
+          for (const [field, value] of Object.entries(patch)) {
+            updateField(field as keyof ClassroomFormValues, value as never);
+          }
+        }}
+        error={errors.communicationModes}
+      />
 
       <Button type="submit" disabled={mutation.isPending} className="h-12 w-full gap-2 text-base">
         {mutation.isPending ? (

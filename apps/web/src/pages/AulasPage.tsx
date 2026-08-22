@@ -1,4 +1,4 @@
-import type { ListClassroomsQuery } from '@academia/types';
+import { type ListClassroomsQuery, UserRole } from '@academia/types';
 import { RotateCw } from 'lucide-react';
 import { useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
@@ -12,12 +12,14 @@ import { Button } from '@/components/ui/button';
 import { Callout } from '@/components/ui/callout';
 import { Skeleton } from '@/components/ui/skeleton';
 import { FiltrosAulas } from '@/features/aulas/components/filtros-aulas';
+import { InvitacionPreferencia } from '@/features/aulas/components/invitacion-preferencia';
 import { useClassrooms } from '@/features/aulas/hooks/use-classrooms';
 import {
   buildSearchParams,
   hayFiltrosActivos,
   parseListClassroomsQuery,
 } from '@/features/aulas/lib/filtros-url';
+import { useAuth } from '@/features/auth/hooks/use-auth';
 import { useAnnounce } from '@/hooks/use-announce';
 
 /** Cuántas tarjetas fantasma se pintan mientras carga (una fila completa en escritorio). */
@@ -33,6 +35,13 @@ export function AulasPage() {
   const query = parseListClassroomsQuery(searchParams);
   const { data, isPending, isError, refetch, isRefetching } = useClassrooms(query);
   const announce = useAnnounce();
+  const { user } = useAuth();
+
+  // T12: solo el estudiante ve la marca de coincidencia. Un `undefined` aquí
+  // hace que `coincideConLaPreferencia()` devuelva `false` siempre — nunca una
+  // marca sobre el aula de otro rol.
+  const preferenciaEstudiante =
+    user?.role === UserRole.STUDENT ? user.communicationPreference : undefined;
 
   // AC9: cada resultado nuevo se anuncia por región viva. Solo se dispara
   // cuando `data` cambia de verdad (React Query mantiene la misma referencia
@@ -70,6 +79,11 @@ export function AulasPage() {
         titulo="Aulas"
         contexto="Las clases publicadas por los profesores de BigHearts, con su horario y su cupo."
       />
+
+      {/* T14, AC6: solo al estudiante sin preferencia, y sin insistir. */}
+      {user?.role === UserRole.STUDENT && !user.communicationPreference && (
+        <InvitacionPreferencia userId={user.id} />
+      )}
 
       <FiltrosAulas value={query} onChange={actualizarFiltros} />
 
@@ -145,7 +159,11 @@ export function AulasPage() {
 
           <RejillaAulas>
             {data.items.map((item) => (
-              <TarjetaAula key={item.id} classroom={item} />
+              <TarjetaAula
+                key={item.id}
+                classroom={item}
+                preferenciaEstudiante={preferenciaEstudiante}
+              />
             ))}
           </RejillaAulas>
 

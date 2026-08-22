@@ -1,4 +1,9 @@
-import { CLASSROOMS_PAGE_SIZE_MAX, EnglishLevel, type ListClassroomsQuery } from '@academia/types';
+import {
+  CLASSROOMS_PAGE_SIZE_MAX,
+  CommunicationPreference,
+  EnglishLevel,
+  type ListClassroomsQuery,
+} from '@academia/types';
 import { Type } from 'class-transformer';
 import { IsEnum, IsInt, IsISO8601, IsOptional, Max, Min } from 'class-validator';
 
@@ -24,6 +29,13 @@ export class ListClassroomsDto implements ListClassroomsQuery {
   @IsOptional()
   @IsISO8601({}, { message: 'La fecha de fin del rango no es válida.' })
   hasta?: string;
+
+  // AC9: combinable con `level`, `desde` y `hasta`. No viene puesto por
+  // defecto en ninguna pantalla — el catálogo destaca la coincidencia con la
+  // preferencia del estudiante, nunca filtra por ella (§4.9, regla 1).
+  @IsOptional()
+  @IsEnum(CommunicationPreference, { message: 'Elige un modo de comunicación válido.' })
+  communicationMode?: CommunicationPreference;
 
   @IsOptional()
   @Type(() => Number)

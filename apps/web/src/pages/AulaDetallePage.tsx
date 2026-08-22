@@ -1,12 +1,20 @@
-import { BookingStatus, type ClassroomDetail, derivarEstadoAula } from '@academia/types';
-import { ExternalLink, RotateCw } from 'lucide-react';
+import {
+  BookingStatus,
+  type ClassroomDetail,
+  coincideConLaPreferencia,
+  derivarEstadoAula,
+  UserRole,
+} from '@academia/types';
+import { ExternalLink, RotateCw, UserCheck } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { Link, useParams } from 'react-router-dom';
 
+import { Badge } from '@/components/ui/badge';
 import { EstadoAula } from '@/components/dominio/estado-aula';
 import { varianteEstadoAula } from '@/components/dominio/estado-aula-variantes';
 import { EstadoVacio } from '@/components/dominio/estado-vacio';
 import { IndicadorCupo } from '@/components/dominio/indicador-cupo';
+import { ModoComunicacionBadge } from '@/components/dominio/modo-comunicacion-badge';
 import { AppShell } from '@/components/layout/app-shell';
 import { PaginaCabecera } from '@/components/layout/pagina-cabecera';
 import { Button } from '@/components/ui/button';
@@ -14,8 +22,10 @@ import { Callout } from '@/components/ui/callout';
 import { Skeleton } from '@/components/ui/skeleton';
 import { AccionesDeAula } from '@/features/aulas/components/acciones-de-aula';
 import { esAulaNoEncontrada, useClassroom } from '@/features/aulas/hooks/use-classroom';
+import { APOYOS_AULA } from '@/features/aulas/lib/apoyos-aula';
 import { describirDuracion, describirHorario } from '@/features/aulas/lib/horario';
 import { nivelesDeIngles } from '@/features/aulas/lib/niveles';
+import { etiquetaPlataformaReunion } from '@/features/aulas/lib/plataforma-reunion';
 import { useAuth } from '@/features/auth/hooks/use-auth';
 import { cn } from '@/lib/utils';
 
@@ -112,7 +122,15 @@ export function AulaDetallePage() {
       )}
 
       {/* Estado 4 — el aula. */}
-      {aula && <DetalleDelAula aula={aula} esDueno={user?.id === aula.teacherId} />}
+      {aula && (
+        <DetalleDelAula
+          aula={aula}
+          esDueno={user?.id === aula.teacherId}
+          preferenciaEstudiante={
+            user?.role === UserRole.STUDENT ? user.communicationPreference : undefined
+          }
+        />
+      )}
     </AppShell>
   );
 }
@@ -126,9 +144,11 @@ function describirLaClase(aula: ClassroomDetail): string {
 type DetalleDelAulaProps = {
   aula: ClassroomDetail;
   esDueno: boolean;
+  /** `undefined` si quien mira no es estudiante o no declaró preferencia. */
+  preferenciaEstudiante?: ClassroomDetail['communicationModes'][number] | null;
 };
 
-function DetalleDelAula({ aula, esDueno }: DetalleDelAulaProps) {
+function DetalleDelAula({ aula, esDueno, preferenciaEstudiante }: DetalleDelAulaProps) {
   // El estado sale SIEMPRE de la función compartida de `@academia/types`
   // (AC6, §7.3). En el Sprint 2 `myBookingStatus` llega en `null`, así que
   // `reservada` y `acceso-abierto` no son alcanzables todavía; la comparación se
@@ -184,6 +204,53 @@ function DetalleDelAula({ aula, esDueno }: DetalleDelAulaProps) {
         </h2>
         <p className="max-w-[65ch] text-base leading-relaxed whitespace-pre-line">
           {aula.description}
+        </p>
+      </section>
+
+      {/*
+        T11: el bloque completo de accesibilidad — todos los modos, no solo el
+        principal de la tarjeta —, los apoyos activos y la plataforma. T12
+        (extensión de bajo riesgo, AC4): la marca de coincidencia se repite
+        aquí porque es donde el estudiante decide de verdad si reserva, no
+        solo en el listado.
+      */}
+      <section aria-labelledby="aula-accesibilidad" className="space-y-3">
+        <h2 id="aula-accesibilidad" className="text-xl font-medium">
+          Cómo se imparte
+        </h2>
+
+        <div className="flex flex-wrap items-center gap-1.5">
+          {aula.communicationModes.length === 0 ? (
+            <ModoComunicacionBadge modo={null} />
+          ) : (
+            aula.communicationModes.map((modo) => <ModoComunicacionBadge key={modo} modo={modo} />)
+          )}
+          {coincideConLaPreferencia(aula, preferenciaEstudiante) && (
+            <Badge tono="primary" icon={UserCheck}>
+              Coincide con tu preferencia
+            </Badge>
+          )}
+        </div>
+
+        {(aula.hasInterpreter || aula.hasLiveCaptions || aula.hasVisualMaterials) && (
+          <ul className="space-y-1.5">
+            {APOYOS_AULA.filter(({ clave }) => aula[clave]).map(
+              ({ clave, etiqueta, icon: Icon }) => (
+                <li key={clave} className="flex items-center gap-2 text-base text-foreground">
+                  <Icon
+                    aria-hidden="true"
+                    strokeWidth={2}
+                    className="size-4 shrink-0 text-primary"
+                  />
+                  {etiqueta}
+                </li>
+              ),
+            )}
+          </ul>
+        )}
+
+        <p className="text-sm text-muted-foreground">
+          Plataforma: {etiquetaPlataformaReunion[aula.meetingProvider]}
         </p>
       </section>
 

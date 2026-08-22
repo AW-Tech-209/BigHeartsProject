@@ -87,11 +87,16 @@ enum ClassroomStatus {
   COMPLETED
 }
 
-/// De dónde salió el enlace de la reunión. Coincide con `MeetingProvider`.
+/// A qué plataforma apunta el enlace de la reunión. Coincide con
+/// `MeetingProvider` de @academia/types.
 ///
-/// En Fase 1 SIEMPRE es `MANUAL`: el profesor crea la sala en Zoom o Meet y
-/// pega el enlace. Los otros tres se declaran desde ya para que integrar
-/// generación automática en Fase 1.5 no exija alterar el tipo con datos dentro.
+/// Hasta HU-211 siempre valía `MANUAL` y no significaba nada. Desde HU-211 el
+/// profesor lo declara: los subtítulos automáticos no funcionan igual en todas
+/// las plataformas y el estudiante necesita saberlo. El enlace se sigue
+/// pegando a mano en los tres casos — eso no cambia. `MANUAL` pasa a leerse
+/// como "otra plataforma" (y es el valor honesto para las aulas de antes de
+/// HU-211, que nunca dijeron cuál era la suya). `DAILY` sigue reservado y sin
+/// escritor: gancho para cuando Fase 1.5 genere el enlace automáticamente.
 enum MeetingProvider {
   MANUAL
   DAILY
@@ -214,6 +219,25 @@ model Classroom {
   /// Gancho para Fase 1.5. **En Fase 1 no hay NINGUNA lógica de recurrencia**:
   /// nadie construye series ni instancias a partir de esta columna.
   isRecurring Boolean @default(false) @map("is_recurring")
+
+  /// En qué modos se imparte la clase (HU-211, `ARQUITECTURA.md` §4.9). Puede
+  /// tener varios a la vez: una clase en señas con subtítulos en vivo declara
+  /// los dos.
+  ///
+  /// **`@default([])` es DELIBERADO y no un placeholder.** Las aulas creadas
+  /// antes de HU-211 se migran con el array vacío — «el profesor no lo ha
+  /// indicado» — nunca con un modo inventado (decisión 5 de la HU): rellenarlo
+  /// sería mentirle al estudiante sobre algo de lo que depende para seguir la
+  /// clase. `POST /classrooms` exige que las aulas nuevas declaren al menos
+  /// uno; esta columna no lo impone, esa regla vive en el DTO.
+  communicationModes CommunicationPreference[] @default([]) @map("communication_modes")
+
+  /// Los tres apoyos son campos aparte del modo: una clase en inglés hablado
+  /// CON intérprete de señas no es lo mismo que una impartida directamente en
+  /// señas (decisión 2 de HU-211).
+  hasInterpreter     Boolean @default(false) @map("has_interpreter")
+  hasLiveCaptions    Boolean @default(false) @map("has_live_captions")
+  hasVisualMaterials Boolean @default(false) @map("has_visual_materials")
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")

@@ -1,4 +1,4 @@
-import { EnglishLevel } from '@academia/types';
+import { CommunicationPreference, EnglishLevel } from '@academia/types';
 import { describe, expect, it } from 'vitest';
 
 import { buildSearchParams, hayFiltrosActivos, parseListClassroomsQuery } from './filtros-url';
@@ -8,13 +8,14 @@ describe('parseListClassroomsQuery', () => {
     expect(parseListClassroomsQuery(new URLSearchParams())).toEqual({});
   });
 
-  it('lee nivel, rango de fechas y paginación', () => {
+  it('lee nivel, modo, rango de fechas y paginación', () => {
     const params = new URLSearchParams(
-      'level=ADVANCED&desde=2026-09-01&hasta=2026-09-30&page=2&pageSize=10',
+      'level=ADVANCED&communicationMode=SIGN_LANGUAGE&desde=2026-09-01&hasta=2026-09-30&page=2&pageSize=10',
     );
 
     expect(parseListClassroomsQuery(params)).toEqual({
       level: EnglishLevel.ADVANCED,
+      communicationMode: CommunicationPreference.SIGN_LANGUAGE,
       desde: '2026-09-01',
       hasta: '2026-09-30',
       page: 2,
@@ -24,6 +25,12 @@ describe('parseListClassroomsQuery', () => {
 
   it('ignora un nivel que no existe, en vez de romper', () => {
     expect(parseListClassroomsQuery(new URLSearchParams('level=EXPERTO'))).toEqual({});
+  });
+
+  it('ignora un modo de comunicación que no existe, en vez de romper', () => {
+    expect(parseListClassroomsQuery(new URLSearchParams('communicationMode=TELEPATIA'))).toEqual(
+      {},
+    );
   });
 
   it.each(['abc', '0', '-1', '1.5'])('ignora una página inválida: %s', (page) => {
@@ -43,6 +50,7 @@ describe('buildSearchParams — el inverso, para el enlace compartible (AC4)', (
   it('round-trip: parsear lo que se construyó devuelve el mismo query', () => {
     const original = {
       level: EnglishLevel.BEGINNER,
+      communicationMode: CommunicationPreference.WRITTEN_TEXT,
       desde: '2026-09-01',
       hasta: '2026-09-30',
       page: 2,
@@ -53,14 +61,16 @@ describe('buildSearchParams — el inverso, para el enlace compartible (AC4)', (
 });
 
 describe('hayFiltrosActivos', () => {
-  it('false sin nivel ni fechas, aunque haya página', () => {
+  it('false sin nivel, modo ni fechas, aunque haya página', () => {
     expect(hayFiltrosActivos({ page: 2 })).toBe(false);
   });
 
-  it.each([{ level: EnglishLevel.BEGINNER }, { desde: '2026-09-01' }, { hasta: '2026-09-30' }])(
-    'true con %o',
-    (query) => {
-      expect(hayFiltrosActivos(query)).toBe(true);
-    },
-  );
+  it.each([
+    { level: EnglishLevel.BEGINNER },
+    { communicationMode: CommunicationPreference.SIGN_LANGUAGE },
+    { desde: '2026-09-01' },
+    { hasta: '2026-09-30' },
+  ])('true con %o', (query) => {
+    expect(hayFiltrosActivos(query)).toBe(true);
+  });
 });

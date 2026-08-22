@@ -1,5 +1,11 @@
 import { type BadRequestException } from '@nestjs/common';
-import { ApiErrorCode, EnglishLevel, type ValidationErrorDetail } from '@academia/types';
+import {
+  ApiErrorCode,
+  CommunicationPreference,
+  EnglishLevel,
+  MeetingProvider,
+  type ValidationErrorDetail,
+} from '@academia/types';
 import { plainToInstance } from 'class-transformer';
 import { validate } from 'class-validator';
 import { describe, expect, it } from 'vitest';
@@ -25,6 +31,8 @@ const payloadValido = {
   scheduledAt: FUTURO,
   durationMinutes: 60,
   meetingLink: 'https://meet.google.com/abc-defg-hij',
+  communicationModes: [CommunicationPreference.WRITTEN_TEXT],
+  meetingProvider: MeetingProvider.GOOGLE_MEET,
 };
 
 describe('CreateClassroomDto (validación)', () => {
@@ -105,6 +113,55 @@ describe('CreateClassroomDto (validación)', () => {
         await camposInvalidos({ ...payloadValido, meetingLink: 'http://aula.ejemplo.test/sala' }),
       ).toHaveLength(0);
     });
+  });
+
+  // AC1: un aula nueva no puede quedar «sin indicar».
+  describe('communicationModes', () => {
+    it('rechaza un array vacío', async () => {
+      expect(await camposInvalidos({ ...payloadValido, communicationModes: [] })).toContain(
+        'communicationModes',
+      );
+    });
+
+    it('rechaza si falta el campo', async () => {
+      const { communicationModes: _omitido, ...sinModos } = payloadValido;
+      expect(await camposInvalidos(sinModos)).toContain('communicationModes');
+    });
+
+    it('rechaza un valor que no es del catálogo', async () => {
+      expect(
+        await camposInvalidos({ ...payloadValido, communicationModes: ['TELEPATIA'] }),
+      ).toContain('communicationModes');
+    });
+
+    it('acepta varios modos a la vez', async () => {
+      expect(
+        await camposInvalidos({
+          ...payloadValido,
+          communicationModes: [
+            CommunicationPreference.SIGN_LANGUAGE,
+            CommunicationPreference.LIP_READING,
+          ],
+        }),
+      ).toHaveLength(0);
+    });
+  });
+
+  // `DAILY` está reservado a Fase 1.5: no es una plataforma que el profesor
+  // pueda declarar al pegar un enlace manual.
+  describe('meetingProvider', () => {
+    it('rechaza DAILY', async () => {
+      expect(
+        await camposInvalidos({ ...payloadValido, meetingProvider: MeetingProvider.DAILY }),
+      ).toContain('meetingProvider');
+    });
+
+    it.each([MeetingProvider.MANUAL, MeetingProvider.GOOGLE_MEET, MeetingProvider.ZOOM])(
+      'acepta %s',
+      async (meetingProvider) => {
+        expect(await camposInvalidos({ ...payloadValido, meetingProvider })).toHaveLength(0);
+      },
+    );
   });
 
   // AC4 y AC6

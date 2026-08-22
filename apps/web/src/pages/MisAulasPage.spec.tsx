@@ -1,6 +1,7 @@
 import {
   type Classroom,
   ClassroomStatus,
+  CommunicationPreference,
   EnglishLevel,
   EstadoTemporalAula,
   MeetingProvider,
@@ -34,6 +35,10 @@ function aula(overrides: Partial<Classroom> = {}): Classroom {
     meetingProvider: MeetingProvider.MANUAL,
     status: ClassroomStatus.PUBLISHED,
     isRecurring: false,
+    communicationModes: [],
+    hasInterpreter: false,
+    hasLiveCaptions: false,
+    hasVisualMaterials: false,
     createdAt: '2026-08-01T10:00:00.000Z',
     updatedAt: '2026-08-01T10:00:00.000Z',
     ...overrides,
@@ -274,6 +279,37 @@ describe('MisAulasPage — una sola acción primaria (B5, AC10)', () => {
 
     expect(screen.getAllByRole('link', { name: 'Crear una clase' })).toHaveLength(1);
     expect(within(cabecera()).queryByRole('link', { name: 'Crear una clase' })).toBeNull();
+  });
+});
+
+/**
+ * HU-211, T15 — la vía para que un aula «sin indicar» deje de estarlo, desde
+ * el registro completo del profesor.
+ */
+describe('MisAulasPage — completar accesibilidad (T15)', () => {
+  it('un aula sin modos declarados ofrece «Completar accesibilidad»', async () => {
+    vi.mocked(getMisAulas).mockResolvedValue(
+      respuesta([aula({ id: 'sin-indicar', communicationModes: [] })]),
+    );
+
+    renderConProviders(<MisAulasPage />);
+    await screen.findByRole('article');
+
+    expect(screen.getByRole('link', { name: 'Completar accesibilidad' })).toHaveAttribute(
+      'href',
+      '/mis-aulas/sin-indicar/accesibilidad',
+    );
+  });
+
+  it('un aula que ya declaró modos no ofrece el enlace', async () => {
+    vi.mocked(getMisAulas).mockResolvedValue(
+      respuesta([aula({ communicationModes: [CommunicationPreference.SIGN_LANGUAGE] })]),
+    );
+
+    renderConProviders(<MisAulasPage />);
+    await screen.findByRole('article');
+
+    expect(screen.queryByRole('link', { name: 'Completar accesibilidad' })).toBeNull();
   });
 });
 

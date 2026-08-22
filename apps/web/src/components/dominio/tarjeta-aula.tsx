@@ -1,17 +1,35 @@
 import {
   type Classroom,
   type ClassroomListItem,
+  coincideConLaPreferencia,
+  type CommunicationPreference,
   derivarEstadoAula,
   type EstadoAula as EstadoAulaTipo,
 } from '@academia/types';
+import { UserCheck } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
+import { Badge } from '@/components/ui/badge';
 import { describirDuracion, describirHorario } from '@/features/aulas/lib/horario';
+import { MODOS_COMUNICACION_EN_ORDEN } from '@/features/aulas/lib/modos-comunicacion';
 import { nivelesDeIngles } from '@/features/aulas/lib/niveles';
 import { cn } from '@/lib/utils';
 import { EstadoAula } from './estado-aula';
 import { varianteEstadoAula } from './estado-aula-variantes';
 import { IndicadorCupo } from './indicador-cupo';
+import { ModoComunicacionBadge } from './modo-comunicacion-badge';
+
+/**
+ * El primer modo declarado, por el orden CANÓNICO del enum — no el de
+ * inserción. Un aula que declaró `[LIP_READING, SIGN_LANGUAGE]` y otra que
+ * declaró `[SIGN_LANGUAGE, LIP_READING]` tienen que mostrar el mismo "modo
+ * principal" en la tarjeta; si el orden dependiera de cómo llegó el array
+ * desde el servidor, el resultado sería arbitrario. `null` si no hay ninguno
+ * declarado (T10, "Modo sin indicar").
+ */
+function modoPrincipal(modos: CommunicationPreference[]): CommunicationPreference | null {
+  return MODOS_COMUNICACION_EN_ORDEN.find((modo) => modos.includes(modo)) ?? null;
+}
 
 /**
  * El aula que pinta la tarjeta.
@@ -37,6 +55,13 @@ type TarjetaAulaProps = {
   perspectiva?: PerspectivaTarjeta;
   /** El reloj contra el que se deriva el estado. Por defecto, ahora mismo. */
   ahora?: Date;
+  /**
+   * La preferencia de comunicación de quien mira (T12). Se pasa como prop y
+   * no se lee con `useAuth()` aquí dentro: mismo criterio que `ahora`, la
+   * tarjeta se mantiene pura y testeable sin montar el store de sesión.
+   * `undefined`/`null` (sin preferencia declarada) nunca produce una marca.
+   */
+  preferenciaEstudiante?: CommunicationPreference | null;
   className?: string;
 };
 
@@ -66,6 +91,7 @@ export function TarjetaAula({
   classroom,
   perspectiva = 'catalogo',
   ahora = new Date(),
+  preferenciaEstudiante,
   className,
 }: TarjetaAulaProps) {
   const estado = derivarEstadoAula({ classroom, ahora });
@@ -74,6 +100,9 @@ export function TarjetaAula({
   const tituloId = `aula-${classroom.id}-titulo`;
 
   const esVistaDelProfesor = perspectiva === 'profesor';
+  const sinModosDeclarados = classroom.communicationModes.length === 0;
+  // AC4: solo marca las que coinciden, nunca las que no — sin marca negativa.
+  const coincideConLaMia = coincideConLaPreferencia(classroom, preferenciaEstudiante);
   const nombreDelProfesor =
     classroom.teacherFirstName && classroom.teacherLastName
       ? `${classroom.teacherFirstName} ${classroom.teacherLastName}`
@@ -142,6 +171,21 @@ export function TarjetaAula({
           <EstadoAula estado={estado} cuposRestantes={cuposRestantes} className="mt-1" />
         )}
 
+        {/*
+          T10: el modo principal, siempre visible en las dos perspectivas —
+          también le sirve al profesor para notar de un vistazo que le falta
+          declararlo. T12: la marca de coincidencia solo aparece del lado del
+          estudiante, y solo cuando SÍ coincide (AC4, nunca marca negativa).
+        */}
+        <div className="mt-1 flex flex-wrap items-center gap-1.5">
+          <ModoComunicacionBadge modo={modoPrincipal(classroom.communicationModes)} />
+          {!esVistaDelProfesor && coincideConLaMia && (
+            <Badge tono="primary" icon={UserCheck}>
+              Coincide con tu preferencia
+            </Badge>
+          )}
+        </div>
+
         {esVistaDelProfesor && (
           <IndicadorCupo
             variante="inscritos"
@@ -149,6 +193,16 @@ export function TarjetaAula({
             currentBookings={classroom.currentBookings}
             className="mt-1 flex"
           />
+        )}
+
+        {/* T15: la vía para que un aula «sin indicar» deje de estarlo. */}
+        {esVistaDelProfesor && sinModosDeclarados && (
+          <Link
+            to={`/mis-aulas/${classroom.id}/accesibilidad`}
+            className="mt-1 inline-block text-sm font-medium text-primary underline underline-offset-4 hover:no-underline"
+          >
+            Completar accesibilidad
+          </Link>
         )}
       </div>
     </article>

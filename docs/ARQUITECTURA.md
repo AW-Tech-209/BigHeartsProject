@@ -526,24 +526,35 @@ Convenciones: `id` UUID v4, nombres de tabla en plural, columnas mapeadas a `sna
 **`Classroom`** — ✅ **implementado en HU-201**; la tabla de abajo es su especificación, y las notas
 de implementación están en §7.1.
 
-| Campo                  | Tipo                                                | Nota                                                                  |
-| ---------------------- | --------------------------------------------------- | --------------------------------------------------------------------- |
-| `id`                   | UUID                                                |                                                                       |
-| `teacherId`            | UUID → `User`                                       | Solo el dueño edita o cancela.                                        |
-| `title`, `description` | text                                                |                                                                       |
-| `level`                | enum `BEGINNER \| INTERMEDIATE \| ADVANCED`         |                                                                       |
-| `maxStudents`          | int                                                 | Cupo máximo.                                                          |
-| `currentBookings`      | int, default 0                                      | **Solo se muta dentro de la transacción de reserva** (§4.2).          |
-| `scheduledAt`          | `timestamptz`                                       | UTC (§4.7).                                                           |
-| `durationMinutes`      | int                                                 |                                                                       |
-| `meetingLink`          | text                                                | **Cifrado AES-256-GCM** (§4.1).                                       |
-| `meetingProvider`      | enum `MANUAL \| DAILY \| GOOGLE_MEET \| ZOOM`       | En Fase 1 siempre `MANUAL`.                                           |
-| `status`               | enum `DRAFT \| PUBLISHED \| CANCELLED \| COMPLETED` | Nace `PUBLISHED` (D15). `DRAFT` y `COMPLETED` sin escritor en Fase 1. |
-| `isRecurring`          | bool, default false                                 | Gancho para Fase 1.5. **Sin regla de recurrencia en Fase 1.**         |
-| `communicationModes`   | enum `CommunicationPreference[]`                    | **Obligatorio y no vacío** en aulas nuevas (§4.9).                    |
-| `hasInterpreter`       | bool, default false                                 | Intérprete de lengua de señas.                                        |
-| `hasLiveCaptions`      | bool, default false                                 | Subtítulos en vivo.                                                   |
-| `hasVisualMaterials`   | bool, default false                                 | Materiales visuales de apoyo.                                         |
+| Campo                  | Tipo                                                | Nota                                                                                                                                    |
+| ---------------------- | --------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| `id`                   | UUID                                                |                                                                                                                                         |
+| `teacherId`            | UUID → `User`                                       | Solo el dueño edita o cancela.                                                                                                          |
+| `title`, `description` | text                                                |                                                                                                                                         |
+| `level`                | enum `BEGINNER \| INTERMEDIATE \| ADVANCED`         |                                                                                                                                         |
+| `maxStudents`          | int                                                 | Cupo máximo.                                                                                                                            |
+| `currentBookings`      | int, default 0                                      | **Solo se muta dentro de la transacción de reserva** (§4.2).                                                                            |
+| `scheduledAt`          | `timestamptz`                                       | UTC (§4.7).                                                                                                                             |
+| `durationMinutes`      | int                                                 |                                                                                                                                         |
+| `meetingLink`          | text                                                | **Cifrado AES-256-GCM** (§4.1).                                                                                                         |
+| `meetingProvider`      | enum `MANUAL \| DAILY \| GOOGLE_MEET \| ZOOM`       | ✅ **Implementado en HU-211.** El profesor lo declara al crear (Zoom, Meet u «Otra» = `MANUAL`); `DAILY` sigue reservado, sin escritor. |
+| `status`               | enum `DRAFT \| PUBLISHED \| CANCELLED \| COMPLETED` | Nace `PUBLISHED` (D15). `DRAFT` y `COMPLETED` sin escritor en Fase 1.                                                                   |
+| `isRecurring`          | bool, default false                                 | Gancho para Fase 1.5. **Sin regla de recurrencia en Fase 1.**                                                                           |
+| `communicationModes`   | enum `CommunicationPreference[]`, `@default([])`    | ✅ **Implementado en HU-211.** **Obligatorio y no vacío** en aulas nuevas (§4.9); las de antes quedan `[]` — «sin indicar».             |
+| `hasInterpreter`       | bool, default false                                 | ✅ **Implementado en HU-211.** Intérprete de lengua de señas.                                                                           |
+| `hasLiveCaptions`      | bool, default false                                 | ✅ **Implementado en HU-211.** Subtítulos en vivo.                                                                                      |
+| `hasVisualMaterials`   | bool, default false                                 | ✅ **Implementado en HU-211.** Materiales visuales de apoyo.                                                                            |
+
+> **Decisión D25 (2026-08-21, HU-211) — `PATCH /classrooms/:id` nace acotado a los 5 campos de
+> accesibilidad.** El endpoint que completa o corrige `communicationModes` y los cuatro campos de
+> arriba **no es la edición general del aula** —título, horario, cupo, enlace—, que trae HU-202
+> (todavía ⬜ pendiente, con su propio `UpdateClassroomInput`, `CLASSROOM_NOT_EDITABLE`). Se
+> resolvió así porque HU-211 necesitaba una vía para sacar a un aula de «sin indicar» sin esperar a
+> HU-202, y las dos HUs comparten la misma ruta y el mismo verbo a propósito: **HU-202 EXTIENDE este
+> endpoint** con el resto de campos editables, no lo reemplaza ni convive con un segundo `PATCH`.
+> Introduce `CLASSROOM_FORBIDDEN` (403, no eres el dueño) — HU-202 reutiliza el mismo código, no
+> inventa uno propio. Sin la regla "no editar si ya empezó" de HU-202: es metadata declarativa, no
+> afecta horario ni cupo, así que ninguna invariante la bloquea.
 
 > **Decisión D15 (2026-08-18) — el aula nace `PUBLISHED`.** `POST /classrooms` la publica de
 > inmediato; no hay flujo de borrador en Fase 1. Crear un aula tiene que costar menos que abrir un
