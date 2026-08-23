@@ -20,15 +20,18 @@ const TEMAS: Tema[] = ['light', 'dark', 'hc'];
 function Arnes({
   inicial = {},
   onChange,
+  ofreceSoloMisClases = false,
 }: {
   inicial?: ListClassroomsQuery;
   onChange: (query: ListClassroomsQuery) => void;
+  ofreceSoloMisClases?: boolean;
 }) {
   const [value, setValue] = useState(inicial);
 
   return (
     <FiltrosAulas
       value={value}
+      ofreceSoloMisClases={ofreceSoloMisClases}
       onChange={(next) => {
         setValue(next);
         onChange(next);
@@ -37,9 +40,11 @@ function Arnes({
   );
 }
 
-function montar(inicial: ListClassroomsQuery = {}) {
+function montar(inicial: ListClassroomsQuery = {}, ofreceSoloMisClases = false) {
   const onChange = vi.fn();
-  const resultado = renderConProviders(<Arnes inicial={inicial} onChange={onChange} />);
+  const resultado = renderConProviders(
+    <Arnes inicial={inicial} onChange={onChange} ofreceSoloMisClases={ofreceSoloMisClases} />,
+  );
   return { ...resultado, onChange };
 }
 
@@ -119,11 +124,88 @@ describe('<FiltrosAulas /> — controles y teclado (B4)', () => {
   });
 });
 
+/**
+ * HU-208, T4/AC5. La casilla del profesor. Quién es profesor lo decide la
+ * página; aquí solo se comprueba que la prop la enciende y la apaga, y que
+ * apagarla **quita** la clave en vez de mandarla en `false`.
+ */
+describe('<FiltrosAulas /> — «Solo mis clases» (T4, AC5)', () => {
+  it('no se pinta si no se ofrece: ausente, no deshabilitada', () => {
+    montar();
+
+    expect(screen.queryByLabelText('Solo mis clases')).not.toBeInTheDocument();
+  });
+
+  it('se pinta cuando se ofrece, y arranca desmarcada', () => {
+    montar({}, true);
+
+    expect(screen.getByLabelText('Solo mis clases')).not.toBeChecked();
+  });
+
+  it('refleja el valor que llega en el query (AC6)', () => {
+    montar({ mias: true }, true);
+
+    expect(screen.getByLabelText('Solo mis clases')).toBeChecked();
+  });
+
+  it('marcarla avisa con `mias: true`', async () => {
+    const { user, onChange } = montar({}, true);
+
+    await user.click(screen.getByLabelText('Solo mis clases'));
+
+    expect(onChange).toHaveBeenCalledWith({ mias: true });
+  });
+
+  /**
+   * `undefined` y **no `false`**, igual que «Todos los niveles» limpia `level`.
+   * Es lo que hace que `buildSearchParams()` lo omita y el enlace que el
+   * profesor comparte no arrastre un `mias=false` que no significa nada — ese
+   * lado del contrato lo verifica `filtros-url.spec.ts`.
+   */
+  it('desmarcarla apaga el filtro con undefined, no con false', async () => {
+    const { user, onChange } = montar({ mias: true }, true);
+
+    await user.click(screen.getByLabelText('Solo mis clases'));
+
+    expect(onChange).toHaveBeenCalledWith({ mias: undefined });
+  });
+
+  it('se alcanza con el teclado, después de los otros cuatro controles', async () => {
+    const { user } = montar({}, true);
+
+    await user.tab();
+    await user.tab();
+    await user.tab();
+    await user.tab();
+    await user.tab();
+
+    expect(screen.getByLabelText('Solo mis clases')).toHaveFocus();
+  });
+
+  it('cambiarla también quita la página del query', async () => {
+    const { user, onChange } = montar({ page: 3 }, true);
+
+    await user.click(screen.getByLabelText('Solo mis clases'));
+
+    expect(onChange.mock.calls[0]?.[0]).not.toHaveProperty('page');
+  });
+});
+
 describe('<FiltrosAulas /> — accesibilidad automática', () => {
   it.each(TEMAS)('sin violaciones en el tema %s', async (tema) => {
     const { container } = renderConProviders(<FiltrosAulas value={{}} onChange={vi.fn()} />, {
       tema,
     });
+
+    await esperarSinFallosDeAccesibilidad(container);
+  });
+
+  // AC8: con la casilla del profesor puesta, que es un control más en la fila.
+  it.each(TEMAS)('con «Solo mis clases», sin violaciones en el tema %s', async (tema) => {
+    const { container } = renderConProviders(
+      <FiltrosAulas value={{}} onChange={vi.fn()} ofreceSoloMisClases />,
+      { tema },
+    );
 
     await esperarSinFallosDeAccesibilidad(container);
   });

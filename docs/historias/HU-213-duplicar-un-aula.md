@@ -93,8 +93,8 @@ resultante dice `Duplicar «Conversación cotidiana»`.
 - [ ] **AC7** — Un `?desde=` con un `id` inexistente o ajeno abre el formulario **vacío con un
       aviso**, no una pantalla de error.
 - [ ] **AC8** — **Accesibilidad:** la pantalla se completa solo con teclado, el cambio de contexto
-      se anuncia por región viva, `axe` limpio, y funciona en `light`, `dark` y `hc`.
-- [ ] **AC9** — **Verificación automática:** `typecheck`, `lint`, `format:check`, `build` y
+      se anuncia por región viva, `axe` limpio, y revisado **a ojo en el navegador** en `.dark` y `.hc` (jsdom no calcula CSS de verdad: eso no se testea).
+- [ ] **AC9** — **Verificación automática:** `typecheck`, `lint`, `build` y
       `npm run test` en verde.
 
 ## 🚫 Fuera de alcance

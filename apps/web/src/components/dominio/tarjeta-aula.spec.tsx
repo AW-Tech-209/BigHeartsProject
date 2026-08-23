@@ -362,6 +362,114 @@ describe('<TarjetaAula /> — accesibilidad declarada del aula (T10, T12, T15)',
   });
 });
 
+/**
+ * HU-208 — el catálogo distingue quién lo mira (T1, T2, T3).
+ *
+ * La tarjeta no conoce roles ni sesión: recibe `esMia` y `puedeReservarla` ya
+ * resueltos, igual que `ahora` y `preferenciaEstudiante`. Quién es quién se
+ * verifica en `puede-reservar.spec.ts` y en `AulasPage.spec.tsx`.
+ */
+describe('<TarjetaAula esMia /> — el distintivo de la clase propia (AC1, AC2)', () => {
+  it('la clase propia lleva el distintivo «Tu clase»', () => {
+    renderConProviders(<TarjetaAula classroom={aula()} esMia ahora={AHORA} />);
+
+    expect(screen.getByText('Tu clase')).toBeInTheDocument();
+  });
+
+  it('la clase de otro profesor no lo lleva', () => {
+    renderConProviders(<TarjetaAula classroom={aula()} ahora={AHORA} />);
+
+    expect(screen.queryByText('Tu clase')).not.toBeInTheDocument();
+  });
+
+  /**
+   * AC2, el criterio entero. El distintivo se AÑADE al estado, no lo sustituye:
+   * si al marcar la clase como propia se perdiera «Quedan 2 cupos», el profesor
+   * dejaría de ver por dónde va su propia clase justo en la pantalla donde
+   * coordina horarios.
+   */
+  it('una clase propia con últimos cupos muestra las dos cosas', () => {
+    renderConProviders(
+      <TarjetaAula classroom={aula({ currentBookings: 8, maxStudents: 10 })} esMia ahora={AHORA} />,
+    );
+
+    expect(screen.getByText('Tu clase')).toBeInTheDocument();
+    expect(screen.getByText('Quedan 2 cupos')).toBeInTheDocument();
+  });
+
+  // La codificación triple: el distintivo no viaja solo en el color.
+  it('el distintivo lleva ícono además de texto y color', () => {
+    renderConProviders(<TarjetaAula classroom={aula()} esMia ahora={AHORA} />);
+
+    const distintivo = screen.getByText('Tu clase').closest('span');
+    expect(distintivo?.querySelector('svg')).toBeInTheDocument();
+  });
+
+  // En «Mis aulas» todas son suyas: marcarlas una por una no distingue nada.
+  it('en la perspectiva del profesor no se pinta, aunque el aula sea suya', () => {
+    renderConProviders(
+      <TarjetaAula classroom={aula()} perspectiva="profesor" esMia ahora={AHORA} />,
+    );
+
+    expect(screen.queryByText('Tu clase')).not.toBeInTheDocument();
+  });
+});
+
+describe('<TarjetaAula esMia /> — la acción de gestión (T2, AC3)', () => {
+  it('la clase propia ofrece «Gestionar mi clase» y lleva al aula', () => {
+    renderConProviders(<TarjetaAula classroom={aula({ id: 'aula-42' })} esMia ahora={AHORA} />);
+
+    expect(screen.getByRole('link', { name: 'Gestionar mi clase' })).toHaveAttribute(
+      'href',
+      '/aulas/aula-42',
+    );
+  });
+
+  it('la clase de otro profesor no ofrece esa acción', () => {
+    renderConProviders(<TarjetaAula classroom={aula()} ahora={AHORA} />);
+
+    expect(screen.queryByRole('link', { name: 'Gestionar mi clase' })).not.toBeInTheDocument();
+  });
+
+  // El catálogo del profesor no es «Mis aulas»: allí la acción sería redundante.
+  it('en la perspectiva del profesor tampoco aparece', () => {
+    renderConProviders(
+      <TarjetaAula classroom={aula()} perspectiva="profesor" esMia ahora={AHORA} />,
+    );
+
+    expect(screen.queryByRole('link', { name: 'Gestionar mi clase' })).not.toBeInTheDocument();
+  });
+});
+
+/**
+ * AC4 — el elemento **no está en el DOM**, no está deshabilitado.
+ *
+ * Hoy `<AccionReservarAula>` devuelve `null` para todos, así que estos tests
+ * pasan también para el estudiante. Se escriben igual, y a propósito: son la
+ * red que se pone en rojo el día que HU-301 rellene ese hueco sin respetar la
+ * regla. Quien decide por rol es `puedeReservar()`, con su propio spec.
+ */
+describe('<TarjetaAula /> — la acción de reservar (T3, AC4)', () => {
+  it.each([
+    ['con `puedeReservarla`', true],
+    ['sin `puedeReservarla`', false],
+  ])('%s, no existe ningún elemento de reservar (HU-301 aún no la trae)', (_caso, puede) => {
+    renderConProviders(<TarjetaAula classroom={aula()} puedeReservarla={puede} ahora={AHORA} />);
+
+    expect(screen.queryByRole('button', { name: /reservar/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: /reservar/i })).not.toBeInTheDocument();
+  });
+
+  // Ni deshabilitado: el skill prohíbe deshabilitar sin explicar.
+  it('no existe ningún control deshabilitado en su lugar', () => {
+    const { container } = renderConProviders(
+      <TarjetaAula classroom={aula()} esMia ahora={AHORA} />,
+    );
+
+    expect(container.querySelector('[disabled], [aria-disabled="true"]')).toBeNull();
+  });
+});
+
 describe('<TarjetaAula /> — accesibilidad automática', () => {
   it.each(TEMAS)('sin violaciones en el tema %s', async (tema) => {
     const { container } = renderConProviders(<TarjetaAula classroom={aula()} ahora={AHORA} />, {
@@ -374,6 +482,17 @@ describe('<TarjetaAula /> — accesibilidad automática', () => {
   it.each(TEMAS)('la perspectiva del profesor, sin violaciones en el tema %s', async (tema) => {
     const { container } = renderConProviders(
       <TarjetaAula classroom={aula()} perspectiva="profesor" ahora={AHORA} />,
+      { tema },
+    );
+
+    await esperarSinFallosDeAccesibilidad(container);
+  });
+
+  // AC8: la tarjeta propia añade un badge y un enlace más. El contraste del
+  // distintivo y el foco del enlace nuevo se revisan también en `.dark` y `.hc`.
+  it.each(TEMAS)('la tarjeta propia, sin violaciones en el tema %s', async (tema) => {
+    const { container } = renderConProviders(
+      <TarjetaAula classroom={aula()} esMia ahora={AHORA} />,
       { tema },
     );
 

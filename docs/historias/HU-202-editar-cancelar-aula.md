@@ -1,15 +1,15 @@
 # HU-202 — Editar o cancelar un aula propia
 
-| Campo            | Valor                                   |
-| ---------------- | --------------------------------------- |
-| **Sprint**       | Sprint 2 — Gestión de Aulas             |
-| **Prioridad**    | 🟠 Alta                                 |
-| **Estimación**   | 2.5 días                                |
-| **Estado**       | ⬜ Pendiente                            |
-| **Rama**         | `hu-202-editar-cancelar-aula-<persona>` |
-| **Colaboración** | Paralelo con contrato acordado          |
-| **Depende de**   | HU-201, HU-203, HU-204                  |
-| **Labels**       | `sprint-2` `prioridad:alta` `fullstack` |
+| Campo               | Valor                                   |
+| ------------------- | --------------------------------------- |
+| **Sprint**          | Sprint 2 — Gestión de Aulas             |
+| **Prioridad**       | 🟠 Alta                                 |
+| **Estimación**      | 2.5 días                                |
+| **Estado**          | ⬜ Pendiente                            |
+| **Rama**            | `hu-202-editar-cancelar-aula-<persona>` |
+| **Alcance técnico** | fullstack                               |
+| **Depende de**      | HU-201, HU-203, HU-204                  |
+| **Labels**          | `sprint-2` `prioridad:alta` `fullstack` |
 
 > **Por qué depende de las tres.** De HU-201 reutiliza el formulario en modo edición. De HU-204
 > toma su punto de entrada: el botón `Editar clase` vive en el detalle, no flota en el aire. Y su
@@ -50,38 +50,42 @@ verificable es `now ≥ scheduledAt`.
 `currentBookings` es siempre `0`. Esa regla nace con las reservas, en el Sprint 3, y hay que
 añadirla a esta pantalla entonces. Anotado en _Fuera de alcance_ para que no se pierda.
 
-## 🤝 Task de contrato — va primero
+## 🔧 Tasks
 
-- [ ] **T0** — En `packages/types`: `UpdateClassroomInput` (subconjunto editable de
+**Una sola persona la implementa de punta a punta.** Agrupadas por capa, en orden.
+
+### Contrato — va primero
+
+- [ ] **T1** — En `packages/types`: `UpdateClassroomInput` (subconjunto editable de
       `CreateClassroomInput`) y los códigos `CLASSROOM_NOT_FOUND`, `CLASSROOM_FORBIDDEN` y
       `CLASSROOM_NOT_EDITABLE` en `ApiErrorCode`. Luego `npm run build:types`.
 
-## 🔧 Tasks — Dev A (backend)
+### Backend
 
-- [ ] **A1** — `PATCH /classrooms/:id` con `@Roles('TEACHER')`. Verifica que el solicitante es el
+- [ ] **T2** — `PATCH /classrooms/:id` con `@Roles('TEACHER')`. Verifica que el solicitante es el
       **dueño**; cualquier otro profesor recibe `CLASSROOM_FORBIDDEN` (403).
-- [ ] **A2** — `POST /classrooms/:id/cancel` → `status = CANCELLED`. Misma verificación de dueño.
-- [ ] **A3** — Reglas de estado: no se edita ni se cancela un aula con `now ≥ scheduledAt`, ni una
+- [ ] **T3** — `POST /classrooms/:id/cancel` → `status = CANCELLED`. Misma verificación de dueño.
+- [ ] **T4** — Reglas de estado: no se edita ni se cancela un aula con `now ≥ scheduledAt`, ni una
       ya `CANCELLED`. En ambos casos, `CLASSROOM_NOT_EDITABLE`.
-- [ ] **A4** — Si el `meetingLink` cambia, se **vuelve a cifrar**. Nunca se guarda en claro ni
+- [ ] **T5** — Si el `meetingLink` cambia, se **vuelve a cifrar**. Nunca se guarda en claro ni
       queda el valor anterior accesible.
-- [ ] **A5** — `UpdateClassroomDto`: mismas validaciones que en la creación para los campos que
+- [ ] **T6** — `UpdateClassroomDto`: mismas validaciones que en la creación para los campos que
       viajen. Omitir un campo lo deja intacto.
-- [ ] **A6** — Tests: dueño edita, otro profesor `403`, estudiante `403`, aula empezada
+- [ ] **T7** — Tests: dueño edita, otro profesor `403`, estudiante `403`, aula empezada
       `CLASSROOM_NOT_EDITABLE`, cancelar dos veces, y que el enlace nuevo queda cifrado.
 
-## 🔧 Tasks — Dev B (frontend)
+### Frontend
 
-- [ ] **B1** — Reutilizar el formulario de HU-201 en modo edición, precargado. **Un solo
+- [ ] **T8** — Reutilizar el formulario de HU-201 en modo edición, precargado. **Un solo
       componente con dos modos**, no dos formularios que se desincronicen.
-- [ ] **B2** — Cancelar con `AlertDialog` **y verbos**: `Cancelar la clase` / `Volver`, nunca
+- [ ] **T9** — Cancelar con `AlertDialog` **y verbos**: `Cancelar la clase` / `Volver`, nunca
       Sí/No. Variante `destructive`, y el texto advierte que la acción no se deshace.
-- [ ] **B3** — Tras editar o cancelar: invalidar las queries de listado y detalle, y anunciar el
+- [ ] **T10** — Tras editar o cancelar: invalidar las queries de listado y detalle, y anunciar el
       resultado por `aria-live`.
-- [ ] **B4** — En un aula que ya empezó, las acciones **no se deshabilitan en silencio**: se
+- [ ] **T11** — En un aula que ya empezó, las acciones **no se deshabilitan en silencio**: se
       explica por qué (`Esta clase ya comenzó, no se puede editar.`). El skill prohíbe deshabilitar
       sin explicación.
-- [ ] **B5** — El estado del aula se muestra con `<EstadoAula>` (color + ícono + texto), no solo
+- [ ] **T12** — El estado del aula se muestra con `<EstadoAula>` (color + ícono + texto), no solo
       con un cambio de color.
 
 ## ✅ Criterios de aceptación
@@ -101,8 +105,12 @@ añadirla a esta pantalla entonces. Anotado en _Fuera de alcance_ para que no se
 - [ ] **AC8** — **Accesibilidad:** el diálogo de confirmación atrapa el foco, se cierra con `Esc`,
       sus botones dicen verbos, y el resultado se anuncia por `aria-live`. Cumple el checklist del
       skill `bighearts-ui`.
-- [ ] **AC9** — **Verificación automática:** `typecheck`, `lint`, `format:check`, `build` y
-      `test --workspace @academia/api` en verde.
+- [ ] **AC9** — **Verificación automática:** `typecheck`, `lint`, `build` y `npm run test` en
+      verde. Una sola vez, al cerrar.
+
+### Documentación
+
+- [ ] **T13** — Recorrer la tabla de §6 del skill `bighearts-dod`.
 
 ## 🚫 Fuera de alcance
 

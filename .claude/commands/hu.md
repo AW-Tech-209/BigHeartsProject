@@ -48,11 +48,23 @@ deja que se apruebe el plan antes de escribir código.
 
 ## Fase 3 — Implementar
 
-Ejecuta las tasks **en orden**, una a una. Después de cada task:
+Ejecuta las tasks **en orden**, una a una. No pases a la siguiente con la anterior a medias.
 
-- Si tocaste `packages/types` → `npm run build:types`.
-- Si tocaste backend → `npm run test --workspace @academia/api`.
-- No pases a la siguiente task con la anterior a medias.
+### Verificación durante la implementación — acotada
+
+**No corras la suite completa después de cada task.** Con 10–17 tasks por HU eso son diez o quince
+ejecuciones que vuelcan su salida al contexto y no aportan nada que no aporten dos. Durante la
+implementación:
+
+- Si tocaste `packages/types` → `npm run build:types`. Es rápido y todo lo demás depende de él.
+- Si escribiste o cambiaste un test → **solo ese archivo**:
+  `npx vitest run <ruta-del-spec> --workspace <workspace>`.
+- Si tocaste código sin test propio → nada. Se verifica en la fase 4.
+- **Nunca** `npm run lint`, `npm run format:check` ni `npm run test` completos aquí.
+
+`eslint` y `prettier` sobre todo el repo son trabajo duplicado: el hook de `pre-commit` ya los pasa
+sobre los ficheros staged. Si necesitas comprobar el lint de algo concreto, acótalo:
+`npx eslint <rutas que tocaste>`.
 
 Mientras escribes:
 
@@ -66,8 +78,10 @@ Mientras escribes:
 
 Aplica el skill **`bighearts-dod`**. Concretamente:
 
-1. Corre la verificación automática: `typecheck`, `lint`, `format:check`,
-   `test --workspace @academia/api`, `build`.
+1. Corre la verificación automática **una sola vez, aquí**:
+   `npm run typecheck`, `npm run lint`, `npm run build`, `npm run test`.
+   **`format:check` no entra**: lo resuelve el hook de `pre-commit` sobre los ficheros staged, y
+   correrlo sobre el repo entero dentro de la sesión es pagar dos veces por lo mismo.
 2. **Recorre cada acceptance criteria de la HU, uno por uno.** Para cada uno:
    - Cítalo textualmente.
    - Di cómo lo comprobaste (test concreto, comando, petición, pantalla).

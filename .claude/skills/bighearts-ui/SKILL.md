@@ -42,8 +42,11 @@ usa prop `render`, **no** `asChild`) · `lucide-react` · CVA para variantes · 
 | `muted`             | Inactivo, pasado, sin acción posible                     | —                      |
 
 Todos los tokens (hex/oklch, modo claro, oscuro y alto contraste, ya verificados en contraste WCAG)
-están en `tokens.css` de este skill — **léelo antes de tocar `src/index.css` o de escribir cualquier
-color**. Cero colores literales en `.tsx` (`bg-primary`, nunca `#054DAE` ni `blue-600`).
+están en `tokens.css` de este skill. **No lo abras para escribir un componente**: el diccionario de
+arriba ya te dice qué token usar, y `tokens.css` es el archivo más pesado de este skill. Ábrelo
+**solo si vas a editar `apps/web/src/index.css`**, que es donde viven de verdad.
+
+Cero colores literales en `.tsx` (`bg-primary`, nunca `#054DAE` ni `blue-600`).
 
 Reglas de contraste: texto ≥ 7:1 (AAA) cuando sea posible, mínimo 4.5:1. Bordes/gráficos con
 significado ≥ 3:1.

@@ -6,10 +6,11 @@ import {
   derivarEstadoAula,
   type EstadoAula as EstadoAulaTipo,
 } from '@academia/types';
-import { UserCheck } from 'lucide-react';
+import { Presentation, UserCheck } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 import { Badge } from '@/components/ui/badge';
+import { AccionReservarAula } from '@/features/aulas/components/accion-reservar-aula';
 import { describirDuracion, describirHorario } from '@/features/aulas/lib/horario';
 import { MODOS_COMUNICACION_EN_ORDEN } from '@/features/aulas/lib/modos-comunicacion';
 import { nivelesDeIngles } from '@/features/aulas/lib/niveles';
@@ -62,6 +63,24 @@ type TarjetaAulaProps = {
    * `undefined`/`null` (sin preferencia declarada) nunca produce una marca.
    */
   preferenciaEstudiante?: CommunicationPreference | null;
+  /**
+   * `true` si el aula la imparte quien está mirando (HU-208, T1).
+   *
+   * Prop y no `useAuth()` aquí dentro, por el mismo motivo que `ahora` y
+   * `preferenciaEstudiante`: la tarjeta se mantiene pura y testeable sin montar
+   * el store de sesión. Quien la monta compara `classroom.teacherId` con el
+   * usuario de la sesión.
+   *
+   * **No es un permiso.** Marca de quién es la clase para que el profesor
+   * distinga lo suyo en un catálogo que sigue siendo único; lo que puede
+   * hacerse con ella lo decide el servidor en `PATCH` y `cancel` (§4.8).
+   */
+  esMia?: boolean;
+  /**
+   * Si a quien mira se le puede ofrecer reservar (HU-208, T3). Llega ya
+   * resuelto por `puedeReservar()`: la tarjeta no conoce roles.
+   */
+  puedeReservarla?: boolean;
   className?: string;
 };
 
@@ -92,6 +111,8 @@ export function TarjetaAula({
   perspectiva = 'catalogo',
   ahora = new Date(),
   preferenciaEstudiante,
+  esMia = false,
+  puedeReservarla = false,
   className,
 }: TarjetaAulaProps) {
   const estado = derivarEstadoAula({ classroom, ahora });
@@ -119,6 +140,12 @@ export function TarjetaAula({
     .join(' · ');
 
   const muestraBadge = !esVistaDelProfesor || !ESTADOS_DE_CUPO.includes(estado);
+
+  // HU-208: la marca solo tiene sentido en el catálogo, donde conviven aulas
+  // propias y ajenas. En «Mis aulas» TODAS son suyas: marcarlas una por una no
+  // distinguiría nada y sería el ruido que la propia pantalla ya evita al no
+  // repetir el nombre del profesor en cada tarjeta.
+  const marcaDePropiedad = esMia && !esVistaDelProfesor;
 
   return (
     <article
@@ -167,8 +194,28 @@ export function TarjetaAula({
 
         <p className="text-[13px] text-muted-foreground">{lineaSecundaria}</p>
 
-        {muestraBadge && (
-          <EstadoAula estado={estado} cuposRestantes={cuposRestantes} className="mt-1" />
+        {/*
+          AC2: el distintivo va **junto** al estado, nunca en su lugar. Una
+          clase propia con últimos cupos tiene que decir las dos cosas: de quién
+          es y cómo va de sitio. Por eso comparten fila en vez de competir por
+          el mismo hueco.
+
+          Tono `primary` porque el diccionario de color reserva ese token para
+          «lo tuyo», y `suave` por la regla del sólido: el color pleno es solo
+          de `acceso-abierto` y `en-curso`, los dos estados que piden actuar
+          ahora mismo. Con ícono y texto propios (`Presentation`, `Tu clase`),
+          que es la codificación triple obligatoria — la marca se distingue con
+          el color apagado y en alto contraste.
+        */}
+        {(muestraBadge || marcaDePropiedad) && (
+          <div className="mt-1 flex flex-wrap items-center gap-1.5">
+            {muestraBadge && <EstadoAula estado={estado} cuposRestantes={cuposRestantes} />}
+            {marcaDePropiedad && (
+              <Badge tono="primary" icon={Presentation}>
+                Tu clase
+              </Badge>
+            )}
+          </div>
         )}
 
         {/*
@@ -193,6 +240,35 @@ export function TarjetaAula({
             currentBookings={classroom.currentBookings}
             className="mt-1 flex"
           />
+        )}
+
+        {/*
+          HU-208, T2/AC3. Sobre la clase propia el catálogo ofrece **otra
+          promesa**, no la del estudiante: gestionarla, no reservarla. Mismo
+          destino que el título —`/aulas/:id`— y a propósito: para el dueño ese
+          detalle YA es su vista de gestión (le revela el enlace de la
+          videollamada, HU-204) y es donde HU-202 colgará editar y cancelar
+          desde `<AccionesDeAula>`. Lo que cambia es el verbo, que es lo que le
+          dice al profesor qué va a encontrar. Cuando llegue HU-202 con su ruta
+          de edición, aquí solo cambia el `to`.
+        */}
+        {marcaDePropiedad && (
+          <Link
+            to={`/aulas/${classroom.id}`}
+            className="mt-1 inline-block text-sm font-medium text-primary underline underline-offset-4 hover:no-underline"
+          >
+            Gestionar mi clase
+          </Link>
+        )}
+
+        {/*
+          HU-208, T3/AC4. El hueco de `Reservar mi cupo` (HU-301). Devuelve
+          `null` hoy para todos los roles, pero la regla de quién lo vería ya
+          está puesta y verificada: `puedeReservar()` fuera, y aquí el `&&
+          !esMia` que impide ofrecérselo a nadie sobre su propia clase.
+        */}
+        {!esVistaDelProfesor && (
+          <AccionReservarAula aula={classroom} puedeReservar={puedeReservarla && !esMia} />
         )}
 
         {/* T15: la vía para que un aula «sin indicar» deje de estarlo. */}

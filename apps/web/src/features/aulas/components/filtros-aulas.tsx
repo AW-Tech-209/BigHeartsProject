@@ -3,7 +3,9 @@ import {
   type EnglishLevel,
   type ListClassroomsQuery,
 } from '@academia/types';
+import { Presentation } from 'lucide-react';
 
+import { CheckboxField } from '@/components/ui/checkbox-field';
 import { Field } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { NativeSelect } from '@/components/ui/native-select';
@@ -13,6 +15,16 @@ import { nivelesDeIngles } from '../lib/niveles';
 type FiltrosAulasProps = {
   value: ListClassroomsQuery;
   onChange: (query: ListClassroomsQuery) => void;
+  /**
+   * Si se ofrece la casilla `Solo mis clases` (HU-208, T4/AC5). Solo el
+   * profesor tiene clases propias que separar del resto; para el estudiante y
+   * el administrador el filtro devolvería siempre cero y no significa nada, así
+   * que **no se pinta** — no se pinta deshabilitado.
+   *
+   * Llega resuelto desde la página, igual que `esMia` en la tarjeta: estos
+   * componentes no leen la sesión.
+   */
+  ofreceSoloMisClases?: boolean;
 };
 
 /**
@@ -24,9 +36,11 @@ type FiltrosAulasProps = {
  * (`layout-y-composicion.md`). Al cambiar cualquier filtro, quita `page` del
  * query: la página 3 de un resultado que acaba de reducirse no tiene sentido.
  */
-export function FiltrosAulas({ value, onChange }: FiltrosAulasProps) {
+export function FiltrosAulas({ value, onChange, ofreceSoloMisClases = false }: FiltrosAulasProps) {
   function actualizar(
-    cambio: Partial<Pick<ListClassroomsQuery, 'level' | 'communicationMode' | 'desde' | 'hasta'>>,
+    cambio: Partial<
+      Pick<ListClassroomsQuery, 'level' | 'communicationMode' | 'desde' | 'hasta' | 'mias'>
+    >,
   ) {
     const { page: _page, ...resto } = value;
     onChange({ ...resto, ...cambio });
@@ -85,6 +99,23 @@ export function FiltrosAulas({ value, onChange }: FiltrosAulasProps) {
           onChange={(event) => actualizar({ hasta: event.target.value || undefined })}
         />
       </Field>
+
+      {/*
+        AC5: solo para el profesor. Es una casilla y no un `<select>` porque es
+        un sí/no, y va con su ícono (`Presentation`, el mismo que marca `Tu
+        clase` en la tarjeta) para que el filtro y su resultado se lean como la
+        misma cosa. `undefined` en vez de `false` al apagarlo: así desaparece de
+        la URL en lugar de dejar un `mias=false` que no aporta nada.
+      */}
+      {ofreceSoloMisClases && (
+        <CheckboxField
+          id="filtro-mias"
+          label="Solo mis clases"
+          icon={Presentation}
+          checked={value.mias ?? false}
+          onChange={(marcado) => actualizar({ mias: marcado || undefined })}
+        />
+      )}
     </div>
   );
 }

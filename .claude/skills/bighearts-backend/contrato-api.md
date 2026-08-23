@@ -112,7 +112,7 @@ Back-office, todos con `@Roles(UserRole.ADMIN)` en la clase del controlador (HU-
 | POST   | `/admin/teachers/:id/approve` | — (ruta)  | `{ user }`             |
 | POST   | `/admin/teachers/:id/reject`  | — (ruta)  | `{ user }`             |
 
-Aulas (HU-201, HU-203, HU-207, HU-204, HU-211):
+Aulas (HU-201, HU-203, HU-207, HU-204, HU-211, HU-208):
 
 | Método | Ruta               | Entrada                             | `data`                             | Rol                |
 | ------ | ------------------ | ----------------------------------- | ---------------------------------- | ------------------ |
@@ -129,6 +129,19 @@ este mismo endpoint**, no abre uno paralelo. Solo el profesor dueño puede llama
 recibe `CLASSROOM_FORBIDDEN` (403) — código nuevo de esta HU, que HU-202 reutiliza sin cambiarlo.
 Un id inexistente responde `CLASSROOM_NOT_FOUND`, igual que el detalle. Sin la regla "no editar si
 ya empezó": es metadata declarativa, ninguna invariante la bloquea.
+
+**`GET /classrooms?mias=true` acota el catálogo al profesor que pregunta** (HU-208, D27). Es la
+única excepción a «ningún parámetro toca el alcance» de §4.8 regla 3, y lo es porque no la rompe:
+**es un booleano sin id**, el `teacherId` sale de `@CurrentUser()`, y **estrecha** un catálogo que
+quien pide ya podía ver entero — no puede revelar nada que la petición sin el parámetro no
+devuelva. Un `STUDENT` o un `ADMIN` que lo mande recibe una lista vacía, que es la verdad y no un
+error: no hace falta un 403.
+
+La prueba para cualquier parámetro nuevo que quiera filtrar por alguien: **si lleva un id, o si con
+él se ve algo que sin él no se veía, está prohibido**. Y no se resuelve en el frontend: este
+listado pagina en el servidor, así que filtrar la página ya enviada dejaría `total` contando filas
+ajenas. `?mias=` viaja como texto, así que el DTO lo traduce con `@Transform` y no con `@Type(() =>
+Boolean)` — `Boolean('false')` es `true`.
 
 **`/classrooms/mias` va declarada ANTES que `/classrooms/:id`**: Nest resuelve por orden de
 registro, y un `:id` por encima se tragaría `mias` como si fuera un identificador. `:id` es la ruta

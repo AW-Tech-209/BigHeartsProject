@@ -93,4 +93,43 @@ describe('ListClassroomsDto (validación)', () => {
   it.each(['0', '-1', 'abc'])('rechaza un pageSize inválido: %s', async (pageSize) => {
     expect(await camposInvalidos({ pageSize })).toContain('pageSize');
   });
+
+  /**
+   * HU-208, AC5/AC6. `mias` viaja por la URL, así que llega como texto y la
+   * conversión importa: `Boolean('false')` es `true`, y con `@Type(() =>
+   * Boolean)` un enlace compartido con `?mias=false` filtraría al revés de lo
+   * que dice.
+   */
+  describe('filtro `mias` (HU-208)', () => {
+    it.each([
+      ['true', true],
+      ['false', false],
+    ])('convierte el texto %s en el booleano correspondiente', async (texto, esperado) => {
+      const dto = plainToInstance(ListClassroomsDto, { mias: texto });
+
+      expect(await validate(dto)).toHaveLength(0);
+      expect(dto.mias).toBe(esperado);
+    });
+
+    it('es opcional: sin él, el query sigue siendo válido', async () => {
+      const dto = plainToInstance(ListClassroomsDto, {});
+
+      expect(await validate(dto)).toHaveLength(0);
+      expect(dto.mias).toBeUndefined();
+    });
+
+    // No se interpreta a ojo: se rechaza, igual que un pageSize fuera de rango.
+    it.each(['1', 'si', 'TRUE', ''])(
+      'rechaza un valor que no es true ni false: %s',
+      async (mias) => {
+        expect(await camposInvalidos({ mias })).toContain('mias');
+      },
+    );
+
+    it('se combina con el resto de filtros', async () => {
+      expect(
+        await camposInvalidos({ mias: 'true', level: EnglishLevel.BEGINNER, page: '2' }),
+      ).toHaveLength(0);
+    });
+  });
 });

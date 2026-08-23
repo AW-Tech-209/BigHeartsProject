@@ -96,8 +96,7 @@ conversación de producto que no hemos tenido.
 - [ ] **T10** — Filtros por profesor, estado y fechas, accesibles por teclado y con su estado en la
       URL.
 - [ ] **T11** — Los 4 estados: cargando con texto, vacío, error y lista.
-- [ ] **T12** — Tests: la pantalla no es alcanzable para roles que no son `ADMIN`; `axe` limpio;
-      los tres temas.
+- [ ] **T12** — Tests: la pantalla no es alcanzable para roles que no son `ADMIN`; `axe` limpio.
 
 ### Documentación
 
@@ -120,8 +119,8 @@ conversación de producto que no hemos tenido.
 - [ ] **AC8** — **Solo lectura:** en esta pantalla no hay ninguna acción de editar ni cancelar
       sobre un aula ajena.
 - [ ] **AC9** — **Accesibilidad:** tabla con encabezados reales, recorrido completo con teclado,
-      cambios anunciados por `aria-live`, `axe` limpio, y funciona en `light`, `dark` y `hc`.
-- [ ] **AC10** — **Verificación automática:** `typecheck`, `lint`, `format:check`, `build` y
+      cambios anunciados por `aria-live`, `axe` limpio, y revisado **a ojo en el navegador** en `.dark` y `.hc` (jsdom no calcula CSS de verdad: eso no se testea).
+- [ ] **AC10** — **Verificación automática:** `typecheck`, `lint`, `build` y
       `npm run test` en verde.
 
 ## 🚫 Fuera de alcance

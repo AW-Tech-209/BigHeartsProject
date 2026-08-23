@@ -105,6 +105,23 @@ estados de ciclo de vida —`cancelada`, `finalizada`, `en-curso`— **sí conse
 del cupo y sin él la tarjeta no diría qué pasó. **El riel de 4px lleva el estado derivado en las dos
 perspectivas**, sin excepción.
 
+### El distintivo `Tu clase` — de quién es, no cómo está
+
+En el **catálogo** (`perspectiva="catalogo"`), un aula que imparte quien la mira lleva un badge
+`primary` / `suave` con ícono `Presentation` y el texto `Tu clase` (HU-208). Tres reglas:
+
+1. **Se añade al estado, nunca lo sustituye.** Comparten fila. Una clase propia con últimos cupos
+   dice las dos cosas: de quién es y cómo va de sitio. Son preguntas distintas y las dos importan.
+2. **No aparece en `perspectiva="profesor"`.** En «Mis aulas» todas son suyas: marcarlas una por
+   una no distingue nada, igual que allí no se repite su nombre en cada tarjeta.
+3. **No es un permiso.** Marca propiedad para que el profesor coordine horarios en un catálogo que
+   sigue siendo único; lo que puede hacer con ella lo decide el servidor (§4.8).
+
+Sobre la clase propia, la acción del catálogo cambia de verbo y de promesa: `Gestionar mi clase`,
+no la de quien va a reservar. **La acción de reservar solo se pinta para `STUDENT`** y para nadie
+más — el elemento **no existe** en el DOM, no se pinta deshabilitado (§4.8, regla 1). Quién la ve
+lo decide `puedeReservar()` en `features/aulas/lib/`, un solo sitio que HU-301 extiende.
+
 ## Acciones destructivas
 
 Cancelar una reserva o un aula **siempre** pasa por `<AlertDialog>` con:
