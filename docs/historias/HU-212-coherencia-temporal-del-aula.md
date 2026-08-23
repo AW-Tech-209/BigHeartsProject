@@ -117,7 +117,7 @@ primera es un aviso que se puede confirmar; la segunda, un error que bloquea.
       tests de backend.
 - [ ] **AC9** — **Accesibilidad:** cada error junto a su campo con `aria-invalid` +
       `aria-describedby` + ícono; el diálogo atrapa el foco y se cierra con `Esc`; `axe` limpio.
-- [ ] **AC10** — **Verificación automática:** `typecheck`, `lint`, `format:check`, `build` y
+- [ ] **AC10** — **Verificación automática:** `typecheck`, `lint`, `build` y
       `npm run test` en verde.
 
 ## 🚫 Fuera de alcance

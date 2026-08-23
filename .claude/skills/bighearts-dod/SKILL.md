@@ -28,19 +28,54 @@ darlo por bueno.
 Si un AC quedó fuera del alcance de la task, **no lo marques como cumplido**. Déjalo pendiente y
 nómbralo.
 
-## 2. Verificación automática — siempre
+## 2. Verificación automática — **una vez, al cerrar**
 
 ```bash
 npm run typecheck    # los tres workspaces
 npm run lint         # ESLint en todo el repo
-npm run format:check # Prettier
 npm run test         # Vitest en los TRES workspaces (compila tipos antes)
 npm run build        # compila los tres, tipos primero
 ```
 
-Los cinco en verde. `npm run test` desde la raíz ya hace `build:types` primero; si corres un
+Los cuatro en verde. `npm run test` desde la raíz ya hace `build:types` primero; si corres un
 workspace suelto y tocaste `packages/types`, lanza `npm run build:types` antes o fallará con
 `TS2307`.
+
+**Esto se corre al cerrar la HU, no después de cada task.** Con 10–17 tasks por historia, repetir
+la suite completa en cada una son diez o quince ejecuciones que vuelcan su salida al contexto sin
+aportar nada que no aporte una. Durante la implementación se verifica **solo lo tocado**:
+`npx vitest run <ruta-del-spec>` y `npx eslint <rutas tocadas>`.
+
+**`format:check` ya no está en la lista.** El hook de `pre-commit` pasa Prettier sobre los ficheros
+staged; correrlo además sobre el repo entero dentro de la sesión es pagar dos veces por el mismo
+trabajo.
+
+## 2.1 Qué se testea y qué no
+
+Un test que no puede fallar por una razón real es coste sin red. Esta lista existe porque el repo
+llegó a **0,66 líneas de test por línea de código**, y buena parte no protegía nada.
+
+**Se testea siempre:**
+
+- **Invariantes de negocio**: concurrencia de cupos, ventana del enlace, no solapamiento,
+  transiciones de estado. Un fallo aquí no es un bug, es el producto.
+- **Autorización**: quién recibe `403` y quién no, verificado en el backend.
+- **Funciones puras de `packages/types`**: `derivarEstadoAula`, `coincideConLaPreferencia`. Baratas
+  y es donde vive la lógica compartida por las dos apps.
+- **`axe`** en componentes de dominio y en cada pantalla nueva. Es la red que sustituye a un
+  checklist manual que ya se degradó una vez (HU-103).
+- **Comportamiento de componente con `user-event`**: que al enviar un formulario vacío aparezca el
+  error, que el foco vaya donde debe.
+
+**No se testea:**
+
+- **Render en los tres temas.** jsdom **no calcula CSS de verdad** — no hace cascada ni layout.
+  Montar un componente con la clase `.hc` confirma que la clase se aplicó, no que se vea bien.
+  `.dark` y `.hc` se revisan **a ojo en el navegador**, que es el único sitio donde son reales.
+- **Texto literal de microcopy.** Frágil y de bajo valor: cambia una coma y se rompe el test sin
+  que se haya roto nada.
+- **«El componente renderiza sin lanzar».** Si no hay aserción de comportamiento, no hay test.
+- **Wrappers y re-exports** sin lógica propia.
 
 ## 3. Si tocaste backend
 

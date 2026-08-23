@@ -93,8 +93,8 @@ reservar. Queda registrado en `ARQUITECTURA.md` §4.8 para que HU-301 lo herede 
 - [ ] **AC7** — Con el filtro activo y sin resultados, el vacío es el propio del profesor, no el
       genérico del catálogo.
 - [ ] **AC8** — **Accesibilidad:** el distintivo se distingue sin depender del color, la pantalla
-      se recorre con teclado con foco visible, funciona en `.dark` y `.hc`, y `axe` sale limpio.
-- [ ] **AC9** — **Verificación automática:** `typecheck`, `lint`, `format:check`, `build` y
+      se recorre con teclado con foco visible, revisado **a ojo en el navegador** en `.dark` y `.hc` (jsdom no calcula CSS de verdad: eso no se testea), y `axe` sale limpio.
+- [ ] **AC9** — **Verificación automática:** `typecheck`, `lint`, `build` y
       `npm run test` en verde.
 
 ## 🚫 Fuera de alcance
