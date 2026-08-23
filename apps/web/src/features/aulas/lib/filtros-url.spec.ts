@@ -36,6 +36,18 @@ describe('parseListClassroomsQuery', () => {
   it.each(['abc', '0', '-1', '1.5'])('ignora una página inválida: %s', (page) => {
     expect(parseListClassroomsQuery(new URLSearchParams(`page=${page}`))).toEqual({});
   });
+
+  // HU-208, AC6: el filtro del profesor se lee de la URL como los demás.
+  it('lee `mias=true`', () => {
+    expect(parseListClassroomsQuery(new URLSearchParams('mias=true'))).toEqual({ mias: true });
+  });
+
+  // Solo `true` lo enciende: la URL la puede teclear alguien a mano, y un
+  // `mias` a medias no debe dejar al profesor mirando un catálogo recortado
+  // sin que la casilla lo refleje.
+  it.each(['false', '1', 'si', ''])('ignora un valor de mias que no es true: %s', (mias) => {
+    expect(parseListClassroomsQuery(new URLSearchParams(`mias=${mias}`))).toEqual({});
+  });
 });
 
 describe('buildSearchParams — el inverso, para el enlace compartible (AC4)', () => {
@@ -58,6 +70,20 @@ describe('buildSearchParams — el inverso, para el enlace compartible (AC4)', (
 
     expect(parseListClassroomsQuery(buildSearchParams(original))).toEqual(original);
   });
+
+  // AC6: copiar el enlace con el filtro puesto y abrirlo reproduce la vista.
+  it('round-trip con `mias` y otro filtro a la vez', () => {
+    const original = { mias: true, level: EnglishLevel.ADVANCED };
+
+    expect(buildSearchParams(original).get('mias')).toBe('true');
+    expect(parseListClassroomsQuery(buildSearchParams(original))).toEqual(original);
+  });
+
+  // Apagado es el default: no ensucia el enlace que el profesor comparte.
+  it('omite `mias` cuando está apagado', () => {
+    expect(buildSearchParams({ mias: false }).toString()).toBe('');
+    expect(buildSearchParams({}).toString()).toBe('');
+  });
 });
 
 describe('hayFiltrosActivos', () => {
@@ -70,6 +96,9 @@ describe('hayFiltrosActivos', () => {
     { communicationMode: CommunicationPreference.SIGN_LANGUAGE },
     { desde: '2026-09-01' },
     { hasta: '2026-09-30' },
+    // `mias` cuenta: «Quitar filtros» tiene que devolver el catálogo completo,
+    // no dejarle al profesor la mitad puesta.
+    { mias: true },
   ])('true con %o', (query) => {
     expect(hayFiltrosActivos(query)).toBe(true);
   });

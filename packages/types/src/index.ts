@@ -399,6 +399,25 @@ export interface ListClassroomsQuery {
    * (`ARQUITECTURA.md` §4.9, regla 1).
    */
   communicationMode?: CommunicationPreference;
+  /**
+   * Solo las aulas de quien pregunta (HU-208, AC5). Un filtro de
+   * **presentación**, no de autorización: el catálogo entero sigue siendo
+   * visible sin él.
+   *
+   * **No lleva un id, y eso es lo que lo hace seguro.** El `teacherId` con el
+   * que se filtra sale del token, nunca del query — no hay forma de nombrar a
+   * un tercero, así que no existe el `?teacherId=` que prohíbe
+   * `ARQUITECTURA.md` §4.8 regla 3. Es un booleano justo por eso: estrecha el
+   * alcance a quien ya está autenticado, nunca lo amplía.
+   *
+   * Va en el servidor y no en el cliente porque el catálogo pagina en el
+   * servidor: filtrar la página ya recibida dejaría `total` contando aulas
+   * ajenas y escondería las propias que cayeran en otra página.
+   *
+   * Para un `STUDENT` o un `ADMIN` la respuesta es una lista vacía —ninguna
+   * aula tiene su id como `teacherId`—, que es la verdad y no un error.
+   */
+  mias?: boolean;
   page?: number;
   pageSize?: number;
 }

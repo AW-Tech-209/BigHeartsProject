@@ -19,11 +19,28 @@ import {
   hayFiltrosActivos,
   parseListClassroomsQuery,
 } from '@/features/aulas/lib/filtros-url';
+import { puedeReservar } from '@/features/aulas/lib/puede-reservar';
 import { useAuth } from '@/features/auth/hooks/use-auth';
 import { useAnnounce } from '@/hooks/use-announce';
 
 /** Cuántas tarjetas fantasma se pintan mientras carga (una fila completa en escritorio). */
 const TARJETAS_FANTASMA = 6;
+
+/** El titular del vacío del profesor filtrando lo suyo (HU-208, T5/AC7). */
+const VACIO_DE_MIS_CLASES = 'No tienes clases publicadas con esos filtros.';
+
+/**
+ * Lo que se anuncia por región viva cuando no hay resultados (AC9 de HU-203).
+ *
+ * Sale a una función para que los tres casos se lean juntos: el del profesor
+ * (AC7) se añadió aquí, y con el `if` escrito dentro del `useEffect` era fácil
+ * dejar el vacío visible diciendo una cosa y el anuncio otra.
+ */
+function anuncioDelVacio(query: ListClassroomsQuery, esProfesor: boolean): string {
+  if (esProfesor && query.mias) return VACIO_DE_MIS_CLASES;
+  if (hayFiltrosActivos(query)) return 'No se encontraron aulas con esos filtros.';
+  return 'Todavía no hay aulas publicadas.';
+}
 
 /**
  * Listado de aulas disponibles (HU-203): la primera pantalla que un
@@ -43,6 +60,31 @@ export function AulasPage() {
   const preferenciaEstudiante =
     user?.role === UserRole.STUDENT ? user.communicationPreference : undefined;
 
+  /**
+   * HU-208. Las dos derivaciones de presentación por rol, resueltas UNA vez
+   * aquí y pasadas hacia abajo: ni la tarjeta ni los filtros leen la sesión.
+   *
+   * `esProfesor` decide si se ofrece la casilla `Solo mis clases` (AC5); solo
+   * él tiene clases propias que separar del resto. La decisión de verdad sobre
+   * qué puede hacer con ellas la toma el servidor (§4.8).
+   */
+  const esProfesor = user?.role === UserRole.TEACHER;
+  const seLePuedeOfrecerReservar = puedeReservar(user);
+
+  /**
+   * AC7: el vacío del profesor filtrando lo suyo no es el del catálogo. Se mira
+   * ANTES que `hayFiltrosActivos()` —que también cuenta `mias`— porque «prueba
+   * con otro nivel u otra fecha» invita a explorar la oferta ajena, y aquí el
+   * profesor está mirando su propio registro.
+   *
+   * Lleva `esProfesor` y no solo `query.mias` porque la URL la puede teclear
+   * cualquiera: un estudiante que abra `/aulas?mias=true` recibe una lista
+   * vacía —correcto, ninguna aula es suya— pero decirle «no tienes clases
+   * publicadas, publica una clase» sería copy de otro rol. A él le sirve el
+   * vacío genérico, que es el que le queda al caer por `hayFiltrosActivos()`.
+   */
+  const filtrandoLasMias = esProfesor && Boolean(query.mias);
+
   // AC9: cada resultado nuevo se anuncia por región viva. Solo se dispara
   // cuando `data` cambia de verdad (React Query mantiene la misma referencia
   // entre renders si el contenido no cambió), nunca en cada pintado.
@@ -50,11 +92,7 @@ export function AulasPage() {
     if (!data) return;
 
     if (data.total === 0) {
-      announce(
-        hayFiltrosActivos(query)
-          ? 'No se encontraron aulas con esos filtros.'
-          : 'Todavía no hay aulas publicadas.',
-      );
+      announce(anuncioDelVacio(query, esProfesor));
       return;
     }
 
@@ -85,7 +123,7 @@ export function AulasPage() {
         <InvitacionPreferencia userId={user.id} />
       )}
 
-      <FiltrosAulas value={query} onChange={actualizarFiltros} />
+      <FiltrosAulas value={query} onChange={actualizarFiltros} ofreceSoloMisClases={esProfesor} />
 
       {/* Estado 1 — cargando. Con texto, nunca un spinner mudo (B5). */}
       {isPending && (
@@ -121,10 +159,31 @@ export function AulasPage() {
         </Callout>
       )}
 
-      {/* Estado 3 — vacío. Dos textos distintos según haya filtros o no (AC8). */}
+      {/*
+        Estado 3 — vacío. Tres textos distintos: el del profesor mirando lo
+        suyo (AC7 de HU-208), el de unos filtros sin resultados y el del
+        catálogo todavía sin publicar (AC8 de HU-203).
+      */}
       {!isPending && !isError && data && data.items.length === 0 && (
         <>
-          {hayFiltrosActivos(query) ? (
+          {filtrandoLasMias ? (
+            /*
+              AC7: no se reutiliza el genérico. «Prueba con otro nivel u otra
+              fecha» invita a explorar la oferta de la academia, y el profesor
+              que marcó `Solo mis clases` está mirando su propio registro: esa
+              invitación le respondería a una pregunta que no hizo. La salida
+              que sí le sirve es volver al catálogo completo.
+            */
+            <EstadoVacio
+              titular={VACIO_DE_MIS_CLASES}
+              ayuda="Publica una clase o quita el filtro para ver el catálogo completo de la academia."
+              accion={
+                <Button variant="outline" onClick={() => actualizarFiltros({})}>
+                  Quitar filtros
+                </Button>
+              }
+            />
+          ) : hayFiltrosActivos(query) ? (
             <EstadoVacio
               titular="No hay aulas con esos filtros"
               ayuda="Prueba con otro nivel u otra fecha."
@@ -163,6 +222,11 @@ export function AulasPage() {
                 key={item.id}
                 classroom={item}
                 preferenciaEstudiante={preferenciaEstudiante}
+                // AC1: la comparación es contra el usuario de la sesión, y solo
+                // decide presentación. Un estudiante nunca es `teacherId` de
+                // nada, así que sale `false` sin comprobar el rol.
+                esMia={item.teacherId === user?.id}
+                puedeReservarla={seLePuedeOfrecerReservar}
               />
             ))}
           </RejillaAulas>

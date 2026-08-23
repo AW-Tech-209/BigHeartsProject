@@ -138,8 +138,23 @@ describe('ClassroomsController.list — GET /classrooms (HU-203)', () => {
     listClassrooms.mockResolvedValue(respuesta);
     const query = { level: 'BEGINNER' } as unknown as ListClassroomsDto;
 
-    await expect(controller.list(query)).resolves.toEqual(respuesta);
-    expect(listClassrooms).toHaveBeenCalledWith(query);
+    await expect(controller.list(profesor, query)).resolves.toEqual(respuesta);
+    expect(listClassrooms).toHaveBeenCalledWith(profesor, query);
+  });
+
+  /**
+   * HU-208, la costura donde se decide el alcance de `?mias=true`. Es el mismo
+   * test que vigila `listMias`: si alguien cambiara esta llamada por algo
+   * sacado del query, el servicio filtraría por el id que le mandaran y ningún
+   * test suyo se pondría rojo.
+   */
+  it('pasa al servicio el usuario del token, no nada del query', async () => {
+    const { controller, listClassrooms } = setup();
+    const query = { mias: true, teacherId: 'otro-profesor' } as unknown as ListClassroomsDto;
+
+    await controller.list(profesor, query);
+
+    expect(listClassrooms.mock.calls[0]?.[0]).toBe(profesor);
   });
 
   /**

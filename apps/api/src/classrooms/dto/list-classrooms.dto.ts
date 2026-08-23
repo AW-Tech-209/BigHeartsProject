@@ -4,8 +4,8 @@ import {
   EnglishLevel,
   type ListClassroomsQuery,
 } from '@academia/types';
-import { Type } from 'class-transformer';
-import { IsEnum, IsInt, IsISO8601, IsOptional, Max, Min } from 'class-validator';
+import { Transform, Type } from 'class-transformer';
+import { IsBoolean, IsEnum, IsInt, IsISO8601, IsOptional, Max, Min } from 'class-validator';
 
 /**
  * DTO de `GET /classrooms`. Implementa `ListClassroomsQuery` de
@@ -36,6 +36,25 @@ export class ListClassroomsDto implements ListClassroomsQuery {
   @IsOptional()
   @IsEnum(CommunicationPreference, { message: 'Elige un modo de comunicación válido.' })
   communicationMode?: CommunicationPreference;
+
+  /**
+   * AC5: solo las aulas de quien pregunta. **No lleva id** — el `teacherId` lo
+   * pone el servicio desde el token (§4.8, regla 3).
+   *
+   * `@Type(() => Boolean)` no sirve aquí: `Boolean('false')` es `true`, así que
+   * `?mias=false` acabaría filtrando. El `@Transform` traduce solo las dos
+   * cadenas que significan algo y deja pasar cualquier otra sin tocar, para que
+   * `@IsBoolean()` la rechace con `VALIDATION_ERROR` en vez de interpretarla a
+   * ojo — mismo criterio que `pageSize`, que tampoco se recorta en silencio.
+   */
+  @IsOptional()
+  @Transform(({ value }) => {
+    if (value === 'true') return true;
+    if (value === 'false') return false;
+    return value;
+  })
+  @IsBoolean({ message: 'El filtro de mis clases solo acepta true o false.' })
+  mias?: boolean;
 
   @IsOptional()
   @Type(() => Number)

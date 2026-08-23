@@ -16,6 +16,7 @@ import type { AppConfigService } from '../config/app-config.service';
 import type { PrismaService } from '../prisma/prisma.service';
 import { ClassroomsService } from './classrooms.service';
 import type { CreateClassroomDto } from './dto/create-classroom.dto';
+import type { ListClassroomsDto } from './dto/list-classrooms.dto';
 import type { ListMisAulasDto } from './dto/list-mis-aulas.dto';
 import type { UpdateClassroomAccessibilityDto } from './dto/update-classroom-accessibility.dto';
 import { MeetingLinkCipher } from './meeting-link.cipher';
@@ -327,7 +328,7 @@ describe('ClassroomsService.listClassrooms', () => {
   it('excluye siempre CANCELLED y lo ya pasado, publicadas y futuras', async () => {
     const { service, findMany, count } = setupParaListado();
 
-    await service.listClassrooms({});
+    await service.listClassrooms(profesorDelToken, {});
 
     const and = whereDe(findMany);
     expect(and).toContainEqual({ status: ClassroomStatus.PUBLISHED });
@@ -339,7 +340,7 @@ describe('ClassroomsService.listClassrooms', () => {
   it('filtra por nivel cuando se pide', async () => {
     const { service, findMany } = setupParaListado();
 
-    await service.listClassrooms({ level: EnglishLevel.ADVANCED });
+    await service.listClassrooms(profesorDelToken, { level: EnglishLevel.ADVANCED });
 
     expect(whereDe(findMany)).toContainEqual({ level: EnglishLevel.ADVANCED });
   });
@@ -348,7 +349,7 @@ describe('ClassroomsService.listClassrooms', () => {
   it('filtra por desde y hasta cuando se piden', async () => {
     const { service, findMany } = setupParaListado();
 
-    await service.listClassrooms({
+    await service.listClassrooms(profesorDelToken, {
       desde: '2099-01-01T00:00:00.000Z',
       hasta: '2099-12-31T23:59:59.000Z',
     });
@@ -362,7 +363,7 @@ describe('ClassroomsService.listClassrooms', () => {
   it('combina nivel y rango de fechas en la misma consulta', async () => {
     const { service, findMany } = setupParaListado();
 
-    await service.listClassrooms({
+    await service.listClassrooms(profesorDelToken, {
       level: EnglishLevel.INTERMEDIATE,
       desde: '2099-01-01T00:00:00.000Z',
     });
@@ -376,7 +377,9 @@ describe('ClassroomsService.listClassrooms', () => {
   it('filtra por modo de comunicación cuando se pide', async () => {
     const { service, findMany } = setupParaListado();
 
-    await service.listClassrooms({ communicationMode: CommunicationPreference.SIGN_LANGUAGE });
+    await service.listClassrooms(profesorDelToken, {
+      communicationMode: CommunicationPreference.SIGN_LANGUAGE,
+    });
 
     expect(whereDe(findMany)).toContainEqual({
       communicationModes: { has: CommunicationPreference.SIGN_LANGUAGE },
@@ -386,7 +389,7 @@ describe('ClassroomsService.listClassrooms', () => {
   it('combina el modo de comunicación con nivel y rango de fechas', async () => {
     const { service, findMany } = setupParaListado();
 
-    await service.listClassrooms({
+    await service.listClassrooms(profesorDelToken, {
       level: EnglishLevel.INTERMEDIATE,
       desde: '2099-01-01T00:00:00.000Z',
       communicationMode: CommunicationPreference.LIP_READING,
@@ -405,7 +408,7 @@ describe('ClassroomsService.listClassrooms', () => {
   it('sin communicationMode no añade ninguna cláusula de modo', async () => {
     const { service, findMany } = setupParaListado();
 
-    await service.listClassrooms({});
+    await service.listClassrooms(profesorDelToken, {});
 
     expect(whereDe(findMany).some((clausula) => 'communicationModes' in clausula)).toBe(false);
   });
@@ -414,16 +417,123 @@ describe('ClassroomsService.listClassrooms', () => {
   it('un aula sin modos declarados se sirve con communicationModes: [], sin romper', async () => {
     const { service } = setupParaListado([filaDeAula({ communicationModes: [] })]);
 
-    const [item] = (await service.listClassrooms({})).items;
+    const [item] = (await service.listClassrooms(profesorDelToken, {})).items;
 
     expect(item).toMatchObject({ communicationModes: [] });
+  });
+
+  /**
+   * HU-208, AC5–AC7. El filtro de presentación del profesor.
+   *
+   * Lo que estos tests protegen no es que filtre —eso es una línea— sino **de
+   * dónde sale el id con el que filtra**: del token, y de ningún otro sitio.
+   */
+  describe('filtro `mias` (HU-208)', () => {
+    it('con `mias`, acota al profesor del token', async () => {
+      const { service, findMany } = setupParaListado();
+
+      await service.listClassrooms(profesorDelToken, { mias: true });
+
+      expect(whereDe(findMany)).toContainEqual({ teacherId: PROFESOR_ID });
+    });
+
+    // AC5, la mitad negativa: sin pedirlo, el catálogo sigue siendo el de todos.
+    it('sin `mias`, no añade ninguna cláusula de profesor', async () => {
+      const { service, findMany } = setupParaListado();
+
+      await service.listClassrooms(profesorDelToken, {});
+
+      expect(whereDe(findMany).some((clausula) => 'teacherId' in clausula)).toBe(false);
+    });
+
+    it('con `mias: false` explícito tampoco filtra', async () => {
+      const { service, findMany } = setupParaListado();
+
+      await service.listClassrooms(profesorDelToken, { mias: false });
+
+      expect(whereDe(findMany).some((clausula) => 'teacherId' in clausula)).toBe(false);
+    });
+
+    /**
+     * §4.8, regla 3, aplicada a este endpoint. El DTO no declara `teacherId`,
+     * así que el `ValidationPipe` global lo tira antes de llegar aquí; este
+     * test comprueba que, aunque se colara, el servicio usa el del token.
+     */
+    it('ignora un teacherId colado en el query: solo lee las aulas del token', async () => {
+      const { service, findMany } = setupParaListado();
+      const conIntruso = { mias: true, teacherId: OTRO_PROFESOR_ID } as ListClassroomsDto;
+
+      await service.listClassrooms(profesorDelToken, conIntruso);
+
+      const and = whereDe(findMany);
+      expect(and).toContainEqual({ teacherId: PROFESOR_ID });
+      expect(and).not.toContainEqual({ teacherId: OTRO_PROFESOR_ID });
+    });
+
+    /**
+     * Un estudiante pidiendo `mias` no es un error: es una lista vacía. Su id
+     * no es `teacherId` de ninguna aula, así que la consulta sale sola. No hace
+     * falta un 403 —no hay nada que proteger: el filtro no puede revelar nada
+     * que el catálogo no enseñe ya—.
+     */
+    it('un estudiante que pide `mias` filtra por su propio id, no por el de un profesor', async () => {
+      const { service, findMany } = setupParaListado();
+      const estudiante: AuthenticatedUser = {
+        id: '99999999-9999-4999-8999-999999999999',
+        email: 'ana@academia.local',
+        role: UserRole.STUDENT,
+        status: UserStatus.ACTIVE,
+      };
+
+      await service.listClassrooms(estudiante, { mias: true });
+
+      expect(whereDe(findMany)).toContainEqual({ teacherId: estudiante.id });
+    });
+
+    // AC6/AC7: `count` recibe el MISMO `where`. Si no, «Página 1 de 3» contaría
+    // aulas ajenas y el vacío del profesor aparecería con resultados detrás.
+    it('el total se cuenta sobre el mismo where, no sobre el catálogo entero', async () => {
+      const { service, findMany, count } = setupParaListado();
+
+      await service.listClassrooms(profesorDelToken, { mias: true });
+
+      expect(count).toHaveBeenCalledWith({ where: { AND: whereDe(findMany) } });
+    });
+
+    it('se combina con nivel y rango de fechas sin tapar a ninguno', async () => {
+      const { service, findMany } = setupParaListado();
+
+      await service.listClassrooms(profesorDelToken, {
+        mias: true,
+        level: EnglishLevel.BEGINNER,
+        desde: '2099-01-01T00:00:00.000Z',
+      });
+
+      const and = whereDe(findMany);
+      expect(and).toContainEqual({ teacherId: PROFESOR_ID });
+      expect(and).toContainEqual({ level: EnglishLevel.BEGINNER });
+      expect(and).toContainEqual({ scheduledAt: { gte: new Date('2099-01-01T00:00:00.000Z') } });
+    });
+
+    // El filtro NO relaja el catálogo: sigue siendo publicadas y futuras. Un
+    // profesor no ve aquí sus canceladas ni sus pasadas — para eso está
+    // `/classrooms/mias`, que es otra vista (§4.8).
+    it('no relaja el catálogo: sigue siendo solo PUBLISHED y futuras', async () => {
+      const { service, findMany } = setupParaListado();
+
+      await service.listClassrooms(profesorDelToken, { mias: true });
+
+      const and = whereDe(findMany);
+      expect(and).toContainEqual({ status: ClassroomStatus.PUBLISHED });
+      expect(and.some((c) => 'scheduledAt' in c && (c.scheduledAt as { gt: Date }).gt)).toBe(true);
+    });
   });
 
   // AC3: orden ascendente por scheduledAt.
   it('ordena por scheduledAt ascendente', async () => {
     const { service, findMany } = setupParaListado();
 
-    await service.listClassrooms({});
+    await service.listClassrooms(profesorDelToken, {});
 
     expect(findMany.mock.calls[0]?.[0]).toMatchObject({ orderBy: { scheduledAt: 'asc' } });
   });
@@ -432,7 +542,7 @@ describe('ClassroomsService.listClassrooms', () => {
     it('usa página 1 y el tamaño por defecto cuando no se piden', async () => {
       const { service, findMany } = setupParaListado();
 
-      const resultado = await service.listClassrooms({});
+      const resultado = await service.listClassrooms(profesorDelToken, {});
 
       expect(findMany.mock.calls[0]?.[0]).toMatchObject({ skip: 0, take: 20 });
       expect(resultado.page).toBe(1);
@@ -442,7 +552,7 @@ describe('ClassroomsService.listClassrooms', () => {
     it('calcula el skip a partir de la página pedida', async () => {
       const { service, findMany } = setupParaListado();
 
-      const resultado = await service.listClassrooms({ page: 3, pageSize: 10 });
+      const resultado = await service.listClassrooms(profesorDelToken, { page: 3, pageSize: 10 });
 
       expect(findMany.mock.calls[0]?.[0]).toMatchObject({ skip: 20, take: 10 });
       expect(resultado.page).toBe(3);
@@ -452,7 +562,7 @@ describe('ClassroomsService.listClassrooms', () => {
     it('devuelve el total real de la consulta, no el largo de la página', async () => {
       const { service } = setupParaListado([filaDeAula(), filaDeAula({ id: 'otra-aula' })], 47);
 
-      const resultado = await service.listClassrooms({ pageSize: 2 });
+      const resultado = await service.listClassrooms(profesorDelToken, { pageSize: 2 });
 
       expect(resultado.total).toBe(47);
       expect(resultado.items).toHaveLength(2);
@@ -464,7 +574,7 @@ describe('ClassroomsService.listClassrooms', () => {
   it('ningún item de la respuesta trae meetingLink', async () => {
     const { service } = setupParaListado();
 
-    const resultado = await service.listClassrooms({});
+    const resultado = await service.listClassrooms(profesorDelToken, {});
 
     for (const item of resultado.items) {
       expect(item).not.toHaveProperty('meetingLink');
@@ -478,7 +588,7 @@ describe('ClassroomsService.listClassrooms', () => {
       filaDeAula({ teacher: { firstName: 'Ana', lastName: 'Restrepo' } }),
     ]);
 
-    const [item] = (await service.listClassrooms({})).items;
+    const [item] = (await service.listClassrooms(profesorDelToken, {})).items;
 
     expect(item).toMatchObject({ teacherFirstName: 'Ana', teacherLastName: 'Restrepo' });
   });

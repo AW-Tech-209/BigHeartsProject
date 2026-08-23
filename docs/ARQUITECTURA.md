@@ -300,6 +300,14 @@ llama.
 3. **El alcance sale del token, nunca de un parámetro.** No existe `?teacherId=` ni `?todas=true`.
    Un endpoint que cambia de alcance según un parámetro es por donde se cuelan los fallos de
    autorización.
+
+   > **Precisión (D27, HU-208).** Lo que la regla prohíbe es **nombrar a un tercero** o **ampliar**
+   > el alcance desde el query. `GET /classrooms?mias=true` no hace ninguna de las dos: es un
+   > booleano sin id, el `teacherId` con el que filtra sale de `@CurrentUser()`, y **estrecha** un
+   > catálogo que ese usuario ya podía ver entero. No puede revelar nada que la petición sin el
+   > parámetro no devuelva ya. La prueba de si un parámetro nuevo cae del lado permitido es esa: si
+   > lleva un id, o si con él se ve algo que sin él no se veía, está prohibido.
+
 4. **El administrador es solo lectura sobre aulas ajenas** en Fase 1. No edita ni cancela el
    trabajo de un profesor. Dar ese poder necesita una decisión de producto que no está tomada.
 5. **`/panel` es el inicio de todos los roles**, y su contenido cambia según quién entra. Para el
@@ -312,6 +320,18 @@ llama.
 > exactamente el total y ninguna aula aparezca dos veces. `todas` se sirve como dos listas
 > concatenadas —próximas ascendente, historial descendente— porque el orden que pide el profesor
 > cambia de sentido en `now`, y eso no es un `ORDER BY`.
+
+> **Decisión D27 (2026-08-23, HU-208).** El filtro «Solo mis clases» del catálogo se resuelve en el
+> **servidor**, con `GET /classrooms?mias=true`, y no filtrando en el navegador la página ya
+> recibida. La HU lo planteó como un cambio solo de frontend, pero el catálogo pagina en el
+> servidor: filtrar en el cliente dejaría `total` —y por tanto «Página 1 de 3»— contando aulas
+> ajenas, y escondería las clases propias que cayeran en otra página, con el vacío «No tienes clases
+> publicadas» apareciendo encima. El `teacherId` sale del token; ver la precisión de la regla 3.
+>
+> El resto de la HU sí es presentación pura y se deriva en el cliente a partir de `teacherId`, que
+> ya viaja en `ClassroomListItem`: el distintivo `Tu clase`, la acción `Gestionar mi clase` y quién
+> ve la acción de reservar. Coherente con §7.3 —la API manda los datos y el cliente deriva la
+> presentación—, y el permiso real lo siguen decidiendo `PATCH`, `cancel` y `POST /bookings`.
 
 > **Decisión D18 (2026-08-20).** El catálogo es único y la presentación varía por rol: el profesor
 > ve sus propias clases marcadas y con acceso a gestionarlas, no a reservarlas. Se resolvió así en
@@ -1000,6 +1020,7 @@ choque entre lo que la HU pedía y lo que el repo o estos documentos dicen.
 | D21 | El aula declara sus modos de comunicación y apoyos; se destaca la coincidencia, no se filtra                               | §4.9   | La preferencia del estudiante no se usaba en ninguna parte: el catálogo filtraba por nivel y horario como una academia genérica.                                                                |
 | D22 | No solapamiento **del profesor**, antelación mínima y duración máxima                                                      | §4.4   | Se podía publicar una clase imposible: dos a la vez, de diez mil minutos, o con dos minutos de antelación.                                                                                      |
 | D23 | Duplicar un aula, sin reabrir la recurrencia                                                                               | HU-213 | La Definición §8.2 declara la adopción del profesor como riesgo y crear un aula son once campos, incluido volver a pegar el enlace.                                                             |
+| D27 | `GET /classrooms?mias=true`: el filtro «Solo mis clases» se resuelve en el servidor, con el `teacherId` del token          | §4.8   | HU-208 lo planteaba solo en frontend, pero el catálogo pagina en el servidor: filtrar en el cliente dejaba `total` contando aulas ajenas y escondía las propias de otras páginas.               |
 | D18 | Las rutas `/aulas`, `/mis-clases` y `/mis-aulas` se registran en HU-206, con su estado vacío, antes de tener contenido     | §9     | Son destinos de la barra de navegación desde HU-206, y un enlace visible que cae en un 404 enseña al usuario a desconfiar de la navegación. HU-201, HU-203 y el Sprint 3 rellenan el contenido. |
 | D19 | El diccionario visual de estados de aula vive en `components/dominio/estado-aula-variantes.ts`, separado de `<EstadoAula>` | §7.3   | El AC9 de HU-206 exigía verificar la regla del sólido, pero el componente es de HU-203. Separar la tabla visual del componente permite testear la regla antes de que exista quien la obedece.   |
 | D20 | `<SessionBar>` desaparece: identidad y «Cerrar sesión» se absorben en la barra del shell                                   | §9     | Migrar las pantallas privadas al shell dejaba dos cabeceras apiladas. Un menú de avatar habría añadido estado oculto, que es justo lo que la navegación de HU-206 prohíbe.                      |

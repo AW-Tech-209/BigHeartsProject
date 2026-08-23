@@ -84,10 +84,19 @@ export class ClassroomsController {
    * Sin `@Roles`: la ve cualquier usuario con sesión válida, estudiante,
    * profesor o administrador — es justo el catálogo del que un estudiante
    * elige su clase.
+   *
+   * El `@CurrentUser()` es para `?mias=true` (HU-208) y para nada más. **No
+   * convierte esto en un endpoint con dos comportamientos**: sigue devolviendo
+   * el mismo catálogo a los tres roles, y `mias` es un filtro que el cliente
+   * pide explícitamente, nunca un alcance implícito por rol. El id del profesor
+   * sale de aquí precisamente para que no pueda venir del query (§4.8, regla 3).
    */
   @Get()
-  async list(@Query() query: ListClassroomsDto): Promise<ListClassroomsResponse> {
-    return this.classroomsService.listClassrooms(query);
+  async list(
+    @CurrentUser() viewer: AuthenticatedUser,
+    @Query() query: ListClassroomsDto,
+  ): Promise<ListClassroomsResponse> {
+    return this.classroomsService.listClassrooms(viewer, query);
   }
 
   /**

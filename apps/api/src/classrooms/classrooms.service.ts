@@ -91,8 +91,15 @@ export class ClassroomsService {
    * Solo lectura: a diferencia de `createClassroom`, no hay
    * `SELECT … FOR UPDATE` porque nada se muta aquí (§4.2 solo lo exige para
    * la transacción que escribe `currentBookings`).
+   *
+   * Recibe el `viewer` **solo** para poder resolver `mias` (HU-208): es el
+   * único sitio del que puede salir ese `teacherId`. El resto de la consulta no
+   * mira quién pregunta — el catálogo es uno solo para los tres roles (§4.8).
    */
-  async listClassrooms(query: ListClassroomsDto): Promise<ListClassroomsResponse> {
+  async listClassrooms(
+    viewer: AuthenticatedUser,
+    query: ListClassroomsDto,
+  ): Promise<ListClassroomsResponse> {
     const page = query.page ?? 1;
     const pageSize = query.pageSize ?? CLASSROOMS_PAGE_SIZE_DEFAULT;
 
@@ -116,6 +123,16 @@ export class ClassroomsService {
         ...(query.communicationMode
           ? [{ communicationModes: { has: query.communicationMode } }]
           : []),
+        // HU-208, AC5. **El id sale de `viewer`, jamás del query**: el DTO ni
+        // siquiera declara un `teacherId`, así que no hay forma de pedir el
+        // catálogo de otro profesor (§4.8, regla 3). Con `mias` puesto y un
+        // estudiante o un admin preguntando, la lista sale vacía —ninguna aula
+        // los tiene como dueño—, y eso es la respuesta correcta, no un error.
+        //
+        // Va en el servidor y no en el frontend porque este listado pagina
+        // aquí: filtrar en el cliente la página ya enviada dejaría `total`
+        // contando aulas ajenas y escondería las propias de otras páginas.
+        ...(query.mias ? [{ teacherId: viewer.id }] : []),
       ],
     };
 

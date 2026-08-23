@@ -29,6 +29,13 @@ export function parseListClassroomsQuery(searchParams: URLSearchParams): ListCla
     query.communicationMode = communicationMode;
   }
 
+  // AC6: el filtro del profesor viaja en la URL como los demás. Solo `true` lo
+  // enciende — cualquier otro valor (`1`, `si`, vacío) se ignora, igual que un
+  // nivel inexistente: la URL la puede teclear alguien a mano.
+  if (searchParams.get('mias') === 'true') {
+    query.mias = true;
+  }
+
   const desde = searchParams.get('desde');
   if (desde) query.desde = desde;
 
@@ -50,6 +57,9 @@ export function buildSearchParams(query: ListClassroomsQuery): URLSearchParams {
 
   if (query.level) params.set('level', query.level);
   if (query.communicationMode) params.set('communicationMode', query.communicationMode);
+  // Apagado es el default: `?mias=false` no aporta nada y ensucia el enlace que
+  // el profesor comparte. Mismo criterio que `page=1`.
+  if (query.mias) params.set('mias', 'true');
   if (query.desde) params.set('desde', query.desde);
   if (query.hasta) params.set('hasta', query.hasta);
   // La página 1 es el default: omitirla mantiene la URL limpia cuando no
@@ -60,9 +70,18 @@ export function buildSearchParams(query: ListClassroomsQuery): URLSearchParams {
   return params;
 }
 
-/** ¿Hay algún filtro de contenido activo? (la página no cuenta como filtro). */
+/**
+ * ¿Hay algún filtro de contenido activo? (la página no cuenta como filtro).
+ *
+ * `mias` cuenta: es un filtro de contenido como cualquier otro, y `Quitar
+ * filtros` tiene que devolver al profesor el catálogo completo, no dejarle la
+ * mitad puesta. Que además cambie el TEXTO del vacío lo decide la página, que
+ * mira `mias` antes que esto (AC7).
+ */
 export function hayFiltrosActivos(query: ListClassroomsQuery): boolean {
-  return Boolean(query.level || query.communicationMode || query.desde || query.hasta);
+  return Boolean(
+    query.level || query.communicationMode || query.desde || query.hasta || query.mias,
+  );
 }
 
 function esNivelValido(value: string): value is EnglishLevel {

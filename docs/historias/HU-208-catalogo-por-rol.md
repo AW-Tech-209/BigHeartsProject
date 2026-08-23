@@ -5,9 +5,9 @@
 | **Sprint**          | Sprint 2 — Gestión de Aulas                   |
 | **Prioridad**       | 🟠 Alta                                       |
 | **Estimación**      | 1 día                                         |
-| **Estado**          | ⬜ Pendiente                                  |
+| **Estado**          | ✅ Terminada                                  |
 | **Rama**            | `hu-208-catalogo-por-rol-<persona>`           |
-| **Alcance técnico** | frontend                                      |
+| **Alcance técnico** | frontend + backend (ver notas)                |
 | **Depende de**      | HU-203 (✅)                                   |
 | **Labels**          | `sprint-2` `prioridad:alta` `frontend` `a11y` |
 
@@ -56,45 +56,45 @@ reservar. Queda registrado en `ARQUITECTURA.md` §4.8 para que HU-301 lo herede 
 
 ### Frontend
 
-- [ ] **T1** — `<TarjetaAula>` acepta una marca de propiedad. Cuando el aula es del usuario que
+- [x] **T1** — `<TarjetaAula>` acepta una marca de propiedad. Cuando el aula es del usuario que
       mira, muestra un distintivo **`Tu clase`** — color + ícono + texto, como todo estado en este
       producto — junto al estado del aula, sin sustituirlo.
-- [ ] **T2** — En una tarjeta propia, el destino del enlace y el texto de la acción cambian: lleva
+- [x] **T2** — En una tarjeta propia, el destino del enlace y el texto de la acción cambian: lleva
       a gestionarla, no a la vista de quien va a reservar. El verbo es `Gestionar mi clase`.
-- [ ] **T3** — La acción de reservar **solo se pinta para `STUDENT`**. Para cualquier otro rol no
+- [x] **T3** — La acción de reservar **solo se pinta para `STUDENT`**. Para cualquier otro rol no
       existe el elemento — no se pinta deshabilitado, que es lo que prohíbe el skill.
-- [ ] **T4** — Filtro `Solo mis clases` en el catálogo, visible **únicamente para el profesor**,
+- [x] **T4** — Filtro `Solo mis clases` en el catálogo, visible **únicamente para el profesor**,
       con su estado en la URL como el resto de filtros.
-- [ ] **T5** — Que el filtro no devuelva nada tiene su propio vacío:
+- [x] **T5** — Que el filtro no devuelva nada tiene su propio vacío:
       `No tienes clases publicadas con esos filtros.` No se reutiliza el vacío genérico del
       catálogo, que invita a explorar y aquí sería confuso.
-- [ ] **T6** — Tests: la marca aparece en la tarjeta propia y no en la ajena; la acción de reservar
+- [x] **T6** — Tests: la marca aparece en la tarjeta propia y no en la ajena; la acción de reservar
       no existe para `TEACHER` ni para `ADMIN`; el filtro solo se pinta para el profesor; `axe`
       limpio en los tres roles.
 
 ### Documentación
 
-- [ ] **T7** — Recorrer la tabla de §6 del skill `bighearts-dod` y actualizar lo que quede
+- [x] **T7** — Recorrer la tabla de §6 del skill `bighearts-dod` y actualizar lo que quede
       desalineado.
 
 ## ✅ Criterios de aceptación
 
-- [ ] **AC1** — Un profesor abre `/aulas` y **sus propias clases llevan el distintivo `Tu clase`**
+- [x] **AC1** — Un profesor abre `/aulas` y **sus propias clases llevan el distintivo `Tu clase`**
       con color, ícono y texto. Las de otros profesores no lo llevan.
-- [ ] **AC2** — El distintivo **no sustituye al estado del aula**: una clase propia con últimos
+- [x] **AC2** — El distintivo **no sustituye al estado del aula**: una clase propia con últimos
       cupos muestra las dos cosas.
-- [ ] **AC3** — En una tarjeta propia la acción dice `Gestionar mi clase` y lleva a la gestión del
+- [x] **AC3** — En una tarjeta propia la acción dice `Gestionar mi clase` y lleva a la gestión del
       aula. En una ajena, no aparece esa acción.
-- [ ] **AC4** — **Ningún rol distinto de `STUDENT` ve una acción de reservar** en ninguna tarjeta.
+- [x] **AC4** — **Ningún rol distinto de `STUDENT` ve una acción de reservar** en ninguna tarjeta.
       El elemento no está en el DOM; no está deshabilitado. Verificado con un test por rol.
-- [ ] **AC5** — El filtro `Solo mis clases` se pinta para `TEACHER` y **no** para `STUDENT` ni
+- [x] **AC5** — El filtro `Solo mis clases` se pinta para `TEACHER` y **no** para `STUDENT` ni
       `ADMIN`.
-- [ ] **AC6** — Ese filtro deja su estado en la URL: copiar el enlace y abrirlo reproduce la vista.
-- [ ] **AC7** — Con el filtro activo y sin resultados, el vacío es el propio del profesor, no el
+- [x] **AC6** — Ese filtro deja su estado en la URL: copiar el enlace y abrirlo reproduce la vista.
+- [x] **AC7** — Con el filtro activo y sin resultados, el vacío es el propio del profesor, no el
       genérico del catálogo.
-- [ ] **AC8** — **Accesibilidad:** el distintivo se distingue sin depender del color, la pantalla
+- [x] **AC8** — **Accesibilidad:** el distintivo se distingue sin depender del color, la pantalla
       se recorre con teclado con foco visible, revisado **a ojo en el navegador** en `.dark` y `.hc` (jsdom no calcula CSS de verdad: eso no se testea), y `axe` sale limpio.
-- [ ] **AC9** — **Verificación automática:** `typecheck`, `lint`, `build` y
+- [x] **AC9** — **Verificación automática:** `typecheck`, `lint`, `build` y
       `npm run test` en verde.
 
 ## 🚫 Fuera de alcance
@@ -108,4 +108,38 @@ reservar. Queda registrado en `ARQUITECTURA.md` §4.8 para que HU-301 lo herede 
 
 ## Notas de implementación
 
-_Se rellena al cerrar._
+**El filtro `Solo mis clases` sí tocó el backend, al revés de lo que decía esta HU.** «No hace
+falta tocar el backend» era cierto para el distintivo y las acciones —`teacherId` ya viaja en
+`ClassroomListItem`— pero no para el filtro: `GET /classrooms` **pagina en el servidor**, así que
+filtrar en el navegador la página ya recibida habría dejado `total` —y con él «Página 1 de 3»—
+contando aulas ajenas, y habría escondido las clases propias que cayeran en otra página, con el
+vacío del AC7 apareciendo encima en falso. Se añadió `?mias=true`: un booleano **sin id**, con el
+`teacherId` sacado de `@CurrentUser()`. Queda registrado como **D27** en `ARQUITECTURA.md`, con la
+precisión a §4.8 regla 3 que explica por qué no la rompe: la regla prohíbe nombrar a un tercero o
+ampliar el alcance, y este parámetro lo estrecha sobre un catálogo que el usuario ya veía entero.
+
+**`Gestionar mi clase` lleva a `/aulas/:id`.** No existe `/mis-aulas/:id`: HU-202 (editar y
+cancelar) está pendiente, y pintar un enlace a una ruta inexistente es justo la trampa que
+`app/router.tsx` documenta. Para el dueño ese detalle **ya es** su vista de gestión —le revela el
+enlace de la videollamada (HU-204) y es donde `<AccionesDeAula>` colgará editar y cancelar—, así
+que cuando llegue HU-202 aquí solo cambia el `to`.
+
+**La acción de reservar no se creó** (estaba fuera de alcance; nace en HU-301). Lo que sí se fijó
+es quién podrá verla: `puedeReservar()` en `features/aulas/lib/` decide por rol y tiene su test por
+rol, y `<AccionReservarAula>` es el hueco que HU-301 rellena —hoy devuelve `null` para todos,
+incluido el estudiante, porque `POST /bookings` todavía no existe—. Mismo patrón que
+`<AccionesDeAula>` con HU-202. **Consecuencia honesta: los tests de AC4 pasan hoy también para el
+estudiante.** Son la red que se pone en rojo el día que HU-301 rellene ese hueco sin respetar la
+regla, no una verificación de algo que ya ocurre.
+
+**El vacío del profesor mira el rol, no solo el query.** La URL la puede teclear cualquiera: un
+estudiante en `/aulas?mias=true` recibe una lista vacía —correcto, ninguna aula es suya— pero
+decirle «no tienes clases publicadas, publica una clase» sería copy de otro rol. Para él queda el
+vacío genérico.
+
+**AC8, la parte que no automatiza nadie:** `axe` sale limpio en los tres temas sobre la tarjeta
+propia, sobre los filtros con la casilla y sobre la pantalla completa del profesor, pero jsdom no
+calcula CSS y el contraste real no se testea ahí. Falta la pasada a ojo en el navegador en `.dark`
+y `.hc`. El par a mirar es `--primary-soft` / `--primary-soft-foreground`, que `.hc` no redefine y
+hereda de light/dark — el mismo que ya usan los badges existentes, así que no es una regresión,
+pero es lo que pinta el distintivo nuevo.
