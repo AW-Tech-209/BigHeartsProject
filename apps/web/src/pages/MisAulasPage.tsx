@@ -171,10 +171,8 @@ export function MisAulasPage() {
 
           <RejillaAulas>
             {data.items.map((aula) => (
-              // Las acciones de gestión NO van en la tarjeta (B4): multiplicarlas
-              // por seis tarjetas rompe la regla de una acción primaria por
-              // pantalla. Viven en el detalle del aula, que trae HU-204 — y es
-              // esa HU la que convierte cada tarjeta en un enlace a su detalle.
+              // La tarjeta es el punto de decisión del listado: el detalle
+              // conserva las mismas acciones para quien ya está dentro.
               <TarjetaAula key={aula.id} classroom={aula} perspectiva="profesor" />
             ))}
           </RejillaAulas>

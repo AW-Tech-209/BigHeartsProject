@@ -10,6 +10,7 @@ import { Presentation, UserCheck } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 import { Badge } from '@/components/ui/badge';
+import { AccionesDeAula } from '@/features/aulas/components/acciones-de-aula';
 import { AccionReservarAula } from '@/features/aulas/components/accion-reservar-aula';
 import { describirDuracion, describirHorario } from '@/features/aulas/lib/horario';
 import { MODOS_COMUNICACION_EN_ORDEN } from '@/features/aulas/lib/modos-comunicacion';
@@ -183,10 +184,10 @@ export function TarjetaAula({
           Tab, el Enter, «abrir en otra pestaña» y el menú contextual sin que
           haya que reimplementar ninguno.
         */}
-        <h3 id={tituloId} className="text-base font-medium text-foreground">
+        <h3 id={tituloId} className="relative z-10 text-base font-medium text-foreground">
           <Link
             to={`/aulas/${classroom.id}`}
-            className="rounded-sm underline-offset-4 outline-none hover:underline"
+            className="after:absolute after:inset-0 after:z-0 after:rounded-xl after:content-[''] rounded-sm underline-offset-4 outline-none hover:underline"
           >
             {classroom.title}
           </Link>
@@ -243,19 +244,16 @@ export function TarjetaAula({
         )}
 
         {/*
-          HU-208, T2/AC3. Sobre la clase propia el catálogo ofrece **otra
-          promesa**, no la del estudiante: gestionarla, no reservarla. Mismo
-          destino que el título —`/aulas/:id`— y a propósito: para el dueño ese
-          detalle YA es su vista de gestión (le revela el enlace de la
-          videollamada, HU-204) y es donde HU-202 colgará editar y cancelar
-          desde `<AccionesDeAula>`. Lo que cambia es el verbo, que es lo que le
-          dice al profesor qué va a encontrar. Cuando llegue HU-202 con su ruta
-          de edición, aquí solo cambia el `to`.
+            HU-208, T2/AC3. Sobre la clase propia el catálogo ofrece **otra
+            promesa**, no la del estudiante: gestionarla, no reservarla. Mismo
+            destino que el título —`/aulas/:id`— y a propósito: para el dueño ese
+            detalle YA es su vista de gestión (le revela el enlace de la
+            videollamada, HU-204).
         */}
         {marcaDePropiedad && (
           <Link
             to={`/aulas/${classroom.id}`}
-            className="mt-1 inline-block text-sm font-medium text-primary underline underline-offset-4 hover:no-underline"
+            className="relative z-10 mt-1 inline-block text-sm font-medium text-primary underline underline-offset-4 hover:no-underline"
           >
             Gestionar mi clase
           </Link>
@@ -275,11 +273,13 @@ export function TarjetaAula({
         {esVistaDelProfesor && sinModosDeclarados && (
           <Link
             to={`/mis-aulas/${classroom.id}/accesibilidad`}
-            className="mt-1 inline-block text-sm font-medium text-primary underline underline-offset-4 hover:no-underline"
+            className="relative z-10 mt-1 inline-block text-sm font-medium text-primary underline underline-offset-4 hover:no-underline"
           >
             Completar accesibilidad
           </Link>
         )}
+
+        {esVistaDelProfesor && <AccionesDeAula aula={classroom} esDueno compact />}
       </div>
     </article>
   );
