@@ -16,7 +16,11 @@ Code las lee solo, git las versiona, y ya no hay que subir un `.docx` a cada cha
           ↓                                                      ↓
    docs/historias/HU-XXX-*.md  ←──────────────────────────────────┘
           ↓
-   rama hu-XXX-slug-yo  →  /hu docs/historias/HU-XXX-*.md  →  PR  →  merge
+   rama hu-XXX-slug-yo
+          ↓
+   /hu <ruta> contrato → /clear → backend → /clear → frontend → /clear → cierre
+          ↓
+        PR  →  merge
 ```
 
 ---
@@ -96,14 +100,30 @@ desde la terminal, en el mismo momento en que escribo el `.md`.
 git checkout -b hu-301-reservar-cupo-william
 ```
 
-En Claude Code:
+En Claude Code, **una capa por sesión y `/clear` entre capas**:
 
 ```
-/hu docs/historias/HU-301-reservar-cupo.md
+/hu docs/historias/HU-301-reservar-cupo.md contrato    → /clear
+/hu docs/historias/HU-301-reservar-cupo.md backend     → /clear
+/hu docs/historias/HU-301-reservar-cupo.md frontend    → /clear
+/hu docs/historias/HU-301-reservar-cupo.md cierre
 ```
 
-El comando hace cinco fases: entender → planear → implementar → verificar → cerrar. Está en
-[`.claude/commands/hu.md`](./.claude/commands/hu.md) si quiero cambiarlo.
+**Por qué así, y no la HU entera de una pasada.** El coste de una sesión es _turnos × contexto
+acumulado_, y el contexto no baja mientras la sesión viva: todo lo leído, lo escrito y toda la
+salida de herramienta se queda. Cuatro sesiones que promedian 50k cuestan bastante menos que una
+que promedia 150k haciendo el mismo trabajo.
+
+Y no es solo dinero: **sale mejor código**. Lo escrito en el turno 38 de una sesión llena es peor
+que lo mismo en el turno 8 de una limpia.
+
+El traspaso entre capas lo hace la propia HU: cada capa marca sus tasks `[x]` y deja 3–5 líneas en
+_Notas de implementación_. La sesión siguiente lee eso y no redescubre nada.
+
+**Sin indicar capa**, el comando las hace todas seguidas. Solo vale para HUs de 5 tasks o menos.
+
+**La verificación va en `cierre`, en sesión limpia y sin subagente.** Delegarla tenía sentido para
+sacarla de un contexto inflado; con el contexto vacío sale más barato hacerla ahí mismo.
 
 ### Qué se carga y qué no
 

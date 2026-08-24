@@ -1,114 +1,101 @@
 ---
-description: Implementa una Historia de Usuario versionada del repo, y verifica sus acceptance criteria uno por uno.
-argument-hint: <ruta a docs/historias/HU-XXX-*.md>
+description: Implementa una capa de una Historia de Usuario del repo, o la cierra verificando sus acceptance criteria.
+argument-hint: <ruta a docs/historias/HU-XXX-*.md> [contrato|backend|frontend|cierre]
 ---
 
-Vas a implementar la Historia de Usuario que está en: **$ARGUMENTS**
+Trabajas sobre la Historia de Usuario que está en **$ARGUMENTS**.
 
 Si no se pasó ninguna ruta, lista `docs/historias/` y pregunta cuál antes de seguir.
 
-Trabaja en este orden. No te saltes fases: la 1 y la 2 existen precisamente para que la 3 no
-produzca código que haya que rehacer.
+## Cómo se usa este comando
+
+**Una capa por sesión, y `/clear` entre capas.** No implementes la HU entera de una pasada.
+
+```
+/hu docs/historias/HU-XXX-*.md contrato    → tipos y códigos de error     → /clear
+/hu docs/historias/HU-XXX-*.md backend     → endpoints, modelo, tests     → /clear
+/hu docs/historias/HU-XXX-*.md frontend    → pantallas y componentes      → /clear
+/hu docs/historias/HU-XXX-*.md cierre      → verificación y AC uno a uno
+```
+
+**Por qué.** El coste de una sesión es _turnos × contexto acumulado_, y el contexto no baja mientras
+la sesión viva. Cuatro sesiones que promedian 50k cuestan mucho menos que una que promedia 150k
+haciendo el mismo trabajo. Y salen mejor: el código escrito en el turno 38 de una sesión llena es
+peor que el mismo código en el turno 8 de una limpia.
+
+**Si no se indica capa**, ejecútalas todas seguidas. Solo es razonable en HUs de 5 tasks o menos; si
+la HU tiene más, **dilo y sugiere partirla por capas** antes de empezar.
 
 ---
 
-## Fase 1 — Entender
+## Fase A — Orientarse (en toda invocación, corta)
 
-1. **Lee la HU completa**, no solo el título. Sus **acceptance criteria son el contrato**: cópialos
-   a un lado, los vas a necesitar al final.
-2. **Localiza qué toca en el repo.** Busca de verdad, no supongas: qué módulo de `apps/api/src/`,
-   qué feature de `apps/web/src/features/`, si cambia `packages/types`, si necesita migración de
-   Prisma. Nombra los archivos concretos.
-3. **Comprueba de qué depende.**
-   - ¿Hay una decisión en `docs/ARQUITECTURA.md` que la condiciona? (modelo de datos, invariantes
-     de §4, contrato de API, variables de entorno pendientes de introducir)
-   - ¿Está en `docs/ARQUITECTURA.md` §14.6, la lista de lo que sigue **sin decidir**? Si la HU
-     depende de algo de ahí, **para y pregunta**. No inventes la decisión.
-   - ¿Qué skill aplica? `bighearts-backend` si toca servidor, `bighearts-ui` si toca pantalla,
-     normalmente los dos si la HU es vertical. **Léelos ahora**, incluidos sus archivos de
-     referencia si la HU entra en su territorio (reservas y cupos → `reglas-reservas.md`;
-     endpoints, DTOs o esquema → `contrato-api.md`; componentes de dominio → `patrones-dominio.md`;
-     texto de interfaz → `voz-microcopy.md`).
-4. **Di en voz alta lo que encontraste** antes de tocar nada: archivos afectados, decisiones de
-   arquitectura implicadas, skills cargados, y cualquier ambigüedad o contradicción de la HU.
+1. **Lee la HU.** Mira qué tasks están ya `[x]` y lee las **Notas de implementación**: ahí está lo
+   que dejó la capa anterior.
+2. **Lee solo los skills que tu capa necesita.** No cargues los cuatro:
+   - `contrato` → `bighearts-backend` → `contrato-api.md`
+   - `backend` → `bighearts-backend` (+ `reglas-reservas.md` solo si tocas reservas o cupos)
+   - `frontend` → `bighearts-ui` (+ `layout-y-composicion.md` si montas pantalla, `patrones-dominio.md`
+     si tocas componentes de dominio, `voz-microcopy.md` si escribes copy)
+   - `cierre` → `bighearts-dod`
+3. **Comprueba bloqueos.** Si la HU depende de algo sin decidir (`ARQUITECTURA.md` §14.6) o da por
+   hecho algo que no existe en el repo, **para y pregunta**. No lo inventes.
+4. **Di en dos líneas** qué vas a hacer en esta capa y qué encontraste ya hecho. Sin resumir la HU
+   entera: ya la tienes delante.
 
-**Si la HU contradice `docs/ARQUITECTURA.md`, un skill o el código existente: dilo y espera.** No
-lo resuelvas en silencio.
+**Si algo de la HU contradice `docs/ARQUITECTURA.md`, un skill o el código existente: dilo y
+espera.**
 
-## Fase 2 — Planear
+## Fase B — Implementar tu capa
 
-Presenta un plan corto: las tasks en el orden en que las vas a hacer, y por qué ese orden.
+Ejecuta **solo las tasks de tu sección**, en orden. Ninguna de otra capa.
 
-Regla de orden que casi siempre aplica en este repo: **`packages/types` primero** (el contrato),
-luego backend, luego frontend. Si el tipo compartido llega al final, las otras dos capas se
-escriben contra un contrato imaginario.
+Verificación durante la implementación, **acotada**:
 
-Si la HU es grande, ambigua o toca las invariantes de reservas y cupos, **entra en modo plan** y
-deja que se apruebe el plan antes de escribir código.
+- `contrato` → `npm run build:types` al terminar. Nada más.
+- `backend` → solo el spec que escribiste: `npx vitest run <ruta> --workspace @academia/api`.
+- `frontend` → solo el spec que escribiste: `npx vitest run <ruta> --workspace @academia/web`.
+- **Nunca** `npm run lint`, `format:check` ni `npm run test` completos aquí. Para lint puntual,
+  `npx eslint <rutas que tocaste>`. Prettier ya lo pasa el hook de `pre-commit`.
 
-## Fase 3 — Implementar
+Mientras escribes: sigue las convenciones del repo, mira un módulo hermano antes de inventar
+estructura, comenta el **porqué** y no el qué, y no añadas dependencias sin justificarlas antes.
 
-Ejecuta las tasks **en orden**, una a una. No pases a la siguiente con la anterior a medias.
+## Fase C — Cerrar la capa y traspasar
 
-### Verificación durante la implementación — acotada
+**Esto es lo que hace que la siguiente sesión no tenga que redescubrir nada.** Antes de terminar:
 
-**No corras la suite completa después de cada task.** Con 10–17 tasks por HU eso son diez o quince
-ejecuciones que vuelcan su salida al contexto y no aportan nada que no aporten dos. Durante la
-implementación:
+1. Marca `[x]` las tasks que completaste.
+2. Escribe en **Notas de implementación** de la HU, en 3–5 líneas: qué quedó hecho, qué decisión
+   tuviste que tomar que no estaba en la HU, y qué necesita saber la capa siguiente.
+3. Termina diciendo: **«Capa <X> lista. Haz `/clear` y ejecuta `/hu <ruta> <siguiente capa>`».**
 
-- Si tocaste `packages/types` → `npm run build:types`. Es rápido y todo lo demás depende de él.
-- Si escribiste o cambiaste un test → **solo ese archivo**:
-  `npx vitest run <ruta-del-spec> --workspace <workspace>`.
-- Si tocaste código sin test propio → nada. Se verifica en la fase 4.
-- **Nunca** `npm run lint`, `npm run format:check` ni `npm run test` completos aquí.
+No sigas con la capa siguiente aunque parezca poco trabajo.
 
-`eslint` y `prettier` sobre todo el repo son trabajo duplicado: el hook de `pre-commit` ya los pasa
-sobre los ficheros staged. Si necesitas comprobar el lint de algo concreto, acótalo:
-`npx eslint <rutas que tocaste>`.
+---
 
-Mientras escribes:
+## La capa `cierre`
 
-- Sigue las convenciones que ya existen en el repo, no las tuyas. Mira un módulo hermano antes de
-  inventar una estructura.
-- Comenta el **porqué**, no el qué. Es el estándar del código actual y es lo que evita que alguien
-  deshaga una decisión sin saberlo.
-- No añadas dependencias sin decirlo. Si hace falta una, justifícala primero.
+Es la única que verifica de verdad. En sesión limpia y con el contexto vacío, así que **hazla
+inline: no delegues a un subagente**, que era una forma de esquivar un contexto inflado que aquí ya
+no existe.
 
-## Fase 4 — Verificar
+1. Lee la HU y `git diff main...HEAD` para ver qué se construyó.
+2. Corre la verificación completa **una sola vez**: `npm run typecheck`, `npm run lint`,
+   `npm run build`, `npm run test`. `format:check` no entra: lo hace el `pre-commit`.
+3. **Recorre cada acceptance criteria, uno por uno.** Cítalo, di cómo lo comprobaste (test concreto,
+   comando, petición, pantalla) y da veredicto: **cumple** / **no cumple** / **parcial, falta X**.
+   Nada de «todos se cumplen».
+4. Si la HU tocó frontend, recorre el checklist final del skill `bighearts-ui`. Los temas `.dark` y
+   `.hc` se revisan **a ojo en el navegador**, no con tests.
+5. Actualiza la documentación que quede desactualizada (tabla de §6 de `bighearts-dod`) y marca el
+   **Estado** de la HU en su cabecera.
 
-Aplica el skill **`bighearts-dod`**. Concretamente:
+Entrega al final:
 
-1. Corre la verificación automática **una sola vez, aquí**:
-   `npm run typecheck`, `npm run lint`, `npm run build`, `npm run test`.
-   **`format:check` no entra**: lo resuelve el hook de `pre-commit` sobre los ficheros staged, y
-   correrlo sobre el repo entero dentro de la sesión es pagar dos veces por lo mismo.
-2. **Recorre cada acceptance criteria de la HU, uno por uno.** Para cada uno:
-   - Cítalo textualmente.
-   - Di cómo lo comprobaste (test concreto, comando, petición, pantalla).
-   - Veredicto: **cumple** / **no cumple** / **cumple parcialmente, falta X**.
-
-   Sin atajos: nada de "todos los AC se cumplen". Uno por uno, con su evidencia.
-
-3. Si la HU tocó frontend, recorre también el checklist final del skill `bighearts-ui`.
-4. Actualiza la documentación que haya quedado desactualizada (tabla de §6 del skill
-   `bighearts-dod`).
-
-> Si la HU tiene muchos acceptance criteria, o el diff es grande, **delega el recorrido de la fase
-> 4 a un subagente** con instrucción de revisar el diff contra la HU sin asumir que el trabajo está
-> bien. Quien acaba de escribir el código es el peor juez de si cumple: llega con el sesgo de haber
-> decidido ya que sí.
-
-## Fase 5 — Cerrar
-
-Entrega:
-
-1. Qué se implementó, por task.
-2. El recorrido completo de acceptance criteria de la fase 4.
+1. Qué se implementó, por capa.
+2. El recorrido de acceptance criteria del punto 3.
 3. **Qué quedó pendiente y por qué**: AC no cumplidos, decisiones que hicieron falta y no estaban
-   tomadas, supuestos que tuviste que hacer.
-4. Qué documentación tocaste.
-5. Un mensaje de commit propuesto en Conventional Commits con ámbito de workspace.
-
-El punto 3 no es opcional. Si de verdad no quedó nada pendiente, dilo explícitamente; pero
-revísalo antes, porque un cierre sin pendientes suele significar que algo se dio por bueno sin
-mirarlo.
+   tomadas, supuestos. Si de verdad no queda nada, dilo — pero revísalo antes, porque un cierre sin
+   pendientes suele significar que algo se dio por bueno sin mirar.
+4. Un mensaje de commit en Conventional Commits con ámbito de workspace.
