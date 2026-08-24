@@ -5,7 +5,7 @@
 | **Sprint**          | Sprint 2 — Gestión de Aulas             |
 | **Prioridad**       | 🟠 Alta                                 |
 | **Estimación**      | 2.5 días                                |
-| **Estado**          | ⬜ Pendiente                            |
+| **Estado**          | ✅ Completo                             |
 | **Rama**            | `hu-202-editar-cancelar-aula-<persona>` |
 | **Alcance técnico** | fullstack                               |
 | **Depende de**      | HU-201, HU-203, HU-204                  |
@@ -70,61 +70,61 @@ edición el caso «editar sin mover el horario no choca consigo misma».
 
 ### Contrato — va primero
 
-- [ ] **T1** — En `packages/types`: `UpdateClassroomInput` (subconjunto editable de
+- [x] **T1** — En `packages/types`: `UpdateClassroomInput` (subconjunto editable de
       `CreateClassroomInput`) y los códigos `CLASSROOM_NOT_FOUND`, `CLASSROOM_FORBIDDEN` y
       `CLASSROOM_NOT_EDITABLE` en `ApiErrorCode`. Luego `npm run build:types`.
 
 ### Backend
 
-- [ ] **T2** — `PATCH /classrooms/:id` con `@Roles('TEACHER')`. Verifica que el solicitante es el
+- [x] **T2** — `PATCH /classrooms/:id` con `@Roles('TEACHER')`. Verifica que el solicitante es el
       **dueño**; cualquier otro profesor recibe `CLASSROOM_FORBIDDEN` (403).
-- [ ] **T3** — `POST /classrooms/:id/cancel` → `status = CANCELLED`. Misma verificación de dueño.
-- [ ] **T4** — Reglas de estado: no se edita ni se cancela un aula con `now ≥ scheduledAt`, ni una
+- [x] **T3** — `POST /classrooms/:id/cancel` → `status = CANCELLED`. Misma verificación de dueño.
+- [x] **T4** — Reglas de estado: no se edita ni se cancela un aula con `now ≥ scheduledAt`, ni una
       ya `CANCELLED`. En ambos casos, `CLASSROOM_NOT_EDITABLE`.
-- [ ] **T5** — Si el `meetingLink` cambia, se **vuelve a cifrar**. Nunca se guarda en claro ni
+- [x] **T5** — Si el `meetingLink` cambia, se **vuelve a cifrar**. Nunca se guarda en claro ni
       queda el valor anterior accesible.
-- [ ] **T6** — `UpdateClassroomDto`: mismas validaciones que en la creación para los campos que
+- [x] **T6** — `UpdateClassroomDto`: mismas validaciones que en la creación para los campos que
       viajen. Omitir un campo lo deja intacto.
-- [ ] **T7** — Tests: dueño edita, otro profesor `403`, estudiante `403`, aula empezada
+- [x] **T7** — Tests: dueño edita, otro profesor `403`, estudiante `403`, aula empezada
       `CLASSROOM_NOT_EDITABLE`, cancelar dos veces, y que el enlace nuevo queda cifrado.
 
 ### Frontend
 
-- [ ] **T8** — Reutilizar el formulario de HU-201 en modo edición, precargado. **Un solo
+- [x] **T8** — Reutilizar el formulario de HU-201 en modo edición, precargado. **Un solo
       componente con dos modos**, no dos formularios que se desincronicen.
-- [ ] **T9** — Cancelar con `AlertDialog` **y verbos**: `Cancelar la clase` / `Volver`, nunca
+- [x] **T9** — Cancelar con `AlertDialog` **y verbos**: `Cancelar la clase` / `Volver`, nunca
       Sí/No. Variante `destructive`, y el texto advierte que la acción no se deshace.
-- [ ] **T10** — Tras editar o cancelar: invalidar las queries de listado y detalle, y anunciar el
+- [x] **T10** — Tras editar o cancelar: invalidar las queries de listado y detalle, y anunciar el
       resultado por `aria-live`.
-- [ ] **T11** — En un aula que ya empezó, las acciones **no se deshabilitan en silencio**: se
+- [x] **T11** — En un aula que ya empezó, las acciones **no se deshabilitan en silencio**: se
       explica por qué (`Esta clase ya comenzó, no se puede editar.`). El skill prohíbe deshabilitar
       sin explicación.
-- [ ] **T12** — El estado del aula se muestra con `<EstadoAula>` (color + ícono + texto), no solo
+- [x] **T12** — El estado del aula se muestra con `<EstadoAula>` (color + ícono + texto), no solo
       con un cambio de color.
 
 ## ✅ Criterios de aceptación
 
-- [ ] **AC1** — **Propiedad:** el profesor dueño edita y cancela su aula. Otro profesor recibe
+- [x] **AC1** — **Propiedad:** el profesor dueño edita y cancela su aula. Otro profesor recibe
       `403 CLASSROOM_FORBIDDEN` en ambos endpoints. Un estudiante también. Verificado en backend.
-- [ ] **AC2** — Cancelar deja el aula en `status = CANCELLED`, y a partir de ahí **desaparece del
+- [x] **AC2** — Cancelar deja el aula en `status = CANCELLED`, y a partir de ahí **desaparece del
       listado público** (HU-203) y no se puede volver a editar.
-- [ ] **AC3** — Un aula cuya `scheduledAt` ya pasó responde `CLASSROOM_NOT_EDITABLE` tanto al
+- [x] **AC3** — Un aula cuya `scheduledAt` ya pasó responde `CLASSROOM_NOT_EDITABLE` tanto al
       editar como al cancelar.
-- [ ] **AC4** — Cambiar el enlace lo guarda cifrado de nuevo: consultando la columna no se lee la
+- [x] **AC4** — Cambiar el enlace lo guarda cifrado de nuevo: consultando la columna no se lee la
       URL nueva en claro.
-- [ ] **AC5** — Una edición parcial (por ejemplo, solo `title`) no modifica el resto de campos.
-- [ ] **AC6** — Un `id` inexistente responde `404 CLASSROOM_NOT_FOUND`, no un 500.
-- [ ] **AC7** — **La interfaz explica, no solo bloquea:** cuando una acción no está disponible, el
+- [x] **AC5** — Una edición parcial (por ejemplo, solo `title`) no modifica el resto de campos.
+- [x] **AC6** — Un `id` inexistente responde `404 CLASSROOM_NOT_FOUND`, no un 500.
+- [x] **AC7** — **La interfaz explica, no solo bloquea:** cuando una acción no está disponible, el
       usuario lee por qué.
-- [ ] **AC8** — **Accesibilidad:** el diálogo de confirmación atrapa el foco, se cierra con `Esc`,
+- [x] **AC8** — **Accesibilidad:** el diálogo de confirmación atrapa el foco, se cierra con `Esc`,
       sus botones dicen verbos, y el resultado se anuncia por `aria-live`. Cumple el checklist del
       skill `bighearts-ui`.
-- [ ] **AC9** — **Verificación automática:** `typecheck`, `lint`, `build` y `npm run test` en
+- [x] **AC9** — **Verificación automática:** `typecheck`, `lint`, `build` y `npm run test` en
       verde. Una sola vez, al cerrar.
 
 ### Documentación
 
-- [ ] **T13** — Recorrer la tabla de §6 del skill `bighearts-dod`.
+- [x] **T13** — Recorrer la tabla de §6 del skill `bighearts-dod`.
 
 ## 🚫 Fuera de alcance
 

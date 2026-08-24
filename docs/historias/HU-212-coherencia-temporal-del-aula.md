@@ -5,7 +5,7 @@
 | **Sprint**          | Sprint 2 — Gestión de Aulas                     |
 | **Prioridad**       | 🟠 Alta                                         |
 | **Estimación**      | 1 día                                           |
-| **Estado**          | ✅ Completa — AC8 parcial, se cierra en HU-202  |
+| **Estado**          | ✅ Completa — AC8 cerrado por HU-202            |
 | **Rama**            | `hu-212-coherencia-temporal-del-aula-<persona>` |
 | **Alcance técnico** | fullstack                                       |
 | **Depende de**      | HU-201 (✅)                                     |
@@ -118,12 +118,10 @@ primera es un aviso que se puede confirmar; la segunda, un error que bloquea.
       control del formulario tampoco la deja escribir.
 - [x] **AC7** — Publicar con menos de la antelación mínima **abre un diálogo de confirmación con
       verbos** que explica la consecuencia. Confirmando, se publica. Es aviso, no bloqueo.
-- [ ] **AC8** — Las tres reglas se aplican **también en `PATCH`**, no solo al crear. Verificado con
+- [x] **AC8** — Las tres reglas se aplican **también en `PATCH`**, no solo al crear. Verificado con
       tests de backend.
-      **Parcial.** La regla es única y `assertCoherenciaTemporal({ excluirId })` ya está lista para
-      `editar()`, pero el único `PATCH` que existe hoy (accesibilidad, D25) no acepta `scheduledAt`
-      ni `durationMinutes`: no hay por dónde colar una clase imposible. **Se cierra en HU-202**, que
-      es quien abre la edición del horario.
+      **Cerrado por HU-202**: `editar()` llama a `assertCoherenciaTemporal({ …, excluirId: id })`
+      cuando `scheduledAt` o `durationMinutes` cambian.
 - [x] **AC9** — **Accesibilidad:** cada error junto a su campo con `aria-invalid` +
       `aria-describedby` + ícono; el diálogo atrapa el foco y se cierra con `Esc`; `axe` limpio.
 - [x] **AC10** — **Verificación automática:** `typecheck`, `lint`, `build` y

@@ -41,7 +41,7 @@ const AULA_CREADA = {
 
 function montar(tema: Tema = 'light') {
   const onCreada = vi.fn();
-  const utils = renderConProviders(<FormularioAula onCreada={onCreada} />, { tema });
+  const utils = renderConProviders(<FormularioAula onGuardada={onCreada} />, { tema });
 
   return { ...utils, onCreada };
 }

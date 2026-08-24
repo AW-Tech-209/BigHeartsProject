@@ -11,11 +11,12 @@ import {
   Query,
 } from '@nestjs/common';
 import {
+  type CancelClassroomResponse,
   type ClassroomDetailResponse,
   type CreateClassroomResponse,
   type ListClassroomsResponse,
   type MisAulasResponse,
-  type UpdateClassroomAccessibilityResponse,
+  type UpdateClassroomResponse,
   UserRole,
 } from '@academia/types';
 
@@ -27,7 +28,7 @@ import { classroomNotFound } from './classrooms.errors';
 import { CreateClassroomDto } from './dto/create-classroom.dto';
 import { ListClassroomsDto } from './dto/list-classrooms.dto';
 import { ListMisAulasDto } from './dto/list-mis-aulas.dto';
-import { UpdateClassroomAccessibilityDto } from './dto/update-classroom-accessibility.dto';
+import { UpdateClassroomDto } from './dto/update-classroom.dto';
 
 /**
  * Valida que el `:id` de la ruta tenga forma de UUID **antes** de que llegue a
@@ -145,29 +146,39 @@ export class ClassroomsController {
   }
 
   /**
-   * PATCH /classrooms/:id — completa o corrige los 5 campos de accesibilidad
-   * de un aula ya creada (HU-211).
+   * PATCH /classrooms/:id — edita un aula ya creada (HU-211 + HU-202, decisión
+   * D25: un solo endpoint para los 5 campos de accesibilidad y el resto del
+   * aula).
    *
-   * **No es la edición general del aula.** Ese endpoint —título, horario,
-   * cupo, enlace— lo trae HU-202, todavía pendiente, y extenderá este mismo
-   * método y esta misma ruta con el resto de campos editables (decisión D25 de
-   * `ARQUITECTURA.md`), no lo reemplazará.
-   *
-   * Solo el profesor dueño puede completarla: cualquier otro recibe
-   * `CLASSROOM_FORBIDDEN` (403), decidido en el servicio.
+   * Solo el profesor dueño, y solo mientras el aula sea editable: cualquier
+   * otro profesor recibe `CLASSROOM_FORBIDDEN` (403), y un aula ya empezada o
+   * cancelada, `CLASSROOM_NOT_EDITABLE` (409). Ambos los decide el servicio.
    */
   @Patch(':id')
   @Roles(UserRole.TEACHER)
-  async updateAccessibility(
+  async edit(
     @CurrentUser() teacher: AuthenticatedUser,
     @Param('id', idDeAula) classroomId: string,
-    @Body() dto: UpdateClassroomAccessibilityDto,
-  ): Promise<UpdateClassroomAccessibilityResponse> {
-    const classroom = await this.classroomsService.updateClassroomAccessibility(
-      teacher,
-      classroomId,
-      dto,
-    );
+    @Body() dto: UpdateClassroomDto,
+  ): Promise<UpdateClassroomResponse> {
+    const classroom = await this.classroomsService.editClassroom(teacher, classroomId, dto);
+    return { classroom };
+  }
+
+  /**
+   * POST /classrooms/:id/cancel — cancela un aula propia (HU-202, AC2).
+   *
+   * Mismas comprobaciones que `edit()`: dueño y editable. No libera cupos ni
+   * notifica a nadie — `Booking` no existe hasta el Sprint 3.
+   */
+  @Post(':id/cancel')
+  @Roles(UserRole.TEACHER)
+  @HttpCode(HttpStatus.OK)
+  async cancel(
+    @CurrentUser() teacher: AuthenticatedUser,
+    @Param('id', idDeAula) classroomId: string,
+  ): Promise<CancelClassroomResponse> {
+    const classroom = await this.classroomsService.cancelClassroom(teacher, classroomId);
     return { classroom };
   }
 }

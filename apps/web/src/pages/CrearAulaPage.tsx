@@ -35,7 +35,7 @@ export function CrearAulaPage() {
         contexto="Publica una clase con su horario, su cupo y el enlace de la reunión que creaste en Zoom o Meet."
       />
 
-      <FormularioAula onCreada={alCrear} />
+      <FormularioAula onGuardada={alCrear} />
     </AppShell>
   );
 }

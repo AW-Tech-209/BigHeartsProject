@@ -13,7 +13,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { AppRoutes } from '@/app/router';
 import { getClassroom } from '@/features/aulas/api/get-classroom';
 import { getMisAulas } from '@/features/aulas/api/get-mis-aulas';
-import { updateClassroomAccessibility } from '@/features/aulas/api/update-classroom-accessibility';
+import { updateClassroom } from '@/features/aulas/api/update-classroom';
 import { ApiClientError } from '@/lib/api-error';
 import { esperarSinFallosDeAccesibilidad } from '@/test/accesibilidad';
 import { renderConProviders, type Tema } from '@/test/render-con-providers';
@@ -21,8 +21,8 @@ import { darSesion } from '@/test/sesion';
 
 vi.mock('@/features/aulas/api/get-classroom', () => ({ getClassroom: vi.fn() }));
 vi.mock('@/features/aulas/api/get-mis-aulas', () => ({ getMisAulas: vi.fn() }));
-vi.mock('@/features/aulas/api/update-classroom-accessibility', () => ({
-  updateClassroomAccessibility: vi.fn(),
+vi.mock('@/features/aulas/api/update-classroom', () => ({
+  updateClassroom: vi.fn(),
 }));
 
 const TEMAS: Tema[] = ['light', 'dark', 'hc'];
@@ -118,11 +118,11 @@ describe('CompletarAccesibilidadPage — completar y guardar (AC1)', () => {
     expect(
       await screen.findByText('Elige al menos un modo en que se imparte la clase.'),
     ).toBeInTheDocument();
-    expect(updateClassroomAccessibility).not.toHaveBeenCalled();
+    expect(updateClassroom).not.toHaveBeenCalled();
   });
 
   it('elegir un modo y guardar llama al PATCH con los datos del formulario', async () => {
-    vi.mocked(updateClassroomAccessibility).mockResolvedValue({
+    vi.mocked(updateClassroom).mockResolvedValue({
       classroom: aula({ communicationModes: [CommunicationPreference.SIGN_LANGUAGE] }),
     });
     const { user } = montar();
@@ -131,15 +131,15 @@ describe('CompletarAccesibilidadPage — completar y guardar (AC1)', () => {
     await user.click(screen.getByLabelText('Lengua de signos'));
     await user.click(screen.getByRole('button', { name: 'Guardar accesibilidad' }));
 
-    await waitFor(() => expect(updateClassroomAccessibility).toHaveBeenCalledTimes(1));
-    expect(updateClassroomAccessibility).toHaveBeenCalledWith(
+    await waitFor(() => expect(updateClassroom).toHaveBeenCalledTimes(1));
+    expect(updateClassroom).toHaveBeenCalledWith(
       ID,
       expect.objectContaining({ communicationModes: [CommunicationPreference.SIGN_LANGUAGE] }),
     );
   });
 
   it('al guardar con éxito, vuelve a Mis aulas', async () => {
-    vi.mocked(updateClassroomAccessibility).mockResolvedValue({
+    vi.mocked(updateClassroom).mockResolvedValue({
       classroom: aula({ communicationModes: [CommunicationPreference.SIGN_LANGUAGE] }),
     });
     const { user } = montar();

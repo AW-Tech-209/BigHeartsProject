@@ -7,6 +7,7 @@ import { AulaDetallePage } from '@/pages/AulaDetallePage';
 import { AulasPage } from '@/pages/AulasPage';
 import { CompletarAccesibilidadPage } from '@/pages/CompletarAccesibilidadPage';
 import { CrearAulaPage } from '@/pages/CrearAulaPage';
+import { EditarAulaPage } from '@/pages/EditarAulaPage';
 import { HomePage } from '@/pages/HomePage';
 import { LoginPage } from '@/pages/LoginPage';
 import { MisAulasPage } from '@/pages/MisAulasPage';
@@ -168,6 +169,20 @@ export function AppRoutes() {
         element={
           <RequireAuth roles={[UserRole.TEACHER]}>
             <CompletarAccesibilidadPage />
+          </RequireAuth>
+        }
+      />
+
+      {/*
+        Editar un aula propia (HU-202). Cuelga de `/mis-aulas` por el mismo
+        motivo que `/mis-aulas/nueva`: es donde el profesor gestiona su
+        trabajo. Llega desde el botón `Editar clase` del detalle.
+      */}
+      <Route
+        path="/mis-aulas/:id/editar"
+        element={
+          <RequireAuth roles={[UserRole.TEACHER]}>
+            <EditarAulaPage />
           </RequireAuth>
         }
       />

@@ -2,6 +2,7 @@ import {
   ApiErrorCode,
   CLASS_MAX_DURATION_MINUTES_DEFAULT,
   type Classroom,
+  type ClassroomDetail,
   type ClassroomLeadTimeWarningDetails,
   type CreateClassroomInput,
   EnglishLevel,
@@ -19,13 +20,14 @@ import { NativeSelect } from '@/components/ui/native-select';
 import { useAnnounce } from '@/hooks/use-announce';
 import { ApiClientError } from '@/lib/api-error';
 import { useCreateClassroom } from '../hooks/use-create-classroom';
+import { useUpdateClassroom } from '../hooks/use-update-classroom';
 import {
   detallesDeAntelacion,
   detallesDeDuracion,
   detallesDeSolapamiento,
   mensajeDeSolapamiento,
 } from '../lib/coherencia-temporal';
-import { aInstanteISO, describirDuracion, describirHorario } from '../lib/horario';
+import { aFechaYHora, aInstanteISO, describirDuracion, describirHorario } from '../lib/horario';
 import { duracionesHasta, nivelesDeIngles } from '../lib/niveles';
 import { etiquetaPlataformaReunion, PLATAFORMAS_OFRECIDAS } from '../lib/plataforma-reunion';
 import {
@@ -49,21 +51,43 @@ const ORDEN_DE_CAMPOS: (keyof ClassroomFormValues)[] = [
   'communicationModes',
 ];
 
-const VALORES_INICIALES: ClassroomFormValues = {
-  title: '',
-  description: '',
-  level: EnglishLevel.BEGINNER,
-  maxStudents: '8',
-  fecha: '',
-  hora: '',
-  durationMinutes: '60',
-  meetingLink: '',
-  communicationModes: [],
-  hasInterpreter: false,
-  hasLiveCaptions: false,
-  hasVisualMaterials: false,
-  meetingProvider: MeetingProvider.GOOGLE_MEET,
-};
+/** Los valores con los que arranca el formulario: en blanco al crear, precargados al editar. */
+function valoresIniciales(aula?: ClassroomDetail): ClassroomFormValues {
+  if (!aula) {
+    return {
+      title: '',
+      description: '',
+      level: EnglishLevel.BEGINNER,
+      maxStudents: '8',
+      fecha: '',
+      hora: '',
+      durationMinutes: '60',
+      meetingLink: '',
+      communicationModes: [],
+      hasInterpreter: false,
+      hasLiveCaptions: false,
+      hasVisualMaterials: false,
+      meetingProvider: MeetingProvider.GOOGLE_MEET,
+    };
+  }
+
+  const { fecha, hora } = aFechaYHora(aula.scheduledAt);
+  return {
+    title: aula.title,
+    description: aula.description,
+    level: aula.level,
+    maxStudents: String(aula.maxStudents),
+    fecha,
+    hora,
+    durationMinutes: String(aula.durationMinutes),
+    meetingLink: aula.meetingLink ?? '',
+    communicationModes: aula.communicationModes,
+    hasInterpreter: aula.hasInterpreter,
+    hasLiveCaptions: aula.hasLiveCaptions,
+    hasVisualMaterials: aula.hasVisualMaterials,
+    meetingProvider: aula.meetingProvider,
+  };
+}
 
 /**
  * Traducción de los campos del contrato a los del formulario.
@@ -84,8 +108,14 @@ const CAMPO_DEL_BACKEND: Record<string, keyof ClassroomFormValues> = {
   meetingProvider: 'meetingProvider',
 };
 
-export function FormularioAula({ onCreada }: { onCreada: (classroom: Classroom) => void }) {
-  const [values, setValues] = useState<ClassroomFormValues>(VALORES_INICIALES);
+type FormularioAulaProps = {
+  /** Presente en modo edición (HU-202): precarga el formulario y usa `PATCH` en vez de `POST`. */
+  aula?: ClassroomDetail;
+  onGuardada: (classroom: Classroom) => void;
+};
+
+export function FormularioAula({ aula, onGuardada }: FormularioAulaProps) {
+  const [values, setValues] = useState<ClassroomFormValues>(() => valoresIniciales(aula));
   const [errors, setErrors] = useState<ClassroomFieldErrors>({});
   const [formError, setFormError] = useState<string | null>(null);
 
@@ -114,8 +144,17 @@ export function FormularioAula({ onCreada }: { onCreada: (classroom: Classroom) 
   /** El campo al que vuelve el foco cuando el profesor decide cambiar la hora. */
   const horaRef = useRef<HTMLInputElement>(null);
 
-  const mutation = useCreateClassroom();
+  /**
+   * Dos mutaciones montadas siempre, para no romper las reglas de los hooks —
+   * `crear`/`editar` cambiarían de rama según `aula` en cada render. Solo se
+   * llama a `.mutate()` de la que corresponde; la otra no dispara nada.
+   */
+  const crear = useCreateClassroom();
+  const editar = useUpdateClassroom(aula?.id ?? '');
+  const mutation = aula ? editar : crear;
   const announce = useAnnounce();
+  /** El verbo que nombran los mensajes de error, según el modo. */
+  const verboFallido = aula ? 'guardar los cambios' : 'publicar la clase';
 
   const duracionesOfrecidas = duracionesHasta(maximoDuracion);
 
@@ -226,8 +265,8 @@ export function FormularioAula({ onCreada }: { onCreada: (classroom: Classroom) 
       // Cuenta pendiente, rechazada o suspendida, y falta de permiso: el
       // servidor ya manda un texto cierto para cada caso, y es más específico
       // que cualquiera que pudiéramos escribir sin saber cuál de los tres es.
-      setFormError(error.message || 'No pudimos publicar la clase. Inténtalo otra vez.');
-      announce('No pudimos publicar la clase.');
+      setFormError(error.message || `No pudimos ${verboFallido}. Inténtalo otra vez.`);
+      announce(`No pudimos ${verboFallido}.`);
       return;
     }
 
@@ -271,7 +310,7 @@ export function FormularioAula({ onCreada }: { onCreada: (classroom: Classroom) 
       // renderizado.
       onSuccess: (data) => {
         setAvisoAbierto(false);
-        onCreada(data.classroom);
+        onGuardada(data.classroom);
       },
       onError: (error) => {
         setAvisoAbierto(false);
@@ -297,7 +336,11 @@ export function FormularioAula({ onCreada }: { onCreada: (classroom: Classroom) 
   return (
     <form noValidate onSubmit={handleSubmit} className="max-w-2xl space-y-6">
       {formError && (
-        <Callout variant="destructive" live="assertive" title="No pudimos publicar la clase">
+        <Callout
+          variant="destructive"
+          live="assertive"
+          title={aula ? 'No pudimos guardar los cambios' : 'No pudimos publicar la clase'}
+        >
           <p>{formError}</p>
         </Callout>
       )}
@@ -501,8 +544,10 @@ export function FormularioAula({ onCreada }: { onCreada: (classroom: Classroom) 
         {mutation.isPending ? (
           <>
             <LoaderCircle aria-hidden="true" strokeWidth={2} className="size-5 animate-spin" />
-            Publicando la clase…
+            {aula ? 'Guardando los cambios…' : 'Publicando la clase…'}
           </>
+        ) : aula ? (
+          'Guardar los cambios'
         ) : (
           'Publicar la clase'
         )}

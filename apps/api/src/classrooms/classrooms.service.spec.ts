@@ -20,7 +20,7 @@ import { ClassroomsService } from './classrooms.service';
 import type { CreateClassroomDto } from './dto/create-classroom.dto';
 import type { ListClassroomsDto } from './dto/list-classrooms.dto';
 import type { ListMisAulasDto } from './dto/list-mis-aulas.dto';
-import type { UpdateClassroomAccessibilityDto } from './dto/update-classroom-accessibility.dto';
+import type { UpdateClassroomDto } from './dto/update-classroom.dto';
 import { MeetingLinkCipher } from './meeting-link.cipher';
 
 const PROFESOR_ID = '11111111-1111-4111-8111-111111111111';
@@ -1363,88 +1363,229 @@ describe('ClassroomsService.getClassroomDetail — aula cancelada e id inexisten
 });
 
 /* ------------------------------------------------------------------------- *
- * PATCH /classrooms/:id — completar accesibilidad (HU-211, T4)
+ * PATCH /classrooms/:id y POST /classrooms/:id/cancel — editar y cancelar
+ * (HU-202, extendiendo HU-211)
  * ------------------------------------------------------------------------- */
 
-function entradaAccesibilidad(
-  overrides: Partial<UpdateClassroomAccessibilityDto> = {},
-): UpdateClassroomAccessibilityDto {
-  return {
-    communicationModes: [CommunicationPreference.SIGN_LANGUAGE],
-    ...overrides,
-  };
+function entradaEdicion(overrides: Partial<UpdateClassroomDto> = {}): UpdateClassroomDto {
+  return { ...overrides };
 }
 
-/** Monta el servicio solo con lo que necesita `updateClassroomAccessibility`. */
-function setupActualizarAccesibilidad(aula: Record<string, unknown> | null) {
+/** Monta el servicio solo con lo que necesitan `editClassroom` y `cancelClassroom`. */
+function setupEditar(
+  aula: Record<string, unknown> | null,
+  options: { agenda?: ReturnType<typeof aulaEnAgenda>[] } = {},
+) {
   const findUnique = vi.fn().mockResolvedValue(aula === null ? null : filaDeAula(aula));
   const update = vi
     .fn()
     .mockImplementation(({ data }: { data: Record<string, unknown> }) =>
       Promise.resolve(filaDeAula({ ...aula, ...data })),
     );
-  const prisma = { classroom: { findUnique, update } } as unknown as PrismaService;
+  const findMany = vi.fn().mockResolvedValue(options.agenda ?? []);
+  const prisma = { classroom: { findUnique, update, findMany } } as unknown as PrismaService;
   const cipher = new MeetingLinkCipher({ meetingLinkKey: 'a'.repeat(64) } as AppConfigService);
 
-  return { service: new ClassroomsService(prisma, cipher, configuracion()), findUnique, update };
+  return {
+    service: new ClassroomsService(prisma, cipher, configuracion()),
+    findUnique,
+    update,
+    findMany,
+  };
 }
 
-describe('ClassroomsService.updateClassroomAccessibility', () => {
-  it('el dueño completa los modos de un aula «sin indicar»', async () => {
-    const { service, update } = setupActualizarAccesibilidad({
-      teacherId: PROFESOR_ID,
-      communicationModes: [],
-    });
+describe('ClassroomsService.editClassroom', () => {
+  it('el dueño edita un campo cualquiera', async () => {
+    const { service, update } = setupEditar({ teacherId: PROFESOR_ID });
 
-    const classroom = await service.updateClassroomAccessibility(
+    const classroom = await service.editClassroom(
       profesorDelToken,
       ID_DEL_AULA,
-      entradaAccesibilidad({ communicationModes: [CommunicationPreference.SIGN_LANGUAGE] }),
+      entradaEdicion({ title: 'Nuevo título' }),
     );
 
     expect(update.mock.calls[0]?.[0]).toMatchObject({
       where: { id: ID_DEL_AULA },
-      data: { communicationModes: [CommunicationPreference.SIGN_LANGUAGE] },
+      data: { title: 'Nuevo título' },
     });
-    expect(classroom.communicationModes).toEqual([CommunicationPreference.SIGN_LANGUAGE]);
+    expect(classroom.title).toBe('Nuevo título');
   });
 
-  it('omitir un apoyo o la plataforma los deja como estaban', async () => {
-    const { service, update } = setupActualizarAccesibilidad({ teacherId: PROFESOR_ID });
+  // AC5: una edición parcial no toca el resto de campos.
+  it('editar solo un campo no manda el resto en `data`', async () => {
+    const { service, update } = setupEditar({ teacherId: PROFESOR_ID });
 
-    await service.updateClassroomAccessibility(
-      profesorDelToken,
-      ID_DEL_AULA,
-      entradaAccesibilidad({ hasInterpreter: true }),
-    );
+    await service.editClassroom(profesorDelToken, ID_DEL_AULA, entradaEdicion({ maxStudents: 12 }));
 
     const data = update.mock.calls[0]?.[0].data as Record<string, unknown>;
-    expect(data).toHaveProperty('hasInterpreter', true);
-    expect(data).not.toHaveProperty('hasLiveCaptions');
-    expect(data).not.toHaveProperty('hasVisualMaterials');
-    expect(data).not.toHaveProperty('meetingProvider');
+    expect(data).toEqual({ maxStudents: 12 });
   });
 
-  // La garantía de propiedad de la HU: solo el dueño completa su aula.
-  it('otro profesor recibe CLASSROOM_FORBIDDEN, y no se escribe nada', async () => {
-    const { service, update } = setupActualizarAccesibilidad({ teacherId: PROFESOR_ID });
+  // AC4: el enlace nuevo se guarda cifrado, nunca en claro.
+  it('si el enlace cambia, se vuelve a cifrar', async () => {
+    const { service, update } = setupEditar({ teacherId: PROFESOR_ID });
+    const otroEnlace = 'https://zoom.us/j/otra-sala';
 
-    expect(
-      await codigoDe(
-        service.updateClassroomAccessibility(otroProfesor, ID_DEL_AULA, entradaAccesibilidad()),
-      ),
-    ).toBe(ApiErrorCode.CLASSROOM_FORBIDDEN);
+    await service.editClassroom(
+      profesorDelToken,
+      ID_DEL_AULA,
+      entradaEdicion({ meetingLink: otroEnlace }),
+    );
+
+    const guardado = (update.mock.calls[0]?.[0].data as Record<string, unknown>)
+      .meetingLink as string;
+    expect(guardado).not.toContain(otroEnlace);
+    expect(guardado).toMatch(/^v1\./);
+  });
+
+  it('otro profesor recibe CLASSROOM_FORBIDDEN, y no se escribe nada', async () => {
+    const { service, update } = setupEditar({ teacherId: PROFESOR_ID });
+
+    expect(await codigoDe(service.editClassroom(otroProfesor, ID_DEL_AULA, entradaEdicion()))).toBe(
+      ApiErrorCode.CLASSROOM_FORBIDDEN,
+    );
     expect(update).not.toHaveBeenCalled();
   });
 
   it('un id que no existe responde CLASSROOM_NOT_FOUND', async () => {
-    const { service, update } = setupActualizarAccesibilidad(null);
+    const { service, update } = setupEditar(null);
 
     expect(
-      await codigoDe(
-        service.updateClassroomAccessibility(profesorDelToken, ID_DEL_AULA, entradaAccesibilidad()),
-      ),
+      await codigoDe(service.editClassroom(profesorDelToken, ID_DEL_AULA, entradaEdicion())),
     ).toBe(ApiErrorCode.CLASSROOM_NOT_FOUND);
+    expect(update).not.toHaveBeenCalled();
+  });
+
+  describe('editabilidad (AC3)', () => {
+    it('un aula que ya empezó responde CLASSROOM_NOT_EDITABLE', async () => {
+      const { service, update } = setupEditar({
+        teacherId: PROFESOR_ID,
+        scheduledAt: new Date('2020-01-01T00:00:00.000Z'),
+      });
+
+      expect(
+        await codigoDe(service.editClassroom(profesorDelToken, ID_DEL_AULA, entradaEdicion())),
+      ).toBe(ApiErrorCode.CLASSROOM_NOT_EDITABLE);
+      expect(update).not.toHaveBeenCalled();
+    });
+
+    it('un aula ya CANCELLED responde CLASSROOM_NOT_EDITABLE', async () => {
+      const { service, update } = setupEditar({
+        teacherId: PROFESOR_ID,
+        status: ClassroomStatus.CANCELLED,
+      });
+
+      expect(
+        await codigoDe(service.editClassroom(profesorDelToken, ID_DEL_AULA, entradaEdicion())),
+      ).toBe(ApiErrorCode.CLASSROOM_NOT_EDITABLE);
+      expect(update).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('coherencia temporal al editar (deuda de HU-212, AC4)', () => {
+    it('editar sin mover el horario no choca consigo misma', async () => {
+      // La consulta real la excluiría por `where.id.not` (Prisma la filtra en la
+      // BD); aquí se comprueba que el servicio la pide con esa exclusión.
+      const { service, update, findMany } = setupEditar({
+        teacherId: PROFESOR_ID,
+        scheduledAt: new Date('2027-08-12T23:00:00.000Z'),
+      });
+
+      await service.editClassroom(
+        profesorDelToken,
+        ID_DEL_AULA,
+        entradaEdicion({ scheduledAt: '2027-08-12T23:00:00.000Z' }),
+      );
+
+      expect(findMany.mock.calls[0]?.[0]).toMatchObject({ where: { id: { not: ID_DEL_AULA } } });
+      expect(update).toHaveBeenCalledOnce();
+    });
+
+    it('mover el horario a uno ocupado por otra aula responde TEACHER_SCHEDULE_CONFLICT', async () => {
+      const { service, update } = setupEditar(
+        { teacherId: PROFESOR_ID },
+        { agenda: [aulaEnAgenda({ hora: '18:00' })] },
+      );
+
+      expect(
+        await codigoDe(
+          service.editClassroom(
+            profesorDelToken,
+            ID_DEL_AULA,
+            entradaEdicion({ scheduledAt: '2027-08-12T18:30:00.000Z' }),
+          ),
+        ),
+      ).toBe(ApiErrorCode.TEACHER_SCHEDULE_CONFLICT);
+      expect(update).not.toHaveBeenCalled();
+    });
+
+    it('editar un campo ajeno al horario no vuelve a comprobar la agenda', async () => {
+      const { service, findMany } = setupEditar({ teacherId: PROFESOR_ID });
+
+      await service.editClassroom(
+        profesorDelToken,
+        ID_DEL_AULA,
+        entradaEdicion({ title: 'Otro título' }),
+      );
+
+      expect(findMany).not.toHaveBeenCalled();
+    });
+  });
+});
+
+describe('ClassroomsService.cancelClassroom', () => {
+  it('el dueño cancela su aula', async () => {
+    const { service, update } = setupEditar({ teacherId: PROFESOR_ID });
+
+    const classroom = await service.cancelClassroom(profesorDelToken, ID_DEL_AULA);
+
+    expect(update.mock.calls[0]?.[0]).toMatchObject({
+      where: { id: ID_DEL_AULA },
+      data: { status: ClassroomStatus.CANCELLED },
+    });
+    expect(classroom.status).toBe(ClassroomStatus.CANCELLED);
+  });
+
+  it('otro profesor recibe CLASSROOM_FORBIDDEN, y no se cancela nada', async () => {
+    const { service, update } = setupEditar({ teacherId: PROFESOR_ID });
+
+    expect(await codigoDe(service.cancelClassroom(otroProfesor, ID_DEL_AULA))).toBe(
+      ApiErrorCode.CLASSROOM_FORBIDDEN,
+    );
+    expect(update).not.toHaveBeenCalled();
+  });
+
+  it('un id que no existe responde CLASSROOM_NOT_FOUND', async () => {
+    const { service, update } = setupEditar(null);
+
+    expect(await codigoDe(service.cancelClassroom(profesorDelToken, ID_DEL_AULA))).toBe(
+      ApiErrorCode.CLASSROOM_NOT_FOUND,
+    );
+    expect(update).not.toHaveBeenCalled();
+  });
+
+  // Cancelar dos veces no es un éxito silencioso.
+  it('cancelar un aula ya CANCELLED responde CLASSROOM_NOT_EDITABLE', async () => {
+    const { service, update } = setupEditar({
+      teacherId: PROFESOR_ID,
+      status: ClassroomStatus.CANCELLED,
+    });
+
+    expect(await codigoDe(service.cancelClassroom(profesorDelToken, ID_DEL_AULA))).toBe(
+      ApiErrorCode.CLASSROOM_NOT_EDITABLE,
+    );
+    expect(update).not.toHaveBeenCalled();
+  });
+
+  it('un aula que ya empezó no se puede cancelar', async () => {
+    const { service, update } = setupEditar({
+      teacherId: PROFESOR_ID,
+      scheduledAt: new Date('2020-01-01T00:00:00.000Z'),
+    });
+
+    expect(await codigoDe(service.cancelClassroom(profesorDelToken, ID_DEL_AULA))).toBe(
+      ApiErrorCode.CLASSROOM_NOT_EDITABLE,
+    );
     expect(update).not.toHaveBeenCalled();
   });
 });

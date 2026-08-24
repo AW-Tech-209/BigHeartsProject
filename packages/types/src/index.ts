@@ -594,30 +594,39 @@ export interface ClassroomDetailResponse {
 }
 
 /**
- * Cuerpo de `PATCH /classrooms/:id` (HU-211).
+ * Cuerpo de `PATCH /classrooms/:id` (HU-211, extendido por HU-202 con la
+ * decisión D25 de `ARQUITECTURA.md`: mismo endpoint, mismo verbo, un solo DTO).
  *
- * **Deliberadamente acotado a los 5 campos de accesibilidad.** Esta HU no trae
- * la edición general del aula —título, horario, cupo, enlace—: eso es HU-202
- * (`CLASSROOM_NOT_EDITABLE`, edición completa), todavía pendiente. Este mismo
- * endpoint es el que HU-202 va a extender con el resto de campos editables, no
- * uno que vaya a reemplazar; ver la decisión D25 de `ARQUITECTURA.md`.
- *
- * `communicationModes` es obligatorio y no vacío igual que en la creación: la
- * única razón de que este endpoint exista en el Sprint 2 es sacar a un aula de
- * «sin indicar», y un `PATCH` que lo dejara vacío no cumpliría ese propósito.
- * Los apoyos y la plataforma son opcionales porque completarlos no es la parte
- * obligatoria del gesto — omitir uno lo deja como estaba.
+ * Todo opcional: **omitir un campo lo deja intacto** (AC5), incluido
+ * `communicationModes` — ya no es obligatorio como en HU-211, porque una
+ * edición parcial del resto de campos no puede exigir declarar accesibilidad.
  */
-export interface UpdateClassroomAccessibilityInput {
-  communicationModes: CommunicationPreference[];
+export interface UpdateClassroomInput {
+  title?: string;
+  description?: string;
+  level?: EnglishLevel;
+  maxStudents?: number;
+  /** Instante de inicio, ISO 8601. Debe ser futuro; lo comprueba el servidor. */
+  scheduledAt?: string;
+  durationMinutes?: number;
+  /** Si cambia, se vuelve a cifrar (§4.1). */
+  meetingLink?: string;
+  communicationModes?: CommunicationPreference[];
   hasInterpreter?: boolean;
   hasLiveCaptions?: boolean;
   hasVisualMaterials?: boolean;
   meetingProvider?: MeetingProvider;
+  /** Acuse de recibo del aviso de poca antelación (HU-212, AC7). */
+  confirmarPocaAntelacion?: boolean;
 }
 
 /** Respuesta de `PATCH /classrooms/:id`. Devuelve el aula ya actualizada. */
-export interface UpdateClassroomAccessibilityResponse {
+export interface UpdateClassroomResponse {
+  classroom: Classroom;
+}
+
+/** Respuesta de `POST /classrooms/:id/cancel` (HU-202). Devuelve el aula ya cancelada. */
+export interface CancelClassroomResponse {
   classroom: Classroom;
 }
 
@@ -796,6 +805,12 @@ export const ApiErrorCode = {
    * Lleva `details` con la forma de `ClassroomLeadTimeWarningDetails`.
    */
   CLASSROOM_LEAD_TIME_WARNING: 'CLASSROOM_LEAD_TIME_WARNING',
+  /**
+   * Se intentó editar o cancelar un aula que ya empezó (`now ≥ scheduledAt`) o
+   * que ya está `CANCELLED` (HU-202, AC3). Es 409: el aula existe, lo que no
+   * existe ya es la ventana para actuar sobre ella.
+   */
+  CLASSROOM_NOT_EDITABLE: 'CLASSROOM_NOT_EDITABLE',
   /** Se superó el límite de peticiones (rate limiting). */
   TOO_MANY_REQUESTS: 'TOO_MANY_REQUESTS',
   DATABASE_UNAVAILABLE: 'DATABASE_UNAVAILABLE',

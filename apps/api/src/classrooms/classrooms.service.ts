@@ -22,6 +22,7 @@ import {
   classroomDurationInvalid,
   classroomForbidden,
   classroomLeadTimeWarning,
+  classroomNotEditable,
   classroomNotFound,
   teacherNotActive,
   teacherProfileNotFound,
@@ -38,7 +39,7 @@ import {
 import type { CreateClassroomDto } from './dto/create-classroom.dto';
 import type { ListClassroomsDto } from './dto/list-classrooms.dto';
 import type { ListMisAulasDto } from './dto/list-mis-aulas.dto';
-import type { UpdateClassroomAccessibilityDto } from './dto/update-classroom-accessibility.dto';
+import type { UpdateClassroomDto } from './dto/update-classroom.dto';
 import { MeetingLinkCipher } from './meeting-link.cipher';
 
 @Injectable()
@@ -353,23 +354,19 @@ export class ClassroomsService {
   }
 
   /**
-   * `PATCH /classrooms/:id` — completa o corrige los 5 campos de accesibilidad
-   * de un aula ya creada (HU-211, T4).
+   * `PATCH /classrooms/:id` — edita un aula ya creada (HU-211 + HU-202,
+   * decisión D25: mismo endpoint, extendido con el resto de campos editables).
    *
-   * **Deliberadamente acotado.** No es la edición general del aula —título,
-   * horario, cupo, enlace—: esa es HU-202, todavía pendiente, y este mismo
-   * endpoint es el que ella va a extender con el resto de campos editables, no
-   * uno que vaya a reemplazar (decisión D25 de `ARQUITECTURA.md`).
-   *
-   * Sin comprobación de `now ≥ scheduledAt` ni de `status = CANCELLED`: es
-   * metadata declarativa que no afecta horario ni cupo, así que no hay
-   * invariante que la bloquee — a diferencia de la edición general, que sí
-   * tendrá esa regla cuando llegue HU-202.
+   * Solo el dueño, y solo mientras el aula sea editable (AC1, AC3): ni
+   * empezada (`now ≥ scheduledAt`) ni `CANCELLED`. Si `scheduledAt` o
+   * `durationMinutes` cambian, las tres reglas de HU-212 se vuelven a aplicar
+   * con `excluirId` para que el aula no choque consigo misma (AC4). El enlace
+   * solo se vuelve a cifrar si de verdad cambió (AC4 de esta HU).
    */
-  async updateClassroomAccessibility(
+  async editClassroom(
     teacher: AuthenticatedUser,
     classroomId: string,
-    dto: UpdateClassroomAccessibilityDto,
+    dto: UpdateClassroomDto,
   ): Promise<Classroom> {
     const classroom = await this.prisma.classroom.findUnique({ where: { id: classroomId } });
 
@@ -381,10 +378,33 @@ export class ClassroomsService {
       throw classroomForbidden();
     }
 
+    this.assertEsEditable(classroom);
+
+    if (dto.scheduledAt !== undefined || dto.durationMinutes !== undefined) {
+      await this.assertCoherenciaTemporal({
+        teacherId: teacher.id,
+        scheduledAt: new Date(dto.scheduledAt ?? classroom.scheduledAt),
+        durationMinutes: dto.durationMinutes ?? classroom.durationMinutes,
+        confirmarPocaAntelacion: dto.confirmarPocaAntelacion,
+        excluirId: classroomId,
+      });
+    }
+
     const actualizada = await this.prisma.classroom.update({
       where: { id: classroomId },
       data: {
-        communicationModes: dto.communicationModes,
+        ...(dto.title !== undefined && { title: dto.title }),
+        ...(dto.description !== undefined && { description: dto.description }),
+        ...(dto.level !== undefined && { level: dto.level }),
+        ...(dto.maxStudents !== undefined && { maxStudents: dto.maxStudents }),
+        ...(dto.scheduledAt !== undefined && { scheduledAt: new Date(dto.scheduledAt) }),
+        ...(dto.durationMinutes !== undefined && { durationMinutes: dto.durationMinutes }),
+        ...(dto.meetingLink !== undefined && {
+          meetingLink: this.meetingLinks.encrypt(dto.meetingLink),
+        }),
+        ...(dto.communicationModes !== undefined && {
+          communicationModes: dto.communicationModes,
+        }),
         ...(dto.hasInterpreter !== undefined && { hasInterpreter: dto.hasInterpreter }),
         ...(dto.hasLiveCaptions !== undefined && { hasLiveCaptions: dto.hasLiveCaptions }),
         ...(dto.hasVisualMaterials !== undefined && { hasVisualMaterials: dto.hasVisualMaterials }),
@@ -393,6 +413,46 @@ export class ClassroomsService {
     });
 
     return toPublicClassroom(actualizada);
+  }
+
+  /**
+   * `POST /classrooms/:id/cancel` (HU-202, AC2). Solo el dueño, y solo
+   * mientras el aula sea editable — cancelar dos veces responde
+   * `CLASSROOM_NOT_EDITABLE`, no un éxito silencioso.
+   *
+   * No libera cupos ni notifica a nadie: `Booking` no existe hasta el Sprint 3
+   * (decisión de auditoría 1 de la HU).
+   */
+  async cancelClassroom(teacher: AuthenticatedUser, classroomId: string): Promise<Classroom> {
+    const classroom = await this.prisma.classroom.findUnique({ where: { id: classroomId } });
+
+    if (!classroom) {
+      throw classroomNotFound();
+    }
+
+    if (classroom.teacherId !== teacher.id) {
+      throw classroomForbidden();
+    }
+
+    this.assertEsEditable(classroom);
+
+    const cancelada = await this.prisma.classroom.update({
+      where: { id: classroomId },
+      data: { status: ClassroomStatus.CANCELLED },
+    });
+
+    return toPublicClassroom(cancelada);
+  }
+
+  /**
+   * La condición de editabilidad compartida entre editar y cancelar (AC3):
+   * no empezada y no ya cancelada. `COMPLETED` no tiene escritor en Fase 1
+   * (decisión de auditoría 2), así que comprobarlo aquí nunca se dispararía.
+   */
+  private assertEsEditable(classroom: Pick<PrismaClassroom, 'status' | 'scheduledAt'>): void {
+    if (classroom.status === ClassroomStatus.CANCELLED || classroom.scheduledAt <= new Date()) {
+      throw classroomNotEditable();
+    }
   }
 
   /**
