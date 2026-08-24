@@ -19,10 +19,14 @@ import { useCancelClassroom } from '@/features/aulas/hooks/use-cancel-classroom'
 import { esAulaEditable } from '@/features/aulas/lib/editabilidad-aula';
 import { ApiClientError } from '@/lib/api-error';
 
+type AulaGestionable = Pick<ClassroomDetail, 'id' | 'title' | 'status' | 'scheduledAt'>;
+
 type AccionesDeAulaProps = {
-  aula: ClassroomDetail;
+  aula: AulaGestionable;
   /** `true` si quien mira es el profesor dueño del aula. */
   esDueno: boolean;
+  /** Reduce el ancho de los controles cuando viven dentro de una tarjeta. */
+  compact?: boolean;
 };
 
 /**
@@ -32,7 +36,7 @@ type AccionesDeAulaProps = {
  * explica por qué no se puede tocar (T11) en vez de esconder los botones sin
  * decir nada.
  */
-export function AccionesDeAula({ aula, esDueno }: AccionesDeAulaProps) {
+export function AccionesDeAula({ aula, esDueno, compact = false }: AccionesDeAulaProps) {
   if (!esDueno || aula.status === ClassroomStatus.CANCELLED) {
     return null;
   }
@@ -46,10 +50,10 @@ export function AccionesDeAula({ aula, esDueno }: AccionesDeAulaProps) {
   }
 
   return (
-    <div className="flex flex-wrap gap-3">
+    <div className={compact ? 'relative z-10 flex flex-wrap gap-2' : 'flex flex-wrap gap-3'}>
       <Button
         render={<Link to={`/mis-aulas/${aula.id}/editar`} />}
-        className="h-11 gap-2 px-5 text-base"
+        className={compact ? 'h-11 gap-2 px-4 text-base' : 'h-11 gap-2 px-5 text-base'}
       >
         <Pencil aria-hidden="true" strokeWidth={2} className="size-4" />
         Editar clase
@@ -60,7 +64,7 @@ export function AccionesDeAula({ aula, esDueno }: AccionesDeAulaProps) {
   );
 }
 
-function DialogoCancelarAula({ aula }: { aula: ClassroomDetail }) {
+function DialogoCancelarAula({ aula }: { aula: AulaGestionable }) {
   const [abierto, setAbierto] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const volverRef = useRef<HTMLButtonElement>(null);

@@ -174,6 +174,19 @@ describe('MisAulasPage — el listado del profesor (AC1, AC2)', () => {
     expect(await screen.findByText('8 de 10 inscritos')).toBeInTheDocument();
     expect(screen.queryByText('Quedan 2 cupos')).toBeNull();
   });
+
+  it('ofrece editar y cancelar desde cada tarjeta', async () => {
+    vi.mocked(getMisAulas).mockResolvedValue(respuesta([aula({ id: 'aula-42' })]));
+
+    renderConProviders(<MisAulasPage />);
+
+    const tarjeta = await screen.findByRole('article');
+    expect(within(tarjeta).getByRole('link', { name: 'Editar clase' })).toHaveAttribute(
+      'href',
+      '/mis-aulas/aula-42/editar',
+    );
+    expect(within(tarjeta).getByRole('button', { name: 'Cancelar clase' })).toBeInTheDocument();
+  });
 });
 
 /**
