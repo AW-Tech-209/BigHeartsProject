@@ -1,6 +1,8 @@
 import type { ForbiddenException } from '@nestjs/common';
 import {
   ApiErrorCode,
+  CLASS_MAX_DURATION_MINUTES_DEFAULT,
+  CLASS_MIN_LEAD_MINUTES_DEFAULT,
   ClassroomStatus,
   CommunicationPreference,
   EnglishLevel,
@@ -49,13 +51,40 @@ function entrada(overrides: Partial<CreateClassroomDto> = {}): CreateClassroomDt
 }
 
 /**
+ * La configuración temporal del aula (HU-212), con los valores de fábrica salvo
+ * que un test necesite otros.
+ *
+ * Se falsea entera en vez de leer el entorno: los dos umbrales **salen de la
+ * configuración**, así que un test que dependiera del `.env` de quien lo corre
+ * probaría una cosa distinta en cada máquina.
+ */
+function configuracion(
+  overrides: { classMinLeadMinutes?: number; classMaxDurationMinutes?: number } = {},
+): AppConfigService {
+  return {
+    classMinLeadMinutes: CLASS_MIN_LEAD_MINUTES_DEFAULT,
+    classMaxDurationMinutes: CLASS_MAX_DURATION_MINUTES_DEFAULT,
+    ...overrides,
+  } as AppConfigService;
+}
+
+/**
  * Monta el servicio con un Prisma falso.
  *
  * `create` devuelve lo que se le pasó, más los campos que pone la BD: así el
  * test comprueba lo que el servicio DECIDIÓ escribir, que es lo que las
  * garantías de la HU están afirmando.
+ *
+ * `findMany` es la consulta de solapamiento (HU-212) y por defecto no devuelve
+ * nada: el profesor tiene la agenda libre salvo que el test diga lo contrario.
  */
-function setup(options: { teacherEnBd?: { role: UserRole; status: UserStatus } | null } = {}) {
+function setup(
+  options: {
+    teacherEnBd?: { role: UserRole; status: UserStatus } | null;
+    agenda?: ReturnType<typeof aulaEnAgenda>[];
+    config?: Parameters<typeof configuracion>[0];
+  } = {},
+) {
   const findUnique = vi
     .fn()
     .mockResolvedValue(
@@ -74,19 +103,54 @@ function setup(options: { teacherEnBd?: { role: UserRole; status: UserStatus } |
     }),
   );
 
-  const prisma = { user: { findUnique }, classroom: { create } } as unknown as PrismaService;
+  const findMany = vi.fn().mockResolvedValue(options.agenda ?? []);
+
+  const prisma = {
+    user: { findUnique },
+    classroom: { create, findMany },
+  } as unknown as PrismaService;
   const cipher = new MeetingLinkCipher({ meetingLinkKey: 'a'.repeat(64) } as AppConfigService);
 
-  return { service: new ClassroomsService(prisma, cipher), create, findUnique, cipher };
+  return {
+    service: new ClassroomsService(prisma, cipher, configuracion(options.config)),
+    create,
+    findUnique,
+    findMany,
+    cipher,
+  };
+}
+
+/** Un aula ya publicada del profesor, tal y como la devuelve la consulta de solapamiento. */
+function aulaEnAgenda(overrides: { id?: string; title?: string; hora: string; duracion?: number }) {
+  return {
+    id: overrides.id ?? '44444444-4444-4444-8444-444444444444',
+    title: overrides.title ?? 'Conversación cotidiana',
+    scheduledAt: new Date(`2027-08-12T${overrides.hora}:00.000Z`),
+    durationMinutes: overrides.duracion ?? 60,
+  };
 }
 
 /** Extrae el `code` del cuerpo de la excepción: es lo que ve el frontend. */
 async function codigoDe(promise: Promise<unknown>): Promise<string> {
+  return (await cuerpoDe(promise)).code;
+}
+
+/**
+ * El cuerpo entero de la excepción. Los errores de HU-212 llevan `details`, y
+ * ese `details` **es** el acceptance criteria (AC5, AC6, AC7): un código pelado
+ * no le sirve al profesor para saber con qué chocó ni cuál era el máximo.
+ */
+async function cuerpoDe(
+  promise: Promise<unknown>,
+): Promise<{ code: string; message: string; details?: Record<string, unknown> }> {
   try {
     await promise;
   } catch (error) {
-    const body = (error as ForbiddenException).getResponse() as { code: string };
-    return body.code;
+    return (error as ForbiddenException).getResponse() as {
+      code: string;
+      message: string;
+      details?: Record<string, unknown>;
+    };
   }
   throw new Error('Se esperaba una excepción y no hubo ninguna.');
 }
@@ -278,6 +342,279 @@ describe('ClassroomsService.createClassroom', () => {
   });
 });
 
+/**
+ * HU-212 — coherencia temporal del aula.
+ *
+ * Lo que se prueba aquí es **la decisión del servicio**: qué código sale, qué
+ * `details` lleva, qué se le pide a la BD y en qué orden se comprueban las tres
+ * reglas. La aritmética de "solaparse" tiene sus propios tests en
+ * `coherencia-temporal.rules.spec.ts`; duplicarla aquí solo la ataría al mock.
+ */
+describe('ClassroomsService.createClassroom — solapamiento del profesor (AC1–AC3, AC5)', () => {
+  // AC1: el caso literal de la HU. 18:00–19:00 ocupado, se intenta 18:30–19:30.
+  it('rechaza un aula que se solapa con otra PUBLISHED del propio profesor', async () => {
+    const { service, create } = setup({ agenda: [aulaEnAgenda({ hora: '18:00' })] });
+
+    const codigo = await codigoDe(
+      service.createClassroom(
+        profesorDelToken,
+        entrada({ scheduledAt: '2027-08-12T18:30:00.000Z' }),
+      ),
+    );
+
+    expect(codigo).toBe(ApiErrorCode.TEACHER_SCHEDULE_CONFLICT);
+    // No basta con responder el error: el aula NO puede haberse escrito.
+    expect(create).not.toHaveBeenCalled();
+  });
+
+  // AC5: el error nombra la clase y el horario con los que se choca. Sin esto,
+  // el profesor tiene que buscar el conflicto a mano entre sus aulas.
+  it('el error nombra el aula que ocupa el horario, con su id, inicio y duración', async () => {
+    const { service } = setup({
+      agenda: [
+        aulaEnAgenda({
+          id: '55555555-5555-4555-8555-555555555555',
+          title: 'Inglés para el trabajo',
+          hora: '18:00',
+          duracion: 90,
+        }),
+      ],
+    });
+
+    const cuerpo = await cuerpoDe(
+      service.createClassroom(
+        profesorDelToken,
+        entrada({ scheduledAt: '2027-08-12T19:00:00.000Z' }),
+      ),
+    );
+
+    expect(cuerpo.details).toEqual({
+      conflictoId: '55555555-5555-4555-8555-555555555555',
+      conflictoTitulo: 'Inglés para el trabajo',
+      conflictoScheduledAt: '2027-08-12T18:00:00.000Z',
+      conflictoDurationMinutes: 90,
+    });
+    // El mensaje también la nombra: llega al profesor tal cual si el frontend
+    // no tuviera copy para este código.
+    expect(cuerpo.message).toContain('Inglés para el trabajo');
+  });
+
+  // AC2: el borde. Es el horario más normal que puede tener un profesor —dos
+  // clases seguidas— y bloquearlo haría la regla inservible.
+  it('permite empezar exactamente cuando termina la anterior', async () => {
+    const { service, create } = setup({ agenda: [aulaEnAgenda({ hora: '18:00' })] });
+
+    await service.createClassroom(
+      profesorDelToken,
+      entrada({ scheduledAt: '2027-08-12T19:00:00.000Z' }),
+    );
+
+    expect(create).toHaveBeenCalledOnce();
+  });
+
+  // AC3: un aula cancelada no ocupa a nadie. Se comprueba en el `where` porque
+  // es ahí donde se decide: el filtro es de la consulta, no de la aritmética.
+  it('solo mira aulas PUBLISHED del propio profesor', async () => {
+    const { service, findMany } = setup();
+
+    await service.createClassroom(profesorDelToken, entrada());
+
+    expect(findMany.mock.calls[0]?.[0]).toMatchObject({
+      where: { teacherId: PROFESOR_ID, status: ClassroomStatus.PUBLISHED },
+    });
+  });
+
+  it('no mira el aula de otro profesor, aunque ocupe el mismo horario', async () => {
+    const { service, findMany } = setup();
+
+    await service.createClassroom(profesorDelToken, entrada());
+
+    const { where } = findMany.mock.calls[0]?.[0] as { where: { teacherId: string } };
+    expect(where.teacherId).toBe(PROFESOR_ID);
+    expect(where.teacherId).not.toBe(OTRO_PROFESOR_ID);
+  });
+
+  // AC4. La edición es HU-202, pero la regla que la hace posible se construye
+  // aquí: sin `excluirId`, un `PATCH` que no mueve el horario chocaría contra
+  // el aula que se está editando.
+  it('al editar, excluye el aula que se edita para que no choque consigo misma', async () => {
+    const { service, findMany } = setup();
+
+    await service.assertCoherenciaTemporal({
+      teacherId: PROFESOR_ID,
+      scheduledAt: new Date('2027-08-12T18:00:00.000Z'),
+      durationMinutes: 60,
+      excluirId: '66666666-6666-4666-8666-666666666666',
+    });
+
+    expect(findMany.mock.calls[0]?.[0]).toMatchObject({
+      where: { id: { not: '66666666-6666-4666-8666-666666666666' } },
+    });
+  });
+
+  it('al crear no excluye ningún id: no hay aula que excluir todavía', async () => {
+    const { service, findMany } = setup();
+
+    await service.createClassroom(profesorDelToken, entrada());
+
+    const { where } = findMany.mock.calls[0]?.[0] as { where: Record<string, unknown> };
+    expect(where).not.toHaveProperty('id');
+  });
+});
+
+describe('ClassroomsService.createClassroom — duración máxima (AC6)', () => {
+  it('rechaza una duración por encima del máximo y dice cuál era el máximo', async () => {
+    const { service, create } = setup();
+
+    const cuerpo = await cuerpoDe(
+      service.createClassroom(profesorDelToken, entrada({ durationMinutes: 10_000 })),
+    );
+
+    expect(cuerpo.code).toBe(ApiErrorCode.CLASSROOM_DURATION_INVALID);
+    expect(cuerpo.details).toEqual({ maximoMinutos: CLASS_MAX_DURATION_MINUTES_DEFAULT });
+    expect(create).not.toHaveBeenCalled();
+  });
+
+  it('acepta exactamente el máximo', async () => {
+    const { service, create } = setup();
+
+    await service.createClassroom(
+      profesorDelToken,
+      entrada({ durationMinutes: CLASS_MAX_DURATION_MINUTES_DEFAULT }),
+    );
+
+    expect(create).toHaveBeenCalledOnce();
+  });
+
+  // El máximo sale del entorno, no del DTO: por eso el error tiene código
+  // propio y devuelve el número. Si el servidor no mandara el suyo, el
+  // formulario mostraría el de fábrica y mentiría.
+  it('aplica el máximo configurado, no el de fábrica', async () => {
+    const { service } = setup({ config: { classMaxDurationMinutes: 90 } });
+
+    const cuerpo = await cuerpoDe(
+      service.createClassroom(profesorDelToken, entrada({ durationMinutes: 120 })),
+    );
+
+    expect(cuerpo.code).toBe(ApiErrorCode.CLASSROOM_DURATION_INVALID);
+    expect(cuerpo.details).toEqual({ maximoMinutos: 90 });
+  });
+
+  // La duración va primero porque el solapamiento se calcula contra
+  // `scheduledAt + durationMinutes`: con una duración imposible, el intervalo
+  // que se consultaría no significa nada.
+  it('no llega a consultar la agenda si la duración ya es inválida', async () => {
+    const { service, findMany } = setup();
+
+    await codigoDe(service.createClassroom(profesorDelToken, entrada({ durationMinutes: 10_000 })));
+
+    expect(findMany).not.toHaveBeenCalled();
+  });
+});
+
+describe('ClassroomsService.createClassroom — antelación mínima (AC7)', () => {
+  /** Un horario a `minutos` de ahora, según el reloj real del servidor. */
+  const dentroDe = (minutos: number): string =>
+    new Date(Date.now() + minutos * 60_000).toISOString();
+
+  it('avisa, sin publicar, cuando falta menos que la antelación mínima', async () => {
+    const { service, create } = setup();
+
+    const cuerpo = await cuerpoDe(
+      service.createClassroom(profesorDelToken, entrada({ scheduledAt: dentroDe(10) })),
+    );
+
+    expect(cuerpo.code).toBe(ApiErrorCode.CLASSROOM_LEAD_TIME_WARNING);
+    expect(cuerpo.details).toMatchObject({ minimoMinutos: CLASS_MIN_LEAD_MINUTES_DEFAULT });
+    // El diálogo explica cuánta antelación hay; el número sale del reloj del
+    // servidor, así que solo se acota.
+    expect(cuerpo.details?.minutosDeAntelacion).toBeLessThan(CLASS_MIN_LEAD_MINUTES_DEFAULT);
+    expect(create).not.toHaveBeenCalled();
+  });
+
+  // El corazón del AC7: es un aviso, no un bloqueo.
+  it('publica la misma clase si el profesor confirma', async () => {
+    const { service, create } = setup();
+
+    await service.createClassroom(
+      profesorDelToken,
+      entrada({ scheduledAt: dentroDe(10), confirmarPocaAntelacion: true }),
+    );
+
+    expect(create).toHaveBeenCalledOnce();
+  });
+
+  // El flag es el acuse de recibo de un aviso, no un campo del aula.
+  it('la confirmación no se guarda en la base de datos', async () => {
+    const { service, create } = setup();
+
+    await service.createClassroom(
+      profesorDelToken,
+      entrada({ scheduledAt: dentroDe(10), confirmarPocaAntelacion: true }),
+    );
+
+    expect(datosEscritos(create)).not.toHaveProperty('confirmarPocaAntelacion');
+  });
+
+  it('no avisa cuando la antelación llega justo al mínimo', async () => {
+    const { service, create } = setup();
+
+    // Un segundo de margen: `minutosDeAntelacion` trunca hacia abajo y el reloj
+    // avanza entre que se construye el horario y se comprueba.
+    await service.createClassroom(
+      profesorDelToken,
+      entrada({ scheduledAt: dentroDe(CLASS_MIN_LEAD_MINUTES_DEFAULT + 1) }),
+    );
+
+    expect(create).toHaveBeenCalledOnce();
+  });
+
+  it('aplica el mínimo configurado, no el de fábrica', async () => {
+    const { service } = setup({ config: { classMinLeadMinutes: 120 } });
+
+    const cuerpo = await cuerpoDe(
+      service.createClassroom(profesorDelToken, entrada({ scheduledAt: dentroDe(90) })),
+    );
+
+    expect(cuerpo.code).toBe(ApiErrorCode.CLASSROOM_LEAD_TIME_WARNING);
+    expect(cuerpo.details).toMatchObject({ minimoMinutos: 120 });
+  });
+
+  // Decisión 5 de la HU: el profesor puede saltarse la antelación, nunca el
+  // solapamiento. Confirmar no es una llave maestra.
+  it('la confirmación NO salta el solapamiento', async () => {
+    const { service, create } = setup({ agenda: [aulaEnAgenda({ hora: '18:00' })] });
+
+    const codigo = await codigoDe(
+      service.createClassroom(
+        profesorDelToken,
+        entrada({ scheduledAt: '2027-08-12T18:30:00.000Z', confirmarPocaAntelacion: true }),
+      ),
+    );
+
+    expect(codigo).toBe(ApiErrorCode.TEACHER_SCHEDULE_CONFLICT);
+    expect(create).not.toHaveBeenCalled();
+  });
+
+  // El aviso va el último: pedirle al profesor que confirme una clase que iba a
+  // ser rechazada por solaparse sería hacerle decidir sobre algo inexistente.
+  it('si choca Y tiene poca antelación, responde el conflicto, no el aviso', async () => {
+    const enBreve = dentroDe(10);
+    const { service } = setup({
+      agenda: [{ ...aulaEnAgenda({ hora: '18:00' }), scheduledAt: new Date(enBreve) }],
+    });
+
+    const codigo = await codigoDe(
+      service.createClassroom(
+        profesorDelToken,
+        entrada({ scheduledAt: enBreve, confirmarPocaAntelacion: false }),
+      ),
+    );
+
+    expect(codigo).toBe(ApiErrorCode.TEACHER_SCHEDULE_CONFLICT);
+  });
+});
+
 /** Fila cruda tal y como la devolvería Prisma, con el `include` del profesor. */
 function filaDeAula(overrides: Record<string, unknown> = {}) {
   return {
@@ -315,7 +652,7 @@ function setupParaListado(
   const prisma = { classroom: { findMany, count } } as unknown as PrismaService;
   const cipher = new MeetingLinkCipher({ meetingLinkKey: 'a'.repeat(64) } as AppConfigService);
 
-  return { service: new ClassroomsService(prisma, cipher), findMany, count };
+  return { service: new ClassroomsService(prisma, cipher, configuracion()), findMany, count };
 }
 
 /** El `where` con el que se llamó a `findMany` (idéntico al de `count`). */
@@ -665,7 +1002,7 @@ function setupMisAulas(
   const prisma = { classroom: { findMany, count } } as unknown as PrismaService;
   const cipher = new MeetingLinkCipher({ meetingLinkKey: 'a'.repeat(64) } as AppConfigService);
 
-  return { service: new ClassroomsService(prisma, cipher), findMany, count };
+  return { service: new ClassroomsService(prisma, cipher, configuracion()), findMany, count };
 }
 
 /** Los `where` de todas las consultas que se lanzaron, `findMany` y `count`. */
@@ -907,7 +1244,7 @@ function setupDetalle(aula: Record<string, unknown> | null = {}) {
     .mockResolvedValue(aula === null ? null : filaDeAula({ meetingLink: cifrado, ...aula }));
   const prisma = { classroom: { findUnique } } as unknown as PrismaService;
 
-  return { service: new ClassroomsService(prisma, cipher), findUnique, cifrado };
+  return { service: new ClassroomsService(prisma, cipher, configuracion()), findUnique, cifrado };
 }
 
 const ID_DEL_AULA = '44444444-4444-4444-8444-444444444444';
@@ -1049,7 +1386,7 @@ function setupActualizarAccesibilidad(aula: Record<string, unknown> | null) {
   const prisma = { classroom: { findUnique, update } } as unknown as PrismaService;
   const cipher = new MeetingLinkCipher({ meetingLinkKey: 'a'.repeat(64) } as AppConfigService);
 
-  return { service: new ClassroomsService(prisma, cipher), findUnique, update };
+  return { service: new ClassroomsService(prisma, cipher, configuracion()), findUnique, update };
 }
 
 describe('ClassroomsService.updateClassroomAccessibility', () => {

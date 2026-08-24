@@ -74,8 +74,35 @@ export class AllExceptionsFilter implements ExceptionFilter {
 
     const fields = Array.isArray(obj.fields) ? (obj.fields as ValidationErrorDetail[]) : undefined;
 
-    return { code, message, ...(fields ? { details: { fields } } : {}) };
+    // Dos formas de llenar el mismo campo del contrato. `fields` lo pone la
+    // fábrica de errores de validación, que trabaja con la forma de
+    // `class-validator`; `details` lo ponen las excepciones de dominio que
+    // necesitan mandar datos propios —el aula con la que se choca, el máximo
+    // que aplicó el servidor (HU-212)—. Sin esta segunda rama esos datos se
+    // perderían aquí en silencio y el frontend recibiría un código pelado.
+    //
+    // `fields` gana si vienen los dos: es el caso de la validación, y ahí el
+    // contrato ya promete esa forma exacta.
+    const details = fields ? { fields } : detallesDeDominio(obj.details);
+
+    return { code, message, ...(details ? { details } : {}) };
   }
+}
+
+/**
+ * El `details` que trae la excepción de dominio, si es un objeto.
+ *
+ * Se copia tal cual: quien lanza la excepción es quien conoce la forma que
+ * promete su código de error (`TeacherScheduleConflictDetails` y compañía viven
+ * en `@academia/types`). Este filtro no tiene forma de validarla sin conocer
+ * los tres tipos, y fingir que la valida sería peor que no hacerlo.
+ */
+function detallesDeDominio(raw: unknown): Record<string, unknown> | undefined {
+  if (typeof raw !== 'object' || raw === null || Array.isArray(raw)) {
+    return undefined;
+  }
+
+  return raw as Record<string, unknown>;
 }
 
 /** Código estable a partir del status HTTP cuando la excepción no trae uno. */

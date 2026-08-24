@@ -1,13 +1,15 @@
 import {
   ApiErrorCode,
+  CLASS_MAX_DURATION_MINUTES_DEFAULT,
   type Classroom,
+  type ClassroomLeadTimeWarningDetails,
   type CreateClassroomInput,
   EnglishLevel,
   MeetingProvider,
   type ValidationErrorDetail,
 } from '@academia/types';
 import { CalendarClock, LoaderCircle, Lock } from 'lucide-react';
-import { type FormEvent, useState } from 'react';
+import { type FormEvent, useRef, useState } from 'react';
 
 import { Button } from '@/components/ui/button';
 import { Callout } from '@/components/ui/callout';
@@ -17,14 +19,21 @@ import { NativeSelect } from '@/components/ui/native-select';
 import { useAnnounce } from '@/hooks/use-announce';
 import { ApiClientError } from '@/lib/api-error';
 import { useCreateClassroom } from '../hooks/use-create-classroom';
+import {
+  detallesDeAntelacion,
+  detallesDeDuracion,
+  detallesDeSolapamiento,
+  mensajeDeSolapamiento,
+} from '../lib/coherencia-temporal';
 import { aInstanteISO, describirDuracion, describirHorario } from '../lib/horario';
-import { duracionesDisponibles, nivelesDeIngles } from '../lib/niveles';
+import { duracionesHasta, nivelesDeIngles } from '../lib/niveles';
 import { etiquetaPlataformaReunion, PLATAFORMAS_OFRECIDAS } from '../lib/plataforma-reunion';
 import {
   type ClassroomFieldErrors,
   type ClassroomFormValues,
   validateClassroom,
 } from '../lib/validate-classroom';
+import { DialogoPocaAntelacion } from './dialogo-poca-antelacion';
 import { SeccionAccesibilidadAula } from './seccion-accesibilidad-aula';
 
 /** Orden visual de los campos: guía el foco al primer error. */
@@ -80,8 +89,35 @@ export function FormularioAula({ onCreada }: { onCreada: (classroom: Classroom) 
   const [errors, setErrors] = useState<ClassroomFieldErrors>({});
   const [formError, setFormError] = useState<string | null>(null);
 
+  /**
+   * HU-212, AC7: el último aviso de poca antelación que respondió el servidor, y
+   * si sigue esperando una decisión.
+   *
+   * Son dos estados y no uno **porque el diálogo se pinta también mientras se
+   * cierra**: si el aviso se vaciara al decidir, la transición de salida
+   * ocurriría sobre un diálogo sin texto. El contenido se queda; lo que cambia
+   * es si está abierto.
+   */
+  const [aviso, setAviso] = useState<ClassroomLeadTimeWarningDetails | null>(null);
+  const [avisoAbierto, setAvisoAbierto] = useState(false);
+
+  /**
+   * HU-212, T9: el tope de duración que aplica el servidor.
+   *
+   * Arranca con el valor de fábrica del contrato porque es lo único que se sabe
+   * antes de hablar con la API, **pero el servidor manda**: si una respuesta
+   * `CLASSROOM_DURATION_INVALID` revela otro más bajo, la lista de opciones se
+   * recorta a ese y ya no se puede volver a elegir la duración rechazada.
+   */
+  const [maximoDuracion, setMaximoDuracion] = useState(CLASS_MAX_DURATION_MINUTES_DEFAULT);
+
+  /** El campo al que vuelve el foco cuando el profesor decide cambiar la hora. */
+  const horaRef = useRef<HTMLInputElement>(null);
+
   const mutation = useCreateClassroom();
   const announce = useAnnounce();
+
+  const duracionesOfrecidas = duracionesHasta(maximoDuracion);
 
   // B5: la confirmación en texto completo con la zona nombrada. Se recalcula al
   // teclear, así que el profesor ve el instante que está eligiendo ANTES de
@@ -123,6 +159,57 @@ export function FormularioAula({ onCreada }: { onCreada: (classroom: Classroom) 
 
   function handleServerError(error: unknown) {
     if (error instanceof ApiClientError) {
+      // HU-212 — las tres reglas de coherencia temporal. Se ramifica por el
+      // `code` y nunca por el `message` (`contrato-api.md` §3); el texto que se
+      // pinta sale del `details`, que es donde viajan los umbrales reales.
+      if (error.code === ApiErrorCode.TEACHER_SCHEDULE_CONFLICT) {
+        const detalles = detallesDeSolapamiento(error.details);
+
+        // Bajo «Día», igual que el `scheduledAt` del backend: el choque es del
+        // instante, y el instante en pantalla empieza en ese campo. Repetir el
+        // mismo párrafo bajo «Día» y bajo «Hora de inicio» solo haría más
+        // largo un mensaje que ya es largo por nombrar el aula que estorba.
+        applyFieldErrors({
+          fecha: detalles ? mensajeDeSolapamiento(detalles) : error.message,
+        });
+        return;
+      }
+
+      if (error.code === ApiErrorCode.CLASSROOM_DURATION_INVALID) {
+        const detalles = detallesDeDuracion(error.details);
+
+        if (detalles) {
+          setMaximoDuracion(detalles.maximoMinutos);
+          // El valor elegido ya no está entre las opciones: sin esto el
+          // `<select>` se quedaría en blanco y el profesor no sabría qué envía.
+          const permitidas = duracionesHasta(detalles.maximoMinutos);
+          setValues((prev) =>
+            permitidas.includes(Number(prev.durationMinutes))
+              ? prev
+              : { ...prev, durationMinutes: String(permitidas[permitidas.length - 1]) },
+          );
+        }
+
+        applyFieldErrors({ durationMinutes: error.message });
+        return;
+      }
+
+      if (error.code === ApiErrorCode.CLASSROOM_LEAD_TIME_WARNING) {
+        const detalles = detallesDeAntelacion(error.details);
+
+        if (detalles) {
+          // No es un error del formulario: es una pregunta. Abre el diálogo, y
+          // el diálogo se lleva el foco por su cuenta — anunciarlo además
+          // pisaría su propio título.
+          setAviso(detalles);
+          setAvisoAbierto(true);
+          return;
+        }
+        // Sin los dos números no se puede explicar la consecuencia, y un
+        // diálogo que dice «confirma» sin decir qué pasa no es una decisión.
+        // Cae al aviso de bloque con el mensaje del servidor.
+      }
+
       if (error.code === ApiErrorCode.VALIDATION_ERROR) {
         const fields = (error.details?.fields as ValidationErrorDetail[] | undefined) ?? [];
         const mapped: ClassroomFieldErrors = {};
@@ -148,17 +235,12 @@ export function FormularioAula({ onCreada }: { onCreada: (classroom: Classroom) 
     announce('No pudimos conectar con el servidor.');
   }
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setFormError(null);
-
-    const clientErrors = validateClassroom(values);
-    if (Object.keys(clientErrors).length > 0) {
-      applyFieldErrors(clientErrors);
-      return;
-    }
-    setErrors({});
-
+  /**
+   * Envía el aula. `confirmarPocaAntelacion` solo se pone cuando el profesor ya
+   * decidió en el diálogo (AC7); el flag no salta ni el solapamiento ni la
+   * duración, que el servidor rechaza igual.
+   */
+  function publicar(confirmarPocaAntelacion: boolean) {
     const scheduledAt = aInstanteISO({ fecha: values.fecha, hora: values.hora });
     if (!scheduledAt) {
       applyFieldErrors({ fecha: 'Esa fecha no existe. Revisa el día y el mes.' });
@@ -178,12 +260,38 @@ export function FormularioAula({ onCreada }: { onCreada: (classroom: Classroom) 
       hasLiveCaptions: values.hasLiveCaptions,
       hasVisualMaterials: values.hasVisualMaterials,
       meetingProvider: values.meetingProvider,
+      ...(confirmarPocaAntelacion ? { confirmarPocaAntelacion: true } : {}),
     };
 
     mutation.mutate(input, {
-      onSuccess: (data) => onCreada(data.classroom),
-      onError: handleServerError,
+      // El diálogo se cierra pase lo que pase, y por eso el `setAvisoAbierto(false)`
+      // va en las dos ramas: mientras esté abierto tapa la página, así que un
+      // aviso de error puesto detrás no lo vería nadie. Si la respuesta trae
+      // otro aviso, `handleServerError` lo vuelve a abrir en el mismo lote de
+      // renderizado.
+      onSuccess: (data) => {
+        setAvisoAbierto(false);
+        onCreada(data.classroom);
+      },
+      onError: (error) => {
+        setAvisoAbierto(false);
+        handleServerError(error);
+      },
     });
+  }
+
+  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setFormError(null);
+
+    const clientErrors = validateClassroom(values);
+    if (Object.keys(clientErrors).length > 0) {
+      applyFieldErrors(clientErrors);
+      return;
+    }
+    setErrors({});
+
+    publicar(false);
   }
 
   return (
@@ -257,6 +365,7 @@ export function FormularioAula({ onCreada }: { onCreada: (classroom: Classroom) 
             <Input
               type="time"
               name="hora"
+              ref={horaRef}
               value={values.hora}
               onChange={(event) => updateField('hora', event.target.value)}
             />
@@ -268,7 +377,11 @@ export function FormularioAula({ onCreada }: { onCreada: (classroom: Classroom) 
               value={values.durationMinutes}
               onChange={(event) => updateField('durationMinutes', event.target.value)}
             >
-              {duracionesDisponibles.map((minutos) => (
+              {/* AC6/T9: la lista está acotada por el tope del servidor, así
+                  que la duración inválida no se puede llegar a elegir. Si el
+                  entorno baja el tope, la lista se recorta en la primera
+                  respuesta y ya no vuelve a ofrecerla. */}
+              {duracionesOfrecidas.map((minutos) => (
                 <option key={minutos} value={minutos}>
                   {describirDuracion(minutos)}
                 </option>
@@ -394,6 +507,19 @@ export function FormularioAula({ onCreada }: { onCreada: (classroom: Classroom) 
           'Publicar la clase'
         )}
       </Button>
+
+      {/* AC7. Va dentro del `<form>` pero se pinta en un portal, así que no
+          hereda su maquetación; está aquí para quedar al lado del envío que lo
+          provoca. Nadie lo abre: lo abre la respuesta del servidor. */}
+      <DialogoPocaAntelacion
+        aviso={aviso}
+        abierto={avisoAbierto}
+        titulo={values.title.trim()}
+        publicando={mutation.isPending}
+        onPublicar={() => publicar(true)}
+        onCambiarHora={() => setAvisoAbierto(false)}
+        volverAlHorario={horaRef}
+      />
     </form>
   );
 }

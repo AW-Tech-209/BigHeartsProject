@@ -77,16 +77,52 @@ export function describirHorario(instanteISO: string): string {
     year: 'numeric',
   }).format(instante);
 
-  // `hour12` explícito: el locale `es` formatea en 24 horas por defecto, y el
-  // microcopy de este producto usa `6:00 p. m.` — la forma en que la gente dice
-  // la hora en voz alta, que es la que menos hay que traducir mentalmente.
-  const hora = new Intl.DateTimeFormat('es', {
+  return `${enMayuscula(fecha)}, ${formatearHora(instante)} (${nombreDeZona(instante)})`;
+}
+
+/**
+ * El intervalo que ocupa una clase, en minúscula y listo para ir **dentro de
+ * una frase**: `martes 25 de agosto, de 6:00 p. m. a 7:00 p. m. (hora de
+ * Colombia)`.
+ *
+ * Existe para el error de solapamiento de HU-212 (AC5). No basta con decir
+ * cuándo EMPIEZA el aula con la que se choca: quien está buscando un hueco
+ * necesita saber cuándo queda libre, y con solo el inicio tendría que ir a
+ * mirar la duración a otra pantalla. El año no va —el choque siempre es con una
+ * clase futura y cercana— pero la zona sí, por lo mismo que en
+ * {@link describirHorario}.
+ */
+export function describirRangoHorario(instanteISO: string, durationMinutes: number): string {
+  const inicio = new Date(instanteISO);
+
+  if (Number.isNaN(inicio.getTime())) {
+    return 'Fecha no disponible';
+  }
+
+  const fin = new Date(inicio.getTime() + durationMinutes * 60_000);
+
+  const fecha = new Intl.DateTimeFormat('es', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+  }).format(inicio);
+
+  return `${fecha}, de ${formatearHora(inicio)} a ${formatearHora(fin)} (${nombreDeZona(inicio)})`;
+}
+
+/**
+ * `6:00 p. m.`
+ *
+ * `hour12` explícito: el locale `es` formatea en 24 horas por defecto, y el
+ * microcopy de este producto usa la forma en que la gente dice la hora en voz
+ * alta, que es la que menos hay que traducir mentalmente.
+ */
+function formatearHora(instante: Date): string {
+  return new Intl.DateTimeFormat('es', {
     hour: 'numeric',
     minute: '2-digit',
     hour12: true,
   }).format(instante);
-
-  return `${enMayuscula(fecha)}, ${hora} (${nombreDeZona(instante)})`;
 }
 
 /**

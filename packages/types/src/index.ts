@@ -359,6 +359,90 @@ export interface CreateClassroomInput {
    * acabas de pegar?".
    */
   meetingProvider: MeetingProvider;
+  /**
+   * El profesor ya vio el aviso de poca antelación y decidió publicar igual
+   * (HU-212, AC7).
+   *
+   * **No es un dato del aula: no se persiste ni viaja de vuelta en
+   * `Classroom`.** Es el acuse de recibo de un aviso. Sin él, un `scheduledAt`
+   * por debajo de `CLASS_MIN_LEAD_MINUTES` responde
+   * `CLASSROOM_LEAD_TIME_WARNING`; con él en `true`, la misma petición se
+   * acepta. Ausente y `false` son lo mismo.
+   *
+   * **No afecta al solapamiento ni a la duración**, que bloquean sin excepción:
+   * confirmar es una decisión que el profesor puede tomar sobre sí mismo, y las
+   * otras dos reglas no describen una molestia sino un imposible.
+   */
+  confirmarPocaAntelacion?: boolean;
+}
+
+/**
+ * Antelación mínima por defecto, en minutos, con la que se publica un aula
+ * (HU-212, `ARQUITECTURA.md` §4.4).
+ *
+ * **El servidor manda: este valor es el que trae `CLASS_MIN_LEAD_MINUTES` de
+ * fábrica, pero el entorno puede fijar otro.** Está aquí para que el frontend
+ * pueda redactar el aviso antes de haber hablado con la API; el número real de
+ * cada respuesta viaja en `ClassroomLeadTimeWarningDetails.minimoMinutos`, y ese
+ * es el que se muestra cuando existe.
+ *
+ * No baja de `ACCESS_WINDOW_MINUTES` (30) por construcción: por debajo de la
+ * ventana de acceso de §4.1, el enlace se revelaría en el mismo instante en que
+ * se publica la clase.
+ */
+export const CLASS_MIN_LEAD_MINUTES_DEFAULT = 60;
+
+/**
+ * Duración máxima por defecto de un aula, en minutos (HU-212).
+ *
+ * Mismo contrato que `CLASS_MIN_LEAD_MINUTES_DEFAULT`: el entorno puede fijar
+ * otro con `CLASS_MAX_DURATION_MINUTES` y el servidor es la autoridad. El
+ * frontend lo usa como `max` del control de duración (AC6) para que el error no
+ * llegue a hacer falta, no para decidir si la petición es válida.
+ */
+export const CLASS_MAX_DURATION_MINUTES_DEFAULT = 240;
+
+/**
+ * `details` de `TEACHER_SCHEDULE_CONFLICT` (HU-212, AC5).
+ *
+ * Describe **el aula con la que se choca**, no la que se intentaba crear: es lo
+ * que el mensaje necesita para decir «Ya tienes «Conversación cotidiana» el
+ * martes 25 a las 6:00 p. m.» en vez de «hay un conflicto de horario».
+ *
+ * Solo lleva lo que ese mensaje usa. No es un `Classroom` recortado ni el
+ * germen de uno: quien necesite el aula entera tiene su `id` para pedirla, y
+ * `meetingLink` no viaja aquí por el mismo motivo que no viaja en un listado
+ * (§4.8, regla 2). Que el aula sea del propio profesor no lo cambia.
+ */
+export interface TeacherScheduleConflictDetails {
+  /** Id del aula que ocupa el horario. Sirve para enlazar a su detalle. */
+  conflictoId: string;
+  /** Título del aula que ocupa el horario. El mensaje lo entrecomilla. */
+  conflictoTitulo: string;
+  /** Inicio del aula que ocupa el horario, ISO 8601 en UTC (§4.7). */
+  conflictoScheduledAt: string;
+  /** Duración del aula que ocupa el horario. Con la anterior, el intervalo. */
+  conflictoDurationMinutes: number;
+}
+
+/** `details` de `CLASSROOM_DURATION_INVALID` (HU-212, AC6). */
+export interface ClassroomDurationInvalidDetails {
+  /** Tope real que aplicó el servidor. Puede no ser el de fábrica. */
+  maximoMinutos: number;
+}
+
+/**
+ * `details` de `CLASSROOM_LEAD_TIME_WARNING` (HU-212, AC7).
+ *
+ * Van los dos números —el que hay y el que hacía falta— porque el diálogo
+ * explica una consecuencia, y para explicarla tiene que poder decir cuánta
+ * antelación falta.
+ */
+export interface ClassroomLeadTimeWarningDetails {
+  /** Minutos que faltan hasta el inicio, calculados con el reloj del servidor. */
+  minutosDeAntelacion: number;
+  /** Antelación mínima que aplicó el servidor. Puede no ser la de fábrica. */
+  minimoMinutos: number;
 }
 
 /**
@@ -670,6 +754,48 @@ export const ApiErrorCode = {
    * vio en el catálogo—, lo que falta es el permiso, no el dato.
    */
   CLASSROOM_FORBIDDEN: 'CLASSROOM_FORBIDDEN',
+  /**
+   * El aula que se quiere publicar o editar se solapa con otra `PUBLISHED` del
+   * mismo profesor (HU-212, `ARQUITECTURA.md` §4.4). Es 409: no es que el
+   * cuerpo esté mal formado, es que el horario ya está ocupado.
+   *
+   * **Bloquea y no se puede confirmar**, al revés que
+   * `CLASSROOM_LEAD_TIME_WARNING`: publicar con poca antelación solo perjudica
+   * al propio profesor, pero estar en dos videollamadas a la vez es imposible.
+   *
+   * Lleva `details` con la forma de `TeacherScheduleConflictDetails`: el aula
+   * con la que se choca, para que el mensaje pueda nombrarla (AC5). Un error que
+   * solo dice «hay conflicto» obliga a buscar el choque a mano.
+   *
+   * Las canceladas no lo emiten: un aula `CANCELLED` no ocupa a nadie.
+   */
+  TEACHER_SCHEDULE_CONFLICT: 'TEACHER_SCHEDULE_CONFLICT',
+  /**
+   * `durationMinutes` supera `CLASS_MAX_DURATION_MINUTES` (HU-212). Lleva
+   * `details` con la forma de `ClassroomDurationInvalidDetails`.
+   *
+   * Es un código propio y no un `VALIDATION_ERROR` porque el tope **sale del
+   * entorno**, no del DTO: el formulario no puede saberlo de antemano con
+   * certeza, así que necesita que la respuesta le diga cuál era el máximo real.
+   */
+  CLASSROOM_DURATION_INVALID: 'CLASSROOM_DURATION_INVALID',
+  /**
+   * El aula empieza antes de `CLASS_MIN_LEAD_MINUTES` (HU-212, AC7).
+   *
+   * **Es un aviso confirmable, no un bloqueo**, y por eso es un código propio y
+   * no un `VALIDATION_ERROR`: el frontend ramifica por el código —abre el
+   * diálogo con `Publicar de todas formas` / `Cambiar la hora`— y reenvía la
+   * misma petición con `confirmarPocaAntelacion: true`, que la acepta. Decidirlo
+   * mirando dentro de `details` habría roto la regla de `contrato-api.md` §3.
+   *
+   * La consecuencia que el diálogo tiene que explicar está en el propio hecho:
+   * por debajo de la ventana de acceso de §4.1 el enlace se revela en el mismo
+   * instante en que se publica la clase, y el recordatorio de 24 h de §4.6 no
+   * llega nunca.
+   *
+   * Lleva `details` con la forma de `ClassroomLeadTimeWarningDetails`.
+   */
+  CLASSROOM_LEAD_TIME_WARNING: 'CLASSROOM_LEAD_TIME_WARNING',
   /** Se superó el límite de peticiones (rate limiting). */
   TOO_MANY_REQUESTS: 'TOO_MANY_REQUESTS',
   DATABASE_UNAVAILABLE: 'DATABASE_UNAVAILABLE',

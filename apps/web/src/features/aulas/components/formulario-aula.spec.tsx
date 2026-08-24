@@ -5,12 +5,13 @@ import {
   EnglishLevel,
   MeetingProvider,
 } from '@academia/types';
-import { screen, waitFor } from '@testing-library/react';
+import { screen, waitFor, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { ApiClientError } from '@/lib/api-error';
 import { esperarSinFallosDeAccesibilidad } from '@/test/accesibilidad';
 import { renderConProviders, type Tema } from '@/test/render-con-providers';
+import { aInstanteISO } from '../lib/horario';
 import { FormularioAula } from './formulario-aula';
 
 const { createClassroomMock } = vi.hoisted(() => ({ createClassroomMock: vi.fn() }));
@@ -337,4 +338,284 @@ describe('FormularioAula — errores de validación (AC4)', () => {
 
     expect(await screen.findByText(/revisa tu conexión/i)).toBeInTheDocument();
   });
+});
+
+/* ------------------------------------------------------------------ *
+ *  HU-212 — coherencia temporal del aula                              *
+ * ------------------------------------------------------------------ */
+
+/**
+ * El horario del aula que estorba se construye con `aInstanteISO`, no con una
+ * cadena UTC literal: el mensaje se formatea en la zona del proceso, y en CI
+ * esa zona no es la misma que en el portátil de quien escribe esto. Así «las
+ * 6:00 p. m.» son las seis de la tarde en cualquier zona.
+ */
+const SOLAPAMIENTO = {
+  conflictoId: '44444444-4444-4444-8444-444444444444',
+  conflictoTitulo: 'Conversación cotidiana',
+  conflictoScheduledAt: aInstanteISO({ fecha: '2027-08-12', hora: '18:00' })!,
+  conflictoDurationMinutes: 60,
+};
+
+function rechazarCon(code: string, message: string, details?: Record<string, unknown>) {
+  createClassroomMock.mockRejectedValueOnce(new ApiClientError({ code, message, details }, 409));
+}
+
+/** Rellena, envía y espera a que el servidor haya contestado. */
+async function enviar(user: ReturnType<typeof montar>['user']) {
+  await rellenarConTeclado(user);
+  await user.click(screen.getByRole('button', { name: /publicar la clase/i }));
+}
+
+describe('FormularioAula — solapamiento con otra clase del profesor (T7, AC5)', () => {
+  it('pinta el error bajo el campo del horario, nombrando el aula que choca', async () => {
+    rechazarCon(
+      ApiErrorCode.TEACHER_SCHEDULE_CONFLICT,
+      'Ya tienes «Conversación cotidiana» en ese horario.',
+      SOLAPAMIENTO,
+    );
+
+    const { user } = montar();
+    await enviar(user);
+
+    const dia = await screen.findByLabelText(/^día/i);
+    await waitFor(() => expect(dia).toHaveAttribute('aria-invalid', 'true'));
+
+    // Asociado al campo, no solo pintado cerca: es lo que hace que un lector de
+    // pantalla lo lea al llegar al input.
+    expect(dia.getAttribute('aria-describedby')).toContain('fecha-error');
+    expect(dia).toHaveFocus();
+
+    // AC5: el mensaje NOMBRA la clase y dice el horario ocupado. Un error que
+    // solo dijera «hay un conflicto» obliga a buscar el choque a mano.
+    const mensaje = screen.getByText(/ya tienes «conversación cotidiana»/i);
+    expect(mensaje.textContent).toMatch(/jueves/i);
+    expect(mensaje.textContent).toMatch(/de 6:00/);
+    expect(mensaje.textContent).toMatch(/a 7:00/);
+  });
+
+  it('el error lleva ícono además del color, y va en un role="alert"', async () => {
+    rechazarCon(ApiErrorCode.TEACHER_SCHEDULE_CONFLICT, 'Ya tienes una clase.', SOLAPAMIENTO);
+
+    const { user } = montar();
+    await enviar(user);
+
+    const alerta = (await screen.findByText(/ya tienes «conversación cotidiana»/i)).closest(
+      '[role="alert"]',
+    );
+
+    expect(alerta).not.toBeNull();
+    // Triple codificación: color + ícono + texto. Sin el `svg` el estado se
+    // estaría comunicando solo con el rojo del borde.
+    expect(alerta!.querySelector('svg')).not.toBeNull();
+  });
+
+  it('bloquea: no abre ningún diálogo que permita publicar igual', async () => {
+    rechazarCon(ApiErrorCode.TEACHER_SCHEDULE_CONFLICT, 'Ya tienes una clase.', SOLAPAMIENTO);
+
+    const { user } = montar();
+    await enviar(user);
+
+    await screen.findByText(/ya tienes «conversación cotidiana»/i);
+    expect(screen.queryByRole('alertdialog')).toBeNull();
+  });
+
+  it('sin details usables cae al mensaje del servidor en vez de escribir undefined', async () => {
+    rechazarCon(ApiErrorCode.TEACHER_SCHEDULE_CONFLICT, 'Ya tienes una clase en ese horario.', {
+      conflictoTitulo: 'Conversación cotidiana',
+    });
+
+    const { user } = montar();
+    await enviar(user);
+
+    expect(await screen.findByText('Ya tienes una clase en ese horario.')).toBeInTheDocument();
+  });
+});
+
+describe('FormularioAula — duración por encima del máximo (T9, AC6)', () => {
+  it('el control no ofrece ninguna duración por encima del tope de fábrica', () => {
+    montar();
+    const duracion = screen.getByLabelText(/duración/i);
+
+    // El tope de fábrica son 240 minutos; ninguna opción puede superarlo.
+    for (const opcion of within(duracion).getAllByRole('option')) {
+      expect(Number((opcion as HTMLOptionElement).value)).toBeLessThanOrEqual(240);
+    }
+  });
+
+  it('pinta el error bajo el campo y recorta el control al tope real del servidor', async () => {
+    createClassroomMock.mockRejectedValueOnce(
+      new ApiClientError(
+        {
+          code: ApiErrorCode.CLASSROOM_DURATION_INVALID,
+          message: 'Una clase no puede durar más de 45 minutos.',
+          details: { maximoMinutos: 45 },
+        },
+        400,
+      ),
+    );
+
+    const { user } = montar();
+    await enviar(user); // el formulario envía 90 minutos
+
+    const duracion = await screen.findByLabelText(/duración/i);
+    await waitFor(() => expect(duracion).toHaveAttribute('aria-invalid', 'true'));
+    expect(duracion.getAttribute('aria-describedby')).toContain('durationMinutes-error');
+    expect(screen.getByText('Una clase no puede durar más de 45 minutos.')).toBeInTheDocument();
+
+    // AC6, la mitad que no es del servidor: la duración rechazada ya no se
+    // puede volver a elegir, y el control queda en una válida en vez de en
+    // blanco.
+    const valores = within(duracion)
+      .getAllByRole('option')
+      .map((opcion) => Number((opcion as HTMLOptionElement).value));
+
+    expect(valores).toEqual([30, 45]);
+    expect(duracion).toHaveValue('45');
+  });
+});
+
+describe('FormularioAula — aviso de poca antelación (T8, AC7)', () => {
+  const AVISO = { minutosDeAntelacion: 45, minimoMinutos: 60 };
+
+  async function abrirElAviso(user: ReturnType<typeof montar>['user']) {
+    rechazarCon(
+      ApiErrorCode.CLASSROOM_LEAD_TIME_WARNING,
+      'Esta clase empieza en menos de 60 minutos.',
+      AVISO,
+    );
+
+    await enviar(user);
+    return screen.findByRole('alertdialog');
+  }
+
+  it('abre un diálogo que nombra la clase y dice cuánto falta', async () => {
+    const { user } = montar();
+    const dialogo = await abrirElAviso(user);
+
+    expect(dialogo).toHaveAccessibleName('«Conversación cotidiana» empieza en 45 minutos');
+  });
+
+  it('explica la consecuencia: el recordatorio llega tarde o no llega', async () => {
+    const { user } = montar();
+    const dialogo = await abrirElAviso(user);
+
+    expect(dialogo).toHaveAccessibleDescription(
+      /recibirán el recordatorio tarde, o no lo recibirán/i,
+    );
+    expect(dialogo).toHaveAccessibleDescription(/con menos de 1 hora de antelación/i);
+  });
+
+  it('los dos botones llevan verbos, y el foco arranca en el que no publica', async () => {
+    const { user } = montar();
+    const dialogo = await abrirElAviso(user);
+
+    const nombres = Array.from(dialogo.querySelectorAll('button')).map((b) => b.textContent);
+    expect(nombres).toEqual(['Cambiar la hora', 'Publicar de todas formas']);
+
+    // El error caro de esta pantalla es publicar una clase que nadie va a poder
+    // reservar, así que el foco no puede empezar en el botón que la publica.
+    await waitFor(() =>
+      expect(screen.getByRole('button', { name: 'Cambiar la hora' })).toHaveFocus(),
+    );
+  });
+
+  /**
+   * AC9 — el foco no se escapa del diálogo.
+   *
+   * En jsdom no se puede comprobar la vuelta al primer botón: el guardián de
+   * foco que la hace vive de un `focus` real del navegador, y aquí el Tab
+   * aterriza en el propio guardián. Lo que sí se comprueba —y es lo que rompe
+   * de verdad si alguien quita el `modal`— es que después de recorrer el
+   * diálogo el foco NUNCA llega a un control del formulario, y que la página
+   * de detrás está oculta para el lector de pantalla.
+   */
+  it('atrapa el foco: ni Tab ni el lector de pantalla salen del diálogo (AC9)', async () => {
+    const { user, container } = montar();
+    await abrirElAviso(user);
+
+    await user.tab();
+    expect(screen.getByRole('button', { name: 'Publicar de todas formas' })).toHaveFocus();
+
+    // Tres Tabs más: en un navegador se habría dado la vuelta al primer botón
+    // varias veces. Lo que se comprueba es que en ningún momento el foco cae
+    // en el formulario de detrás.
+    for (let i = 0; i < 3; i += 1) {
+      await user.tab();
+      expect(container.contains(document.activeElement)).toBe(false);
+    }
+
+    // Y el formulario entero queda fuera del árbol de accesibilidad mientras el
+    // diálogo está abierto: sin esto, quien navega por formularios o por
+    // encabezados seguiría recorriendo una pantalla que ya no puede tocar.
+    // `querySelector` y no `getByRole`: precisamente porque ya no tiene rol.
+    expect(container.querySelector('button[type="submit"]')).toHaveAttribute('aria-hidden', 'true');
+  });
+
+  it('se cierra con Esc y devuelve el foco al campo que hay que cambiar (AC9)', async () => {
+    const { user } = montar();
+    await abrirElAviso(user);
+
+    await user.keyboard('{Escape}');
+
+    await waitFor(() => expect(screen.queryByRole('alertdialog')).toBeNull());
+    // No basta con cerrarlo: quien navega con teclado tiene que aterrizar en la
+    // hora, que es lo que el diálogo le acaba de pedir que cambie.
+    await waitFor(() => expect(screen.getByLabelText(/hora de inicio/i)).toHaveFocus());
+    expect(createClassroomMock).toHaveBeenCalledTimes(1);
+  });
+
+  it('«Cambiar la hora» cierra sin publicar nada', async () => {
+    const { user, onCreada } = montar();
+    await abrirElAviso(user);
+
+    await user.click(screen.getByRole('button', { name: 'Cambiar la hora' }));
+
+    await waitFor(() => expect(screen.queryByRole('alertdialog')).toBeNull());
+    expect(createClassroomMock).toHaveBeenCalledTimes(1);
+    expect(onCreada).not.toHaveBeenCalled();
+  });
+
+  it('«Publicar de todas formas» reenvía la MISMA petición con la confirmación', async () => {
+    const { user, onCreada } = montar();
+    await abrirElAviso(user);
+
+    await user.click(screen.getByRole('button', { name: 'Publicar de todas formas' }));
+
+    await waitFor(() => expect(onCreada).toHaveBeenCalledWith(AULA_CREADA));
+    expect(createClassroomMock).toHaveBeenCalledTimes(2);
+
+    const [primero] = createClassroomMock.mock.calls[0] as [Record<string, unknown>];
+    const [segundo] = createClassroomMock.mock.calls[1] as [Record<string, unknown>];
+
+    // El flag es el acuse de recibo del aviso, no un dato del aula: solo viaja
+    // en el reintento, y el resto del cuerpo es idéntico.
+    expect(primero.confirmarPocaAntelacion).toBeUndefined();
+    expect(segundo).toEqual({ ...primero, confirmarPocaAntelacion: true });
+  });
+
+  it('si el reintento falla, el diálogo se cierra para que se vea el error', async () => {
+    const { user } = montar();
+    await abrirElAviso(user);
+
+    createClassroomMock.mockRejectedValueOnce(new Error('offline'));
+    await user.click(screen.getByRole('button', { name: 'Publicar de todas formas' }));
+
+    // El diálogo es modal: si se quedara abierto, el aviso que explica qué pasó
+    // estaría detrás del fondo, invisible para quien mira y ausente para quien
+    // usa lector de pantalla.
+    await waitFor(() => expect(screen.queryByRole('alertdialog')).toBeNull());
+    expect(await screen.findByText(/revisa tu conexión/i)).toBeInTheDocument();
+  });
+
+  it.each<Tema>(['light', 'dark', 'hc'])(
+    'no tiene fallos de axe con el diálogo abierto en el tema %s',
+    async (tema) => {
+      const { user, baseElement } = montar(tema);
+      await abrirElAviso(user);
+
+      // `baseElement` y no `container`: el diálogo vive en un portal.
+      await esperarSinFallosDeAccesibilidad(baseElement);
+    },
+  );
 });

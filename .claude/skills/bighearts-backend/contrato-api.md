@@ -49,9 +49,20 @@ mensaje mostrar a partir del código, **nunca** parseando `message`.
 Códigos ya existentes: `VALIDATION_ERROR`, `EMAIL_ALREADY_EXISTS`, `INVALID_CREDENTIALS`,
 `ACCOUNT_SUSPENDED`, `ACCOUNT_PENDING`, `ACCOUNT_REJECTED`, `UNAUTHENTICATED`,
 `INSUFFICIENT_ROLE`, `INVALID_REFRESH_TOKEN`, `PROFILE_FORBIDDEN`, `USER_NOT_FOUND`,
-`CLASSROOM_NOT_FOUND`, `CLASSROOM_FORBIDDEN`, `INVALID_STATUS_TRANSITION`, `TOO_MANY_REQUESTS`,
-`DATABASE_UNAVAILABLE`, `INTERNAL_ERROR`. Los del dominio de reservas están en
+`CLASSROOM_NOT_FOUND`, `CLASSROOM_FORBIDDEN`, `TEACHER_SCHEDULE_CONFLICT`,
+`CLASSROOM_DURATION_INVALID`, `CLASSROOM_LEAD_TIME_WARNING`, `INVALID_STATUS_TRANSITION`,
+`TOO_MANY_REQUESTS`, `DATABASE_UNAVAILABLE`, `INTERNAL_ERROR`. Los del dominio de reservas están en
 `reglas-reservas.md` §7.
+
+**Un cuarto par que tampoco es intercambiable (HU-212):** los tres códigos de coherencia temporal
+del aula tienen `details` tipados en `@academia/types` y **no todos bloquean igual**.
+`TEACHER_SCHEDULE_CONFLICT` (409) y `CLASSROOM_DURATION_INVALID` (400) bloquean sin excepción;
+`CLASSROOM_LEAD_TIME_WARNING` (409) es un **aviso confirmable**: la misma petición reenviada con
+`confirmarPocaAntelacion: true` en el cuerpo se acepta. Ese flag es el único campo de
+`CreateClassroomInput` que no describe el aula —no se persiste ni vuelve en `Classroom`—: es el
+acuse de recibo de un aviso. Son códigos propios y no `VALIDATION_ERROR` porque el frontend ramifica
+por el código (§3, arriba) y porque los dos umbrales salen del entorno, así que la respuesta tiene
+que decir cuál era el número real.
 
 Tres que se confunden con facilidad y no son intercambiables:
 
@@ -214,5 +225,14 @@ la clave, escondiendo un error de configuración detrás de un cifrado más déb
 promete. Se genera con `openssl rand -hex 32`. **Cambiarla deja ilegibles los enlaces ya guardados**:
 no hay rotación de claves en Fase 1 (el prefijo `v1.` del texto cifrado es el gancho para añadirla).
 
-Pendientes de introducir (ver `docs/ARQUITECTURA.md` §6.4): `ACCESS_WINDOW_MINUTES` (30),
+`CLASS_MIN_LEAD_MINUTES` (60) y `CLASS_MAX_DURATION_MINUTES` (240) están **en el esquema desde
+HU-212**. La primera no admite un valor por debajo de la ventana de acceso (30) y la app se niega a
+arrancar si se lo dan: por debajo, el enlace se revelaría al publicar la clase.
+
+Pendientes de introducir (ver `docs/ARQUITECTURA.md` §6.4): `ACCESS_WINDOW_MINUTES` (30) y
 `CANCELLATION_WINDOW_MINUTES` (60).
+
+`@academia/types` exporta `CLASS_MIN_LEAD_MINUTES_DEFAULT` y `CLASS_MAX_DURATION_MINUTES_DEFAULT`
+con esos mismos valores. **No son la configuración, son el valor de fábrica**: existen para que el
+formulario pueda poner un `max` y redactar el aviso antes de hablar con la API. El servidor es la
+autoridad y devuelve su número real dentro de `details`. Si alguna vez divergen, manda el `details`.

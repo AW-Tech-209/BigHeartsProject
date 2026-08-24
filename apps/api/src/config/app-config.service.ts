@@ -95,6 +95,20 @@ export class AppConfigService {
     return this.config.get('TEACHER_APPROVAL_REQUIRED', { infer: true });
   }
 
+  /**
+   * Antelación mínima, en minutos, con la que se publica un aula (§4.4).
+   * **Aviso confirmable, no bloqueo**: ver `CLASS_MIN_LEAD_MINUTES` en el
+   * esquema.
+   */
+  get classMinLeadMinutes(): number {
+    return this.config.get('CLASS_MIN_LEAD_MINUTES', { infer: true });
+  }
+
+  /** Duración máxima de un aula, en minutos (§4.4). Este bloquea. */
+  get classMaxDurationMinutes(): number {
+    return this.config.get('CLASS_MAX_DURATION_MINUTES', { infer: true });
+  }
+
   get isProduction(): boolean {
     return this.nodeEnv === 'production';
   }

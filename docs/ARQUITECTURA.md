@@ -499,6 +499,15 @@ Variables que introdujo esta auditoría:
 | `MEETING_LINK_KEY`            | — (obligatoria) | ✅ **En el esquema desde HU-201.** Clave AES-256-GCM del enlace (§4.1). |
 | `ACCESS_WINDOW_MINUTES`       | `30`            | ⬜ Pendiente. La introduce HU-303, que abre la ventana (§4.1).          |
 | `CANCELLATION_WINDOW_MINUTES` | `60`            | ⬜ Pendiente. La introduce el Sprint 3 (§4.3).                          |
+| `CLASS_MIN_LEAD_MINUTES`      | `60`            | ✅ **En el esquema desde HU-212.** Antelación mínima (§4.4).            |
+| `CLASS_MAX_DURATION_MINUTES`  | `240`           | ✅ **En el esquema desde HU-212.** Duración máxima (§4.4).              |
+
+`CLASS_MIN_LEAD_MINUTES` **no admite un valor menor que `ACCESS_WINDOW_MINUTES`** y el esquema lo
+rechaza al arrancar: por debajo de la ventana de acceso, el enlace se revelaría en el mismo instante
+en que se publica la clase y la ventana de §4.1 dejaría de significar nada. Los dos umbrales se
+exportan además como `CLASS_MIN_LEAD_MINUTES_DEFAULT` y `CLASS_MAX_DURATION_MINUTES_DEFAULT` desde
+`@academia/types`, pero **eso es el valor de fábrica del formulario, no la configuración**: la
+autoridad es el servidor, que devuelve su número real dentro de `details`.
 
 `MEETING_LINK_KEY` se valida como **64 caracteres hexadecimales**, los 32 bytes exactos que pide
 AES-256, y no como "una cadena larga" al estilo de `JWT_SECRET`. Aceptar cualquier longitud

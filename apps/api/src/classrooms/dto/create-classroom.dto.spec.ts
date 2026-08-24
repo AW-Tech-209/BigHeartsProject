@@ -218,6 +218,31 @@ describe('CreateClassroomDto (validación)', () => {
   });
 
   /**
+   * HU-212, AC7. El acuse de recibo del aviso de poca antelación. Es opcional
+   * —la inmensa mayoría de las clases se publican con margen de sobra— pero
+   * tiene que existir en el DTO: con `whitelist` + `forbidNonWhitelisted`, un
+   * campo no declarado no se ignora, se rechaza, y el reintento del profesor
+   * moriría con un `VALIDATION_ERROR` en vez de publicar la clase.
+   */
+  describe('confirmarPocaAntelacion', () => {
+    it('es opcional', async () => {
+      expect(await camposInvalidos(payloadValido)).toHaveLength(0);
+    });
+
+    it('acepta el booleano', async () => {
+      expect(
+        await camposInvalidos({ ...payloadValido, confirmarPocaAntelacion: true }),
+      ).toHaveLength(0);
+    });
+
+    it('rechaza cualquier cosa que no sea booleana', async () => {
+      expect(await camposInvalidos({ ...payloadValido, confirmarPocaAntelacion: 'sí' })).toContain(
+        'confirmarPocaAntelacion',
+      );
+    });
+  });
+
+  /**
    * AC4: el formulario necesita `details.fields[]` para pintar el error BAJO
    * cada campo. Sin esa lista, lo único que puede hacer la pantalla es un
    * mensaje genérico arriba, y quien lee español como segunda lengua se queda

@@ -139,6 +139,15 @@ sentido, que un lector de pantalla lea algo comprensible, que el texto se entien
 real —jsdom no aplica las hojas de Tailwind, así que la regla `color-contrast` está desactivada a
 propósito en el helper; automatizarla ahí daría un falso verde—.
 
+**Y el ciclo de foco de un diálogo modal.** El `Tab` que vuelve del último elemento al primero lo
+hace un guardián de foco de Base UI que necesita un `focus` real de navegador; en jsdom el Tab
+aterriza en el propio guardián y la aserción prueba otra cosa. Lo que sí se testea, porque es lo
+que rompe de verdad si alguien quita el `modal`: que tras varios `Tab` el foco **nunca** caiga en
+la pantalla de detrás, que esa pantalla quede `aria-hidden`, que `Esc` cierre y que el foco vuelva
+al campo que el diálogo pidió cambiar. Patrón:
+`features/aulas/components/formulario-aula.spec.tsx`. **El recorrido completo con teclado se ve a
+ojo en el navegador**, junto con `.dark` y `.hc`.
+
 **Lo que sigue sin existir:**
 
 - **Cobertura retroactiva.** `features/auth` y `features/profile` se cubren cuando se toquen. Los
