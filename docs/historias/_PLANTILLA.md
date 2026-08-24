@@ -32,8 +32,9 @@ bien. Si una decisión de arquitectura la condiciona, **enlázala** en vez de co
 
 ## 🔧 Tasks
 
-**Una sola persona implementa la HU de punta a punta.** Las tasks van numeradas `T1…Tn` en el
-orden en que se hacen, agrupadas por capa. Los subtítulos nombran la **capa**, no a quién le toca.
+**Una sola persona, una sola sesión.** Tasks `T1…Tn` en orden, agrupadas por capa.
+
+**Máximo 7 tasks.** Si necesitas más, no es una HU: son dos.
 
 ### Contrato — va primero
 
@@ -60,8 +61,9 @@ orden en que se hacen, agrupadas por capa. Los subtítulos nombran la **capa**, 
 
 ## ✅ Criterios de aceptación
 
-Cada uno debe ser **verificable**: alguien tiene que poder decir "cumple" o "no cumple" sin opinar.
-`/hu` los recorre uno por uno al terminar, así que un AC vago no produce ninguna verificación útil.
+**Máximo 6.** Cada uno **verificable**: se puede decir "cumple" o "no cumple" sin opinar. `/hu` los
+recorre en una tabla al cerrar, así que un AC vago no produce verificación útil. Si tienes diez, o
+la HU es demasiado grande o estás repitiendo el mismo en tres formas.
 
 - [ ] **AC1** — \<condición observable\>.
 - [ ] **AC2** — \<condición observable\>.
@@ -98,5 +100,5 @@ Qué NO entra, para que no se cuele por el camino. Si algo se aplaza, di a qué 
 
 ## Notas de implementación
 
-Se rellena **al cerrar**: decisiones que hubo que tomar, supuestos, deuda anotada, y qué
-documentación se actualizó.
+**Máximo 5 líneas**, y solo si hubo una decisión que no estaba en la HU. Si no la hubo:
+«Sin desviaciones». El registro de lo que se hizo es el diff de git, no este apartado.

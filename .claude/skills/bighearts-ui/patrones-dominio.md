@@ -131,6 +131,25 @@ Cancelar una reserva o un aula **siempre** pasa por `<AlertDialog>` con:
 - Botones con verbos, no Sí/No: `Cancelar mi reserva` (destructive) / `Volver` (outline).
 - El botón seguro (`Volver`) recibe el foco inicial.
 
+## Confirmar un aviso del servidor
+
+Hay reglas que **avisan en vez de bloquear**: publicar un aula con poca antelación (HU-212) es una
+decisión del profesor, no un error suyo. El servidor responde un código propio —nunca un `message`
+que el frontend tenga que interpretar— y la UI abre el mismo `<AlertDialog>` de arriba, con la
+misma anatomía y dos diferencias:
+
+- **El diálogo no tiene `Trigger`.** Lo abre la respuesta del servidor, así que su apertura vive en
+  un estado aparte del contenido: si el contenido se vaciara al decidir, la animación de salida
+  ocurriría sobre un diálogo sin texto. Patrón: `features/aulas/components/dialogo-poca-antelacion.tsx`.
+- **Confirmar es reenviar la misma petición** con el flag de acuse de recibo en el cuerpo. Ese flag
+  no salta ninguna otra regla, y no se guarda: es una respuesta al aviso, no un dato del objeto.
+
+Los umbrales que se enseñan (`en 45 minutos`, `menos de 1 hora`) salen del `details` de la
+respuesta, **no de una constante del frontend**: la autoridad es la configuración del servidor, y
+una constante compilada mentiría el día que cambie el entorno. Valida la forma del `details` antes
+de escribirlo en el mensaje — es un `Record<string, unknown>` que llegó por la red, y un `as` a
+secas pone un `undefined` en mitad de la frase que lee el profesor.
+
 ## Preferencias de accesibilidad del usuario
 
 El estudiante indica su nivel de hipoacusia y preferencia de comunicación al registrarse.

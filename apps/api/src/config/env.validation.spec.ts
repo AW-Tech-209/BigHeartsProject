@@ -1,3 +1,7 @@
+import {
+  CLASS_MAX_DURATION_MINUTES_DEFAULT,
+  CLASS_MIN_LEAD_MINUTES_DEFAULT,
+} from '@academia/types';
 import { describe, expect, it } from 'vitest';
 
 import { validateEnv } from './env.validation';
@@ -63,5 +67,51 @@ describe('validateEnv', () => {
     // Quien configura un despliegue las arregla de una pasada en vez de
     // descubrirlas de una en una, reiniciando entre cada intento.
     expect(() => validateEnv(roto)).toThrow(/JWT_SECRET[\s\S]*MEETING_LINK_KEY/);
+  });
+});
+
+/**
+ * HU-212. Los dos umbrales del eje temporal del aula son opcionales —traen
+ * valor de fábrica— pero **no admiten cualquier valor**: uno de los dos tiene un
+ * suelo que sale de otra regla del producto, y dejarlo pasar convertiría la
+ * ventana de acceso al enlace en decorado.
+ */
+describe('validateEnv — coherencia temporal del aula', () => {
+  it('trae los valores de fábrica: 60 minutos de antelación, 240 de duración', () => {
+    const env = validateEnv(entornoValido());
+
+    expect(env.CLASS_MIN_LEAD_MINUTES).toBe(CLASS_MIN_LEAD_MINUTES_DEFAULT);
+    expect(env.CLASS_MAX_DURATION_MINUTES).toBe(CLASS_MAX_DURATION_MINUTES_DEFAULT);
+  });
+
+  it('los lee como números aunque el entorno los dé como texto', () => {
+    const env = validateEnv(
+      entornoValido({ CLASS_MIN_LEAD_MINUTES: '90', CLASS_MAX_DURATION_MINUTES: '120' }),
+    );
+
+    expect(env.CLASS_MIN_LEAD_MINUTES).toBe(90);
+    expect(env.CLASS_MAX_DURATION_MINUTES).toBe(120);
+  });
+
+  // El suelo no es un número elegido a ojo: por debajo de la ventana de acceso
+  // (30 min, §4.1) el enlace se revelaría en el mismo instante en que se publica
+  // la clase. Un despliegue con 15 aquí no puede arrancar.
+  it('no arranca con una antelación mínima por debajo de la ventana de acceso', () => {
+    expect(() => validateEnv(entornoValido({ CLASS_MIN_LEAD_MINUTES: '15' }))).toThrow(
+      /CLASS_MIN_LEAD_MINUTES/,
+    );
+
+    expect(
+      validateEnv(entornoValido({ CLASS_MIN_LEAD_MINUTES: '30' })).CLASS_MIN_LEAD_MINUTES,
+    ).toBe(30);
+  });
+
+  it('no arranca con una duración máxima de más de un día, ni con una negativa', () => {
+    expect(() => validateEnv(entornoValido({ CLASS_MAX_DURATION_MINUTES: '1441' }))).toThrow(
+      /CLASS_MAX_DURATION_MINUTES/,
+    );
+    expect(() => validateEnv(entornoValido({ CLASS_MAX_DURATION_MINUTES: '-10' }))).toThrow(
+      /CLASS_MAX_DURATION_MINUTES/,
+    );
   });
 });

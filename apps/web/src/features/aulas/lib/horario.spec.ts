@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest';
 
-import { aInstanteISO, describirDuracion, describirHorario } from './horario';
+import {
+  aInstanteISO,
+  describirDuracion,
+  describirHorario,
+  describirRangoHorario,
+} from './horario';
 
 /**
  * Estos tests corren en la zona del proceso, que NO es la misma en el portátil
@@ -89,6 +94,45 @@ describe('describirHorario', () => {
 
   it('no imprime «Invalid Date» ante una fecha rota', () => {
     expect(describirHorario('no-es-una-fecha')).toBe('Fecha no disponible');
+  });
+});
+
+describe('describirRangoHorario', () => {
+  const texto = describirRangoHorario(aInstanteISO({ fecha: '2027-08-12', hora: '18:00' })!, 60);
+
+  it('dice el día y las DOS horas: cuándo empieza y cuándo queda libre', () => {
+    expect(texto).toMatch(/jueves/i);
+    expect(texto).toContain('12');
+    expect(texto).toMatch(/agosto/i);
+    expect(texto).toMatch(/de 6:00/);
+    expect(texto).toMatch(/a 7:00/);
+  });
+
+  it('va en minúscula, porque se lee dentro de una frase', () => {
+    // `Ya tienes «…» el jueves 12 de agosto…`. Con mayúscula quedaría una
+    // segunda frase empezada en mitad de la primera.
+    expect(texto[0]).toBe(texto[0]?.toLowerCase());
+  });
+
+  it('nombra la zona horaria, igual que describirHorario', () => {
+    const nombreDeZona = texto.match(/\((.+)\)$/)?.[1];
+
+    expect(nombreDeZona).toBeTruthy();
+    expect(nombreDeZona!.length).toBeGreaterThan(3);
+  });
+
+  it('cruza la medianoche sin inventarse la hora del final', () => {
+    const cruzando = describirRangoHorario(
+      aInstanteISO({ fecha: '2027-08-12', hora: '23:30' })!,
+      60,
+    );
+
+    expect(cruzando).toMatch(/de 11:30/);
+    expect(cruzando).toMatch(/a 12:30/);
+  });
+
+  it('no imprime «Invalid Date» ante una fecha rota', () => {
+    expect(describirRangoHorario('no-es-una-fecha', 60)).toBe('Fecha no disponible');
   });
 });
 

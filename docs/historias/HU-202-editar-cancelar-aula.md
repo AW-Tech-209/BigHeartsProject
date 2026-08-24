@@ -50,6 +50,20 @@ verificable es `now ≥ scheduledAt`.
 `currentBookings` es siempre `0`. Esa regla nace con las reservas, en el Sprint 3, y hay que
 añadirla a esta pantalla entonces. Anotado en _Fuera de alcance_ para que no se pierda.
 
+### Deuda heredada de HU-212 (2026-08-24) — no es opcional
+
+**Esta HU cierra el AC8 de HU-212.** Al abrir el `PATCH` a `scheduledAt` y `durationMinutes`, las
+tres reglas de coherencia temporal (§4.4) empiezan a poder romperse por ahí, que es justo lo que
+HU-212 vino a impedir. **La lógica ya está escrita y no hay que reescribirla**: llama a
+`ClassroomsService.assertCoherenciaTemporal({ …, excluirId: id })` desde `editar()`. Es público y
+acepta `excluirId` desde el primer día precisamente para esto — sin ese id, un `PATCH` que no mueve
+el horario chocaría contra el aula que se está editando.
+
+En el frontend, el formulario en modo edición hereda los tres errores tal cual: el solapamiento se
+pinta bajo «Día», la duración recorta el `<select>`, y el aviso de poca antelación abre
+`<DialogoPocaAntelacion>` y se reintenta con `confirmarPocaAntelacion: true`. Añade a los tests de
+edición el caso «editar sin mover el horario no choca consigo misma».
+
 ## 🔧 Tasks
 
 **Una sola persona la implementa de punta a punta.** Agrupadas por capa, en orden.

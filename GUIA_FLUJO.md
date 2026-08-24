@@ -16,7 +16,11 @@ Code las lee solo, git las versiona, y ya no hay que subir un `.docx` a cada cha
           ↓                                                      ↓
    docs/historias/HU-XXX-*.md  ←──────────────────────────────────┘
           ↓
-   rama hu-XXX-slug-yo  →  /hu docs/historias/HU-XXX-*.md  →  PR  →  merge
+   rama hu-XXX-slug-yo
+          ↓
+   /hu docs/historias/HU-XXX-*.md   (una sesión) → /clear
+          ↓
+        PR  →  merge
 ```
 
 ---
@@ -96,14 +100,24 @@ desde la terminal, en el mismo momento en que escribo el `.md`.
 git checkout -b hu-301-reservar-cupo-william
 ```
 
-En Claude Code:
+En Claude Code, **una HU por sesión, y `/clear` al terminar**:
 
 ```
 /hu docs/historias/HU-301-reservar-cupo.md
 ```
 
-El comando hace cinco fases: entender → planear → implementar → verificar → cerrar. Está en
-[`.claude/commands/hu.md`](./.claude/commands/hu.md) si quiero cambiarlo.
+**Medido el 2026-08-24, no supuesto.** Se probó partir la HU en cuatro sesiones (contrato, backend,
+frontend, cierre) y salió **peor**: cada sesión paga ~32K fijos de arranque —system prompt, tools,
+memory, skills— así que cuatro arranques costaron 127K contra 32K. HU-212 partida gastó el 50% de
+la sesión de 5 h; sin partir, HU-208 gastó el 32%.
+
+Del mismo dato salió que **los skills son solo 3,1K de 166K de contexto**: recortarlos no sirve de
+nada. El gasto vive en `Messages` —135K en la capa de backend—, y lo llenan los comentarios largos,
+los tests de más, los AC de más y las explicaciones al cerrar. Por eso `CLAUDE.md` §11–13 y
+`bighearts-dod` §2.1–2.2 ponen topes duros a esas cuatro cosas.
+
+**Si una HU no cabe en una sesión, el problema es la HU.** Máximo 7 tasks y 6 AC; si necesita más,
+son dos HUs.
 
 ### Qué se carga y qué no
 

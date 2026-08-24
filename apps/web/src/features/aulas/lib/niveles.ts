@@ -33,3 +33,25 @@ export const nivelesDeIngles: Record<EnglishLevel, { nombre: string; ayuda: stri
  * no cambia.
  */
 export const duracionesDisponibles = [30, 45, 60, 90, 120] as const;
+
+/**
+ * Las duraciones que caben bajo el tope del servidor
+ * (`CLASS_MAX_DURATION_MINUTES`, HU-212, AC6).
+ *
+ * El tope **sale del entorno**, así que el formulario no puede darlo por
+ * sabido: arranca con el valor de fábrica del contrato y, si una respuesta
+ * `CLASSROOM_DURATION_INVALID` revela que el servidor aplica otro más bajo, la
+ * lista se recorta con este mismo filtro. Recortar la lista es lo que hace que
+ * el control «no deje escribir» la duración inválida en vez de limitarse a
+ * rechazarla después.
+ *
+ * Nunca devuelve una lista vacía: si el tope quedara por debajo de la duración
+ * más corta que se ofrece, se conserva esa —un `<select>` sin opciones es un
+ * formulario que no se puede enviar, y el profesor no tendría forma de saber
+ * por qué.
+ */
+export function duracionesHasta(maximoMinutos: number): number[] {
+  const permitidas = duracionesDisponibles.filter((minutos) => minutos <= maximoMinutos);
+
+  return permitidas.length > 0 ? [...permitidas] : [duracionesDisponibles[0]];
+}

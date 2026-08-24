@@ -15,14 +15,26 @@ import {
 
 import type { AuthenticatedUser } from '../auth/auth.types';
 import { insufficientRole } from '../auth/auth.errors';
+import { AppConfigService } from '../config/app-config.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { toClassroomDetail, toClassroomListItem, toPublicClassroom } from './classroom.mapper';
 import {
+  classroomDurationInvalid,
   classroomForbidden,
+  classroomLeadTimeWarning,
   classroomNotFound,
   teacherNotActive,
   teacherProfileNotFound,
+  teacherScheduleConflict,
 } from './classrooms.errors';
+import {
+  excedeLaDuracionMaxima,
+  finDelAula,
+  type IntervaloAula,
+  minutosDeAntelacion,
+  seSolapan,
+  tienePocaAntelacion,
+} from './coherencia-temporal.rules';
 import type { CreateClassroomDto } from './dto/create-classroom.dto';
 import type { ListClassroomsDto } from './dto/list-classrooms.dto';
 import type { ListMisAulasDto } from './dto/list-mis-aulas.dto';
@@ -34,6 +46,7 @@ export class ClassroomsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly meetingLinks: MeetingLinkCipher,
+    private readonly config: AppConfigService,
   ) {}
 
   /**
@@ -45,6 +58,13 @@ export class ClassroomsService {
    */
   async createClassroom(teacher: AuthenticatedUser, input: CreateClassroomDto): Promise<Classroom> {
     await this.assertPuedeCrearAulas(teacher.id);
+
+    await this.assertCoherenciaTemporal({
+      teacherId: teacher.id,
+      scheduledAt: new Date(input.scheduledAt),
+      durationMinutes: input.durationMinutes,
+      confirmarPocaAntelacion: input.confirmarPocaAntelacion,
+    });
 
     const classroom = await this.prisma.classroom.create({
       data: {
@@ -82,6 +102,118 @@ export class ClassroomsService {
     });
 
     return toPublicClassroom(classroom);
+  }
+
+  /**
+   * Las tres reglas de coherencia temporal del aula (HU-212, §4.4). Lanza la
+   * primera que falle, o no lanza nada.
+   *
+   * **Público y con `excluirId` desde el primer día porque HU-202 lo va a
+   * llamar desde `editar()`.** Las tres reglas valen igual al crear y al
+   * editar; si al llegar la edición hubiera que reescribirlas, se colarían por
+   * el `PATCH` exactamente las clases imposibles que esta HU vino a impedir. El
+   * aula que se edita se excluye para que no choque consigo misma (AC4).
+   *
+   * **El orden importa y no es casual:**
+   *
+   * 1. **Duración**, que es pura y no consulta nada. Además, sin una duración
+   *    creíble el intervalo del paso 2 no significa nada: el solapamiento se
+   *    calcula contra `scheduledAt + durationMinutes`.
+   * 2. **Solapamiento**, que bloquea.
+   * 3. **Antelación**, que solo avisa. Va la última **a propósito**: pedirle al
+   *    profesor que confirme publicar con poca antelación para después
+   *    rechazarle la clase por solaparse sería hacerle tomar una decisión sobre
+   *    algo que no iba a existir.
+   *
+   * No hay transacción ni bloqueo, a diferencia de §4.2. Aquí no hay contador
+   * que mutar ni dos actores compitiendo: el único que puede crear un aula del
+   * profesor es el propio profesor. Queda una carrera teórica —el mismo
+   * profesor publicando dos clases solapadas desde dos pestañas en el mismo
+   * milisegundo— que no se cubre porque la respuesta correcta sería un índice de
+   * exclusión en la BD (`tstzrange` + `EXCLUDE USING gist`), no un lock, y eso
+   * es su propia migración.
+   */
+  async assertCoherenciaTemporal(aula: {
+    teacherId: string;
+    scheduledAt: Date;
+    durationMinutes: number;
+    /** El acuse de recibo del aviso de poca antelación. Solo afecta al paso 3. */
+    confirmarPocaAntelacion?: boolean;
+    /** El aula que se está editando, que no puede chocar consigo misma (AC4). */
+    excluirId?: string;
+  }): Promise<void> {
+    const maximoMinutos = this.config.classMaxDurationMinutes;
+
+    if (excedeLaDuracionMaxima(aula.durationMinutes, maximoMinutos)) {
+      throw classroomDurationInvalid(maximoMinutos);
+    }
+
+    const conflicto = await this.buscarSolapamiento(aula);
+
+    if (conflicto) {
+      throw teacherScheduleConflict({
+        conflictoId: conflicto.id,
+        conflictoTitulo: conflicto.title,
+        conflictoScheduledAt: conflicto.scheduledAt.toISOString(),
+        conflictoDurationMinutes: conflicto.durationMinutes,
+      });
+    }
+
+    // El reloj del servidor, y una sola lectura: con dos `new Date()` el número
+    // que se comprueba y el que se devuelve en `details` podrían no ser el
+    // mismo, y el diálogo explicaría una antelación distinta de la que bloqueó.
+    const ahora = new Date();
+    const minimoMinutos = this.config.classMinLeadMinutes;
+
+    if (
+      tienePocaAntelacion(aula.scheduledAt, ahora, minimoMinutos) &&
+      !aula.confirmarPocaAntelacion
+    ) {
+      throw classroomLeadTimeWarning(minutosDeAntelacion(aula.scheduledAt, ahora), minimoMinutos);
+    }
+  }
+
+  /**
+   * La primera aula `PUBLISHED` del profesor cuyo horario se cruza con el que
+   * se le pasa, o `null`.
+   *
+   * **La consulta trae candidatas y el cruce lo decide `seSolapan()` en
+   * memoria.** No es un descuido: el solapamiento compara contra
+   * `scheduledAt + durationMinutes`, una expresión sobre dos columnas que
+   * Prisma no sabe filtrar, y resolverlo con `$queryRaw` metería la regla más
+   * sutil de esta HU —el borde abierto por la derecha, AC2— dentro de una
+   * cadena SQL que ningún test unitario puede recorrer. Aquí la decide una
+   * función pura con sus propios tests.
+   *
+   * Por eso el `where` solo acota por arriba (`scheduledAt < fin`): es un
+   * superconjunto exacto, sin suponer nada sobre lo que duran las aulas ya
+   * guardadas. Filtrar también por abajo exigiría dar por hecho un tope de
+   * duración que las filas anteriores a esta HU no tuvieron. El conjunto es
+   * pequeño —las aulas de UN profesor, y solo las publicadas— y se leen cuatro
+   * columnas.
+   *
+   * **Las canceladas no cuentan** (AC3): un aula `CANCELLED` no ocupa a nadie.
+   * Se filtra por `PUBLISHED` en positivo, no por «distinto de CANCELLED», para
+   * que un `DRAFT` de Fase 1.5 tampoco bloquee horarios que nadie ha publicado.
+   *
+   * Devuelve la más temprana de las que chocan: es un orden estable, y es la que
+   * el profesor reconoce antes al leer el mensaje.
+   */
+  private async buscarSolapamiento(
+    aula: IntervaloAula & { teacherId: string; excluirId?: string },
+  ) {
+    const candidatas = await this.prisma.classroom.findMany({
+      where: {
+        teacherId: aula.teacherId,
+        status: ClassroomStatus.PUBLISHED,
+        scheduledAt: { lt: finDelAula(aula) },
+        ...(aula.excluirId ? { id: { not: aula.excluirId } } : {}),
+      },
+      select: { id: true, title: true, scheduledAt: true, durationMinutes: true },
+      orderBy: { scheduledAt: 'asc' },
+    });
+
+    return candidatas.find((candidata) => seSolapan(aula, candidata)) ?? null;
   }
 
   /**

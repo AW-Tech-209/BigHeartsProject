@@ -3,6 +3,8 @@ import { describe, expect, it } from 'vitest';
 import {
   ApiErrorCode,
   BookingStatus,
+  CLASS_MAX_DURATION_MINUTES_DEFAULT,
+  CLASS_MIN_LEAD_MINUTES_DEFAULT,
   ClassroomStatus,
   CommunicationPreference,
   EnglishLevel,
@@ -127,5 +129,28 @@ describe('ApiErrorCode', () => {
     expect(ApiErrorCode.ACCOUNT_PENDING).toBe('ACCOUNT_PENDING');
     expect(ApiErrorCode.ACCOUNT_SUSPENDED).toBe('ACCOUNT_SUSPENDED');
     expect(ApiErrorCode.VALIDATION_ERROR).toBe('VALIDATION_ERROR');
+  });
+
+  it('separa la regla que bloquea de la que solo avisa (HU-212)', () => {
+    // Las tres son códigos propios y no `VALIDATION_ERROR` a propósito: el
+    // frontend ramifica por el código —el aviso abre un diálogo confirmable,
+    // los otros dos pintan el error bajo su campo—, nunca por el mensaje ni
+    // mirando dentro de `details` (`contrato-api.md` §3).
+    expect(ApiErrorCode.TEACHER_SCHEDULE_CONFLICT).toBe('TEACHER_SCHEDULE_CONFLICT');
+    expect(ApiErrorCode.CLASSROOM_DURATION_INVALID).toBe('CLASSROOM_DURATION_INVALID');
+    expect(ApiErrorCode.CLASSROOM_LEAD_TIME_WARNING).toBe('CLASSROOM_LEAD_TIME_WARNING');
+  });
+});
+
+describe('coherencia temporal del aula (HU-212)', () => {
+  it('la antelación mínima por defecto no baja de la ventana de acceso', () => {
+    // Por debajo de ACCESS_WINDOW_MINUTES (30, §4.1) el enlace se revelaría en
+    // el mismo instante en que se publica la clase, que es justo lo que esta
+    // regla existe para impedir. Bajar este número rompe §4.1 en silencio.
+    expect(CLASS_MIN_LEAD_MINUTES_DEFAULT).toBeGreaterThanOrEqual(30);
+  });
+
+  it('la duración máxima por defecto es la de §4.4', () => {
+    expect(CLASS_MAX_DURATION_MINUTES_DEFAULT).toBe(240);
   });
 });

@@ -1,3 +1,8 @@
+import {
+  ACCESS_WINDOW_MINUTES_DEFAULT,
+  CLASS_MAX_DURATION_MINUTES_DEFAULT,
+  CLASS_MIN_LEAD_MINUTES_DEFAULT,
+} from '@academia/types';
 import { z } from 'zod';
 
 /**
@@ -118,6 +123,46 @@ export const envSchema = z.object({
     .enum(['true', 'false'])
     .default('true')
     .transform((value) => value === 'true'),
+
+  /**
+   * Antelación mínima con la que se puede publicar un aula, en minutos
+   * (HU-212, `docs/ARQUITECTURA.md` §4.4). Opcional: por defecto 60.
+   *
+   * **Es un aviso confirmable, no un bloqueo.** Por debajo de este número la
+   * API responde `CLASSROOM_LEAD_TIME_WARNING`, y la misma petición reenviada
+   * con `confirmarPocaAntelacion: true` se acepta: publicar con poca antelación
+   * solo perjudica al propio profesor.
+   *
+   * **El suelo no es arbitrario: es `ACCESS_WINDOW_MINUTES` (30).** Por debajo
+   * de la ventana de acceso de §4.1, el enlace se revelaría en el mismo
+   * instante en que se publica la clase, y entonces la ventana deja de
+   * significar nada. Se valida contra la constante de `@academia/types` en vez
+   * de contra un 30 escrito aquí para que las dos no puedan divergir el día que
+   * `ACCESS_WINDOW_MINUTES` entre en este esquema (HU-303).
+   */
+  CLASS_MIN_LEAD_MINUTES: z.coerce
+    .number()
+    .int()
+    .min(
+      ACCESS_WINDOW_MINUTES_DEFAULT,
+      `no puede bajar de ${ACCESS_WINDOW_MINUTES_DEFAULT}: es la ventana de acceso al enlace, y por debajo el enlace se revelaría al publicar la clase`,
+    )
+    .default(CLASS_MIN_LEAD_MINUTES_DEFAULT),
+
+  /**
+   * Duración máxima de un aula, en minutos (HU-212). Opcional: por defecto 240.
+   *
+   * Este sí bloquea: `CLASSROOM_DURATION_INVALID`, sin confirmación posible.
+   * El tope de 1440 (un día) no es la regla de negocio sino su marco: una
+   * "clase" más larga que un día es un error de configuración, y detectarlo al
+   * arrancar es mejor que descubrirlo en el primer aula imposible.
+   */
+  CLASS_MAX_DURATION_MINUTES: z.coerce
+    .number()
+    .int()
+    .positive()
+    .max(1440, 'una clase no puede durar más de un día (1440 minutos)')
+    .default(CLASS_MAX_DURATION_MINUTES_DEFAULT),
 });
 
 /** Variables de entorno ya validadas y con los tipos correctos. */

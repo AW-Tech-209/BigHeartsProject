@@ -134,4 +134,23 @@ export class CreateClassroomDto implements CreateClassroomInput {
 
   @IsIn(PLATAFORMAS_OFRECIDAS, { message: 'Elige la plataforma: Zoom, Meet u otra.' })
   meetingProvider!: MeetingProvider;
+
+  /**
+   * El profesor ya vio el aviso de poca antelación y decidió publicar igual
+   * (HU-212, AC7).
+   *
+   * **El único campo de este DTO que no describe el aula.** No se persiste ni
+   * vuelve en la respuesta: es el acuse de recibo de un aviso, y por eso el
+   * servicio lo lee y lo tira. Sin él, un `scheduledAt` por debajo de
+   * `CLASS_MIN_LEAD_MINUTES` responde `CLASSROOM_LEAD_TIME_WARNING`; con él en
+   * `true`, la misma petición se acepta.
+   *
+   * Viaja en el cuerpo y no como query porque ningún `POST` del repo mezcla las
+   * dos cosas. Y **no está aquí como excepción a las otras dos reglas**: el
+   * solapamiento y la duración bloquean con este flag puesto exactamente igual
+   * que sin él.
+   */
+  @IsOptional()
+  @IsBoolean({ message: 'Confirma si quieres publicar con poca antelación.' })
+  confirmarPocaAntelacion?: boolean;
 }

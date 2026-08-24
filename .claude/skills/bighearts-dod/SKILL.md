@@ -31,51 +31,47 @@ nómbralo.
 ## 2. Verificación automática — **una vez, al cerrar**
 
 ```bash
-npm run typecheck    # los tres workspaces
-npm run lint         # ESLint en todo el repo
-npm run test         # Vitest en los TRES workspaces (compila tipos antes)
-npm run build        # compila los tres, tipos primero
+npm run typecheck && npm run lint && npm run build && npm run test
 ```
 
-Los cuatro en verde. `npm run test` desde la raíz ya hace `build:types` primero; si corres un
-workspace suelto y tocaste `packages/types`, lanza `npm run build:types` antes o fallará con
-`TS2307`.
+Una sola ejecución al final de la HU. **No** después de cada task. **No** `format:check`: lo hace el
+hook de `pre-commit`. **Nunca** sobre archivos `.md`.
 
-**Esto se corre al cerrar la HU, no después de cada task.** Con 10–17 tasks por historia, repetir
-la suite completa en cada una son diez o quince ejecuciones que vuelcan su salida al contexto sin
-aportar nada que no aporte una. Durante la implementación se verifica **solo lo tocado**:
-`npx vitest run <ruta-del-spec>` y `npx eslint <rutas tocadas>`.
+Durante la implementación, como mucho el spec que acabas de escribir: `npx vitest run <ruta>`.
 
-**`format:check` ya no está en la lista.** El hook de `pre-commit` pasa Prettier sobre los ficheros
-staged; correrlo además sobre el repo entero dentro de la sesión es pagar dos veces por el mismo
-trabajo.
+## 2.1 Qué se testea — y es poco, a propósito
 
-## 2.1 Qué se testea y qué no
+Esto es un **MVP para enseñarle a un cliente**, no un producto enterprise. El repo llegó a 0,66
+líneas de test por línea de código y buena parte no protegía nada.
 
-Un test que no puede fallar por una razón real es coste sin red. Esta lista existe porque el repo
-llegó a **0,66 líneas de test por línea de código**, y buena parte no protegía nada.
+**Se testea:**
 
-**Se testea siempre:**
-
-- **Invariantes de negocio**: concurrencia de cupos, ventana del enlace, no solapamiento,
-  transiciones de estado. Un fallo aquí no es un bug, es el producto.
-- **Autorización**: quién recibe `403` y quién no, verificado en el backend.
-- **Funciones puras de `packages/types`**: `derivarEstadoAula`, `coincideConLaPreferencia`. Baratas
-  y es donde vive la lógica compartida por las dos apps.
-- **`axe`** en componentes de dominio y en cada pantalla nueva. Es la red que sustituye a un
-  checklist manual que ya se degradó una vez (HU-103).
-- **Comportamiento de componente con `user-event`**: que al enviar un formulario vacío aparezca el
-  error, que el foco vaya donde debe.
+- **Invariantes de negocio**: concurrencia de cupos, ventana del enlace, solapamiento, transiciones
+  de estado. Un fallo aquí no es un bug, es el producto.
+- **Autorización**: quién recibe `403`.
+- **Funciones puras compartidas** de `packages/types`.
+- **`axe` en pantalla nueva**: una línea por pantalla.
 
 **No se testea:**
 
-- **Render en los tres temas.** jsdom **no calcula CSS de verdad** — no hace cascada ni layout.
-  Montar un componente con la clase `.hc` confirma que la clase se aplicó, no que se vea bien.
-  `.dark` y `.hc` se revisan **a ojo en el navegador**, que es el único sitio donde son reales.
-- **Texto literal de microcopy.** Frágil y de bajo valor: cambia una coma y se rompe el test sin
-  que se haya roto nada.
-- **«El componente renderiza sin lanzar».** Si no hay aserción de comportamiento, no hay test.
-- **Wrappers y re-exports** sin lógica propia.
+- Render en los tres temas. jsdom no calcula CSS: no comprueba nada. `.dark` y `.hc` se miran en el
+  navegador.
+- Comportamiento de componente, salvo en **formularios con validación**. Un formulario sí; una
+  tarjeta que pinta datos, no.
+- Texto literal de microcopy.
+- «Renderiza sin lanzar», wrappers, re-exports.
+
+**Si dudas, no lo escribas.** Un test de más cuesta en cada sesión futura; uno de menos cuesta un
+bug que se ve al usar la pantalla.
+
+## 2.2 Comentarios en el código — límite duro
+
+Máximo **2 líneas**, y solo cuando el _porqué_ no se deduce leyendo. Cero encabezados narrativos,
+cero repetir lo que hace la línea de al lado, cero referencias a números de HU.
+
+Un comentario largo se paga **cada vez que alguien vuelve a leer ese archivo**, en todas las
+sesiones futuras. Si la razón necesita un párrafo, va en `ARQUITECTURA.md` o en la HU, no en el
+`.ts`.
 
 ## 3. Si tocaste backend
 
@@ -138,6 +134,15 @@ subir el umbral):
 sentido, que un lector de pantalla lea algo comprensible, que el texto se entienda, y el contraste
 real —jsdom no aplica las hojas de Tailwind, así que la regla `color-contrast` está desactivada a
 propósito en el helper; automatizarla ahí daría un falso verde—.
+
+**Y el ciclo de foco de un diálogo modal.** El `Tab` que vuelve del último elemento al primero lo
+hace un guardián de foco de Base UI que necesita un `focus` real de navegador; en jsdom el Tab
+aterriza en el propio guardián y la aserción prueba otra cosa. Lo que sí se testea, porque es lo
+que rompe de verdad si alguien quita el `modal`: que tras varios `Tab` el foco **nunca** caiga en
+la pantalla de detrás, que esa pantalla quede `aria-hidden`, que `Esc` cierre y que el foco vuelva
+al campo que el diálogo pidió cambiar. Patrón:
+`features/aulas/components/formulario-aula.spec.tsx`. **El recorrido completo con teclado se ve a
+ojo en el navegador**, junto con `.dark` y `.hc`.
 
 **Lo que sigue sin existir:**
 

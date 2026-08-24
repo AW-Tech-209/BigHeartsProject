@@ -7,8 +7,13 @@ import { cn } from '@/lib/utils';
  * Diálogo de confirmación para acciones que se pueden perder: cancelar una
  * reserva, cancelar un aula, rechazar a un profesor.
  *
- * Es `AlertDialog` y no `Dialog` porque no se cierra al pulsar fuera ni con
- * Escape sin decidir: una pulsación accidental no debe parecer una respuesta.
+ * Es `AlertDialog` y no `Dialog` porque **no se cierra al pulsar fuera**: un
+ * clic accidental en el fondo no debe parecer una respuesta.
+ *
+ * **Escape sí lo cierra**, y eso es deliberado: es la salida que espera quien
+ * navega con teclado, y cerrar equivale siempre a la opción segura —no ejecuta
+ * la acción, igual que el botón de salida. Quitarlo dejaría a esa persona
+ * atrapada en un diálogo que no abrió necesariamente a propósito.
  *
  * **La forma que exige el skill** (`patrones-dominio.md`, «Acciones destructivas»):
  *

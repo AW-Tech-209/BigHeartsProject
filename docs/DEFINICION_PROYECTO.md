@@ -170,6 +170,14 @@ está en [`ARQUITECTURA.md` §4](./ARQUITECTURA.md#4-reglas-de-negocio--fase-1).
 > arquitectura y no estaba en el alcance de este documento; **queda incorporada al alcance de
 > Fase 1** y se sube a regla diferencial, porque sostiene la fiabilidad del historial.
 
+**Una quinta regla, de integridad y no diferencial: el aula publicada tiene que ser posible.** Un
+profesor no puede tener dos clases suyas a la misma hora —nadie está en dos videollamadas a la vez—,
+una clase no puede durar más de **4 horas**, y publicar con menos de **1 hora** de antelación abre un
+aviso que el profesor puede confirmar, porque por debajo de eso las promesas de las reglas 1 y de
+los recordatorios no se pueden cumplir. Las tres son configurables por entorno y se detallan en
+[`ARQUITECTURA.md` §4.4](./ARQUITECTURA.md#44-no-solapamiento). No están en la lista de arriba a
+propósito: no venden el producto, evitan que se rompa.
+
 ---
 
 ## 5. Alcance de la Fase 1
