@@ -3,10 +3,9 @@ description: Implementa una Historia de Usuario del repo y verifica sus acceptan
 argument-hint: <ruta a docs/historias/HU-XXX-*.md>
 ---
 
-Implementa la HU de **$ARGUMENTS**. Si no se pasó ruta, lista `docs/historias/` y pregunta cuál.
+Implementa la HU de **$ARGUMENTS**.
 
-**Una sola sesión, de principio a fin.** No la partas en capas: cada sesión nueva vuelve a pagar
-~32K de arranque.
+**Una sola sesión, de principio a fin.** No la partas en capas.
 
 ## Reglas de gasto — obedécelas
 
@@ -25,7 +24,7 @@ Lee la HU. Carga **solo** los skills que necesites: `bighearts-backend` si tocas
 Si la HU depende de algo sin decidir (`ARQUITECTURA.md` §14.6) o da por hecho algo que no existe en
 el repo, **para y pregunta**.
 
-Si algo contradice `ARQUITECTURA.md`, un skill o el código: dilo y espera.
+Si algo contradice `ARQUITECTURA.md`, un skill o el código: pregunta y espera.
 
 **No resumas la HU.** Empieza a trabajar.
 

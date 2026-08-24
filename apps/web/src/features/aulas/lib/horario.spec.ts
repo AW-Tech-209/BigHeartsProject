@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  aFechaYHora,
   aInstanteISO,
   describirDuracion,
   describirHorario,
@@ -15,6 +16,16 @@ import {
  * cierta en Bogotá. Un test que solo pasa en una zona horaria es un test que
  * alguien va a desactivar el día que rompa en CI.
  */
+
+describe('aFechaYHora', () => {
+  // El camino inverso de aInstanteISO, para precargar el formulario en modo
+  // edición (HU-202, T8): ida y vuelta debe devolver el mismo instante.
+  it('deshace aInstanteISO: ida y vuelta conserva el día y la hora', () => {
+    const iso = aInstanteISO({ fecha: '2027-08-12', hora: '18:30' })!;
+
+    expect(aFechaYHora(iso)).toEqual({ fecha: '2027-08-12', hora: '18:30' });
+  });
+});
 
 describe('aInstanteISO', () => {
   it('combina día y hora en un instante ISO en UTC', () => {

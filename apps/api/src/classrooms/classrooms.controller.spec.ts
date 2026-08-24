@@ -10,6 +10,7 @@ import type { ClassroomsService } from './classrooms.service';
 import type { CreateClassroomDto } from './dto/create-classroom.dto';
 import type { ListClassroomsDto } from './dto/list-classrooms.dto';
 import type { ListMisAulasDto } from './dto/list-mis-aulas.dto';
+import type { UpdateClassroomDto } from './dto/update-classroom.dto';
 
 const profesor: AuthenticatedUser = {
   id: '11111111-1111-4111-8111-111111111111',
@@ -31,11 +32,17 @@ function setup() {
     id: '44444444-4444-4444-8444-444444444444',
     myBookingStatus: null,
   });
+  const editClassroom = vi.fn().mockResolvedValue({ id: ID_DEL_AULA });
+  const cancelClassroom = vi
+    .fn()
+    .mockResolvedValue({ id: ID_DEL_AULA, status: ClassroomStatus.CANCELLED });
   const service = {
     createClassroom,
     listClassrooms,
     listMisAulas,
     getClassroomDetail,
+    editClassroom,
+    cancelClassroom,
   } as unknown as ClassroomsService;
 
   return {
@@ -44,6 +51,8 @@ function setup() {
     listClassrooms,
     listMisAulas,
     getClassroomDetail,
+    editClassroom,
+    cancelClassroom,
   };
 }
 
@@ -301,5 +310,90 @@ describe('ClassroomsController — orden de rutas', () => {
 
     expect(metodos.indexOf('listMias')).toBeGreaterThan(-1);
     expect(metodos.indexOf('listMias')).toBeLessThan(metodos.indexOf('detail'));
+  });
+});
+
+describe('ClassroomsController.edit — PATCH /classrooms/:id (HU-202)', () => {
+  it('pasa al servicio el usuario del token, el id de la ruta y el cuerpo', async () => {
+    const { controller, editClassroom } = setup();
+    const dto = { title: 'Nuevo título' } as UpdateClassroomDto;
+
+    await controller.edit(profesor, ID_DEL_AULA, dto);
+
+    expect(editClassroom).toHaveBeenCalledWith(profesor, ID_DEL_AULA, dto);
+  });
+
+  it('devuelve `{ classroom }`', async () => {
+    const { controller } = setup();
+
+    await expect(controller.edit(profesor, ID_DEL_AULA, {} as UpdateClassroomDto)).resolves.toEqual(
+      { classroom: { id: ID_DEL_AULA } },
+    );
+  });
+
+  describe('autorización por rol (AC1)', () => {
+    const guard = new RolesGuard(new Reflector());
+
+    it('deja pasar a TEACHER', () => {
+      expect(
+        guard.canActivate(contextoDeRol(ClassroomsController.prototype.edit, UserRole.TEACHER)),
+      ).toBe(true);
+    });
+
+    it.each([UserRole.STUDENT, UserRole.ADMIN])('responde 403 INSUFFICIENT_ROLE a %s', (role) => {
+      try {
+        guard.canActivate(contextoDeRol(ClassroomsController.prototype.edit, role));
+        throw new Error('Se esperaba un 403 y el guard dejó pasar.');
+      } catch (error) {
+        const excepcion = error as {
+          getStatus?: () => number;
+          getResponse?: () => { code: string };
+        };
+        expect(excepcion.getStatus?.()).toBe(403);
+        expect(excepcion.getResponse?.().code).toBe(ApiErrorCode.INSUFFICIENT_ROLE);
+      }
+    });
+  });
+});
+
+describe('ClassroomsController.cancel — POST /classrooms/:id/cancel (HU-202)', () => {
+  it('pasa al servicio el usuario del token y el id de la ruta', async () => {
+    const { controller, cancelClassroom } = setup();
+
+    await controller.cancel(profesor, ID_DEL_AULA);
+
+    expect(cancelClassroom).toHaveBeenCalledWith(profesor, ID_DEL_AULA);
+  });
+
+  it('devuelve `{ classroom }` con el aula cancelada', async () => {
+    const { controller } = setup();
+
+    await expect(controller.cancel(profesor, ID_DEL_AULA)).resolves.toEqual({
+      classroom: { id: ID_DEL_AULA, status: ClassroomStatus.CANCELLED },
+    });
+  });
+
+  describe('autorización por rol (AC1)', () => {
+    const guard = new RolesGuard(new Reflector());
+
+    it('deja pasar a TEACHER', () => {
+      expect(
+        guard.canActivate(contextoDeRol(ClassroomsController.prototype.cancel, UserRole.TEACHER)),
+      ).toBe(true);
+    });
+
+    it.each([UserRole.STUDENT, UserRole.ADMIN])('responde 403 INSUFFICIENT_ROLE a %s', (role) => {
+      try {
+        guard.canActivate(contextoDeRol(ClassroomsController.prototype.cancel, role));
+        throw new Error('Se esperaba un 403 y el guard dejó pasar.');
+      } catch (error) {
+        const excepcion = error as {
+          getStatus?: () => number;
+          getResponse?: () => { code: string };
+        };
+        expect(excepcion.getStatus?.()).toBe(403);
+        expect(excepcion.getResponse?.().code).toBe(ApiErrorCode.INSUFFICIENT_ROLE);
+      }
+    });
   });
 });

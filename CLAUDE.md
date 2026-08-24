@@ -40,7 +40,7 @@ Seed: un usuario por rol, contraseña `Password123!` (ver `README.md`).
 ```
 apps/api/src/     config · prisma · common · health · auth ✅ · users ✅ · admin ✅
                   notifications ✅ (solo el puerto + adaptador de registro)
-                  classrooms 🟨 (crear, catálogo, «mis aulas» y detalle ✅; editar/cancelar pendiente)
+                  classrooms ✅ (crear, catálogo, «mis aulas», detalle, editar y cancelar)
                   bookings · sessions ⬜ (stubs)
 apps/web/src/     app/ (providers, router) · pages/ · features/<dominio>/{api,components,hooks,lib}
                   components/ui/ (shadcn+Base UI) · components/layout/ (shell, cabecera, rejilla)

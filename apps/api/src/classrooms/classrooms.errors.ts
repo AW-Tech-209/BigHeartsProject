@@ -152,6 +152,19 @@ export const classroomLeadTimeWarning = (
 };
 
 /**
+ * El aula ya empezó (`now ≥ scheduledAt`) o ya está `CANCELLED` (HU-202, AC3).
+ *
+ * Es 409: el aula existe y quien pregunta la sabe suya, pero ya no hay ventana
+ * para editarla ni cancelarla. `COMPLETED` no aparece en la comprobación
+ * porque no tiene escritor en Fase 1 (decisión de auditoría 2 de la HU).
+ */
+export const classroomNotEditable = (): ConflictException =>
+  new ConflictException({
+    code: ApiErrorCode.CLASSROOM_NOT_EDITABLE,
+    message: 'Esta clase ya no se puede editar ni cancelar.',
+  });
+
+/**
  * Traduce el estado de la cuenta del profesor al 403 que le corresponde.
  *
  * Los tres mensajes son distintos porque los tres hechos son distintos, y el

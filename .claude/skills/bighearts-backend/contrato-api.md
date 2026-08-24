@@ -123,23 +123,23 @@ Back-office, todos con `@Roles(UserRole.ADMIN)` en la clase del controlador (HU-
 | POST   | `/admin/teachers/:id/approve` | — (ruta)  | `{ user }`             |
 | POST   | `/admin/teachers/:id/reject`  | — (ruta)  | `{ user }`             |
 
-Aulas (HU-201, HU-203, HU-207, HU-204, HU-211, HU-208):
+Aulas (HU-201, HU-203, HU-207, HU-204, HU-211, HU-208, HU-202):
 
-| Método | Ruta               | Entrada                             | `data`                             | Rol                |
-| ------ | ------------------ | ----------------------------------- | ---------------------------------- | ------------------ |
-| POST   | `/classrooms`      | `CreateClassroomInput`              | `{ classroom }`                    | `TEACHER` `ACTIVE` |
-| GET    | `/classrooms`      | `ListClassroomsQuery`               | `{ items, total, page, pageSize }` | Cualquier sesión   |
-| GET    | `/classrooms/mias` | `MisAulasQuery`                     | `{ items, total, page, pageSize }` | `TEACHER`          |
-| GET    | `/classrooms/:id`  | — (ruta)                            | `{ classroom: ClassroomDetail }`   | Cualquier sesión   |
-| PATCH  | `/classrooms/:id`  | `UpdateClassroomAccessibilityInput` | `{ classroom }`                    | `TEACHER` (dueño)  |
+| Método | Ruta                     | Entrada                | `data`                             | Rol                |
+| ------ | ------------------------ | ---------------------- | ---------------------------------- | ------------------ |
+| POST   | `/classrooms`            | `CreateClassroomInput` | `{ classroom }`                    | `TEACHER` `ACTIVE` |
+| GET    | `/classrooms`            | `ListClassroomsQuery`  | `{ items, total, page, pageSize }` | Cualquier sesión   |
+| GET    | `/classrooms/mias`       | `MisAulasQuery`        | `{ items, total, page, pageSize }` | `TEACHER`          |
+| GET    | `/classrooms/:id`        | — (ruta)               | `{ classroom: ClassroomDetail }`   | Cualquier sesión   |
+| PATCH  | `/classrooms/:id`        | `UpdateClassroomInput` | `{ classroom }`                    | `TEACHER` (dueño)  |
+| POST   | `/classrooms/:id/cancel` | — (ruta)               | `{ classroom }`                    | `TEACHER` (dueño)  |
 
-**`PATCH /classrooms/:id` es deliberadamente acotado a los 5 campos de accesibilidad**
-(`communicationModes`, los tres apoyos, `meetingProvider`) — decisión D25 de `ARQUITECTURA.md`. No
-es la edición general del aula (título, horario, cupo, enlace), que trae HU-202: esa HU **extiende
-este mismo endpoint**, no abre uno paralelo. Solo el profesor dueño puede llamarlo; cualquier otro
-recibe `CLASSROOM_FORBIDDEN` (403) — código nuevo de esta HU, que HU-202 reutiliza sin cambiarlo.
-Un id inexistente responde `CLASSROOM_NOT_FOUND`, igual que el detalle. Sin la regla "no editar si
-ya empezó": es metadata declarativa, ninguna invariante la bloquea.
+**`PATCH /classrooms/:id` nació acotado a los 5 campos de accesibilidad (HU-211) y HU-202 lo
+extendió** con el resto del aula (título, horario, cupo, enlace) — decisión D25 de
+`ARQUITECTURA.md`: un solo endpoint, no uno paralelo. Todo opcional; omitir un campo lo deja
+intacto. Solo el profesor dueño puede llamarlo; cualquier otro recibe `CLASSROOM_FORBIDDEN` (403).
+Un id inexistente responde `CLASSROOM_NOT_FOUND`. Editar o cancelar un aula que ya empezó
+(`now ≥ scheduledAt`) o ya `CANCELLED` responde `CLASSROOM_NOT_EDITABLE` (409) en los dos endpoints.
 
 **`GET /classrooms?mias=true` acota el catálogo al profesor que pregunta** (HU-208, D27). Es la
 única excepción a «ningún parámetro toca el alcance» de §4.8 regla 3, y lo es porque no la rompe:

@@ -574,16 +574,15 @@ de implementación están en §7.1.
 | `hasLiveCaptions`      | bool, default false                                 | ✅ **Implementado en HU-211.** Subtítulos en vivo.                                                                                      |
 | `hasVisualMaterials`   | bool, default false                                 | ✅ **Implementado en HU-211.** Materiales visuales de apoyo.                                                                            |
 
-> **Decisión D25 (2026-08-21, HU-211) — `PATCH /classrooms/:id` nace acotado a los 5 campos de
-> accesibilidad.** El endpoint que completa o corrige `communicationModes` y los cuatro campos de
-> arriba **no es la edición general del aula** —título, horario, cupo, enlace—, que trae HU-202
-> (todavía ⬜ pendiente, con su propio `UpdateClassroomInput`, `CLASSROOM_NOT_EDITABLE`). Se
-> resolvió así porque HU-211 necesitaba una vía para sacar a un aula de «sin indicar» sin esperar a
-> HU-202, y las dos HUs comparten la misma ruta y el mismo verbo a propósito: **HU-202 EXTIENDE este
-> endpoint** con el resto de campos editables, no lo reemplaza ni convive con un segundo `PATCH`.
-> Introduce `CLASSROOM_FORBIDDEN` (403, no eres el dueño) — HU-202 reutiliza el mismo código, no
-> inventa uno propio. Sin la regla "no editar si ya empezó" de HU-202: es metadata declarativa, no
-> afecta horario ni cupo, así que ninguna invariante la bloquea.
+> **Decisión D25 (2026-08-21, HU-211; extendida 2026-08-24, HU-202) — `PATCH /classrooms/:id` nace
+> acotado a los 5 campos de accesibilidad y HU-202 lo extiende.** El endpoint nació acotado a
+> `communicationModes` y los cuatro campos de arriba porque HU-211 necesitaba una vía para sacar a un
+> aula de «sin indicar» sin esperar a HU-202. Se resolvió así a propósito: **HU-202 EXTIENDE este
+> mismo endpoint** con el resto de campos editables (título, horario, cupo, enlace), en un único
+> `UpdateClassroomInput` con todo opcional — no abre un segundo `PATCH` ni un DTO paralelo. También
+> trae `POST /classrooms/:id/cancel` y `CLASSROOM_NOT_EDITABLE` (409): ni editable ni cancelable una
+> vez que `now ≥ scheduledAt`, o si ya está `CANCELLED`. Reutiliza `CLASSROOM_FORBIDDEN` (403,
+> HU-211) para «no eres el dueño» en los dos endpoints.
 
 > **Decisión D15 (2026-08-18) — el aula nace `PUBLISHED`.** `POST /classrooms` la publica de
 > inmediato; no hay flujo de borrador en Fase 1. Crear un aula tiene que costar menos que abrir un

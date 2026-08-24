@@ -15,7 +15,7 @@ import {
   type ValoresAccesibilidadAula,
 } from '@/features/aulas/components/seccion-accesibilidad-aula';
 import { esAulaNoEncontrada, useClassroom } from '@/features/aulas/hooks/use-classroom';
-import { useUpdateClassroomAccessibility } from '@/features/aulas/hooks/use-update-classroom-accessibility';
+import { useUpdateClassroom } from '@/features/aulas/hooks/use-update-classroom';
 import {
   etiquetaPlataformaReunion,
   PLATAFORMAS_OFRECIDAS,
@@ -142,7 +142,7 @@ function valoresIniciales(aula: ClassroomDetail): FormValues {
 function FormularioAccesibilidad({ aula }: { aula: ClassroomDetail }) {
   const navigate = useNavigate();
   const announce = useAnnounce();
-  const mutation = useUpdateClassroomAccessibility(aula.id);
+  const mutation = useUpdateClassroom(aula.id);
 
   const [values, setValues] = useState<FormValues>(() => valoresIniciales(aula));
   const [errorModos, setErrorModos] = useState<string | null>(null);

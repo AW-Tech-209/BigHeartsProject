@@ -50,6 +50,20 @@ export function aInstanteISO({ fecha, hora }: FechaYHora): string | null {
 }
 
 /**
+ * El camino inverso de {@link aInstanteISO}: de un instante UTC a los dos
+ * campos que precargan el formulario en modo edición, en la zona del profesor.
+ */
+export function aFechaYHora(instanteISO: string): FechaYHora {
+  const instante = new Date(instanteISO);
+  const dosDigitos = (n: number) => String(n).padStart(2, '0');
+
+  return {
+    fecha: `${instante.getFullYear()}-${dosDigitos(instante.getMonth() + 1)}-${dosDigitos(instante.getDate())}`,
+    hora: `${dosDigitos(instante.getHours())}:${dosDigitos(instante.getMinutes())}`,
+  };
+}
+
+/**
  * El texto completo con el que se le confirma al profesor qué acaba de elegir:
  * `Martes 12 de agosto de 2026, 6:00 p. m. (hora de Colombia)`.
  *
