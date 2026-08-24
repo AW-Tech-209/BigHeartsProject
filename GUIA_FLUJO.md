@@ -18,7 +18,7 @@ Code las lee solo, git las versiona, y ya no hay que subir un `.docx` a cada cha
           ↓
    rama hu-XXX-slug-yo
           ↓
-   /hu <ruta> contrato → /clear → backend → /clear → frontend → /clear → cierre
+   /hu docs/historias/HU-XXX-*.md   (una sesión) → /clear
           ↓
         PR  →  merge
 ```
@@ -100,30 +100,24 @@ desde la terminal, en el mismo momento en que escribo el `.md`.
 git checkout -b hu-301-reservar-cupo-william
 ```
 
-En Claude Code, **una capa por sesión y `/clear` entre capas**:
+En Claude Code, **una HU por sesión, y `/clear` al terminar**:
 
 ```
-/hu docs/historias/HU-301-reservar-cupo.md contrato    → /clear
-/hu docs/historias/HU-301-reservar-cupo.md backend     → /clear
-/hu docs/historias/HU-301-reservar-cupo.md frontend    → /clear
-/hu docs/historias/HU-301-reservar-cupo.md cierre
+/hu docs/historias/HU-301-reservar-cupo.md
 ```
 
-**Por qué así, y no la HU entera de una pasada.** El coste de una sesión es _turnos × contexto
-acumulado_, y el contexto no baja mientras la sesión viva: todo lo leído, lo escrito y toda la
-salida de herramienta se queda. Cuatro sesiones que promedian 50k cuestan bastante menos que una
-que promedia 150k haciendo el mismo trabajo.
+**Medido el 2026-08-24, no supuesto.** Se probó partir la HU en cuatro sesiones (contrato, backend,
+frontend, cierre) y salió **peor**: cada sesión paga ~32K fijos de arranque —system prompt, tools,
+memory, skills— así que cuatro arranques costaron 127K contra 32K. HU-212 partida gastó el 50% de
+la sesión de 5 h; sin partir, HU-208 gastó el 32%.
 
-Y no es solo dinero: **sale mejor código**. Lo escrito en el turno 38 de una sesión llena es peor
-que lo mismo en el turno 8 de una limpia.
+Del mismo dato salió que **los skills son solo 3,1K de 166K de contexto**: recortarlos no sirve de
+nada. El gasto vive en `Messages` —135K en la capa de backend—, y lo llenan los comentarios largos,
+los tests de más, los AC de más y las explicaciones al cerrar. Por eso `CLAUDE.md` §11–13 y
+`bighearts-dod` §2.1–2.2 ponen topes duros a esas cuatro cosas.
 
-El traspaso entre capas lo hace la propia HU: cada capa marca sus tasks `[x]` y deja 3–5 líneas en
-_Notas de implementación_. La sesión siguiente lee eso y no redescubre nada.
-
-**Sin indicar capa**, el comando las hace todas seguidas. Solo vale para HUs de 5 tasks o menos.
-
-**La verificación va en `cierre`, en sesión limpia y sin subagente.** Delegarla tenía sentido para
-sacarla de un contexto inflado; con el contexto vacío sale más barato hacerla ahí mismo.
+**Si una HU no cabe en una sesión, el problema es la HU.** Máximo 7 tasks y 6 AC; si necesita más,
+son dos HUs.
 
 ### Qué se carga y qué no
 

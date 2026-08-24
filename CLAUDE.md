@@ -108,6 +108,15 @@ rompa por desconocimiento.
     `getByLabelText`). **Cero `data-testid`**: si un elemento no se encuentra por su rol, el
     problema es el componente, no el test. Se interactúa con `user-event`, no con `fireEvent`.
 
+**Coste de contexto** — estas tres cuestan en cada sesión futura, no solo hoy
+
+11. **Comentarios: máximo 2 líneas**, y solo si el porqué no se deduce del código. Un comentario
+    largo se relee en cada sesión que abra ese archivo. Si la razón necesita un párrafo, va en
+    `docs/ARQUITECTURA.md`.
+12. **Tests: solo invariantes de negocio, autorización, funciones puras compartidas y `axe`.** Es un
+    MVP. Detalle en el skill `bighearts-dod` §2.1.
+13. **Nunca formatear, lintar ni revisar archivos `.md`.** No son código.
+
 **Terminar una task** → skill `bighearts-dod`
 
 ---
