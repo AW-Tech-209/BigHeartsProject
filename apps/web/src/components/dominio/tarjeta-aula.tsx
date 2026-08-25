@@ -152,7 +152,7 @@ export function TarjetaAula({
     <article
       aria-labelledby={tituloId}
       className={cn(
-        'relative overflow-hidden rounded-xl border border-border bg-card p-4 pl-5',
+        'relative flex h-full flex-col overflow-hidden rounded-xl border border-border bg-card p-4 pl-5',
         // El anillo va en la TARJETA aunque el foco lo reciba el enlace del
         // título (`patrones-dominio.md`): un anillo de 3px alrededor de tres
         // palabras se pierde en una rejilla de seis, y lo que el usuario
@@ -163,7 +163,7 @@ export function TarjetaAula({
     >
       <span aria-hidden="true" className={cn('absolute inset-y-0 left-0 w-1', variante.riel)} />
 
-      <div className="space-y-1.5">
+      <div className="flex min-h-0 flex-1 flex-col space-y-1.5">
         {/*
           La fecha va ANTES del título en el DOM a propósito: quien navega con
           lector de pantalla se entera de CUÁNDO es la clase antes de CÓMO se
@@ -279,7 +279,11 @@ export function TarjetaAula({
           </Link>
         )}
 
-        {esVistaDelProfesor && <AccionesDeAula aula={classroom} esDueno compact />}
+        {esVistaDelProfesor && (
+          <div className="mt-auto border-t border-border pt-3">
+            <AccionesDeAula aula={classroom} esDueno compact />
+          </div>
+        )}
       </div>
     </article>
   );
