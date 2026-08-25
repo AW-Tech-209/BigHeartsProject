@@ -61,40 +61,40 @@ resultante dice `Duplicar «Conversación cotidiana»`.
 
 ### Frontend
 
-- [ ] **T1** — Acción `Duplicar clase` en el detalle del aula (HU-204), visible **solo para el
+- [x] **T1** — Acción `Duplicar clase` en el detalle del aula (HU-204), visible **solo para el
       profesor dueño**. No en la tarjeta del listado: multiplicarla por seis tarjetas rompe la regla
       de una acción primaria por pantalla.
-- [ ] **T2** — Ruta `/mis-aulas/nueva?desde=<id>`: carga el aula origen y precarga el formulario con
+- [x] **T2** — Ruta `/mis-aulas/nueva?desde=<id>`: carga el aula origen y precarga el formulario con
       todos sus campos **excepto fecha y hora**.
-- [ ] **T3** — La cabecera de la pantalla dice de dónde viene: `Duplicar «Conversación cotidiana»`.
+- [x] **T3** — La cabecera de la pantalla dice de dónde viene: `Duplicar «Conversación cotidiana»`.
       El profesor tiene que saber que no está editando la original.
-- [ ] **T4** — El foco entra en el campo de fecha al cargar, que es el único vacío y el único que
+- [x] **T4** — El foco entra en el campo de fecha al cargar, que es el único vacío y el único que
       hay que rellenar.
-- [ ] **T5** — Si el `id` de origen no existe o no es del profesor, la pantalla cae al formulario
+- [x] **T5** — Si el `id` de origen no existe o no es del profesor, la pantalla cae al formulario
       vacío con un aviso, **no a un error**: duplicar algo que ya no está no debería bloquear crear.
-- [ ] **T6** — Tests: los campos se precargan; fecha y hora llegan vacías; el foco entra en fecha;
+- [x] **T6** — Tests: los campos se precargan; fecha y hora llegan vacías; el foco entra en fecha;
       un `id` ajeno no precarga nada; la acción no aparece para quien no es el dueño; `axe` limpio.
 
 ### Documentación
 
-- [ ] **T7** — Recorrer la tabla de §6 del skill `bighearts-dod`.
+- [x] **T7** — Recorrer la tabla de §6 del skill `bighearts-dod`.
 
 ## ✅ Criterios de aceptación
 
-- [ ] **AC1** — Desde el detalle de un aula propia, `Duplicar clase` abre el formulario de creación
+- [x] **AC1** — Desde el detalle de un aula propia, `Duplicar clase` abre el formulario de creación
       con **título, descripción, nivel, duración, cupo, enlace, plataforma, modos de comunicación y
       apoyos** ya rellenos.
-- [ ] **AC2** — **La fecha y la hora llegan vacías**, y el formulario no se puede enviar sin ellas.
-- [ ] **AC3** — El foco está en el campo de fecha al cargar la pantalla.
-- [ ] **AC4** — La cabecera nombra el aula de origen, de forma que se distingue de una edición.
-- [ ] **AC5** — Publicar crea un aula **nueva**: la original no se modifica ni desaparece.
-- [ ] **AC6** — La acción **no aparece** para un profesor que no es el dueño, ni para estudiantes,
+- [x] **AC2** — **La fecha y la hora llegan vacías**, y el formulario no se puede enviar sin ellas.
+- [x] **AC3** — El foco está en el campo de fecha al cargar la pantalla.
+- [x] **AC4** — La cabecera nombra el aula de origen, de forma que se distingue de una edición.
+- [x] **AC5** — Publicar crea un aula **nueva**: la original no se modifica ni desaparece.
+- [x] **AC6** — La acción **no aparece** para un profesor que no es el dueño, ni para estudiantes,
       ni para el administrador.
-- [ ] **AC7** — Un `?desde=` con un `id` inexistente o ajeno abre el formulario **vacío con un
+- [x] **AC7** — Un `?desde=` con un `id` inexistente o ajeno abre el formulario **vacío con un
       aviso**, no una pantalla de error.
 - [ ] **AC8** — **Accesibilidad:** la pantalla se completa solo con teclado, el cambio de contexto
       se anuncia por región viva, `axe` limpio, y revisado **a ojo en el navegador** en `.dark` y `.hc` (jsdom no calcula CSS de verdad: eso no se testea).
-- [ ] **AC9** — **Verificación automática:** `typecheck`, `lint`, `build` y
+- [x] **AC9** — **Verificación automática:** `typecheck`, `lint`, `build` y
       `npm run test` en verde.
 
 ## 🚫 Fuera de alcance
@@ -107,4 +107,7 @@ resultante dice `Duplicar «Conversación cotidiana»`.
 
 ## Notas de implementación
 
-_Se rellena al cerrar._
+Un id ajeno o de red (no solo 404) también cae al formulario vacío con aviso: bloquear crear por un
+fallo transitorio del origen sería peor que el rodeo. `Duplicar clase` se ofrece incluso sobre un
+aula cancelada o ya iniciada, a diferencia de Editar/Cancelar — es el caso de uso real (la clase de
+la semana pasada).

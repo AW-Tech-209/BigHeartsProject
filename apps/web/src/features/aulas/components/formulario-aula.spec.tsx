@@ -1,5 +1,7 @@
 import {
   ApiErrorCode,
+  BookingStatus,
+  type ClassroomDetail,
   ClassroomStatus,
   CommunicationPreference,
   EnglishLevel,
@@ -42,6 +44,31 @@ const AULA_CREADA = {
 function montar(tema: Tema = 'light') {
   const onCreada = vi.fn();
   const utils = renderConProviders(<FormularioAula onGuardada={onCreada} />, { tema });
+
+  return { ...utils, onCreada };
+}
+
+const AULA_ORIGEN: ClassroomDetail = {
+  ...AULA_CREADA,
+  id: '55555555-5555-4555-8555-555555555555',
+  title: 'Conversación cotidiana',
+  description: 'Practicamos saludos.',
+  maxStudents: 8,
+  scheduledAt: '2027-08-05T23:00:00.000Z',
+  meetingLink: 'https://meet.google.com/xyz-uvwx-yz',
+  hasInterpreter: true,
+  hasLiveCaptions: false,
+  hasVisualMaterials: false,
+  teacherFirstName: 'Marta',
+  teacherLastName: 'Ríos',
+  myBookingStatus: null satisfies BookingStatus | null,
+};
+
+function montarDuplicando() {
+  const onCreada = vi.fn();
+  const utils = renderConProviders(
+    <FormularioAula duplicarDesde={AULA_ORIGEN} onGuardada={onCreada} />,
+  );
 
   return { ...utils, onCreada };
 }
@@ -618,4 +645,45 @@ describe('FormularioAula — aviso de poca antelación (T8, AC7)', () => {
       await esperarSinFallosDeAccesibilidad(baseElement);
     },
   );
+});
+
+/* ------------------------------------------------------------------ *
+ *  HU-213 — duplicar un aula                                          *
+ * ------------------------------------------------------------------ */
+
+describe('FormularioAula — duplicando (AC1, AC2, AC3)', () => {
+  it('precarga todos los campos salvo fecha y hora', () => {
+    montarDuplicando();
+
+    expect(screen.getByLabelText(/nombre de la clase/i)).toHaveValue('Conversación cotidiana');
+    expect(screen.getByLabelText(/descripción/i)).toHaveValue('Practicamos saludos.');
+    expect(screen.getByLabelText(/cupo máximo/i)).toHaveValue(8);
+    expect(screen.getByLabelText(/enlace de la reunión/i)).toHaveValue(
+      'https://meet.google.com/xyz-uvwx-yz',
+    );
+    expect(screen.getByLabelText(/lengua de signos/i)).toBeChecked();
+  });
+
+  it('la fecha y la hora llegan vacías', () => {
+    montarDuplicando();
+
+    expect(screen.getByLabelText(/^día/i)).toHaveValue('');
+    expect(screen.getByLabelText(/hora de inicio/i)).toHaveValue('');
+  });
+
+  it('el foco entra en el campo de fecha al cargar', () => {
+    montarDuplicando();
+
+    expect(screen.getByLabelText(/^día/i)).toHaveFocus();
+  });
+
+  it('publicar usa POST (crea un aula nueva, no PATCH sobre la original)', async () => {
+    const { user, onCreada } = montarDuplicando();
+
+    await elegirHorario(user, '2027-09-02', '18:00');
+    await user.click(screen.getByRole('button', { name: /publicar la clase/i }));
+
+    await waitFor(() => expect(createClassroomMock).toHaveBeenCalledTimes(1));
+    expect(onCreada).toHaveBeenCalledWith(AULA_CREADA);
+  });
 });

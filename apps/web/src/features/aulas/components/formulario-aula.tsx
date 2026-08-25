@@ -10,7 +10,7 @@ import {
   type ValidationErrorDetail,
 } from '@academia/types';
 import { CalendarClock, LoaderCircle, Lock } from 'lucide-react';
-import { type FormEvent, useRef, useState } from 'react';
+import { type FormEvent, useEffect, useRef, useState } from 'react';
 
 import { Button } from '@/components/ui/button';
 import { Callout } from '@/components/ui/callout';
@@ -111,11 +111,20 @@ const CAMPO_DEL_BACKEND: Record<string, keyof ClassroomFormValues> = {
 type FormularioAulaProps = {
   /** Presente en modo edición (HU-202): precarga el formulario y usa `PATCH` en vez de `POST`. */
   aula?: ClassroomDetail;
+  /**
+   * Presente al duplicar (HU-213): precarga el formulario con el aula de
+   * origen, salvo fecha y hora, y usa `POST` como una creación cualquiera —
+   * a diferencia de `aula`, nunca activa el modo edición.
+   */
+  duplicarDesde?: ClassroomDetail;
   onGuardada: (classroom: Classroom) => void;
 };
 
-export function FormularioAula({ aula, onGuardada }: FormularioAulaProps) {
-  const [values, setValues] = useState<ClassroomFormValues>(() => valoresIniciales(aula));
+export function FormularioAula({ aula, duplicarDesde, onGuardada }: FormularioAulaProps) {
+  const [values, setValues] = useState<ClassroomFormValues>(() => {
+    if (duplicarDesde) return { ...valoresIniciales(duplicarDesde), fecha: '', hora: '' };
+    return valoresIniciales(aula);
+  });
   const [errors, setErrors] = useState<ClassroomFieldErrors>({});
   const [formError, setFormError] = useState<string | null>(null);
 
@@ -143,6 +152,13 @@ export function FormularioAula({ aula, onGuardada }: FormularioAulaProps) {
 
   /** El campo al que vuelve el foco cuando el profesor decide cambiar la hora. */
   const horaRef = useRef<HTMLInputElement>(null);
+
+  // AC3: al duplicar, fecha es el único campo vacío. Corre después del foco
+  // que `<PaginaCabecera>` pone en el `<h1>` al montar, así que gana el último.
+  useEffect(() => {
+    if (duplicarDesde) document.getElementById('fecha')?.focus();
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- solo debe correr una vez, al montar; `duplicarDesde` no cambia en la vida del componente.
+  }, []);
 
   /**
    * Dos mutaciones montadas siempre, para no romper las reglas de los hooks —

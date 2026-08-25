@@ -349,7 +349,9 @@ describe('AulaDetallePage — acciones de gestión por rol (AC5)', () => {
       await screen.findByRole('heading', { level: 1, name: 'Conversación cotidiana' });
 
       expect(screen.queryByRole('button', { name: /editar|cancelar/i })).not.toBeInTheDocument();
-      expect(screen.queryByRole('link', { name: /editar|cancelar/i })).not.toBeInTheDocument();
+      expect(
+        screen.queryByRole('link', { name: /editar|cancelar|duplicar/i }),
+      ).not.toBeInTheDocument();
     },
   );
 
@@ -361,6 +363,28 @@ describe('AulaDetallePage — acciones de gestión por rol (AC5)', () => {
     await screen.findByRole('heading', { level: 1, name: 'Conversación cotidiana' });
 
     expect(screen.queryByRole('button', { name: /editar|cancelar/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: /duplicar/i })).not.toBeInTheDocument();
+  });
+});
+
+/** HU-213, AC1/AC6: `Duplicar clase` solo para el dueño, y lleva a la ruta del formulario. */
+describe('AulaDetallePage — duplicar clase (AC1, AC6)', () => {
+  it('el dueño ve «Duplicar clase» y lleva a /mis-aulas/nueva?desde=<id>', async () => {
+    darSesion(UserRole.TEACHER);
+    montarDetalle();
+
+    const enlace = await screen.findByRole('link', { name: /duplicar clase/i });
+    expect(enlace).toHaveAttribute('href', `/mis-aulas/nueva?desde=${ID}`);
+  });
+
+  it('el dueño la ve incluso sobre una clase cancelada', async () => {
+    darSesion(UserRole.TEACHER);
+    vi.mocked(getClassroom).mockResolvedValue({
+      classroom: aula({ status: ClassroomStatus.CANCELLED }),
+    });
+    montarDetalle();
+
+    expect(await screen.findByRole('link', { name: /duplicar clase/i })).toBeInTheDocument();
   });
 });
 
