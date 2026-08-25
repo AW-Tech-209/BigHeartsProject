@@ -53,18 +53,20 @@ export function AccionesDeAula({ aula, esDueno, compact = false }: AccionesDeAul
     <div className={compact ? 'relative z-10 flex flex-wrap gap-2' : 'flex flex-wrap gap-3'}>
       <Button
         render={<Link to={`/mis-aulas/${aula.id}/editar`} />}
-        className={compact ? 'h-11 gap-2 px-4 text-base' : 'h-11 gap-2 px-5 text-base'}
+        className={
+          compact ? 'h-11 min-w-0 flex-1 gap-2 px-3 text-base' : 'h-11 gap-2 px-5 text-base'
+        }
       >
         <Pencil aria-hidden="true" strokeWidth={2} className="size-4" />
         Editar clase
       </Button>
 
-      <DialogoCancelarAula aula={aula} />
+      <DialogoCancelarAula aula={aula} compact={compact} />
     </div>
   );
 }
 
-function DialogoCancelarAula({ aula }: { aula: AulaGestionable }) {
+function DialogoCancelarAula({ aula, compact }: { aula: AulaGestionable; compact: boolean }) {
   const [abierto, setAbierto] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const volverRef = useRef<HTMLButtonElement>(null);
@@ -96,7 +98,14 @@ function DialogoCancelarAula({ aula }: { aula: AulaGestionable }) {
       }}
     >
       <AlertDialogTrigger
-        render={<Button variant="destructive" className="h-11 gap-2 px-5 text-base" />}
+        render={
+          <Button
+            variant="destructive"
+            className={
+              compact ? 'h-11 min-w-0 flex-1 gap-2 px-3 text-base' : 'h-11 gap-2 px-5 text-base'
+            }
+          />
+        }
       >
         <Ban aria-hidden="true" strokeWidth={2} className="size-4" />
         Cancelar clase

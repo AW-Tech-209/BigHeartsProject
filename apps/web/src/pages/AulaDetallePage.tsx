@@ -5,7 +5,7 @@ import {
   derivarEstadoAula,
   UserRole,
 } from '@academia/types';
-import { ExternalLink, RotateCw, UserCheck } from 'lucide-react';
+import { CalendarClock, ExternalLink, Languages, RotateCw, UserCheck, Users } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { Link, useParams } from 'react-router-dom';
 
@@ -161,110 +161,122 @@ function DetalleDelAula({ aula, esDueno, preferenciaEstudiante }: DetalleDelAula
 
   return (
     <div className="space-y-8">
-      {/*
-        El riel de 4px con el color del estado, igual que en la tarjeta: es la
-        firma visual del producto y lo que permite reconocer de un vistazo, y
-        sin leer, que esta clase está cancelada (`patrones-dominio.md`).
-      */}
-      <div className="relative overflow-hidden rounded-xl border border-border bg-card p-6 pl-7">
-        <span
-          aria-hidden="true"
-          className={cn('absolute inset-y-0 left-0 w-1', varianteEstadoAula[estado].riel)}
-        />
-
+      <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1.35fr)_minmax(18rem,0.65fr)]">
         <div className="space-y-6">
-          <EstadoAula
-            estado={estado}
-            cuposRestantes={Math.max(aula.maxStudents - aula.currentBookings, 0)}
-          />
+          <section
+            aria-labelledby="aula-descripcion"
+            className="rounded-xl border border-border bg-card p-6 sm:p-7"
+          >
+            <div className="space-y-4">
+              <div className="flex items-center gap-3">
+                <span className="rounded-lg bg-primary-soft p-2 text-primary">
+                  <Languages aria-hidden="true" strokeWidth={2} className="size-5" />
+                </span>
+                <h2 id="aula-descripcion" className="text-xl font-medium">
+                  De qué trata la clase
+                </h2>
+              </div>
+              <p className="max-w-[65ch] text-base leading-relaxed whitespace-pre-line">
+                {aula.description}
+              </p>
+            </div>
+          </section>
 
-          <dl className="grid gap-6 sm:grid-cols-2">
-            <Dato termino="Fecha y hora">{describirHorario(aula.scheduledAt)}</Dato>
-            <Dato termino="Duración">{describirDuracion(aula.durationMinutes)}</Dato>
-            <Dato termino="Cupo" className="sm:col-span-2">
-              {/*
-                Los mismos dos números, contados según quién pregunta
-                (`patrones-dominio.md`): el dueño quiere saber cuánta gente
-                viene; quien no lo es, si le queda sitio.
-              */}
-              <IndicadorCupo
-                variante={esDueno ? 'inscritos' : 'cupos'}
-                maxStudents={aula.maxStudents}
-                currentBookings={aula.currentBookings}
-                className="flex"
+          <section
+            aria-labelledby="aula-accesibilidad"
+            className="rounded-xl border border-border bg-card p-6 sm:p-7"
+          >
+            <div className="space-y-5">
+              <div className="flex items-center gap-3">
+                <span className="rounded-lg bg-primary-soft p-2 text-primary">
+                  <Users aria-hidden="true" strokeWidth={2} className="size-5" />
+                </span>
+                <div>
+                  <h2 id="aula-accesibilidad" className="text-xl font-medium">
+                    Cómo se imparte
+                  </h2>
+                  <p className="text-sm text-muted-foreground">
+                    Comunicación y apoyos disponibles para seguir la clase.
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-1.5">
+                {aula.communicationModes.length === 0 ? (
+                  <ModoComunicacionBadge modo={null} />
+                ) : (
+                  aula.communicationModes.map((modo) => (
+                    <ModoComunicacionBadge key={modo} modo={modo} />
+                  ))
+                )}
+                {coincideConLaPreferencia(aula, preferenciaEstudiante) && (
+                  <Badge tono="primary" icon={UserCheck}>
+                    Coincide con tu preferencia
+                  </Badge>
+                )}
+              </div>
+
+              {(aula.hasInterpreter || aula.hasLiveCaptions || aula.hasVisualMaterials) && (
+                <ul className="grid gap-3 sm:grid-cols-2">
+                  {APOYOS_AULA.filter(({ clave }) => aula[clave]).map(
+                    ({ clave, etiqueta, icon: Icon }) => (
+                      <li
+                        key={clave}
+                        className="flex items-center gap-2 rounded-lg border border-border bg-muted/40 px-3 py-2 text-base text-foreground"
+                      >
+                        <Icon
+                          aria-hidden="true"
+                          strokeWidth={2}
+                          className="size-4 shrink-0 text-primary"
+                        />
+                        {etiqueta}
+                      </li>
+                    ),
+                  )}
+                </ul>
+              )}
+
+              <p className="border-t border-border pt-4 text-sm text-muted-foreground">
+                Plataforma: {etiquetaPlataformaReunion[aula.meetingProvider]}
+              </p>
+            </div>
+          </section>
+        </div>
+
+        <aside className="space-y-6" aria-label="Resumen de la clase">
+          <section className="relative overflow-hidden rounded-xl border border-border bg-card p-6 pl-7">
+            <span
+              aria-hidden="true"
+              className={cn('absolute inset-y-0 left-0 w-1', varianteEstadoAula[estado].riel)}
+            />
+            <div className="space-y-5">
+              <EstadoAula
+                estado={estado}
+                cuposRestantes={Math.max(aula.maxStudents - aula.currentBookings, 0)}
               />
-            </Dato>
-          </dl>
-        </div>
-      </div>
 
-      <section aria-labelledby="aula-descripcion" className="space-y-2">
-        <h2 id="aula-descripcion" className="text-xl font-medium">
-          De qué trata la clase
-        </h2>
-        <p className="max-w-[65ch] text-base leading-relaxed whitespace-pre-line">
-          {aula.description}
-        </p>
-      </section>
-
-      {/*
-        T11: el bloque completo de accesibilidad — todos los modos, no solo el
-        principal de la tarjeta —, los apoyos activos y la plataforma. T12
-        (extensión de bajo riesgo, AC4): la marca de coincidencia se repite
-        aquí porque es donde el estudiante decide de verdad si reserva, no
-        solo en el listado.
-      */}
-      <section aria-labelledby="aula-accesibilidad" className="space-y-3">
-        <h2 id="aula-accesibilidad" className="text-xl font-medium">
-          Cómo se imparte
-        </h2>
-
-        <div className="flex flex-wrap items-center gap-1.5">
-          {aula.communicationModes.length === 0 ? (
-            <ModoComunicacionBadge modo={null} />
-          ) : (
-            aula.communicationModes.map((modo) => <ModoComunicacionBadge key={modo} modo={modo} />)
-          )}
-          {coincideConLaPreferencia(aula, preferenciaEstudiante) && (
-            <Badge tono="primary" icon={UserCheck}>
-              Coincide con tu preferencia
-            </Badge>
-          )}
-        </div>
-
-        {(aula.hasInterpreter || aula.hasLiveCaptions || aula.hasVisualMaterials) && (
-          <ul className="space-y-1.5">
-            {APOYOS_AULA.filter(({ clave }) => aula[clave]).map(
-              ({ clave, etiqueta, icon: Icon }) => (
-                <li key={clave} className="flex items-center gap-2 text-base text-foreground">
-                  <Icon
-                    aria-hidden="true"
-                    strokeWidth={2}
-                    className="size-4 shrink-0 text-primary"
+              <dl className="divide-y divide-border">
+                <Dato termino="Fecha y hora" icon={CalendarClock}>
+                  {describirHorario(aula.scheduledAt)}
+                </Dato>
+                <Dato termino="Duración">{describirDuracion(aula.durationMinutes)}</Dato>
+                <Dato termino="Cupo" className="pt-4">
+                  <IndicadorCupo
+                    variante={esDueno ? 'inscritos' : 'cupos'}
+                    maxStudents={aula.maxStudents}
+                    currentBookings={aula.currentBookings}
+                    className="flex"
                   />
-                  {etiqueta}
-                </li>
-              ),
-            )}
-          </ul>
-        )}
+                </Dato>
+              </dl>
+            </div>
+          </section>
 
-        <p className="text-sm text-muted-foreground">
-          Plataforma: {etiquetaPlataformaReunion[aula.meetingProvider]}
-        </p>
-      </section>
+          {aula.meetingLink && <EnlaceDeLaClase url={aula.meetingLink} />}
 
-      {/*
-        El enlace solo se pinta si el servidor lo mandó. En este sprint eso
-        significa «quien mira es el profesor dueño y la clase no está
-        cancelada»; HU-303 añade al estudiante con cupo dentro de la ventana de
-        30 minutos, y entonces habrá que revisar el texto de ayuda de abajo,
-        que hoy está escrito para el dueño. La condición NO se replica aquí:
-        quien decide es §4.1, en el servidor.
-      */}
-      {aula.meetingLink && <EnlaceDeLaClase url={aula.meetingLink} />}
-
-      <AccionesDeAula aula={aula} esDueno={esDueno} />
+          <AccionesDeAula aula={aula} esDueno={esDueno} />
+        </aside>
+      </div>
     </div>
   );
 }
@@ -274,14 +286,24 @@ function Dato({
   termino,
   children,
   className,
+  icon: Icon,
 }: {
   termino: string;
   children: ReactNode;
   className?: string;
+  icon?: typeof CalendarClock;
 }) {
   return (
-    <div className={cn('space-y-1', className)}>
-      <dt className="text-[13px] text-muted-foreground">{termino}</dt>
+    <div
+      className={cn(
+        'space-y-1 border-b border-border py-4 first:pt-0 last:border-b-0 last:pb-0',
+        className,
+      )}
+    >
+      <dt className="flex items-center gap-2 text-[13px] text-muted-foreground">
+        {Icon && <Icon aria-hidden="true" strokeWidth={2} className="size-4" />}
+        {termino}
+      </dt>
       <dd className="text-base text-foreground">{children}</dd>
     </div>
   );
