@@ -16,6 +16,7 @@ import { NotFoundPage } from '@/pages/NotFoundPage';
 import { PanelPage } from '@/pages/PanelPage';
 import { PerfilPage } from '@/pages/PerfilPage';
 import { RegisterPage } from '@/pages/RegisterPage';
+import { SupervisionAulasPage } from '@/pages/SupervisionAulasPage';
 
 /**
  * Rutas de la aplicación.
@@ -88,6 +89,22 @@ export function AppRoutes() {
         el `<RequireAuth>` de `/panel`.
       */}
       <Route path="/admin" element={<Navigate to="/panel" replace />} />
+
+      {/*
+        Supervisión de aulas para el administrador (HU-210, D20). Solo lectura:
+        el admin ve todas las aulas de todos los profesores, pero no edita ni
+        cancela nada ajeno (decisión 4 de la HU). Cuelga de `/admin` y no de
+        `/panel` porque no es el inicio del rol sino una pantalla a la que se
+        llega desde ahí.
+      */}
+      <Route
+        path="/admin/aulas"
+        element={
+          <RequireAuth roles={[UserRole.ADMIN]}>
+            <SupervisionAulasPage />
+          </RequireAuth>
+        }
+      />
 
       {/*
         Los tres destinos de la barra de navegación. Se registran aquí desde

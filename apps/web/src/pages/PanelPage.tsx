@@ -1,7 +1,10 @@
 import { UserRole } from '@academia/types';
+import { Presentation } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 import { AppShell } from '@/components/layout/app-shell';
 import { PaginaCabecera } from '@/components/layout/pagina-cabecera';
+import { Button } from '@/components/ui/button';
 import { AprobacionesPendientes } from '@/features/admin/components/aprobaciones-pendientes';
 import { RoleGate } from '@/features/auth/components/role-gate';
 import { useAuth } from '@/features/auth/hooks/use-auth';
@@ -54,7 +57,24 @@ export function PanelPage() {
       </RoleGate>
 
       <RoleGate roles={[UserRole.ADMIN]}>
-        <AprobacionesPendientes />
+        <div className="space-y-8">
+          {/*
+            HU-210: la vía desde el panel de operación hacia la supervisión de
+            aulas. No compite con `AprobacionesPendientes` por la acción
+            primaria de la pantalla — es un enlace secundario a otra vista,
+            no un botón de acción.
+          */}
+          <Button
+            render={<Link to="/admin/aulas" />}
+            variant="outline"
+            className="h-11 gap-2 px-5 text-base"
+          >
+            <Presentation aria-hidden="true" strokeWidth={2} className="size-5" />
+            Ver supervisión de aulas
+          </Button>
+
+          <AprobacionesPendientes />
+        </div>
       </RoleGate>
     </AppShell>
   );

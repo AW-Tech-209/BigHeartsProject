@@ -48,6 +48,21 @@ export class AdminService {
     return pending.map(toPublicUser);
   }
 
+  /**
+   * Todos los profesores, sin filtrar por estado (HU-210). Alimenta el
+   * selector del filtro de supervisión: un profesor suspendido puede tener
+   * aulas pasadas que el admin todavía necesita encontrar, así que no se
+   * acota a `ACTIVE`.
+   */
+  async listTeachers(): Promise<User[]> {
+    const teachers = await this.prisma.user.findMany({
+      where: { role: UserRole.TEACHER },
+      orderBy: [{ firstName: 'asc' }, { lastName: 'asc' }],
+    });
+
+    return teachers.map(toPublicUser);
+  }
+
   /** Aprueba a un profesor: `PENDING → ACTIVE`. A partir de aquí ya puede entrar. */
   async approveTeacher(teacherId: string): Promise<User> {
     return this.resolveTeacher(teacherId, UserStatus.ACTIVE);

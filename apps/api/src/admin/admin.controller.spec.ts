@@ -9,10 +9,12 @@ import { AdminController, idDeProfesor } from './admin.controller';
 import type { AdminService } from './admin.service';
 
 function setup() {
+  const listTeachers = vi.fn().mockResolvedValue([]);
   const listPendingTeachers = vi.fn().mockResolvedValue([]);
   const approveTeacher = vi.fn().mockResolvedValue({ id: 'profe', status: UserStatus.ACTIVE });
   const rejectTeacher = vi.fn().mockResolvedValue({ id: 'profe', status: UserStatus.REJECTED });
   const service = {
+    listTeachers,
     listPendingTeachers,
     approveTeacher,
     rejectTeacher,
@@ -20,6 +22,7 @@ function setup() {
 
   return {
     controller: new AdminController(service),
+    listTeachers,
     listPendingTeachers,
     approveTeacher,
     rejectTeacher,
@@ -27,6 +30,12 @@ function setup() {
 }
 
 describe('AdminController — forma de las respuestas', () => {
+  it('GET /admin/teachers devuelve `{ teachers }`, como declara TeachersResponse', async () => {
+    const { controller } = setup();
+
+    await expect(controller.listAll()).resolves.toEqual({ teachers: [] });
+  });
+
   it('GET /admin/teachers/pending devuelve `{ teachers }`, como declara PendingTeachersResponse', async () => {
     const { controller } = setup();
 
@@ -94,6 +103,7 @@ describe('AdminController — autorización por rol (AC4)', () => {
 
   /** Los tres handlers del controlador, por su nombre en el contrato HTTP. */
   const HANDLERS = [
+    ['GET /admin/teachers', AdminController.prototype.listAll],
     ['GET /admin/teachers/pending', AdminController.prototype.listPending],
     ['POST /admin/teachers/:id/approve', AdminController.prototype.approve],
     ['POST /admin/teachers/:id/reject', AdminController.prototype.reject],
