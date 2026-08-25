@@ -12,6 +12,7 @@ import { Link } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
 import { AccionesDeAula } from '@/features/aulas/components/acciones-de-aula';
 import { AccionReservarAula } from '@/features/aulas/components/accion-reservar-aula';
+import { APOYOS_AULA } from '@/features/aulas/lib/apoyos-aula';
 import { describirDuracion, describirHorario } from '@/features/aulas/lib/horario';
 import { MODOS_COMUNICACION_EN_ORDEN } from '@/features/aulas/lib/modos-comunicacion';
 import { nivelesDeIngles } from '@/features/aulas/lib/niveles';
@@ -22,15 +23,12 @@ import { IndicadorCupo } from './indicador-cupo';
 import { ModoComunicacionBadge } from './modo-comunicacion-badge';
 
 /**
- * El primer modo declarado, por el orden CANÓNICO del enum — no el de
- * inserción. Un aula que declaró `[LIP_READING, SIGN_LANGUAGE]` y otra que
- * declaró `[SIGN_LANGUAGE, LIP_READING]` tienen que mostrar el mismo "modo
- * principal" en la tarjeta; si el orden dependiera de cómo llegó el array
- * desde el servidor, el resultado sería arbitrario. `null` si no hay ninguno
- * declarado (T10, "Modo sin indicar").
+ * Los modos declarados, en el orden CANÓNICO del enum — no el de inserción.
+ * Así, todas las tarjetas muestran las etiquetas en la misma secuencia aunque
+ * el servidor reciba los valores en otro orden.
  */
-function modoPrincipal(modos: CommunicationPreference[]): CommunicationPreference | null {
-  return MODOS_COMUNICACION_EN_ORDEN.find((modo) => modos.includes(modo)) ?? null;
+function modosEnOrden(modos: CommunicationPreference[]): CommunicationPreference[] {
+  return MODOS_COMUNICACION_EN_ORDEN.filter((modo) => modos.includes(modo));
 }
 
 /**
@@ -152,7 +150,7 @@ export function TarjetaAula({
     <article
       aria-labelledby={tituloId}
       className={cn(
-        'relative flex h-full flex-col overflow-hidden rounded-xl border border-border bg-card p-4 pl-5',
+        'relative overflow-hidden rounded-xl border border-border bg-card p-4 pl-5',
         // El anillo va en la TARJETA aunque el foco lo reciba el enlace del
         // título (`patrones-dominio.md`): un anillo de 3px alrededor de tres
         // palabras se pierde en una rejilla de seis, y lo que el usuario
@@ -163,7 +161,7 @@ export function TarjetaAula({
     >
       <span aria-hidden="true" className={cn('absolute inset-y-0 left-0 w-1', variante.riel)} />
 
-      <div className="flex min-h-0 flex-1 flex-col space-y-1.5">
+      <div className="space-y-1.5">
         {/*
           La fecha va ANTES del título en el DOM a propósito: quien navega con
           lector de pantalla se entera de CUÁNDO es la clase antes de CÓMO se
@@ -220,19 +218,36 @@ export function TarjetaAula({
         )}
 
         {/*
-          T10: el modo principal, siempre visible en las dos perspectivas —
-          también le sirve al profesor para notar de un vistazo que le falta
-          declararlo. T12: la marca de coincidencia solo aparece del lado del
-          estudiante, y solo cuando SÍ coincide (AC4, nunca marca negativa).
+          T10: todos los modos declarados, siempre visibles en las dos
+          perspectivas. T12: la marca de coincidencia solo aparece del lado
+          del estudiante, y solo cuando SÍ coincide (AC4, nunca marca negativa).
         */}
         <div className="mt-1 flex flex-wrap items-center gap-1.5">
-          <ModoComunicacionBadge modo={modoPrincipal(classroom.communicationModes)} />
+          {classroom.communicationModes.length === 0 ? (
+            <ModoComunicacionBadge modo={null} />
+          ) : (
+            modosEnOrden(classroom.communicationModes).map((modo) => (
+              <ModoComunicacionBadge key={modo} modo={modo} />
+            ))
+          )}
           {!esVistaDelProfesor && coincideConLaMia && (
             <Badge tono="primary" icon={UserCheck}>
               Coincide con tu preferencia
             </Badge>
           )}
         </div>
+
+        {APOYOS_AULA.some(({ clave }) => classroom[clave]) && (
+          <div className="flex flex-wrap items-center gap-1.5" aria-label="Apoyos disponibles">
+            {APOYOS_AULA.filter(({ clave }) => classroom[clave]).map(
+              ({ clave, etiqueta, icon: Icon }) => (
+                <Badge key={clave} tono="neutral" icon={Icon}>
+                  {etiqueta}
+                </Badge>
+              ),
+            )}
+          </div>
+        )}
 
         {esVistaDelProfesor && (
           <IndicadorCupo
@@ -279,11 +294,7 @@ export function TarjetaAula({
           </Link>
         )}
 
-        {esVistaDelProfesor && (
-          <div className="mt-auto border-t border-border pt-3">
-            <AccionesDeAula aula={classroom} esDueno compact />
-          </div>
-        )}
+        {esVistaDelProfesor && <AccionesDeAula aula={classroom} esDueno compact />}
       </div>
     </article>
   );

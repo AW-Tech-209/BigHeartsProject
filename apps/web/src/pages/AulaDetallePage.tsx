@@ -5,7 +5,7 @@ import {
   derivarEstadoAula,
   UserRole,
 } from '@academia/types';
-import { CalendarClock, ExternalLink, Languages, RotateCw, UserCheck, Users } from 'lucide-react';
+import { BookOpen, CalendarClock, ExternalLink, RotateCw, UserCheck, Users } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { Link, useParams } from 'react-router-dom';
 
@@ -170,7 +170,7 @@ function DetalleDelAula({ aula, esDueno, preferenciaEstudiante }: DetalleDelAula
             <div className="space-y-4">
               <div className="flex items-center gap-3">
                 <span className="rounded-lg bg-primary-soft p-2 text-primary">
-                  <Languages aria-hidden="true" strokeWidth={2} className="size-5" />
+                  <BookOpen aria-hidden="true" strokeWidth={2} className="size-5" />
                 </span>
                 <h2 id="aula-descripcion" className="text-xl font-medium">
                   De qué trata la clase
@@ -318,22 +318,34 @@ function Dato({
  */
 function EnlaceDeLaClase({ url }: { url: string }) {
   return (
-    <section aria-labelledby="aula-enlace" className="space-y-3">
-      <h2 id="aula-enlace" className="text-xl font-medium">
-        Enlace de la clase
-      </h2>
-      <p className="max-w-[65ch] text-base text-muted-foreground">
-        Solo tú lo ves. Los estudiantes con cupo podrán entrar desde 30 minutos antes de que empiece
-        la clase.
-      </p>
+    <section
+      aria-labelledby="aula-enlace"
+      className="space-y-4 rounded-xl border-2 border-primary bg-primary-soft p-5"
+    >
+      <div className="flex items-center gap-3">
+        <span className="rounded-lg bg-primary p-2 text-primary-foreground">
+          <ExternalLink aria-hidden="true" strokeWidth={2} className="size-5" />
+        </span>
+        <div>
+          <h2 id="aula-enlace" className="text-xl font-medium">
+            Entra a la clase
+          </h2>
+          <p className="text-sm text-primary-soft-foreground">
+            Solo tú lo ves. Los estudiantes con cupo podrán entrar 30 minutos antes.
+          </p>
+        </div>
+      </div>
       <a
         href={url}
         target="_blank"
         rel="noreferrer"
-        className="inline-flex max-w-full items-center gap-2 rounded-lg text-base break-all text-primary underline underline-offset-4 hover:no-underline focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
+        className="flex min-h-14 max-w-full flex-col justify-center gap-1 rounded-lg border border-primary bg-background px-4 py-3 text-base text-primary shadow-sm outline-none hover:bg-muted focus-visible:ring-3 focus-visible:ring-ring/50"
       >
-        <ExternalLink aria-hidden="true" strokeWidth={2} className="size-4 shrink-0" />
-        <span>{url}</span>
+        <span className="flex items-center gap-2 font-medium underline underline-offset-4">
+          <ExternalLink aria-hidden="true" strokeWidth={2} className="size-4 shrink-0" />
+          Entrar a la clase
+        </span>
+        <span className="break-all text-sm text-muted-foreground">{url}</span>
         {/* Que se abra en otra pestaña se avisa, no se descubre. */}
         <span className="sr-only">(se abre en otra pestaña)</span>
       </a>

@@ -84,6 +84,19 @@ describe('<TarjetaAula /> — anatomía (layout-y-composicion.md)', () => {
 
     expect(screen.getByText('Quedan 2 cupos')).toBeInTheDocument();
   });
+
+  it('muestra los apoyos declarados con sus etiquetas visibles', () => {
+    renderConProviders(
+      <TarjetaAula
+        classroom={aula({ hasInterpreter: true, hasLiveCaptions: true, hasVisualMaterials: true })}
+        ahora={AHORA}
+      />,
+    );
+
+    expect(screen.getByText('Intérprete de lengua de señas')).toBeInTheDocument();
+    expect(screen.getByText('Subtítulos en vivo')).toBeInTheDocument();
+    expect(screen.getByText('Materiales visuales de apoyo')).toBeInTheDocument();
+  });
 });
 
 /**
@@ -245,9 +258,9 @@ describe('<TarjetaAula /> — accesibilidad declarada del aula (T10, T12, T15)',
     expect(screen.getByText('Lengua de signos')).toBeInTheDocument();
   });
 
-  // El orden CANÓNICO decide, no el de inserción: dos aulas con los mismos
-  // modos en distinto orden tienen que mostrar el mismo "modo principal".
-  it('con varios modos, el principal es siempre el mismo sin importar el orden de llegada', () => {
+  // El orden CANÓNICO decide, no el de inserción: todas las etiquetas deben
+  // aparecer y conservar la misma secuencia en cada tarjeta.
+  it('muestra todos los modos en orden canónico sin importar el orden de llegada', () => {
     const { rerender } = renderConProviders(
       <TarjetaAula
         classroom={aula({
@@ -260,7 +273,12 @@ describe('<TarjetaAula /> — accesibilidad declarada del aula (T10, T12, T15)',
       />,
     );
     expect(screen.getByText('Lengua de signos')).toBeInTheDocument();
-    expect(screen.queryByText('Texto escrito')).not.toBeInTheDocument();
+    expect(screen.getByText('Texto escrito')).toBeInTheDocument();
+    expect(
+      screen
+        .getByText('Lengua de signos')
+        .compareDocumentPosition(screen.getByText('Texto escrito')),
+    ).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
 
     rerender(
       <TarjetaAula
@@ -274,7 +292,7 @@ describe('<TarjetaAula /> — accesibilidad declarada del aula (T10, T12, T15)',
       />,
     );
     expect(screen.getByText('Lengua de signos')).toBeInTheDocument();
-    expect(screen.queryByText('Texto escrito')).not.toBeInTheDocument();
+    expect(screen.getByText('Texto escrito')).toBeInTheDocument();
   });
 
   // AC4: solo marca las que coinciden, y nunca con una marca negativa.

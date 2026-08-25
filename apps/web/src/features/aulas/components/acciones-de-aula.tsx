@@ -50,11 +50,19 @@ export function AccionesDeAula({ aula, esDueno, compact = false }: AccionesDeAul
   }
 
   return (
-    <div className={compact ? 'relative z-10 flex flex-wrap gap-2' : 'flex flex-wrap gap-3'}>
+    <div
+      className={
+        compact
+          ? 'relative z-10 grid grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)] gap-2'
+          : 'flex flex-wrap gap-3'
+      }
+    >
       <Button
         render={<Link to={`/mis-aulas/${aula.id}/editar`} />}
         className={
-          compact ? 'h-11 min-w-0 flex-1 gap-2 px-3 text-base' : 'h-11 gap-2 px-5 text-base'
+          compact
+            ? 'h-11 min-w-0 w-full gap-2 px-2 text-base whitespace-normal leading-tight'
+            : 'h-11 gap-2 px-5 text-base'
         }
       >
         <Pencil aria-hidden="true" strokeWidth={2} className="size-4" />
@@ -102,7 +110,9 @@ function DialogoCancelarAula({ aula, compact }: { aula: AulaGestionable; compact
           <Button
             variant="destructive"
             className={
-              compact ? 'h-11 min-w-0 flex-1 gap-2 px-3 text-base' : 'h-11 gap-2 px-5 text-base'
+              compact
+                ? 'h-11 min-w-0 w-full gap-2 px-2 text-base whitespace-normal leading-tight'
+                : 'h-11 gap-2 px-5 text-base'
             }
           />
         }

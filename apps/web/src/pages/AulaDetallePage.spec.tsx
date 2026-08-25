@@ -191,6 +191,17 @@ describe('AulaDetallePage — el enlace se pinta solo si el servidor lo mandó (
     expect(enlace).toHaveAccessibleName(expect.stringContaining('se abre en otra pestaña'));
   });
 
+  it('prioriza una acción clara para entrar a la clase', async () => {
+    darSesion(UserRole.TEACHER);
+    vi.mocked(getClassroom).mockResolvedValue({ classroom: aula({ meetingLink: ENLACE }) });
+    montarDetalle();
+
+    expect(await screen.findByRole('link', { name: /Entrar a la clase/ })).toHaveAttribute(
+      'href',
+      ENLACE,
+    );
+  });
+
   /**
    * El caso normal: la respuesta **no trae la clave**, y la pantalla no inventa
    * un hueco vacío ni un aviso de que existe algo que no puede ver.
