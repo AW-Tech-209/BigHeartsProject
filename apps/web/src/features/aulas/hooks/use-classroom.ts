@@ -41,10 +41,11 @@ export function esAulaNoEncontrada(error: unknown): boolean {
  * Sin `placeholderData`: aquí no se cambia de filtro ni de página, así que no
  * hay una respuesta anterior que mantener mientras llega la siguiente.
  */
-export function useClassroom(id: string) {
+export function useClassroom(id: string, options?: { enabled?: boolean }) {
   return useQuery({
     queryKey: classroomQueryKey(id),
     queryFn: () => getClassroom(id),
     retry: (intentos, error) => !esAulaNoEncontrada(error) && intentos < REINTENTOS,
+    enabled: options?.enabled ?? true,
   });
 }

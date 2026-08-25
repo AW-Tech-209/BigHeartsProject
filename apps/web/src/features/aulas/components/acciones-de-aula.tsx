@@ -1,5 +1,5 @@
 import { ClassroomStatus, type ClassroomDetail } from '@academia/types';
-import { Ban, LoaderCircle, Pencil } from 'lucide-react';
+import { Ban, Copy, LoaderCircle, Pencil } from 'lucide-react';
 import { useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 
@@ -30,46 +30,82 @@ type AccionesDeAulaProps = {
 };
 
 /**
- * Las acciones de gestión del aula (HU-202): `Editar clase` y `Cancelar
- * clase`. Solo para el dueño, y solo mientras el aula sea editable — sobre
- * una ya cancelada no queda nada que gestionar (AC4), y una que ya empezó
- * explica por qué no se puede tocar (T11) en vez de esconder los botones sin
- * decir nada.
+ * Las acciones de gestión del aula: `Editar clase`, `Cancelar clase` (HU-202)
+ * y `Duplicar clase` (HU-213). Solo para el dueño. Editar y cancelar exigen
+ * que el aula siga siendo editable — sobre una ya cancelada no queda nada que
+ * gestionar (AC4), y una que ya empezó explica por qué no se puede tocar
+ * (T11). Duplicar no tiene esa restricción: la clase de la semana pasada, ya
+ * finalizada o cancelada, es justo la que el profesor quiere volver a usar.
+ *
+ * `compact` (la tarjeta del listado) nunca ofrece Duplicar: multiplicarla por
+ * cada tarjeta rompería la regla de una acción primaria por pantalla.
  */
 export function AccionesDeAula({ aula, esDueno, compact = false }: AccionesDeAulaProps) {
-  if (!esDueno || aula.status === ClassroomStatus.CANCELLED) {
+  if (!esDueno) {
     return null;
   }
 
-  if (!esAulaEditable(aula)) {
+  const cancelada = aula.status === ClassroomStatus.CANCELLED;
+  const editable = !cancelada && esAulaEditable(aula);
+
+  if (compact) {
+    if (cancelada) return null;
+
+    if (!editable) {
+      return (
+        <Callout variant="attention" title="Esta clase ya comenzó">
+          <p>Ya no se puede editar ni cancelar.</p>
+        </Callout>
+      );
+    }
+
     return (
-      <Callout variant="attention" title="Esta clase ya comenzó">
-        <p>Ya no se puede editar ni cancelar.</p>
-      </Callout>
+      <div className="relative z-10 grid gap-2 sm:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
+        <Button
+          render={<Link to={`/mis-aulas/${aula.id}/editar`} />}
+          className="h-11 min-w-0 w-full gap-2 px-2 text-base whitespace-nowrap"
+        >
+          <Pencil aria-hidden="true" strokeWidth={2} className="size-4" />
+          Editar clase
+        </Button>
+
+        <DialogoCancelarAula aula={aula} compact />
+      </div>
     );
   }
 
   return (
-    <div
-      className={
-        compact
-          ? 'relative z-10 grid gap-2 sm:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]'
-          : 'flex flex-wrap gap-3'
-      }
-    >
-      <Button
-        render={<Link to={`/mis-aulas/${aula.id}/editar`} />}
-        className={
-          compact
-            ? 'h-11 min-w-0 w-full gap-2 px-2 text-base whitespace-nowrap'
-            : 'h-11 gap-2 px-5 text-base'
-        }
-      >
-        <Pencil aria-hidden="true" strokeWidth={2} className="size-4" />
-        Editar clase
-      </Button>
+    <div className="space-y-3">
+      {!cancelada && !editable && (
+        <Callout variant="attention" title="Esta clase ya comenzó">
+          <p>Ya no se puede editar ni cancelar.</p>
+        </Callout>
+      )}
 
-      <DialogoCancelarAula aula={aula} compact={compact} />
+      <div className="flex flex-wrap gap-3">
+        {editable && (
+          <>
+            <Button
+              render={<Link to={`/mis-aulas/${aula.id}/editar`} />}
+              className="h-11 gap-2 px-5 text-base"
+            >
+              <Pencil aria-hidden="true" strokeWidth={2} className="size-4" />
+              Editar clase
+            </Button>
+
+            <DialogoCancelarAula aula={aula} compact={false} />
+          </>
+        )}
+
+        <Button
+          render={<Link to={`/mis-aulas/nueva?desde=${aula.id}`} />}
+          variant="outline"
+          className="h-11 gap-2 px-5 text-base"
+        >
+          <Copy aria-hidden="true" strokeWidth={2} className="size-4" />
+          Duplicar clase
+        </Button>
+      </div>
     </div>
   );
 }
