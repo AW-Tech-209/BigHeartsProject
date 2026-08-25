@@ -217,19 +217,13 @@ function DetalleDelAula({ aula, esDueno, preferenciaEstudiante }: DetalleDelAula
               </div>
 
               {(aula.hasInterpreter || aula.hasLiveCaptions || aula.hasVisualMaterials) && (
-                <ul className="grid gap-3 sm:grid-cols-2">
+                <ul className="flex flex-wrap gap-2" aria-label="Apoyos disponibles">
                   {APOYOS_AULA.filter(({ clave }) => aula[clave]).map(
                     ({ clave, etiqueta, icon: Icon }) => (
-                      <li
-                        key={clave}
-                        className="flex items-center gap-2 rounded-lg border border-border bg-muted/40 px-3 py-2 text-base text-foreground"
-                      >
-                        <Icon
-                          aria-hidden="true"
-                          strokeWidth={2}
-                          className="size-4 shrink-0 text-primary"
-                        />
-                        {etiqueta}
+                      <li key={clave}>
+                        <Badge tono="neutral" icon={Icon} className="px-2.5 py-1 text-sm">
+                          {etiqueta}
+                        </Badge>
                       </li>
                     ),
                   )}

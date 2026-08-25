@@ -222,12 +222,12 @@ export function TarjetaAula({
           perspectivas. T12: la marca de coincidencia solo aparece del lado
           del estudiante, y solo cuando SÍ coincide (AC4, nunca marca negativa).
         */}
-        <div className="mt-1 flex flex-wrap items-center gap-1.5">
+        <div className="mt-1 flex flex-wrap items-center gap-1" aria-label="Formas de comunicación">
           {classroom.communicationModes.length === 0 ? (
-            <ModoComunicacionBadge modo={null} />
+            <ModoComunicacionBadge modo={null} className="px-2 py-0.5 text-xs" />
           ) : (
             modosEnOrden(classroom.communicationModes).map((modo) => (
-              <ModoComunicacionBadge key={modo} modo={modo} />
+              <ModoComunicacionBadge key={modo} modo={modo} className="px-2 py-0.5 text-xs" />
             ))
           )}
           {!esVistaDelProfesor && coincideConLaMia && (
@@ -241,7 +241,7 @@ export function TarjetaAula({
           <div className="flex flex-wrap items-center gap-1.5" aria-label="Apoyos disponibles">
             {APOYOS_AULA.filter(({ clave }) => classroom[clave]).map(
               ({ clave, etiqueta, icon: Icon }) => (
-                <Badge key={clave} tono="neutral" icon={Icon}>
+                <Badge key={clave} tono="neutral" icon={Icon} className="px-2 py-0.5 text-xs">
                   {etiqueta}
                 </Badge>
               ),
