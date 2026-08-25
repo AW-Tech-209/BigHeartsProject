@@ -96,6 +96,32 @@ describe('AdminService.listPendingTeachers', () => {
   });
 });
 
+describe('AdminService.listTeachers', () => {
+  it('consulta todos los TEACHER, sin filtrar por estado, ordenados por nombre', async () => {
+    const { service, findMany } = setup();
+
+    await service.listTeachers();
+
+    expect(findMany).toHaveBeenCalledWith({
+      where: { role: UserRole.TEACHER },
+      orderBy: [{ firstName: 'asc' }, { lastName: 'asc' }],
+    });
+  });
+
+  it('incluye profesores en cualquier estado, no solo ACTIVE', async () => {
+    const { service } = setup({
+      findMany: [dbUser({ status: UserStatus.PENDING }), dbUser({ status: UserStatus.SUSPENDED })],
+    });
+
+    const teachers = await service.listTeachers();
+
+    expect(teachers.map((teacher) => teacher.status)).toEqual([
+      UserStatus.PENDING,
+      UserStatus.SUSPENDED,
+    ]);
+  });
+});
+
 describe('AdminService.approveTeacher', () => {
   it('cambia el estado a ACTIVE (AC2)', async () => {
     const { service, update } = setup();

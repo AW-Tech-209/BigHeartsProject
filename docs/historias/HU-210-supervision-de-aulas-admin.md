@@ -70,57 +70,59 @@ conversación de producto que no hemos tenido.
 
 ### Contrato — va primero
 
-- [ ] **T1** — En `packages/types`: filtros de supervisión (profesor, estado, rango de fechas) y el
+- [x] **T1** — En `packages/types`: filtros de supervisión (profesor, estado, rango de fechas) y el
       tipo de respuesta. **Reutiliza `ClassroomListItem`**; no declares un tipo paralelo. Luego
       `npm run build:types`.
 
 ### Backend
 
-- [ ] **T2** — `GET /admin/classrooms` en `AdminModule`, con `@Roles('ADMIN')`.
-- [ ] **T3** — Devuelve **todas** las aulas de **todos** los profesores: `PUBLISHED`, `CANCELLED`,
+- [x] **T2** — `GET /admin/classrooms` en `AdminModule`, con `@Roles('ADMIN')`.
+- [x] **T3** — Devuelve **todas** las aulas de **todos** los profesores: `PUBLISHED`, `CANCELLED`,
       y las pasadas. Sin exclusiones por defecto.
-- [ ] **T4** — Filtros opcionales por profesor, por estado y por rango de fechas, combinables.
+- [x] **T4** — Filtros opcionales por profesor, por estado y por rango de fechas, combinables.
       Orden: `scheduledAt` descendente — al supervisar interesa primero lo más reciente.
-- [ ] **T5** — El `meetingLink` **no se incluye**. Decisión 2.
-- [ ] **T6** — Paginación con el mismo formato que HU-203. No inventes un segundo formato.
-- [ ] **T7** — Tests: un `STUDENT` y un `TEACHER` reciben `403`; aparecen aulas de varios
+- [x] **T5** — El `meetingLink` **no se incluye**. Decisión 2.
+- [x] **T6** — Paginación con el mismo formato que HU-203. No inventes un segundo formato.
+- [x] **T7** — Tests: un `STUDENT` y un `TEACHER` reciben `403`; aparecen aulas de varios
       profesores; aparecen canceladas y pasadas; cada filtro; el orden; y **un test explícito de
       que `meetingLink` no aparece**.
 
 ### Frontend
 
-- [ ] **T8** — Pantalla de supervisión en `features/admin/`, alcanzable desde el panel del
+- [x] **T8** — Pantalla de supervisión en `features/admin/`, alcanzable desde el panel del
       administrador (HU-209).
-- [ ] **T9** — Presentación en **filas** con el riel de estado de 4 px, mostrando profesor,
+- [x] **T9** — Presentación en **filas** con el riel de estado de 4 px, mostrando profesor,
       título, fecha con zona explícita, estado e inscritos sobre cupo.
-- [ ] **T10** — Filtros por profesor, estado y fechas, accesibles por teclado y con su estado en la
+- [x] **T10** — Filtros por profesor, estado y fechas, accesibles por teclado y con su estado en la
       URL.
-- [ ] **T11** — Los 4 estados: cargando con texto, vacío, error y lista.
-- [ ] **T12** — Tests: la pantalla no es alcanzable para roles que no son `ADMIN`; `axe` limpio.
+- [x] **T11** — Los 4 estados: cargando con texto, vacío, error y lista.
+- [x] **T12** — Tests: la pantalla no es alcanzable para roles que no son `ADMIN`; `axe` limpio.
 
 ### Documentación
 
-- [ ] **T13** — Confirmar que `DEFINICION_PROYECTO.md` §5.1 recoge la supervisión dentro del
+- [x] **T13** — Confirmar que `DEFINICION_PROYECTO.md` §5.1 recoge la supervisión dentro del
       alcance, y recorrer la tabla de §6 del skill `bighearts-dod`.
 
 ## ✅ Criterios de aceptación
 
-- [ ] **AC1** — Un administrador ve aulas de **al menos dos profesores distintos** en la misma
+- [x] **AC1** — Un administrador ve aulas de **al menos dos profesores distintos** en la misma
       pantalla.
-- [ ] **AC2** — **Aparecen las canceladas y las pasadas**, cada una con su estado en color + ícono + texto.
-- [ ] **AC3** — **Autorización:** un `STUDENT` y un `TEACHER` reciben `403` en
+- [x] **AC2** — **Aparecen las canceladas y las pasadas**, cada una con su estado en color + ícono + texto.
+- [x] **AC3** — **Autorización:** un `STUDENT` y un `TEACHER` reciben `403` en
       `GET /admin/classrooms`. Verificado con tests de backend, no ocultando la UI.
-- [ ] **AC4** — **El `meetingLink` no aparece en la respuesta**, ni siquiera para el admin.
+- [x] **AC4** — **El `meetingLink` no aparece en la respuesta**, ni siquiera para el admin.
       Verificado con un test.
-- [ ] **AC5** — Los filtros de profesor, estado y fechas funcionan por separado y **combinados**, y
+- [x] **AC5** — Los filtros de profesor, estado y fechas funcionan por separado y **combinados**, y
       quedan en la URL.
-- [ ] **AC6** — El orden es `scheduledAt` descendente.
-- [ ] **AC7** — La presentación es en filas, con el riel de estado. No se usan tarjetas.
-- [ ] **AC8** — **Solo lectura:** en esta pantalla no hay ninguna acción de editar ni cancelar
+- [x] **AC6** — El orden es `scheduledAt` descendente.
+- [x] **AC7** — La presentación es en filas, con el riel de estado. No se usan tarjetas.
+- [x] **AC8** — **Solo lectura:** en esta pantalla no hay ninguna acción de editar ni cancelar
       sobre un aula ajena.
 - [ ] **AC9** — **Accesibilidad:** tabla con encabezados reales, recorrido completo con teclado,
-      cambios anunciados por `aria-live`, `axe` limpio, y revisado **a ojo en el navegador** en `.dark` y `.hc` (jsdom no calcula CSS de verdad: eso no se testea).
-- [ ] **AC10** — **Verificación automática:** `typecheck`, `lint`, `build` y
+      cambios anunciados por `aria-live`, `axe` limpio (✅, ver tests), y revisado **a ojo en el
+      navegador** en `.dark` y `.hc` (⬜ pendiente — jsdom no calcula CSS de verdad: eso no se
+      testea, y esta sesión no abrió un navegador).
+- [x] **AC10** — **Verificación automática:** `typecheck`, `lint`, `build` y
       `npm run test` en verde.
 
 ## 🚫 Fuera de alcance
@@ -134,4 +136,8 @@ conversación de producto que no hemos tenido.
 
 ## Notas de implementación
 
-_Se rellena al cerrar._
+La HU no decía cómo elige el admin a qué profesor filtrar, y no existía ningún endpoint que
+listara profesores. Se preguntó al usuario: se añadió `GET /admin/teachers` (todos los profesores,
+cualquier estado) para poblar el `<select>` del filtro — un profesor `SUSPENDED` puede tener aulas
+pasadas que el admin todavía necesita encontrar. Pendiente: revisión visual en `.dark`/`.hc` en
+navegador real (AC9, segunda mitad).

@@ -2,6 +2,7 @@ import { Controller, Get, HttpCode, HttpStatus, Param, ParseUUIDPipe, Post } fro
 import {
   type PendingTeachersResponse,
   type TeacherApprovalResponse,
+  type TeachersResponse,
   UserRole,
 } from '@academia/types';
 
@@ -44,6 +45,19 @@ export const idDeProfesor = new ParseUUIDPipe({ exceptionFactory: () => teacherN
 @Roles(UserRole.ADMIN)
 export class AdminController {
   constructor(private readonly adminService: AdminService) {}
+
+  /**
+   * GET /admin/teachers
+   *
+   * Todos los profesores, sin filtrar por estado. Alimenta el selector del
+   * filtro de supervisión de aulas (HU-210), no un listado de gestión propio.
+   */
+  @Get()
+  @HttpCode(HttpStatus.OK)
+  async listAll(): Promise<TeachersResponse> {
+    const teachers = await this.adminService.listTeachers();
+    return { teachers };
+  }
 
   /**
    * GET /admin/teachers/pending

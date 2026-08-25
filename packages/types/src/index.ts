@@ -690,6 +690,50 @@ export interface MisAulasResponse {
   pageSize: number;
 }
 
+/**
+ * Query de `GET /admin/classrooms` (HU-210). Solo `ADMIN`. Sin ningún filtro
+ * puesto, devuelve **todas** las aulas de **todos** los profesores: publicadas,
+ * canceladas y pasadas (§4.8). No es el catálogo con otro filtro: el catálogo
+ * (`ListClassroomsQuery`) solo enseña `PUBLISHED` y futuras.
+ */
+export interface AdminClassroomsQuery {
+  teacherId?: string;
+  status?: ClassroomStatus;
+  /** ISO 8601. Cota inferior de `scheduledAt`, combinable con `hasta`. */
+  desde?: string;
+  /** ISO 8601. Cota superior de `scheduledAt`, combinable con `desde`. */
+  hasta?: string;
+  page?: number;
+  pageSize?: number;
+}
+
+/**
+ * Respuesta de `GET /admin/classrooms`. Mismo formato de paginación que el
+ * catálogo y «Mis aulas» (T6): un solo contrato de listado en toda la API.
+ *
+ * Reutiliza `ClassroomListItem` —no un tipo paralelo— porque la fila de
+ * supervisión enseña lo mismo que la tarjeta del catálogo: el aula pública más
+ * el nombre del profesor. `meetingLink` no viaja: ni `Classroom` ni
+ * `ClassroomListItem` lo incluyen salvo que alguien lo añada explícitamente, y
+ * este endpoint no lo hace (decisión 2 de la HU, AC4).
+ */
+export interface AdminClassroomsResponse {
+  items: ClassroomListItem[];
+  total: number;
+  page: number;
+  pageSize: number;
+}
+
+/**
+ * Respuesta de `GET /admin/teachers`: todos los profesores de la academia, sin
+ * filtrar por estado. Sirve al selector del filtro de supervisión (HU-210) y
+ * es un superconjunto de `PendingTeachersResponse`, que solo trae los
+ * `PENDING`.
+ */
+export interface TeachersResponse {
+  teachers: User[];
+}
+
 /** Códigos de error estables que la API puede devolver en `ApiError.code`. */
 export const ApiErrorCode = {
   VALIDATION_ERROR: 'VALIDATION_ERROR',
