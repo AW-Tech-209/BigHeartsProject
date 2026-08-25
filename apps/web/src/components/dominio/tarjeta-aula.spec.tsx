@@ -265,6 +265,8 @@ describe('<TarjetaAula /> — accesibilidad declarada del aula (T10, T12, T15)',
       <TarjetaAula
         classroom={aula({
           communicationModes: [
+            CommunicationPreference.SPOKEN_AUDIO,
+            CommunicationPreference.LIP_READING,
             CommunicationPreference.WRITTEN_TEXT,
             CommunicationPreference.SIGN_LANGUAGE,
           ],
@@ -273,11 +275,21 @@ describe('<TarjetaAula /> — accesibilidad declarada del aula (T10, T12, T15)',
       />,
     );
     expect(screen.getByText('Lengua de signos')).toBeInTheDocument();
+    expect(screen.getByText('Lectura labial')).toBeInTheDocument();
     expect(screen.getByText('Texto escrito')).toBeInTheDocument();
+    expect(screen.getByText('Audio con apoyo')).toBeInTheDocument();
     expect(
       screen
         .getByText('Lengua de signos')
-        .compareDocumentPosition(screen.getByText('Texto escrito')),
+        .compareDocumentPosition(screen.getByText('Lectura labial')),
+    ).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
+    expect(
+      screen.getByText('Lectura labial').compareDocumentPosition(screen.getByText('Texto escrito')),
+    ).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
+    expect(
+      screen
+        .getByText('Texto escrito')
+        .compareDocumentPosition(screen.getByText('Audio con apoyo')),
     ).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
 
     rerender(
@@ -286,13 +298,17 @@ describe('<TarjetaAula /> — accesibilidad declarada del aula (T10, T12, T15)',
           communicationModes: [
             CommunicationPreference.SIGN_LANGUAGE,
             CommunicationPreference.WRITTEN_TEXT,
+            CommunicationPreference.SPOKEN_AUDIO,
+            CommunicationPreference.LIP_READING,
           ],
         })}
         ahora={AHORA}
       />,
     );
     expect(screen.getByText('Lengua de signos')).toBeInTheDocument();
+    expect(screen.getByText('Lectura labial')).toBeInTheDocument();
     expect(screen.getByText('Texto escrito')).toBeInTheDocument();
+    expect(screen.getByText('Audio con apoyo')).toBeInTheDocument();
   });
 
   // AC4: solo marca las que coinciden, y nunca con una marca negativa.
