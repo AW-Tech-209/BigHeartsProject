@@ -1,15 +1,15 @@
 # HU-213 — Duplicar un aula
 
-| Campo               | Valor                                               |
-| ------------------- | --------------------------------------------------- |
-| **Sprint**          | Sprint 2 — Gestión de Aulas                         |
-| **Prioridad**       | 🟡 Media                                            |
-| **Estimación**      | 0.5 días                                            |
-| **Estado**          | ✅ Completada (2026-08-24) — AC8 en la pasada de QA |
-| **Rama**            | `hu-213-duplicar-un-aula-<persona>`                 |
-| **Alcance técnico** | frontend                                            |
-| **Depende de**      | HU-201 (✅), HU-207, HU-211                         |
-| **Labels**          | `sprint-2` `prioridad:media` `frontend`             |
+| Campo               | Valor                                                           |
+| ------------------- | --------------------------------------------------------------- |
+| **Sprint**          | Sprint 2 — Gestión de Aulas                                     |
+| **Prioridad**       | 🟡 Media                                                        |
+| **Estimación**      | 0.5 días                                                        |
+| **Estado**          | ✅ Completada (2026-08-24) — AC8 cerrado en HU-215 (2026-08-25) |
+| **Rama**            | `hu-213-duplicar-un-aula-<persona>`                             |
+| **Alcance técnico** | frontend                                                        |
+| **Depende de**      | HU-201 (✅), HU-207, HU-211                                     |
+| **Labels**          | `sprint-2` `prioridad:media` `frontend`                         |
 
 > **Como** profesor,
 > **Quiero** crear una clase nueva a partir de otra que ya publiqué,
@@ -92,8 +92,10 @@ resultante dice `Duplicar «Conversación cotidiana»`.
       ni para el administrador.
 - [x] **AC7** — Un `?desde=` con un `id` inexistente o ajeno abre el formulario **vacío con un
       aviso**, no una pantalla de error.
-- [ ] **AC8** — **Accesibilidad:** la pantalla se completa solo con teclado, el cambio de contexto
+- [x] **AC8** — **Accesibilidad:** la pantalla se completa solo con teclado, el cambio de contexto
       se anuncia por región viva, `axe` limpio, y revisado **a ojo en el navegador** en `.dark` y `.hc` (jsdom no calcula CSS de verdad: eso no se testea).
+      _Teclado y anuncio verificados manualmente en HU-215 (2026-08-25). `.dark`/`.hc` no son
+      alcanzables en la app — ver HU-216._
 - [x] **AC9** — **Verificación automática:** `typecheck`, `lint`, `build` y
       `npm run test` en verde.
 

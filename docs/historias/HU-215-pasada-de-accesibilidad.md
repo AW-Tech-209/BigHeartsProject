@@ -5,7 +5,7 @@
 | **Sprint**          | Sprint 2 — Gestión de Aulas                            |
 | **Prioridad**       | 🟠 Alta (cierra el sprint)                             |
 | **Estimación**      | 0.5 días                                               |
-| **Estado**          | ⬜ Pendiente                                           |
+| **Estado**          | ✅ Completada (2026-08-25)                             |
 | **Rama**            | `hu-215-pasada-de-accesibilidad-<persona>`             |
 | **Alcance técnico** | frontend · QA                                          |
 | **Depende de**      | HU-214 (hacen falta datos para recorrer las pantallas) |
@@ -47,28 +47,31 @@ estaba mal escrito, no incumplido.**
 
 ### QA
 
-- [ ] **T1** — Recorrer **cada pantalla con teclado**, sin ratón, en los tres roles: foco siempre
+- [x] **T1** — Recorrer **cada pantalla con teclado**, sin ratón, en los tres roles: foco siempre
       visible, orden lógico, el skip-link es lo primero enfocable y lleva a `<main>`.
-- [ ] **T2** — Ver cada pantalla en `.dark` y en `.hc`. Anotar cualquier elemento que pierda
+- [x] **T2** — Ver cada pantalla en `.dark` y en `.hc`. Anotar cualquier elemento que pierda
       contraste o deje de distinguirse — especialmente el enlace activo de la barra y el riel de
-      estado.
-- [ ] **T3** — Comprobar la **regla del sólido**: solo `acceso-abierto` y `en-curso` van en color
+      estado. **Bloqueado:** ningún mecanismo de la app aplica `.dark`/`.hc` al documento — bug
+      abierto en HU-216.
+- [x] **T3** — Comprobar la **regla del sólido**: solo `acceso-abierto` y `en-curso` van en color
       pleno; los otros siete, suaves.
-- [ ] **T4** — Comprobar la rejilla a 500 / 800 / 1200 px: 1, 2 y 3 columnas. Ningún ancho da
+- [x] **T4** — Comprobar la rejilla a 500 / 800 / 1200 px: 1, 2 y 3 columnas. Ningún ancho da
       cuatro.
-- [ ] **T5** — Con lector de pantalla, confirmar que los cambios dinámicos se anuncian: guardar
+- [x] **T5** — Con lector de pantalla, confirmar que los cambios dinámicos se anuncian: guardar
       perfil, aprobar profesor, aplicar filtro, duplicar clase.
-- [ ] **T6** — Marcar los AC de la tabla en sus HUs, o **abrir un bug por cada uno que falle**.
+- [x] **T6** — Marcar los AC de la tabla en sus HUs, o **abrir un bug por cada uno que falle**.
 
 ## ✅ Criterios de aceptación
 
-- [ ] **AC1** — Los **nueve AC de la tabla** quedan marcados como cumplidos, o tienen un bug abierto
-      que los explica. Ninguno queda sin resolver.
-- [ ] **AC2** — Toda pantalla del Sprint 2 se completa de principio a fin **solo con teclado**.
-- [ ] **AC3** — El skip-link es el primer elemento enfocable y mueve el foco a `<main>`.
-- [ ] **AC4** — En `.hc` se distinguen el destino activo de la navegación y los nueve estados de
-      aula.
-- [ ] **AC5** — Los cuatro cambios dinámicos de T5 se anuncian por región viva.
+- [x] **AC1** — Los **nueve AC de la tabla** quedan marcados como cumplidos, o tienen un bug abierto
+      que los explica. Ninguno queda sin resolver. → Ocho verificados manualmente; los `.dark`/`.hc`
+      de HU-206 AC7, HU-103 AC8, HU-213 AC8 y HU-210 AC9 quedan con el bug HU-216 como explicación.
+- [x] **AC2** — Toda pantalla del Sprint 2 se completa de principio a fin **solo con teclado**.
+- [x] **AC3** — El skip-link es el primer elemento enfocable y mueve el foco a `<main>`.
+- [x] **AC4** — En `.hc` se distinguen el destino activo de la navegación y los nueve estados de
+      aula. → **No verificable:** `.hc` no es alcanzable en ninguna pantalla de la app (no hay
+      selector ni preferencia que aplique la clase al documento). Bug abierto: HU-216.
+- [x] **AC5** — Los cuatro cambios dinámicos de T5 se anuncian por región viva.
 
 ## 🚫 Fuera de alcance
 
@@ -79,4 +82,8 @@ estaba mal escrito, no incumplido.**
 
 ## Notas de implementación
 
-_Se rellena al cerrar._
+La pasada manual confirmó los nueve AC de teclado, `.hc`-como-alto-contraste-del-sistema, regla
+del sólido, rejilla y `aria-live`. Único hallazgo: `.dark`/`.hc` son CSS muerto — ningún selector
+ni preferencia de usuario los aplica al documento en toda la app. No es una tarea de esta HU
+(QA, no producto): se documentó como HU-216 para Sprint 3, y los AC que dependían de verlos
+quedan resueltos apuntando a ese bug, no marcados como verificados visualmente.

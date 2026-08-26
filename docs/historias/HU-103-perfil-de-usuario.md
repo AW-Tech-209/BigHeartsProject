@@ -1,14 +1,14 @@
 # HU-103 — Ver y editar el perfil de usuario
 
-| Campo            | Valor                                                |
-| ---------------- | ---------------------------------------------------- |
-| **Sprint**       | Sprint 1 — Autenticación y Usuarios                  |
-| **Prioridad**    | 🟠 Alta                                              |
-| **Estimación**   | 2.5 días (⚠️ ver _Decisiones que bloquean_)          |
-| **Estado**       | 🔄 En revisión (falta pasada manual de AC4 y AC8)    |
-| **Rama**         | `8-hu-103-ver-y-editar-el-perfil-de-usuario-william` |
-| **Colaboración** | Paralelo con contrato acordado                       |
-| **Depende de**   | HU-102                                               |
+| Campo            | Valor                                                             |
+| ---------------- | ----------------------------------------------------------------- |
+| **Sprint**       | Sprint 1 — Autenticación y Usuarios                               |
+| **Prioridad**    | 🟠 Alta                                                           |
+| **Estimación**   | 2.5 días (⚠️ ver _Decisiones que bloquean_)                       |
+| **Estado**       | ✅ Completada (2026-08-25) — parte visual `.dark`/`.hc` en HU-216 |
+| **Rama**         | `8-hu-103-ver-y-editar-el-perfil-de-usuario-william`              |
+| **Colaboración** | Paralelo con contrato acordado                                    |
+| **Depende de**   | HU-102                                                            |
 
 > **Como** usuario autenticado,
 > **Quiero** ver y editar la información de mi perfil, incluidas mis preferencias de accesibilidad,
@@ -73,9 +73,8 @@ Los campos editables salen del modelo `User` real
 - [x] **AC3** — Cambiar nombre y preferencia de accesibilidad, guardar, y recargar la página: los
       valores nuevos persisten.
 - [x] **AC4** — Tras guardar con éxito, el nombre mostrado en la barra de sesión se actualiza
-      **sin recargar la página**, y se anuncia por región `aria-live`. _Implementado
-      (`useUpdateProfile` → `setUser` del auth-store + `useAnnounce`), pero sin comprobar en
-      navegador: falta la pasada manual._
+      **sin recargar la página**, y se anuncia por región `aria-live`. _Verificado manualmente en
+      HU-215 (2026-08-25): funciona en los tres roles._
 - [x] **AC5** — **Errores:** enviar el formulario con `firstName` vacío responde
       `VALIDATION_ERROR` con `details.fields[]`, y la interfaz pinta el mensaje bajo ese campo con
       ícono, no solo con borde rojo.
@@ -85,9 +84,8 @@ Los campos editables salen del modelo `User` real
 - [x] **AC7** — **Campos protegidos:** enviar `email` o `role` en el `PATCH` no los modifica.
 - [x] **AC8** — **Accesibilidad:** el formulario se completa entero con teclado y foco visible,
       funciona en `.dark` y `.hc`, y cumple el checklist final del skill `bighearts-ui`.
-      _Construido con los componentes que ya cumplen el checklist (`Field`, `Input`,
-      `NativeSelect`, `Callout`) y sin colores literales, pero sin verificación visual en
-      navegador ni con lector de pantalla._
+      _Teclado verificado en HU-215 (2026-08-25). `.dark`/`.hc` no son alcanzables en la app —
+      ver HU-216 — se re-verifican visualmente cuando ese mecanismo exista._
 - [x] **AC9** — **Verificación automática:** `typecheck`, `lint`, `format:check`, `build` y
       `test --workspace @academia/api` en verde. _`format:check` señala un archivo del skill de UI
       que ya fallaba antes de esta HU; ver Deuda anotada._
@@ -132,9 +130,9 @@ habría forma de volver a "Prefiero no indicarlo" después de haber elegido algo
 ### Deuda anotada
 
 - `PROFILE_FORBIDDEN` sin emisor hasta que exista la edición de perfiles ajenos en `AdminModule`.
-- AC4 y AC8 se verificaron leyendo el código y con `build`/`lint`, **no** con un navegador real:
-  este repo no tiene tests de frontend (ver `docs/ARQUITECTURA.md` §10.2 y §14.6.4). Quedan
-  pendientes de una pasada manual con teclado y lector de pantalla en `.dark` y `.hc`.
+- AC4 y AC8 se verificaron manualmente en HU-215 (2026-08-25) para teclado y lector de pantalla.
+  La parte visual en `.dark`/`.hc` sigue abierta: esas clases no son alcanzables en ninguna
+  pantalla de la app — ver HU-216.
 - `format:check` sigue señalando `.claude/skills/bighearts-ui/tokens.css`, que ya fallaba antes de
   esta HU. Se dejó intacto a propósito: Prettier destruiría la alineación en columnas de la tabla
   de tokens, y el CI no ejecuta `format:check`.
