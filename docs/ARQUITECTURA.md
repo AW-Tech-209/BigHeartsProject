@@ -434,19 +434,19 @@ juntos.
 
 ### 6.1 Módulos
 
-| Módulo          | Responsabilidad                                                                     | Estado                                                                              |
-| --------------- | ----------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
-| `config`        | Validación del entorno con Zod y config global.                                     | ✅                                                                                  |
-| `prisma`        | `PrismaService` global.                                                             | ✅                                                                                  |
-| `common`        | Filtro de excepciones, interceptor de respuesta, factoría de errores de validación. | ✅                                                                                  |
-| `health`        | `GET /health` — proceso + BD.                                                       | ✅                                                                                  |
-| `auth`          | Registro, login, refresh, logout, guards.                                           | ✅                                                                                  |
-| `users`         | Perfil propio (`GET`/`PATCH /users/me`). La gestión de terceros vive en `admin`.    | ✅                                                                                  |
-| `classrooms`    | Aulas, horarios, cupos, enlace. Incluye `MeetingLinkCipher` (§4.1), que exporta.    | 🟨 Creación (HU-201). Listado y detalle en HU-203/HU-204.                           |
-| `bookings`      | Reservas, concurrencia, cancelaciones.                                              | ⬜ Stub                                                                             |
-| `sessions`      | Reservado (ver nota).                                                               | ⬜ Stub                                                                             |
-| `notifications` | Emails transaccionales y recordatorios.                                             | 🟨 Puerto + `LoggingNotificationService` (HU-104, D14). Adaptador real en Sprint 4. |
-| `admin`         | Aprobación de profesores, back-office.                                              | ✅ HU-104                                                                           |
+| Módulo          | Responsabilidad                                                                     | Estado                                                                                         |
+| --------------- | ----------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| `config`        | Validación del entorno con Zod y config global.                                     | ✅                                                                                             |
+| `prisma`        | `PrismaService` global.                                                             | ✅                                                                                             |
+| `common`        | Filtro de excepciones, interceptor de respuesta, factoría de errores de validación. | ✅                                                                                             |
+| `health`        | `GET /health` — proceso + BD.                                                       | ✅                                                                                             |
+| `auth`          | Registro, login, refresh, logout, guards.                                           | ✅                                                                                             |
+| `users`         | Perfil propio (`GET`/`PATCH /users/me`). La gestión de terceros vive en `admin`.    | ✅                                                                                             |
+| `classrooms`    | Aulas, horarios, cupos, enlace. Incluye `MeetingLinkCipher` (§4.1), que exporta.    | ✅ Crear, listar, detalle, editar, cancelar, «mis aulas», accesibilidad y coherencia temporal. |
+| `bookings`      | Reservas, concurrencia, cancelaciones.                                              | ⬜ Stub                                                                                        |
+| `sessions`      | Reservado (ver nota).                                                               | ⬜ Stub                                                                                        |
+| `notifications` | Emails transaccionales y recordatorios.                                             | 🟨 Puerto + `LoggingNotificationService` (HU-104, D14). Adaptador real en Sprint 4.            |
+| `admin`         | Aprobación de profesores y supervisión de aulas (solo lectura).                     | ✅ HU-104, HU-210                                                                              |
 
 > **Nota de auditoría — `SessionsModule` no tiene datos que gobernar.** El `.docx` lo declaraba
 > como módulo pero **nunca definió una entidad `Session`**: el historial y la asistencia viven en

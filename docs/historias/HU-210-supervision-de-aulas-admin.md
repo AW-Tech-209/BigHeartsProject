@@ -5,7 +5,7 @@
 | **Sprint**          | Sprint 2 — Gestión de Aulas                    |
 | **Prioridad**       | 🟠 Alta                                        |
 | **Estimación**      | 1.5 días                                       |
-| **Estado**          | ⬜ Pendiente                                   |
+| **Estado**          | ✅ Completada (2026-08-24)                     |
 | **Rama**            | `hu-210-supervision-de-aulas-admin-<persona>`  |
 | **Alcance técnico** | fullstack                                      |
 | **Depende de**      | HU-203 (✅), HU-209                            |

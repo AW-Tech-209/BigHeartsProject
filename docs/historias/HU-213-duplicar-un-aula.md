@@ -1,15 +1,15 @@
 # HU-213 — Duplicar un aula
 
-| Campo               | Valor                                   |
-| ------------------- | --------------------------------------- |
-| **Sprint**          | Sprint 2 — Gestión de Aulas             |
-| **Prioridad**       | 🟡 Media                                |
-| **Estimación**      | 0.5 días                                |
-| **Estado**          | ⬜ Pendiente                            |
-| **Rama**            | `hu-213-duplicar-un-aula-<persona>`     |
-| **Alcance técnico** | frontend                                |
-| **Depende de**      | HU-201 (✅), HU-207, HU-211             |
-| **Labels**          | `sprint-2` `prioridad:media` `frontend` |
+| Campo               | Valor                                               |
+| ------------------- | --------------------------------------------------- |
+| **Sprint**          | Sprint 2 — Gestión de Aulas                         |
+| **Prioridad**       | 🟡 Media                                            |
+| **Estimación**      | 0.5 días                                            |
+| **Estado**          | ✅ Completada (2026-08-24) — AC8 en la pasada de QA |
+| **Rama**            | `hu-213-duplicar-un-aula-<persona>`                 |
+| **Alcance técnico** | frontend                                            |
+| **Depende de**      | HU-201 (✅), HU-207, HU-211                         |
+| **Labels**          | `sprint-2` `prioridad:media` `frontend`             |
 
 > **Como** profesor,
 > **Quiero** crear una clase nueva a partir de otra que ya publiqué,
