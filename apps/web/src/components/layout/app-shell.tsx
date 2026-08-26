@@ -71,9 +71,10 @@ export function AppShell({ children, conNavegacion = true }: AppShellProps) {
             </nav>
           )}
 
-          <SelectorTema />
-
-          {user && <CuentaDelShell user={user} />}
+          <div className="flex shrink-0 items-center gap-3">
+            {user && <CuentaDelShell user={user} />}
+            <SelectorTema />
+          </div>
         </Contenedor>
       </header>
 

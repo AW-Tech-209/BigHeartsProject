@@ -60,5 +60,7 @@ literalmente imposible de hacer.
 ## Notas de implementación
 
 Decidido con el usuario: preferencia solo local (`localStorage`), sin columna en `User` ni
-endpoint. `AC1`/`AC3` no cubren la combinación `.hc.dark`: el selector ofrece las 3 opciones
-literales de la HU, no una matriz de dos toggles independientes.
+endpoint. A petición posterior del usuario, el selector quedó reducido a un botón que alterna
+claro/oscuro (sin opción de alto contraste en la UI, aunque `.hc`/`.hc.dark` siguen en
+`index.css`) — se marcó la tensión con el objetivo de accesibilidad de esta HU antes de aplicar
+el cambio.

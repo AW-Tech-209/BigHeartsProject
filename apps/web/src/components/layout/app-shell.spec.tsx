@@ -105,9 +105,9 @@ describe('AppShell — sin estado oculto', () => {
     expect(container.querySelector('[aria-expanded]')).toBeNull();
     expect(container.querySelector('[aria-haspopup]')).toBeNull();
 
-    // El único botón de la barra es el de salir.
+    // Los únicos botones de la barra son el de salir y el de alternar el tema.
     const botones = screen.getAllByRole('button').map((boton) => boton.textContent);
-    expect(botones).toEqual(['Cerrar sesión']);
+    expect(botones).toEqual(['Cerrar sesión', '']);
   });
 
   it('en móvil la barra inferior está siempre visible y tampoco tiene toggle', () => {
