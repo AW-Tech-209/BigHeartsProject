@@ -1004,7 +1004,8 @@ en marcha se reducen a invariantes + enlace a `DEPLOYMENT.md`, `AUTH_FLOW.md` y 
    **✅ Resuelto (2026-08-18) — D17, e implementado en HU-205.** Vitest + Testing Library + `axe`,
    bloqueando en CI, sin umbral de cobertura y sin cobertura retroactiva. Ver §10.2.
 5. **Proveedor de email** para el adaptador real de `NotificationService` (§4.6, D14). Bloquea el
-   Sprint 4; no bloquea HU-104.
+   Sprint 4; **no bloquea el Sprint 3**: D29 emite los avisos de reserva por el puerto, que hoy
+   escribe a log. El Sprint 4 cambia el `useClass` y nada más.
 6. **Formato de paginación** del listado de aulas: `{ items, total, page, pageSize }` con
    `pageSize` 20 por defecto. Propuesto en HU-203, sin decidir formalmente.
 
@@ -1046,3 +1047,31 @@ Correcciones aplicadas a las HUs al convertirlas, sin necesidad de decisión nue
   `currentBookings` (D9). Se añade la función `derivarEstadoAula()` compartida (§7.3).
 - **HU-204** — el enlace se limita al profesor dueño; la regla de estudiante y ventana de 30
   minutos queda aislada en un método que HU-303 extiende.
+
+---
+
+## 16. Registro de decisiones — Sprint 3 (2026-08-26)
+
+| #   | Decisión                                                                                  | Dónde  | Por qué se tomó                                                                                                                                                                                                               |
+| --- | ----------------------------------------------------------------------------------------- | ------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| D28 | La **asistencia queda fuera del Sprint 3** y va al 4, con el historial                    | §4.6   | La HU-303 original la registraba al abrirse el enlace. La nota de auditoría #2 de la Definición ya había fijado que la asistencia es **manual del profesor**: con enlace manual de Zoom, un clic no prueba que nadie entrara. |
+| D29 | Los avisos de reserva y cancelación **se emiten ya**, por el puerto `NotificationService` | §4.6   | El puerto existe desde HU-104 justo para esto. Insertar las llamadas ahora cuesta una línea por evento y se verifica con un espía; hacerlo en el Sprint 4 obliga a reabrir los servicios de reserva y cancelación.            |
+| D30 | Un aula con reservas vivas **se puede cancelar, pero no mover de horario**                | HU-306 | El no solapamiento de §4.4 es del **estudiante**, no del aula: mover la clase puede chocar con otra que él ya reservó, sin que él haya hecho nada. Cancelar sí es legítimo y lo deja enterado, con su cupo libre.             |
+| D31 | «Mis reservas» es **HU propia**, y va inmediatamente después de reservar                  | HU-302 | `/mis-clases` está registrada vacía desde HU-206 (D18) y ninguna HU antigua la llenaba. Reservar sin un sitio donde volver a encontrar lo reservado no es un sistema de reservas.                                             |
+
+Correcciones aplicadas a las HUs del Sprint 3 al convertirlas, sin necesidad de decisión nueva:
+
+- **HU-301** — la tarea de frontend pedía «actualización optimista», que contradice §4.2 y la
+  regla 10 de `CLAUDE.md`. El cupo tiene concurrencia real y no se pinta reservado antes de que el
+  servidor confirme.
+- **HU-303 (antigua)** — planteaba un `GET /classrooms/:id/meeting-link` propio. Descartado por
+  **D25**: el enlace se revela solo en `GET /classrooms/:id` y la regla vive en un único método.
+  Pasa a ser HU-304 y **extiende `revelarElEnlace()`**, no crea endpoint.
+- **HU-202** — el agujero que aquel sprint aplazó («notificar a los estudiantes con reserva salió
+  del alcance: `Booking` no existe hasta el Sprint 3») se recoge en **HU-306**.
+- **`ACCESS_WINDOW_MINUTES` y `CANCELLATION_WINDOW_MINUTES`** no existen todavía en
+  `config/env.schema.ts`. Los añaden HU-304 y HU-303 respectivamente.
+
+> **Deriva menor pendiente.** La tabla de §15 repite los números **D18, D19 y D20** en dos filas
+> distintas. No afecta a ninguna regla —el texto de cada una es correcto— pero conviene renumerar
+> las tres segundas ocurrencias antes de que alguien cite «D19» y no se sepa cuál.
