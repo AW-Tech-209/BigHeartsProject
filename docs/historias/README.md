@@ -70,41 +70,63 @@ cuerpo del issue.
 
 ## Estado
 
-| HU                                                     | Título                                        | Estado                                |
-| ------------------------------------------------------ | --------------------------------------------- | ------------------------------------- |
-| HU-001…004                                             | Sprint 0 — Fundación técnica                  | ✅ Completo (anterior a esta carpeta) |
-| HU-101, 102                                            | Registro y login con sesión persistente       | ✅ Completo (anterior a esta carpeta) |
-| [HU-103](./HU-103-perfil-de-usuario.md)                | Ver y editar el perfil de usuario             | 🔄 En revisión                        |
-| [HU-104](./HU-104-aprobacion-de-profesores.md)         | Aprobación de profesores por el administrador | ✅ Completada                         |
-| [HU-201](./HU-201-crear-aula-virtual.md)               | Crear aula virtual con enlace manual          | ✅ Terminada                          |
-| [HU-202](./HU-202-editar-cancelar-aula.md)             | Editar o cancelar un aula propia              | ✅ Completada                         |
-| [HU-203](./HU-203-listado-de-aulas.md)                 | Listado de aulas con filtros                  | ✅ Completada                         |
-| [HU-204](./HU-204-detalle-de-aula.md)                  | Detalle de un aula                            | ✅ Completada                         |
-| [HU-205](./HU-205-tests-de-frontend.md)                | Infraestructura de tests de frontend y tipos  | ✅ Completada                         |
-| [HU-206](./HU-206-sistema-visual-y-shell.md)           | Sistema visual y shell de la aplicación       | ✅ Completada                         |
-| [HU-207](./HU-207-mis-aulas-del-profesor.md)           | Mis aulas: listado del profesor               | ✅ Completada                         |
-| [HU-208](./HU-208-catalogo-por-rol.md)                 | El catálogo de aulas distingue quién lo mira  | ✅ Completada                         |
-| [HU-209](./HU-209-panel-de-inicio-por-rol.md)          | Panel de inicio por rol                       | ✅ Completada                         |
-| [HU-210](./HU-210-supervision-de-aulas-admin.md)       | Supervisión de aulas para el administrador    | ✅ Completada                         |
-| [HU-211](./HU-211-accesibilidad-declarada-del-aula.md) | El aula declara cómo se imparte               | ✅ Completada                         |
-| [HU-212](./HU-212-coherencia-temporal-del-aula.md)     | Coherencia temporal del aula                  | ✅ Completada                         |
-| [HU-213](./HU-213-duplicar-un-aula.md)                 | Duplicar un aula                              | ✅ Completada                         |
-| [HU-214](./HU-214-datos-de-demostracion.md)            | Datos de demostración en el seed              | ⬜ Pendiente                          |
-| [HU-215](./HU-215-pasada-de-accesibilidad.md)          | Pasada manual de accesibilidad                | ⬜ Pendiente                          |
-| HU-301…304                                             | Sprint 3 — Sistema de reservas                | ⬜ Sin convertir a `.md`              |
-| HU-401…404                                             | Sprint 4 — Notificaciones e historial         | ⬜ Sin convertir a `.md`              |
+| HU                                                     | Título                                         | Estado                                |
+| ------------------------------------------------------ | ---------------------------------------------- | ------------------------------------- |
+| HU-001…004                                             | Sprint 0 — Fundación técnica                   | ✅ Completo (anterior a esta carpeta) |
+| HU-101, 102                                            | Registro y login con sesión persistente        | ✅ Completo (anterior a esta carpeta) |
+| [HU-103](./HU-103-perfil-de-usuario.md)                | Ver y editar el perfil de usuario              | 🔄 En revisión                        |
+| [HU-104](./HU-104-aprobacion-de-profesores.md)         | Aprobación de profesores por el administrador  | ✅ Completada                         |
+| [HU-201](./HU-201-crear-aula-virtual.md)               | Crear aula virtual con enlace manual           | ✅ Terminada                          |
+| [HU-202](./HU-202-editar-cancelar-aula.md)             | Editar o cancelar un aula propia               | ✅ Completada                         |
+| [HU-203](./HU-203-listado-de-aulas.md)                 | Listado de aulas con filtros                   | ✅ Completada                         |
+| [HU-204](./HU-204-detalle-de-aula.md)                  | Detalle de un aula                             | ✅ Completada                         |
+| [HU-205](./HU-205-tests-de-frontend.md)                | Infraestructura de tests de frontend y tipos   | ✅ Completada                         |
+| [HU-206](./HU-206-sistema-visual-y-shell.md)           | Sistema visual y shell de la aplicación        | ✅ Completada                         |
+| [HU-207](./HU-207-mis-aulas-del-profesor.md)           | Mis aulas: listado del profesor                | ✅ Completada                         |
+| [HU-208](./HU-208-catalogo-por-rol.md)                 | El catálogo de aulas distingue quién lo mira   | ✅ Completada                         |
+| [HU-209](./HU-209-panel-de-inicio-por-rol.md)          | Panel de inicio por rol                        | ✅ Completada                         |
+| [HU-210](./HU-210-supervision-de-aulas-admin.md)       | Supervisión de aulas para el administrador     | ✅ Completada                         |
+| [HU-211](./HU-211-accesibilidad-declarada-del-aula.md) | El aula declara cómo se imparte                | ✅ Completada                         |
+| [HU-212](./HU-212-coherencia-temporal-del-aula.md)     | Coherencia temporal del aula                   | ✅ Completada                         |
+| [HU-213](./HU-213-duplicar-un-aula.md)                 | Duplicar un aula                               | ✅ Completada                         |
+| [HU-214](./HU-214-datos-de-demostracion.md)            | Datos de demostración en el seed               | ✅ Completada                         |
+| [HU-215](./HU-215-pasada-de-accesibilidad.md)          | Pasada manual de accesibilidad                 | ✅ Completada                         |
+| [HU-216](./HU-216-mecanismo-de-tema.md)                | Mecanismo real para `.dark` y `.hc`            | ⬜ Pendiente                          |
+| [HU-301](./HU-301-reservar-un-cupo.md)                 | Reservar un cupo                               | ⬜ Pendiente                          |
+| [HU-302](./HU-302-mis-reservas.md)                     | Mis reservas: el estudiante encuentra su clase | ⬜ Pendiente                          |
+| [HU-303](./HU-303-cancelar-una-reserva.md)             | Cancelar una reserva                           | ⬜ Pendiente                          |
+| [HU-304](./HU-304-acceso-al-enlace.md)                 | El enlace se revela dentro de su ventana       | ⬜ Pendiente                          |
+| [HU-305](./HU-305-el-profesor-ve-quien-viene.md)       | El profesor ve quién viene a su clase          | ⬜ Pendiente                          |
+| [HU-306](./HU-306-un-aula-con-reservas.md)             | Un aula con reservas no cambia en silencio     | ⬜ Pendiente                          |
+| [HU-307](./HU-307-seed-con-reservas.md)                | El seed siembra reservas                       | ⬜ Pendiente                          |
+| HU-401…404                                             | Sprint 4 — Notificaciones e historial          | ⬜ Sin convertir a `.md`              |
 
-**Sprint 2 — cierre (2026-08-24).** Las trece HUs de gestión de aulas están implementadas. Quedan
-dos para poder darlo por cerrado:
+**Sprint 2 — cerrado (2026-08-25).** Las quince HUs de gestión de aulas, incluidas HU-214 y HU-215,
+están implementadas.
+
+**Sprint 3 — Sistema de Reservas.** Siete HUs, ~11.5 días, un solo developer. Más HU-216, que
+salió de la pasada de accesibilidad del Sprint 2 y no depende de nada, así que entra por donde
+quepa.
 
 ```
-HU-214 (datos de demo) ─► HU-215 (pasada de accesibilidad)
+HU-301 (reservar) ─┬─► HU-302 (mis reservas) ─┬─► HU-303 (cancelar) ─┬─► HU-306 (aula con reservas)
+                   │                          └─► HU-304 (enlace)     │
+                   └─► HU-305 (quién viene)                           └─► HU-307 (seed)
 ```
 
-- **HU-214** es bloqueante para enseñárselo al cliente: el seed crea tres usuarios y **cero aulas**,
-  así que hoy no hay nada que demostrar sin construirlo a mano.
-- **HU-215** cierra los nueve AC de accesibilidad que quedaron sin verificar en seis HUs, todos del
-  tipo que solo se comprueba a ojo en un navegador. Necesita los datos de HU-214.
+**HU-301 va primera y sola.** Crea `Booking` y la transacción de cupos; todo lo demás la presupone.
+**HU-302 va inmediatamente después**, no al final: reservar sin un sitio donde volver a encontrar
+lo reservado no es un sistema de reservas, y es la mitad de la prueba definitiva del producto.
+**HU-307 va última** por definición: siembra lo que las demás construyeron.
+
+Tres HUs cierran agujeros que las historias originales no veían:
+
+- **HU-302** rellena `/mis-clases`, registrada vacía desde HU-206 (D18) y que ninguna HU antigua
+  llegaba a llenar.
+- **HU-306** cierra el agujero que **se abre con HU-301**: HU-202 dejó al profesor cancelar un aula
+  cuando no había nadie dentro. En cuanto exista la primera reserva, ese mismo botón deja
+  estudiantes con una clase fantasma.
+- **HU-307** evita repetir lo del Sprint 2, que terminó con todo hecho y nada que enseñar.
 
 Las HUs de Sprint 0 y las primeras de Sprint 1 se implementaron antes de que existiera esta
 carpeta; su texto original está en GitHub Projects. No se reconstruyen aquí.
