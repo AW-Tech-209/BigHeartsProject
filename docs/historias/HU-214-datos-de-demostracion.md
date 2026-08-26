@@ -36,36 +36,36 @@ estados que necesitan varias aulas distintas para comprobarse.
 
 ### Backend
 
-- [ ] **T1** — Segundo profesor `ACTIVE` en el seed. Con uno solo no se puede enseñar la supervisión
+- [x] **T1** — Segundo profesor `ACTIVE` en el seed. Con uno solo no se puede enseñar la supervisión
       del admin ni el distintivo `Tu clase` del catálogo.
-- [ ] **T2** — Un profesor `PENDING`, para que el panel del admin tenga algo que aprobar.
-- [ ] **T3** — **Ocho aulas** repartidas entre los dos profesores, con fechas relativas a `now()`,
+- [x] **T2** — Un profesor `PENDING`, para que el panel del admin tenga algo que aprobar.
+- [x] **T3** — **Ocho aulas** repartidas entre los dos profesores, con fechas relativas a `now()`,
       que cubran: `disponible`, `últimos cupos`, `sin cupos`, `en curso`, `finalizada` (pasada),
       `cancelada`, y una **sin modos de comunicación declarados**.
-- [ ] **T4** — Variar `level` y `communicationModes` entre ellas para que los filtros del catálogo y
+- [x] **T4** — Variar `level` y `communicationModes` entre ellas para que los filtros del catálogo y
       la marca `Coincide con tu preferencia` se puedan probar de verdad.
-- [ ] **T5** — Dar al estudiante del seed una `communicationPreference` que **coincida con algunas
+- [x] **T5** — Dar al estudiante del seed una `communicationPreference` que **coincida con algunas
       aulas y no con otras**.
-- [ ] **T6** — Mantener la idempotencia: re-ejecutar el seed no duplica aulas.
+- [x] **T6** — Mantener la idempotencia: re-ejecutar el seed no duplica aulas.
 
 ### Documentación
 
-- [ ] **T7** — Actualizar `README.md`, que dice «el seed crea un usuario por rol»: ahora también
+- [x] **T7** — Actualizar `README.md`, que dice «el seed crea un usuario por rol»: ahora también
       siembra aulas de ejemplo.
 
 ## ✅ Criterios de aceptación
 
-- [ ] **AC1** — Tras `npm run db:seed`, el catálogo muestra **al menos cinco aulas** de dos
+- [x] **AC1** — Tras `npm run db:seed`, el catálogo muestra **al menos cinco aulas** de dos
       profesores distintos.
-- [ ] **AC2** — Entre las sembradas se pueden ver **al menos cinco de los nueve estados** de
+- [x] **AC2** — Entre las sembradas se pueden ver **al menos cinco de los nueve estados** de
       `<EstadoAula>`, incluidos «sin cupos» y «cancelada».
-- [ ] **AC3** — El estudiante del seed ve **algunas aulas marcadas** con `Coincide con tu
+- [x] **AC3** — El estudiante del seed ve **algunas aulas marcadas** con `Coincide con tu
 preferencia` y otras sin marcar.
-- [ ] **AC4** — Hay **al menos un aula sin modos declarados**, que se muestra como
+- [x] **AC4** — Hay **al menos un aula sin modos declarados**, que se muestra como
       `Modo sin indicar`.
-- [ ] **AC5** — El panel del admin tiene **un profesor pendiente** que aprobar, y la supervisión
+- [x] **AC5** — El panel del admin tiene **un profesor pendiente** que aprobar, y la supervisión
       lista aulas de los dos profesores.
-- [ ] **AC6** — Ejecutar el seed dos veces seguidas **no duplica** nada, y ninguna fecha sembrada
+- [x] **AC6** — Ejecutar el seed dos veces seguidas **no duplica** nada, y ninguna fecha sembrada
       queda en el pasado por ser absoluta.
 
 ## 🚫 Fuera de alcance
@@ -76,4 +76,8 @@ preferencia` y otras sin marcar.
 
 ## Notas de implementación
 
-_Se rellena al cerrar._
+Las aulas se upsertean por un id UUID **fijo** (no hay campo de negocio único en `Classroom`), y en
+el `update` se recalculan también las fechas — así una fila reejecutada nunca queda con
+`scheduledAt` obsoleto. `reservada`, `acceso-abierto` y `pendiente-aprobacion` no se sembraron:
+hoy no tienen ningún caso alcanzable (no existe `Booking`, y no hay forma de que un profesor
+`PENDING` tenga aulas), tal y como documenta `derivarEstadoAula()`.

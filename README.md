@@ -66,16 +66,24 @@ curl http://localhost:3000/health
 
 ### Credenciales de prueba (seed)
 
-El seed crea un usuario por rol. Todos comparten la misma contraseña:
+El seed crea usuarios y, en entornos no productivos, aulas de ejemplo. Todos los usuarios comparten
+la misma contraseña:
 
-| Rol     | Email                   | Contraseña     |
-| ------- | ----------------------- | -------------- |
-| ADMIN   | `admin@academia.local`  | `Password123!` |
-| TEACHER | `profe@academia.local`  | `Password123!` |
-| STUDENT | `alumno@academia.local` | `Password123!` |
+| Rol     | Email                            | Estado  | Contraseña     |
+| ------- | -------------------------------- | ------- | -------------- |
+| ADMIN   | `admin@academia.local`           | ACTIVE  | `Password123!` |
+| TEACHER | `profe@academia.local`           | ACTIVE  | `Password123!` |
+| TEACHER | `profe2@academia.local`          | ACTIVE  | `Password123!` |
+| TEACHER | `profe.pendiente@academia.local` | PENDING | `Password123!` |
+| STUDENT | `alumno@academia.local`          | ACTIVE  | `Password123!` |
 
-El seed es idempotente (`upsert` por email): se puede re-ejecutar sin duplicar. Para lanzarlo a
-mano: `npm run db:seed` (o dentro del contenedor, ya corre solo al arrancar).
+Además, ocho aulas repartidas entre los dos profesores `ACTIVE`, con fechas relativas al momento
+de sembrar, para poder enseñar el catálogo, la supervisión del admin y «Mis aulas» sin construir
+datos a mano.
+
+El seed es idempotente (usuarios por `upsert` de email, aulas por un id fijo): se puede
+re-ejecutar sin duplicar. Para lanzarlo a mano: `npm run db:seed` (o dentro del contenedor, ya
+corre solo al arrancar).
 
 ### Hot-reload
 
