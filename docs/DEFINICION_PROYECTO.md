@@ -253,8 +253,8 @@ Explícitamente aplazado, para evitar expectativas equivocadas:
 | ------------------------------------------------------------------------ | ----------------------------------------------------------------------- |
 | Sprint 0 — Fundación técnica (monorepo, Docker, CI/CD, deploy a staging) | ✅ Completo                                                             |
 | Sprint 1 — Autenticación y usuarios                                      | 🔄 En curso (registro y login/refresh entregados; perfil en desarrollo) |
-| Sprint 2 — Gestión de aulas                                              | ⬜ Sin empezar                                                          |
-| Sprint 3 — Sistema de reservas                                           | ⬜ Sin empezar                                                          |
+| Sprint 2 — Gestión de aulas                                              | ✅ Cerrado (2026-08-25) — 15 HUs                                        |
+| Sprint 3 — Sistema de reservas                                           | 🔄 Planificado — 7 HUs (HU-301…307), ~11.5 días                         |
 | Sprint 4 — Notificaciones e historial                                    | ⬜ Sin empezar                                                          |
 
 El backlog vivo con el detalle de cada historia está en [`docs/historias/`](./historias/).
