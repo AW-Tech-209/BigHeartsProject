@@ -1,38 +1,34 @@
-import { NativeSelect } from '@/components/ui/native-select';
+import { Moon, Sun } from 'lucide-react';
+
+import { Button } from '@/components/ui/button';
 import { useAnnounce } from '@/hooks/use-announce';
-import { TEMAS, useTema, type Tema } from '@/hooks/use-tema';
+import { useTema } from '@/hooks/use-tema';
 
-const ETIQUETAS: Record<Tema, string> = {
-  claro: 'Tema claro',
-  oscuro: 'Tema oscuro',
-  'alto-contraste': 'Tema de alto contraste',
-};
-
-/** Selector de tema visual (claro/oscuro/alto contraste) del `<AppShell>` (HU-216). */
+/** Botón que alterna entre tema claro y oscuro, en el extremo derecho del `<AppShell>` (HU-216). */
 export function SelectorTema() {
-  const { tema, setTema } = useTema();
+  const { tema, alternar } = useTema();
   const announce = useAnnounce();
+  const esOscuro = tema === 'oscuro';
 
-  function cambiar(siguiente: Tema) {
-    setTema(siguiente);
-    announce(`${ETIQUETAS[siguiente]} activado.`);
+  function cambiar() {
+    alternar();
+    announce(esOscuro ? 'Tema claro activado.' : 'Tema oscuro activado.');
   }
 
   return (
-    <label className="flex shrink-0 items-center gap-2 text-sm text-foreground">
-      <span className="sr-only sm:not-sr-only">Tema</span>
-      <NativeSelect
-        aria-label="Tema visual"
-        value={tema}
-        onChange={(e) => cambiar(e.target.value as Tema)}
-        className="h-9 w-auto min-w-0 pr-9 pl-3 text-sm"
-      >
-        {TEMAS.map((opcion) => (
-          <option key={opcion} value={opcion}>
-            {ETIQUETAS[opcion]}
-          </option>
-        ))}
-      </NativeSelect>
-    </label>
+    <Button
+      type="button"
+      variant="outline"
+      onClick={cambiar}
+      aria-pressed={esOscuro}
+      aria-label={esOscuro ? 'Cambiar a tema claro' : 'Cambiar a tema oscuro'}
+      className="size-11 shrink-0 rounded-full"
+    >
+      {esOscuro ? (
+        <Moon aria-hidden="true" strokeWidth={2} className="size-5" />
+      ) : (
+        <Sun aria-hidden="true" strokeWidth={2} className="size-5" />
+      )}
+    </Button>
   );
 }
