@@ -40,17 +40,17 @@ literalmente imposible de hacer.
 
 ## 🔧 Tasks
 
-- [ ] **T1** — Selector de tema en `<AppShell>` (claro / oscuro / alto contraste), accesible por
+- [x] **T1** — Selector de tema en `<AppShell>` (claro / oscuro / alto contraste), accesible por
       teclado, con el estado actual anunciado.
-- [ ] **T2** — Aplicar la clase correspondiente a `<html>` al cargar y al cambiar selección.
-- [ ] **T3** — Persistir la elección (según la decisión pendiente de arriba).
+- [x] **T2** — Aplicar la clase correspondiente a `<html>` al cargar y al cambiar selección.
+- [x] **T3** — Persistir la elección (según la decisión pendiente de arriba).
 
 ## ✅ Criterios de aceptación
 
-- [ ] **AC1** — Cambiar el selector aplica `.dark`/`.hc`/`.hc.dark` a `<html>` de inmediato, sin
+- [x] **AC1** — Cambiar el selector aplica `.dark`/`.hc`/`.hc.dark` a `<html>` de inmediato, sin
       recargar.
-- [ ] **AC2** — La preferencia persiste entre sesiones.
-- [ ] **AC3** — El selector se opera completo con teclado y el cambio se anuncia por región viva.
+- [x] **AC2** — La preferencia persiste entre sesiones.
+- [x] **AC3** — El selector se opera completo con teclado y el cambio se anuncia por región viva.
 
 ## 🚫 Fuera de alcance
 
@@ -59,4 +59,6 @@ literalmente imposible de hacer.
 
 ## Notas de implementación
 
-_Se rellena al cerrar._
+Decidido con el usuario: preferencia solo local (`localStorage`), sin columna en `User` ni
+endpoint. `AC1`/`AC3` no cubren la combinación `.hc.dark`: el selector ofrece las 3 opciones
+literales de la HU, no una matriz de dos toggles independientes.
