@@ -115,7 +115,7 @@ para resolver.
 - [x] **AC6** — **La red atrapa algo de verdad.** Quitarle el `<label>` a un input de un componente
       cubierto hace **fallar** el test de `axe`, con un mensaje que nombra la violación. Este AC no
       se cumple con "axe está instalado": hay que demostrar el fallo y luego restaurarlo.
-- [ ] **AC7** — El CI ejecuta los tests de los tres workspaces en cada PR, y **un test roto bloquea
+- [x] **AC7** — El CI ejecuta los tests de los tres workspaces en cada PR, y **un test roto bloquea
       el merge**. Verificado abriendo un PR con un test que falle a propósito y comprobando que el
       check queda en rojo.
 - [x] **AC8** — **Los tests siguen la convención de consulta accesible:** los ejemplos usan

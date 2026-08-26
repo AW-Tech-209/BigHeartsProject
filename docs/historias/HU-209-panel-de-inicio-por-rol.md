@@ -86,7 +86,7 @@ exactamente lo que produjo esta HU.
 
 ## ✅ Criterios de aceptación
 
-- [ ] **AC1** — **Ninguna de las dos frases falsas queda en el código.**
+- [x] **AC1** — **Ninguna de las dos frases falsas queda en el código.**
       `grep -rn "Todavía no puedes crear aulas\|Todavía no hay aulas publicadas" apps/web/src` no
       devuelve nada.
       → ⚠️ **Cumple en el panel; el comando literal no.** Ver nota 1 del cierre.
