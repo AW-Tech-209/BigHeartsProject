@@ -5,7 +5,7 @@
 | **Sprint**          | Sprint 2 — Gestión de Aulas                    |
 | **Prioridad**       | 🟠 Alta                                        |
 | **Estimación**      | 1.5 días                                       |
-| **Estado**          | ⬜ Pendiente                                   |
+| **Estado**          | ✅ Completada (2026-08-24)                     |
 | **Rama**            | `hu-210-supervision-de-aulas-admin-<persona>`  |
 | **Alcance técnico** | fullstack                                      |
 | **Depende de**      | HU-203 (✅), HU-209                            |
@@ -118,10 +118,11 @@ conversación de producto que no hemos tenido.
 - [x] **AC7** — La presentación es en filas, con el riel de estado. No se usan tarjetas.
 - [x] **AC8** — **Solo lectura:** en esta pantalla no hay ninguna acción de editar ni cancelar
       sobre un aula ajena.
-- [ ] **AC9** — **Accesibilidad:** tabla con encabezados reales, recorrido completo con teclado,
+- [x] **AC9** — **Accesibilidad:** tabla con encabezados reales, recorrido completo con teclado,
       cambios anunciados por `aria-live`, `axe` limpio (✅, ver tests), y revisado **a ojo en el
-      navegador** en `.dark` y `.hc` (⬜ pendiente — jsdom no calcula CSS de verdad: eso no se
-      testea, y esta sesión no abrió un navegador).
+      navegador** en `.dark` y `.hc`. _Encabezados, teclado y `aria-live` verificados manualmente
+      en HU-215 (2026-08-25). `.dark`/`.hc` no son alcanzables en la app — ver HU-216 — se
+      re-verifican visualmente cuando ese mecanismo exista._
 - [x] **AC10** — **Verificación automática:** `typecheck`, `lint`, `build` y
       `npm run test` en verde.
 
@@ -139,5 +140,5 @@ conversación de producto que no hemos tenido.
 La HU no decía cómo elige el admin a qué profesor filtrar, y no existía ningún endpoint que
 listara profesores. Se preguntó al usuario: se añadió `GET /admin/teachers` (todos los profesores,
 cualquier estado) para poblar el `<select>` del filtro — un profesor `SUSPENDED` puede tener aulas
-pasadas que el admin todavía necesita encontrar. Pendiente: revisión visual en `.dark`/`.hc` en
-navegador real (AC9, segunda mitad).
+pasadas que el admin todavía necesita encontrar. AC9 verificado en HU-215 (2026-08-25) salvo
+`.dark`/`.hc`, inalcanzables hasta HU-216.

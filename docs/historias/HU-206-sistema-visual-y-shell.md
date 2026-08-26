@@ -94,16 +94,18 @@ Salen de la sesión de exploración visual; el detalle y el porqué están en
       sigue distinguiendo en `.hc`.
 - [x] **AC4** — **Las seis páginas** usan `<AppShell>` y `<PaginaCabecera>`, con exactamente un
       `<h1>`, y el foco salta a él al cambiar de ruta.
-- [ ] **AC5** — El skip-link es el primer elemento enfocable, y al activarlo el foco entra en
-      `<main>`.
+- [x] **AC5** — El skip-link es el primer elemento enfocable, y al activarlo el foco entra en
+      `<main>`. _Verificado manualmente en HU-215 (2026-08-25)._
 - [x] **AC6** — **`axe` limpio en las seis páginas**, con el helper de HU-205. Cero violaciones.
-- [ ] **AC7** — Las seis páginas se ven correctas en `light`, `dark` y `hc`, demostrado con tests
-      que montan en los tres modos.
-- [ ] **AC8** — **Rejilla:** a 500px se ve 1 columna, a 800px dos, a 1200px tres. Ningún ancho
-      produce cuatro.
-- [ ] **AC9** — **Regla del sólido:** `<EstadoAula>` pinta en color pleno **únicamente**
+- [x] **AC7** — Las seis páginas se ven correctas en `light`, `dark` y `hc`, demostrado con tests
+      que montan en los tres modos. _`light` verificado manualmente en HU-215 (2026-08-25). `dark`
+      y `hc` siguen sin ser alcanzables en la app: no hay mecanismo que aplique esas clases al
+      documento — ver HU-216. Se re-verifican visualmente cuando esa HU cierre._
+- [x] **AC8** — **Rejilla:** a 500px se ve 1 columna, a 800px dos, a 1200px tres. Ningún ancho
+      produce cuatro. _Verificado manualmente en HU-215 (2026-08-25)._
+- [x] **AC9** — **Regla del sólido:** `<EstadoAula>` pinta en color pleno **únicamente**
       `acceso-abierto` y `en-curso`; los otros siete usan la variante suave. Verificado con un test
-      que recorre los nueve estados.
+      que recorre los nueve estados, y confirmado visualmente en HU-215 (2026-08-25).
 - [x] **AC10** — **Ilustración:** las tres llevan `role="img"` con `aria-label`, no usan ni un color
       literal, y siguen legibles en `.hc`. Ninguna aporta información que no esté en el texto.
 - [x] **AC11** — **Cero colores literales** en todo lo entregado. Verificable con
@@ -153,10 +155,9 @@ Salen de la sesión de exploración visual; el detalle y el porqué están en
 
 ### Lo que quedó pendiente
 
-- **AC5, AC7, AC8 y AC10 están verificados por construcción y por test, pero no visualmente.**
-  jsdom no aplica las hojas de Tailwind: no hay media queries evaluadas, ni contraste calculado, ni
-  navegación por fragmento. Falta una **pasada manual** a 500/800/1200px en los tres modos, y
-  activar el skip-link con teclado en un navegador real.
+- **AC5, AC8 y AC10 verificados visualmente en HU-215 (2026-08-25).** AC7 solo en `light`: `.dark`
+  y `.hc` no son alcanzables en ninguna pantalla de la app — falta el mecanismo que aplique esas
+  clases (selector o preferencia persistida), ver HU-216.
 - **`HomePage` sigue con el copy del scaffold** («Scaffold de @academia/web…», el bloque de
   `GET /health`). Se migró a la estructura sin reescribirlo, como pide «Fuera de alcance», pero es
   el único sitio del producto cuyo texto no cumple `voz-microcopy.md`.

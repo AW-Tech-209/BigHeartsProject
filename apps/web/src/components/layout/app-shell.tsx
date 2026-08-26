@@ -13,6 +13,7 @@ import { useEsMovil } from '@/hooks/use-es-movil';
 import { cn } from '@/lib/utils';
 import { Contenedor } from './contenedor';
 import { destinosPorRol, type Destino } from './destinos-por-rol';
+import { SelectorTema } from './selector-tema';
 
 type AppShellProps = {
   children: ReactNode;
@@ -69,6 +70,8 @@ export function AppShell({ children, conNavegacion = true }: AppShellProps) {
               ))}
             </nav>
           )}
+
+          <SelectorTema />
 
           {user && <CuentaDelShell user={user} />}
         </Contenedor>

@@ -1,15 +1,15 @@
 # HU-204 — Detalle de un aula
 
-| Campo            | Valor                                           |
-| ---------------- | ----------------------------------------------- |
-| **Sprint**       | Sprint 2 — Gestión de Aulas                     |
-| **Prioridad**    | 🟠 Alta                                         |
-| **Estimación**   | 2 días                                          |
-| **Estado**       | ✅ Completada (2026-08-21); AC5 y AC8 parciales |
-| **Rama**         | `hu-204-detalle-de-aula-<persona>`              |
-| **Colaboración** | Paralelo con contrato acordado                  |
-| **Depende de**   | HU-203 (✅), HU-207 (✅)                        |
-| **Labels**       | `sprint-2` `prioridad:alta` `fullstack` `a11y`  |
+| Campo            | Valor                                                                 |
+| ---------------- | --------------------------------------------------------------------- |
+| **Sprint**       | Sprint 2 — Gestión de Aulas                                           |
+| **Prioridad**    | 🟠 Alta                                                               |
+| **Estimación**   | 2 días                                                                |
+| **Estado**       | ✅ Completada (2026-08-21); AC5 y AC8 cerrados en HU-215 (2026-08-25) |
+| **Rama**         | `hu-204-detalle-de-aula-<persona>`                                    |
+| **Colaboración** | Paralelo con contrato acordado                                        |
+| **Depende de**   | HU-203 (✅), HU-207 (✅)                                              |
+| **Labels**       | `sprint-2` `prioridad:alta` `fullstack` `a11y`                        |
 
 > **Como** estudiante o profesor,
 > **Quiero** ver el detalle completo de un aula,
@@ -122,12 +122,10 @@ Consecuencia en los AC: **AC5 y AC8 cumplen parcialmente** — ver el recorrido 
       → Servicio: se devuelve con `status: CANCELLED`, y un test aparte comprueba que **ni el dueño**
       recibe el enlace. Frontend: badge «Clase cancelada» (`<EstadoAula>` = color + ícono + texto),
       sin acciones, sin sección de enlace.
-- [ ] **AC5** — El CTA cambia según el rol: el dueño ve editar y cancelar; el resto, ninguna acción
+- [x] **AC5** — El CTA cambia según el rol: el dueño ve editar y cancelar; el resto, ninguna acción
       de gestión.
-      → **Cumple parcialmente: falta la mitad del dueño.** «El resto, ninguna acción» está probado
-      para estudiante, administrador y profesor no dueño. **Editar y cancelar no se pintan para
-      nadie**, porque HU-202 no existe todavía; el hueco queda aislado en `<AccionesDeAula>` con la
-      condición exacta que esa HU tiene que implementar. Ver la decisión de implementación de arriba.
+      → HU-202 ya implementa editar/cancelar. Verificado manualmente en HU-215 (2026-08-25): el
+      dueño ve ambas acciones, el resto no ve ninguna.
 - [x] **AC6** — El estado del aula usa `derivarEstadoAula()` de `@academia/types`, sin una segunda
       implementación en la pantalla.
       → Única llamada en `AulaDetallePage.tsx`; `grep -rn "derivarEstadoAula" apps/web/src` solo
@@ -139,12 +137,11 @@ Consecuencia en los AC: **AC5 y AC8 cumplen parcialmente** — ver el recorrido 
       → Un `<h1>` y foco, probados; `axe` limpio en `light`/`dark`/`hc` sobre tres de los cuatro
       estados. Teclado: todo son elementos nativos (`<a>`, `<button>`), y el enlace de la tarjeta se
       alcanza con `user.tab()` en `tarjeta-aula.spec.tsx`. Checklist recorrido en el cierre.
-- [ ] **AC8** — **Cierra el AC9 de HU-207:** pulsar una tarjeta en `/mis-aulas` y en `/aulas` lleva
+- [x] **AC8** — **Cierra el AC9 de HU-207:** pulsar una tarjeta en `/mis-aulas` y en `/aulas` lleva
       al detalle de esa aula, y desde el detalle el dueño puede editar y cancelar (HU-202). Con el
       AC marcado también en el archivo de HU-207.
-      → **La navegación cumple** —dos tests que pulsan la tarjeta sobre `<AppRoutes />`, uno desde
-      `/mis-aulas` y otro desde `/aulas`— y el AC9 de HU-207 queda marcado en su archivo. **«Desde
-      el detalle el dueño puede editar y cancelar» no**: es HU-202. Misma causa que el AC5.
+      → Navegación cubierta por tests. «Desde el detalle el dueño puede editar y cancelar»
+      verificado manualmente en HU-215 (2026-08-25), ahora que HU-202 existe.
 - [x] **AC9** — **Verificación automática:** `typecheck`, `lint`, `format:check`, `build` y
       `test --workspace @academia/api` en verde.
       → Los cinco, más `npm run test` completo (249 + 463 + 38). `lint` sin errores; los 7 warnings
