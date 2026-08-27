@@ -462,7 +462,8 @@ describe('AulaDetallePage — reservar un cupo (HU-301)', () => {
     montarDetalle();
 
     expect(await screen.findByText('Tienes tu cupo')).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: /reservar/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Reservar mi cupo' })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Cupo reservado' })).toBeDisabled();
   });
 
   it('un aula llena no ofrece reservar', async () => {
@@ -521,6 +522,10 @@ describe('AulaDetallePage — reservar un cupo (HU-301)', () => {
     // respuesta ya trae la reserva, y el estado se actualiza con ella.
     await waitFor(() => expect(getClassroom).toHaveBeenCalledTimes(2));
     expect(await screen.findByText('Tienes tu cupo')).toBeInTheDocument();
+    // El botón de reservar se reemplaza por uno inhabilitado que lo explica,
+    // no desaparece sin más.
+    expect(screen.getByRole('button', { name: 'Cupo reservado' })).toBeDisabled();
+    expect(screen.queryByRole('button', { name: 'Reservar mi cupo' })).not.toBeInTheDocument();
   });
 
   /**
