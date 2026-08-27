@@ -8,6 +8,8 @@ import {
   type CommunicationPreference,
   type EnglishLevel,
   type EstadoAccesoEnlace,
+  type HearingLossLevel,
+  type InscritoAula,
   type MeetingProvider,
 } from '@academia/types';
 
@@ -131,6 +133,26 @@ export type RevelacionesDelDetalle = {
  * serializador intermedio que no sea `JSON` la vería. §4.1 pide que el campo
  * **no viaje**, no que viaje vacío.
  */
+/** Una fila de `Booking.findMany` con el estudiante incluido, a `InscritoAula` (HU-305). Sin email. */
+export function toInscritoAula(booking: {
+  status: string;
+  student: {
+    firstName: string;
+    lastName: string;
+    hearingLossLevel: string | null;
+    communicationPreference: string | null;
+  };
+}): InscritoAula {
+  return {
+    firstName: booking.student.firstName,
+    lastName: booking.student.lastName,
+    hearingLossLevel: booking.student.hearingLossLevel as HearingLossLevel | null,
+    communicationPreference: booking.student
+      .communicationPreference as CommunicationPreference | null,
+    bookingStatus: booking.status as BookingStatus,
+  };
+}
+
 export function toClassroomDetail(
   classroom: PrismaClassroom,
   teacher: { firstName: string; lastName: string },

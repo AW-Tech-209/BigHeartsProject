@@ -823,6 +823,26 @@ export interface MisReservasResponse {
 }
 
 /**
+ * Un inscrito en un aula, tal y como lo ve el profesor dueño (HU-305).
+ *
+ * **Deliberadamente sin `email` ni ningún identificador.** El profesor no
+ * necesita escribirle a nadie por fuera de la plataforma.
+ */
+export interface InscritoAula {
+  firstName: string;
+  lastName: string;
+  hearingLossLevel: HearingLossLevel | null;
+  communicationPreference: CommunicationPreference | null;
+  bookingStatus: BookingStatus;
+}
+
+/** Respuesta de `GET /classrooms/:id/inscritos` (HU-305). Separado por estado, no una lista con filtro. */
+export interface InscritosAulaResponse {
+  confirmados: InscritoAula[];
+  cancelados: InscritoAula[];
+}
+
+/**
  * Respuesta de `GET /admin/teachers`: todos los profesores de la academia, sin
  * filtrar por estado. Sirve al selector del filtro de supervisión (HU-210) y
  * es un superconjunto de `PendingTeachersResponse`, que solo trae los

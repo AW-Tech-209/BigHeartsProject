@@ -3,7 +3,9 @@ import {
   BookingStatus,
   type ClassroomDetail,
   ClassroomStatus,
+  CommunicationPreference,
   EnglishLevel,
+  HearingLossLevel,
   MeetingProvider,
   UserRole,
 } from '@academia/types';
@@ -14,6 +16,7 @@ import { AppRoutes } from '@/app/router';
 import { createBooking } from '@/features/aulas/api/create-booking';
 import { getClassroom } from '@/features/aulas/api/get-classroom';
 import { getClassrooms } from '@/features/aulas/api/get-classrooms';
+import { getInscritosAula } from '@/features/aulas/api/get-inscritos-aula';
 import { getMisAulas } from '@/features/aulas/api/get-mis-aulas';
 import { ApiClientError } from '@/lib/api-error';
 import { esperarSinFallosDeAccesibilidad } from '@/test/accesibilidad';
@@ -23,6 +26,7 @@ import { darSesion } from '@/test/sesion';
 vi.mock('@/features/aulas/api/get-classroom', () => ({ getClassroom: vi.fn() }));
 vi.mock('@/features/aulas/api/get-classrooms', () => ({ getClassrooms: vi.fn() }));
 vi.mock('@/features/aulas/api/get-mis-aulas', () => ({ getMisAulas: vi.fn() }));
+vi.mock('@/features/aulas/api/get-inscritos-aula', () => ({ getInscritosAula: vi.fn() }));
 vi.mock('@/features/aulas/api/create-booking', () => ({ createBooking: vi.fn() }));
 vi.mock('@/features/aulas/api/cancel-booking', () => ({ cancelBooking: vi.fn() }));
 
@@ -90,6 +94,7 @@ beforeEach(() => {
   vi.mocked(getClassroom).mockResolvedValue({ classroom: aula() });
   vi.mocked(getClassrooms).mockResolvedValue({ items: [], total: 0, page: 1, pageSize: 20 });
   vi.mocked(getMisAulas).mockResolvedValue({ items: [], total: 0, page: 1, pageSize: 20 });
+  vi.mocked(getInscritosAula).mockResolvedValue({ confirmados: [], cancelados: [] });
 });
 
 describe('AulaDetallePage — información completa (B1, B2, AC1)', () => {
@@ -578,6 +583,63 @@ describe('AulaDetallePage — reservar un cupo (HU-301)', () => {
     expect(await screen.findByText(mensaje)).toBeInTheDocument();
     // El botón sigue ahí: el fallo no se lleva la posibilidad de reintentar.
     expect(screen.getByRole('button', { name: 'Reservar mi cupo' })).toBeInTheDocument();
+  });
+});
+
+/** HU-305: la lista de inscritos, con su perfil de accesibilidad, solo para el dueño. */
+describe('AulaDetallePage — quién viene a la clase (HU-305)', () => {
+  it('un estudiante no ve la sección de inscritos', async () => {
+    montarDetalle();
+
+    await screen.findByRole('heading', { level: 1, name: 'Conversación cotidiana' });
+
+    expect(
+      screen.queryByRole('heading', { name: 'Quién viene a la clase' }),
+    ).not.toBeInTheDocument();
+    expect(getInscritosAula).not.toHaveBeenCalled();
+  });
+
+  it('el dueño ve la lista completa con el modo de comunicación y la pérdida auditiva de cada uno (AC1, AC2)', async () => {
+    darSesion(UserRole.TEACHER);
+    vi.mocked(getInscritosAula).mockResolvedValue({
+      confirmados: [
+        {
+          firstName: 'Ana',
+          lastName: 'Estudiante',
+          hearingLossLevel: HearingLossLevel.MODERATE,
+          communicationPreference: CommunicationPreference.SIGN_LANGUAGE,
+          bookingStatus: BookingStatus.CONFIRMED,
+        },
+      ],
+      cancelados: [],
+    });
+    montarDetalle();
+
+    expect(await screen.findByRole('rowheader', { name: 'Ana Estudiante' })).toBeInTheDocument();
+    expect(screen.getByText('Lengua de signos')).toBeInTheDocument();
+    expect(screen.getByText('Moderada')).toBeInTheDocument();
+    expect(screen.getByText('Confirmada')).toBeInTheDocument();
+    expect(
+      screen.getByRole('list', { name: 'Resumen de accesibilidad del grupo' }),
+    ).toHaveTextContent('1 lengua de signos');
+  });
+
+  it('el vacío dice que aún no hay inscritos, sin sonar a error', async () => {
+    darSesion(UserRole.TEACHER);
+    montarDetalle();
+
+    expect(await screen.findByText('Aún no hay inscritos')).toBeInTheDocument();
+  });
+
+  it('un error de lectura ofrece reintentar', async () => {
+    darSesion(UserRole.TEACHER);
+    vi.mocked(getInscritosAula).mockRejectedValue(
+      new ApiClientError({ code: 'NETWORK_ERROR', message: 'sin red' }),
+    );
+    montarDetalle();
+
+    expect(await screen.findByText('No pudimos cargar los inscritos')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /volver a cargar/i })).toBeInTheDocument();
   });
 });
 

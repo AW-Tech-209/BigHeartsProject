@@ -44,37 +44,37 @@ comunicación y nivel de pérdida auditiva—, que hoy se recoge al registrarse 
 
 ### Contrato — va primero
 
-- [ ] **T1** — En `packages/types`: el tipo del inscrito, con **solo** los campos de la nota de
+- [x] **T1** — En `packages/types`: el tipo del inscrito, con **solo** los campos de la nota de
       arriba. Luego `npm run build:types`.
 
 ### Backend
 
-- [ ] **T2** — `GET /classrooms/:id/inscritos` con `@Roles('TEACHER')`, **acotado al dueño**: si el
+- [x] **T2** — `GET /classrooms/:id/inscritos` con `@Roles('TEACHER')`, **acotado al dueño**: si el
       aula no es suya, `404`.
-- [ ] **T3** — Devuelve las reservas `CONFIRMED` y `CANCELLED` por separado, con el perfil de
+- [x] **T3** — Devuelve las reservas `CONFIRMED` y `CANCELLED` por separado, con el perfil de
       accesibilidad de cada estudiante y el recuento sobre el cupo. **Sin email.**
-- [ ] **T4** — Tests: otro profesor → `404`; un `STUDENT` y un `ADMIN` → `403`; **el email no
+- [x] **T4** — Tests: otro profesor → `404`; un `STUDENT` y un `ADMIN` → `403`; **el email no
       aparece** en la respuesta; los recuentos cuadran con `currentBookings`.
 
 ### Frontend
 
-- [ ] **T5** — Lista en **filas** dentro del detalle del aula propia, con nombre, modo de
+- [x] **T5** — Lista en **filas** dentro del detalle del aula propia, con nombre, modo de
       comunicación —color + ícono + texto—, nivel de pérdida auditiva y estado de la reserva.
-- [ ] **T6** — Un **resumen de accesibilidad del grupo** arriba: cuántos por cada modo. Es lo que
+- [x] **T6** — Un **resumen de accesibilidad del grupo** arriba: cuántos por cada modo. Es lo que
       el profesor mira antes de preparar; que no tenga que contarlo él.
-- [ ] **T7** — Los 4 estados. El vacío dice que aún no hay inscritos, sin sonar a error.
+- [x] **T7** — Los 4 estados. El vacío dice que aún no hay inscritos, sin sonar a error.
 
 ## ✅ Criterios de aceptación
 
-- [ ] **AC1** — El profesor dueño ve la lista completa de inscritos de su aula, con el estado de
+- [x] **AC1** — El profesor dueño ve la lista completa de inscritos de su aula, con el estado de
       cada reserva y el recuento sobre el cupo.
-- [ ] **AC2** — Cada inscrito muestra **su modo de comunicación y su nivel de pérdida auditiva**, y
+- [x] **AC2** — Cada inscrito muestra **su modo de comunicación y su nivel de pérdida auditiva**, y
       arriba aparece el resumen del grupo por modo.
-- [ ] **AC3** — **Autorización:** otro profesor recibe `404`; un `STUDENT` y un `ADMIN`, `403`.
-- [ ] **AC4** — **El email del estudiante no aparece** en la respuesta. Verificado con un test.
-- [ ] **AC5** — Tras una cancelación, la lista y el recuento reflejan el cambio al volver a
+- [x] **AC3** — **Autorización:** otro profesor recibe `404`; un `STUDENT` y un `ADMIN`, `403`.
+- [x] **AC4** — **El email del estudiante no aparece** en la respuesta. Verificado con un test.
+- [x] **AC5** — Tras una cancelación, la lista y el recuento reflejan el cambio al volver a
       consultarla.
-- [ ] **AC6** — **Accesibilidad y verificación:** tabla con encabezados reales, recorrido con
+- [x] **AC6** — **Accesibilidad y verificación:** tabla con encabezados reales, recorrido con
       teclado, `axe` limpio, y `typecheck`, `lint`, `build` y `npm run test` en verde.
 
 ## 🚫 Fuera de alcance
@@ -87,4 +87,5 @@ comunicación y nivel de pérdida auditiva—, que hoy se recoge al registrarse 
 
 ## Notas de implementación
 
-_Se rellena al cerrar._
+Confirmados y cancelados se pintan en una sola tabla (columna «Reserva» los distingue); el resumen
+de accesibilidad del grupo solo cuenta confirmados, porque es a quien el profesor prepara clase.

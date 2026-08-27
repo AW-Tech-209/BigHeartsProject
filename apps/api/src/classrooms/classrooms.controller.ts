@@ -14,6 +14,7 @@ import {
   type CancelClassroomResponse,
   type ClassroomDetailResponse,
   type CreateClassroomResponse,
+  type InscritosAulaResponse,
   type ListClassroomsResponse,
   type MisAulasResponse,
   type UpdateClassroomResponse,
@@ -143,6 +144,19 @@ export class ClassroomsController {
   ): Promise<ClassroomDetailResponse> {
     const classroom = await this.classroomsService.getClassroomDetail(viewer, classroomId);
     return { classroom };
+  }
+
+  /**
+   * GET /classrooms/:id/inscritos — quién reservó la clase, con su perfil de
+   * accesibilidad (HU-305). Solo el profesor dueño; otro TEACHER recibe 404.
+   */
+  @Get(':id/inscritos')
+  @Roles(UserRole.TEACHER)
+  async inscritos(
+    @CurrentUser() teacher: AuthenticatedUser,
+    @Param('id', idDeAula) classroomId: string,
+  ): Promise<InscritosAulaResponse> {
+    return this.classroomsService.getInscritos(teacher, classroomId);
   }
 
   /**

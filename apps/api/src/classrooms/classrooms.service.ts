@@ -8,6 +8,7 @@ import {
   ClassroomStatus,
   ESTADO_TEMPORAL_POR_DEFECTO,
   EstadoTemporalAula,
+  type InscritosAulaResponse,
   type ListClassroomsResponse,
   type MisAulasResponse,
   UserRole,
@@ -20,7 +21,12 @@ import { AppConfigService } from '../config/app-config.service';
 import { puedeCancelarse } from '../bookings/cancelacion.rules';
 import { PrismaService } from '../prisma/prisma.service';
 import { derivarAccesoAlEnlace, type ResultadoAccesoEnlace } from './acceso-enlace.rules';
-import { toClassroomDetail, toClassroomListItem, toPublicClassroom } from './classroom.mapper';
+import {
+  toClassroomDetail,
+  toClassroomListItem,
+  toInscritoAula,
+  toPublicClassroom,
+} from './classroom.mapper';
 import {
   classroomDurationInvalid,
   classroomForbidden,
@@ -397,6 +403,53 @@ export class ClassroomsService {
       ahora,
       accessWindowMinutes: this.config.accessWindowMinutes,
     });
+  }
+
+  /**
+   * `GET /classrooms/:id/inscritos` — quién reservó la clase (HU-305).
+   *
+   * Otro profesor recibe `CLASSROOM_NOT_FOUND` (404) y no `CLASSROOM_FORBIDDEN`
+   * (403): esta lista no debe confirmarle a nadie que el aula existe.
+   */
+  async getInscritos(
+    teacher: AuthenticatedUser,
+    classroomId: string,
+  ): Promise<InscritosAulaResponse> {
+    const classroom = await this.prisma.classroom.findUnique({
+      where: { id: classroomId },
+      select: { teacherId: true },
+    });
+
+    if (!classroom || classroom.teacherId !== teacher.id) {
+      throw classroomNotFound();
+    }
+
+    const bookings = await this.prisma.booking.findMany({
+      where: { classroomId, status: { in: [BookingStatus.CONFIRMED, BookingStatus.CANCELLED] } },
+      select: {
+        status: true,
+        student: {
+          select: {
+            firstName: true,
+            lastName: true,
+            hearingLossLevel: true,
+            communicationPreference: true,
+          },
+        },
+      },
+      orderBy: { createdAt: 'asc' },
+    });
+
+    const inscritos = bookings.map(toInscritoAula);
+
+    return {
+      confirmados: inscritos.filter(
+        (inscrito) => inscrito.bookingStatus === BookingStatus.CONFIRMED,
+      ),
+      cancelados: inscritos.filter(
+        (inscrito) => inscrito.bookingStatus === BookingStatus.CANCELLED,
+      ),
+    };
   }
 
   /**

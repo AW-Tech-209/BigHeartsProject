@@ -31,6 +31,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { AccionCancelarReserva } from '@/features/aulas/components/accion-cancelar-reserva';
 import { AccionesDeAula } from '@/features/aulas/components/acciones-de-aula';
 import { AccionReservarAula } from '@/features/aulas/components/accion-reservar-aula';
+import { InscritosAula } from '@/features/aulas/components/inscritos-aula';
 import { useAccesoAlEnlace } from '@/features/aulas/hooks/use-acceso-al-enlace';
 import { esAulaNoEncontrada, useClassroom } from '@/features/aulas/hooks/use-classroom';
 import { APOYOS_AULA } from '@/features/aulas/lib/apoyos-aula';
@@ -257,6 +258,8 @@ function DetalleDelAula({
               </p>
             </div>
           </section>
+
+          <InscritosAula classroomId={aula.id} esDueno={esDueno} />
         </div>
 
         <aside className="space-y-6" aria-label="Resumen de la clase">
