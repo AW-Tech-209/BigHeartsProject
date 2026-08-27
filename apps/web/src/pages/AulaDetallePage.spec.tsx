@@ -466,7 +466,7 @@ describe('AulaDetallePage — reservar un cupo (HU-301)', () => {
     expect(screen.getByRole('button', { name: 'Cupo reservado' })).toBeDisabled();
   });
 
-  it('un aula llena no ofrece reservar', async () => {
+  it('un aula llena muestra «Sin cupos disponibles» inhabilitado', async () => {
     vi.mocked(getClassroom).mockResolvedValue({
       classroom: aula({ currentBookings: 10, maxStudents: 10 }),
     });
@@ -474,7 +474,8 @@ describe('AulaDetallePage — reservar un cupo (HU-301)', () => {
 
     await screen.findByText('Sin cupos');
 
-    expect(screen.queryByRole('button', { name: /reservar/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Reservar mi cupo' })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Sin cupos disponibles' })).toBeDisabled();
   });
 
   /**

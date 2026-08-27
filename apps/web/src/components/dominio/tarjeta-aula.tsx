@@ -1,4 +1,5 @@
 import {
+  BookingStatus,
   type Classroom,
   type ClassroomListItem,
   coincideConLaPreferencia,
@@ -39,7 +40,7 @@ function modosEnOrden(modos: CommunicationPreference[]): CommunicationPreference
  * (`MisAulasResponse`) no, porque el profesor es quien pregunta.
  */
 export type AulaDeTarjeta = Classroom &
-  Partial<Pick<ClassroomListItem, 'teacherFirstName' | 'teacherLastName'>>;
+  Partial<Pick<ClassroomListItem, 'teacherFirstName' | 'teacherLastName' | 'myBookingStatus'>>;
 
 /**
  * Desde dónde se mira el aula. No es una variante estética: cambia **qué
@@ -114,7 +115,15 @@ export function TarjetaAula({
   puedeReservarla = false,
   className,
 }: TarjetaAulaProps) {
-  const estado = derivarEstadoAula({ classroom, ahora });
+  // HU-301, ajuste post-cierre: en el catálogo `classroom.myBookingStatus`
+  // ahora sí viaja para un STUDENT, así que `reservada`/`acceso-abierto` son
+  // alcanzables aquí igual que en el detalle. En «Mis aulas» llega `undefined`
+  // y la comparación da `false` sin más: el profesor nunca tiene reserva propia.
+  const estado = derivarEstadoAula({
+    classroom,
+    ahora,
+    tieneReservaConfirmada: classroom.myBookingStatus === BookingStatus.CONFIRMED,
+  });
   const cuposRestantes = Math.max(classroom.maxStudents - classroom.currentBookings, 0);
   const variante = varianteEstadoAula[estado];
   const tituloId = `aula-${classroom.id}-titulo`;

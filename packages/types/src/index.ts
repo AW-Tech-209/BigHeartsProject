@@ -517,6 +517,14 @@ export interface ListClassroomsQuery {
 export interface ClassroomListItem extends Classroom {
   teacherFirstName: string;
   teacherLastName: string;
+  /**
+   * La reserva `CONFIRMED` de **quien pide**, si tiene alguna (HU-301, ajuste
+   * post-cierre). `null` si no la tiene, o si quien pregunta no es un
+   * estudiante — un `ADMIN`/`TEACHER` que llame a este listado nunca tiene
+   * reserva propia. Sin esto, el catálogo no podía distinguir «disponible» de
+   * «ya la reservaste», y ofrecía reservar otra vez sobre una clase propia.
+   */
+  myBookingStatus: BookingStatus | null;
 }
 
 /**
