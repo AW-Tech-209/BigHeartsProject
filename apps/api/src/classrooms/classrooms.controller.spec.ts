@@ -36,6 +36,7 @@ function setup() {
   const cancelClassroom = vi
     .fn()
     .mockResolvedValue({ id: ID_DEL_AULA, status: ClassroomStatus.CANCELLED });
+  const getInscritos = vi.fn().mockResolvedValue({ confirmados: [], cancelados: [] });
   const service = {
     createClassroom,
     listClassrooms,
@@ -43,6 +44,7 @@ function setup() {
     getClassroomDetail,
     editClassroom,
     cancelClassroom,
+    getInscritos,
   } as unknown as ClassroomsService;
 
   return {
@@ -53,6 +55,7 @@ function setup() {
     getClassroomDetail,
     editClassroom,
     cancelClassroom,
+    getInscritos,
   };
 }
 
@@ -310,6 +313,50 @@ describe('ClassroomsController — orden de rutas', () => {
 
     expect(metodos.indexOf('listMias')).toBeGreaterThan(-1);
     expect(metodos.indexOf('listMias')).toBeLessThan(metodos.indexOf('detail'));
+  });
+});
+
+describe('ClassroomsController.inscritos — GET /classrooms/:id/inscritos (HU-305)', () => {
+  it('pasa al servicio el usuario del token y el id de la ruta', async () => {
+    const { controller, getInscritos } = setup();
+
+    await controller.inscritos(profesor, ID_DEL_AULA);
+
+    expect(getInscritos).toHaveBeenCalledWith(profesor, ID_DEL_AULA);
+  });
+
+  it('devuelve la respuesta del servicio tal cual', async () => {
+    const { controller, getInscritos } = setup();
+    const respuesta = { confirmados: [{ firstName: 'Ana' }], cancelados: [] };
+    getInscritos.mockResolvedValue(respuesta);
+
+    await expect(controller.inscritos(profesor, ID_DEL_AULA)).resolves.toEqual(respuesta);
+  });
+
+  describe('autorización por rol (AC3)', () => {
+    const guard = new RolesGuard(new Reflector());
+
+    it('deja pasar a TEACHER', () => {
+      expect(
+        guard.canActivate(
+          contextoDeRol(ClassroomsController.prototype.inscritos, UserRole.TEACHER),
+        ),
+      ).toBe(true);
+    });
+
+    it.each([UserRole.STUDENT, UserRole.ADMIN])('responde 403 INSUFFICIENT_ROLE a %s', (role) => {
+      try {
+        guard.canActivate(contextoDeRol(ClassroomsController.prototype.inscritos, role));
+        throw new Error('Se esperaba un 403 y el guard dejó pasar.');
+      } catch (error) {
+        const excepcion = error as {
+          getStatus?: () => number;
+          getResponse?: () => { code: string };
+        };
+        expect(excepcion.getStatus?.()).toBe(403);
+        expect(excepcion.getResponse?.().code).toBe(ApiErrorCode.INSUFFICIENT_ROLE);
+      }
+    });
   });
 });
 

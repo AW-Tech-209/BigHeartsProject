@@ -1558,6 +1558,98 @@ describe('ClassroomsService.getClassroomDetail — ventana de acceso del estudia
   });
 });
 
+/** Monta el servicio solo para `getInscritos` (HU-305). */
+function setupInscritos(
+  aula: { teacherId: string } | null,
+  bookings: Record<string, unknown>[] = [],
+) {
+  const findUnique = vi.fn().mockResolvedValue(aula);
+  const findMany = vi.fn().mockResolvedValue(bookings);
+  const cipher = new MeetingLinkCipher({ meetingLinkKey: 'a'.repeat(64) } as AppConfigService);
+  const prisma = {
+    classroom: { findUnique },
+    booking: { findMany },
+  } as unknown as PrismaService;
+
+  return {
+    service: new ClassroomsService(prisma, cipher, configuracion()),
+    findUnique,
+    findMany,
+  };
+}
+
+const inscritoConfirmado = (overrides: Record<string, unknown> = {}) => ({
+  status: 'CONFIRMED',
+  student: {
+    firstName: 'Ana',
+    lastName: 'Estudiante',
+    hearingLossLevel: 'MODERATE',
+    communicationPreference: 'SIGN_LANGUAGE',
+    email: 'ana@academia.local',
+    ...overrides,
+  },
+});
+
+describe('ClassroomsService.getInscritos — quién viene a la clase (HU-305)', () => {
+  it('el dueño ve confirmados y cancelados por separado', async () => {
+    const { service } = setupInscritos({ teacherId: PROFESOR_ID }, [
+      inscritoConfirmado(),
+      { status: 'CANCELLED', student: inscritoConfirmado().student },
+    ]);
+
+    const respuesta = await service.getInscritos(profesorDelToken, ID_DEL_AULA);
+
+    expect(respuesta.confirmados).toHaveLength(1);
+    expect(respuesta.cancelados).toHaveLength(1);
+    expect(respuesta.confirmados[0]).toMatchObject({
+      firstName: 'Ana',
+      hearingLossLevel: 'MODERATE',
+      communicationPreference: 'SIGN_LANGUAGE',
+      bookingStatus: 'CONFIRMED',
+    });
+  });
+
+  // AC4: el email nunca sale del mapeador, aunque la fila de Prisma lo traiga.
+  it('el email no aparece en la respuesta', async () => {
+    const { service } = setupInscritos({ teacherId: PROFESOR_ID }, [inscritoConfirmado()]);
+
+    const respuesta = await service.getInscritos(profesorDelToken, ID_DEL_AULA);
+
+    expect(JSON.stringify(respuesta)).not.toContain('ana@academia.local');
+  });
+
+  // Los recuentos cuadran con `currentBookings`: tantos CONFIRMED en la
+  // respuesta como reservas vigentes tenga el aula.
+  it('el número de confirmados coincide con las reservas CONFIRMED devueltas', async () => {
+    const { service } = setupInscritos({ teacherId: PROFESOR_ID }, [
+      inscritoConfirmado(),
+      inscritoConfirmado({ firstName: 'Luis' }),
+      { status: 'CANCELLED', student: inscritoConfirmado().student },
+    ]);
+
+    const respuesta = await service.getInscritos(profesorDelToken, ID_DEL_AULA);
+
+    expect(respuesta.confirmados).toHaveLength(2);
+  });
+
+  // AC3: otro profesor no confirma que el aula exista.
+  it('otro profesor recibe CLASSROOM_NOT_FOUND (404), no un 403', async () => {
+    const { service } = setupInscritos({ teacherId: OTRO_PROFESOR_ID });
+
+    const codigo = await codigoDe(service.getInscritos(profesorDelToken, ID_DEL_AULA));
+
+    expect(codigo).toBe(ApiErrorCode.CLASSROOM_NOT_FOUND);
+  });
+
+  it('un aula inexistente responde CLASSROOM_NOT_FOUND', async () => {
+    const { service } = setupInscritos(null);
+
+    const codigo = await codigoDe(service.getInscritos(profesorDelToken, ID_DEL_AULA));
+
+    expect(codigo).toBe(ApiErrorCode.CLASSROOM_NOT_FOUND);
+  });
+});
+
 describe('ClassroomsService.getClassroomDetail — aula cancelada e id inexistente (A3, AC3, AC4)', () => {
   /**
    * AC4. La cancelada **se abre**: no aparece en el catálogo, pero quien tenga
