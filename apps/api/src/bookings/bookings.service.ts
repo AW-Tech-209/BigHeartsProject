@@ -381,12 +381,14 @@ const BOOKING_CLASSROOM_INCLUDE = {
 
 /**
  * Los tres grupos disjuntos de D24, sobre la reserva del estudiante en vez
- * del aula del profesor: el estado gana sobre la fecha, así que una clase
- * cancelada cuenta como `canceladas` aunque sea futura.
+ * del aula del profesor: el estado gana sobre la fecha, así que una reserva
+ * cancelada —por el estudiante o porque el profesor canceló el aula— cuenta
+ * como `canceladas` aunque sea futura, nunca como `proximas` ni `pasadas`.
  */
 function proximasDe(studentId: string, ahora: Date): Prisma.BookingWhereInput {
   return {
     studentId,
+    status: { not: 'CANCELLED' },
     classroom: { status: { not: ClassroomStatus.CANCELLED }, scheduledAt: { gt: ahora } },
   };
 }
@@ -394,17 +396,25 @@ function proximasDe(studentId: string, ahora: Date): Prisma.BookingWhereInput {
 function pasadasDe(studentId: string, ahora: Date): Prisma.BookingWhereInput {
   return {
     studentId,
+    status: { not: 'CANCELLED' },
     classroom: { status: { not: ClassroomStatus.CANCELLED }, scheduledAt: { lte: ahora } },
   };
 }
 
 function canceladasDe(studentId: string): Prisma.BookingWhereInput {
-  return { studentId, classroom: { status: ClassroomStatus.CANCELLED } };
+  return {
+    studentId,
+    OR: [{ status: 'CANCELLED' }, { classroom: { status: ClassroomStatus.CANCELLED } }],
+  };
 }
 
 function historialDe(studentId: string, ahora: Date): Prisma.BookingWhereInput {
   return {
     studentId,
-    classroom: { OR: [{ status: ClassroomStatus.CANCELLED }, { scheduledAt: { lte: ahora } }] },
+    OR: [
+      { status: 'CANCELLED' },
+      { classroom: { status: ClassroomStatus.CANCELLED } },
+      { classroom: { scheduledAt: { lte: ahora } } },
+    ],
   };
 }

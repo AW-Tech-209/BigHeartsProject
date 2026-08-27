@@ -535,6 +535,17 @@ describe('<TarjetaAula /> — la acción de reservar (T3, AC4, HU-301)', () => {
     expect(screen.getByRole('button', { name: 'Cupo reservado' })).toBeDisabled();
   });
 
+  // Bug reportado: una reserva que el estudiante canceló pintaba el estado
+  // ambiente del aula (`Hay cupo`) como si siguiera siendo suya.
+  it('una reserva cancelada por el estudiante se pinta como «Reserva cancelada», no con el estado del aula', () => {
+    renderConProviders(
+      <TarjetaAula classroom={aula({ myBookingStatus: BookingStatus.CANCELLED })} ahora={AHORA} />,
+    );
+
+    expect(screen.getByText('Reserva cancelada')).toBeInTheDocument();
+    expect(screen.queryByText('Hay cupo')).not.toBeInTheDocument();
+  });
+
   // Ni deshabilitado: el skill prohíbe deshabilitar sin explicar.
   it('no existe ningún control deshabilitado en su lugar', () => {
     const { container } = renderConProviders(

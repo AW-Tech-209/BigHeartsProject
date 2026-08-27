@@ -496,6 +496,7 @@ function filaReserva(
   };
 }
 
+/** El aula del profesor la canceló: sale en `canceladas` sin importar la fecha. */
 function reservaCancelada(classroomId: string, scheduledAt: string) {
   return filaReserva(classroomId, scheduledAt, {
     classroom: aulaDeReserva({
@@ -506,28 +507,71 @@ function reservaCancelada(classroomId: string, scheduledAt: string) {
   });
 }
 
+/** El ESTUDIANTE canceló su propia reserva (HU-303): el aula sigue `PUBLISHED`. */
+function reservaCanceladaPorElEstudiante(classroomId: string, scheduledAt: string) {
+  return filaReserva(classroomId, scheduledAt, {
+    status: 'CANCELLED',
+    cancelledAt: new Date('2026-08-05T10:00:00.000Z'),
+  });
+}
+
 type WhereReserva = {
   studentId?: string;
-  classroom?: { status?: unknown; scheduledAt?: { gt?: Date; lte?: Date }; OR?: unknown[] };
+  status?: string | { not: string };
+  classroom?: { status?: unknown; scheduledAt?: { gt?: Date; lte?: Date } };
+  OR?: WhereReserva[];
 };
 
+/** Evalúa una `where` de `listMisReservas` contra una fila, como haría Postgres. */
+function coincideConWhere(fila: FilaReserva, where: WhereReserva): boolean {
+  if (where.OR) {
+    return where.OR.some((rama) => coincideConWhere(fila, rama));
+  }
+
+  if (where.status !== undefined) {
+    const coincideStatus =
+      typeof where.status === 'string'
+        ? fila.status === where.status
+        : fila.status !== where.status.not;
+    if (!coincideStatus) return false;
+  }
+
+  if (where.classroom) {
+    const { status, scheduledAt } = where.classroom;
+    if (status !== undefined) {
+      const coincide =
+        typeof status === 'string'
+          ? fila.classroom.status === status
+          : fila.classroom.status !== (status as { not: unknown }).not;
+      if (!coincide) return false;
+    }
+    if (scheduledAt?.gt && !(fila.classroom.scheduledAt.getTime() > scheduledAt.gt.getTime())) {
+      return false;
+    }
+    if (scheduledAt?.lte && !(fila.classroom.scheduledAt.getTime() <= scheduledAt.lte.getTime())) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
 /**
- * Prisma falso que entiende las cuatro cláusulas de `listMisReservas` sobre
- * `Booking.classroom`, igual que `setupMisAulas` en `classrooms.service.spec.ts`
- * las entiende sobre `Classroom` directo.
+ * Prisma falso que entiende las cláusulas de `listMisReservas`: junta todas las
+ * filas de fábrica en una sola «tabla» y aplica cada `where` como lo haría
+ * Postgres, en vez de adivinar el grupo por la forma de la consulta.
  */
 function setupMisReservas(
   grupos: { proximas?: FilaReserva[]; pasadas?: FilaReserva[]; canceladas?: FilaReserva[] } = {},
 ) {
-  const proximas = grupos.proximas ?? [];
-  const pasadas = grupos.pasadas ?? [];
-  const canceladas = grupos.canceladas ?? [];
+  const todasLasFilas = [
+    ...(grupos.proximas ?? []),
+    ...(grupos.pasadas ?? []),
+    ...(grupos.canceladas ?? []),
+  ];
 
   function filasDe(where: WhereReserva): FilaReserva[] {
-    const c = where.classroom ?? {};
-    if (c.OR) return [...canceladas, ...pasadas];
-    if (c.status === ClassroomStatus.CANCELLED) return canceladas;
-    return c.scheduledAt?.gt ? proximas : pasadas;
+    return todasLasFilas.filter((fila) => coincideConWhere(fila, where));
   }
 
   const findMany = vi.fn(
@@ -665,6 +709,28 @@ describe('BookingsService.listMisReservas — filtro temporal disjunto (AC1, AC2
     });
 
     expect(resultado.items.map((item) => item.id)).toEqual(['cancelada-futura', 'cancelada-vieja']);
+  });
+
+  /**
+   * El bug reportado: cancelar la propia reserva la dejaba viéndose en
+   * `proximas` porque el filtro solo miraba `Classroom.status`, nunca
+   * `Booking.status`.
+   */
+  it('una reserva que el propio estudiante canceló sale en canceladas, no en proximas', async () => {
+    const { service } = setupMisReservas({
+      proximas: [filaReserva('vigente', PRONTO)],
+      canceladas: [reservaCanceladaPorElEstudiante('cancelada-por-mi', MAS_TARDE)],
+    });
+
+    const proximas = await service.listMisReservas(ESTUDIANTE, {
+      estado: EstadoTemporalAula.PROXIMAS,
+    });
+    const canceladas = await service.listMisReservas(ESTUDIANTE, {
+      estado: EstadoTemporalAula.CANCELADAS,
+    });
+
+    expect(proximas.items.map((item) => item.id)).toEqual(['vigente']);
+    expect(canceladas.items.map((item) => item.id)).toEqual(['cancelada-por-mi']);
   });
 
   it('los tres filtros suman el total de todas y ninguna reserva sale dos veces', async () => {

@@ -7,7 +7,7 @@ import {
   derivarEstadoAula,
   type EstadoAula as EstadoAulaTipo,
 } from '@academia/types';
-import { Presentation, UserCheck } from 'lucide-react';
+import { Ban, Presentation, UserCheck } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 import { Badge } from '@/components/ui/badge';
@@ -142,6 +142,12 @@ export function TarjetaAula({
   const tituloId = `aula-${classroom.id}-titulo`;
 
   const esVistaDelProfesor = perspectiva === 'profesor';
+  // `derivarEstadoAula()` no conoce la reserva del estudiante que cancela la
+  // suya sin que el aula se cancele: sin esto, «Mis clases» pintaría el
+  // estado ambiente del aula (`Hay cupo`, `Sin cupos`…) sobre una reserva que
+  // ya no es suya.
+  const miReservaCancelada =
+    !esVistaDelProfesor && classroom.myBookingStatus === BookingStatus.CANCELLED;
   const sinModosDeclarados = classroom.communicationModes.length === 0;
   // AC4: solo marca las que coinciden, nunca las que no — sin marca negativa.
   const coincideConLaMia = coincideConLaPreferencia(classroom, preferenciaEstudiante);
@@ -181,7 +187,13 @@ export function TarjetaAula({
         className,
       )}
     >
-      <span aria-hidden="true" className={cn('absolute inset-y-0 left-0 w-1', variante.riel)} />
+      <span
+        aria-hidden="true"
+        className={cn(
+          'absolute inset-y-0 left-0 w-1',
+          miReservaCancelada ? varianteEstadoAula.cancelada.riel : variante.riel,
+        )}
+      />
 
       <div className="space-y-1.5">
         {/*
@@ -228,9 +240,15 @@ export function TarjetaAula({
           que es la codificación triple obligatoria — la marca se distingue con
           el color apagado y en alto contraste.
         */}
-        {(muestraBadge || marcaDePropiedad) && (
+        {(muestraBadge || marcaDePropiedad || miReservaCancelada) && (
           <div className="mt-1 flex flex-wrap items-center gap-1.5">
-            {muestraBadge && <EstadoAula estado={estado} cuposRestantes={cuposRestantes} />}
+            {miReservaCancelada ? (
+              <Badge tono="destructive" icon={Ban}>
+                Reserva cancelada
+              </Badge>
+            ) : (
+              muestraBadge && <EstadoAula estado={estado} cuposRestantes={cuposRestantes} />
+            )}
             {marcaDePropiedad && (
               <Badge tono="primary" icon={Presentation}>
                 Tu clase
