@@ -145,3 +145,25 @@ describe('BookingsController.listMias — GET /bookings/mias (HU-302)', () => {
     });
   });
 });
+
+describe('BookingsController.cancel — POST /bookings/:id/cancelar (HU-303)', () => {
+  it('pasa al servicio el usuario del token y el id de la ruta', async () => {
+    const cancelBooking = vi.fn().mockResolvedValue({
+      booking: { id: 'x', status: BookingStatus.CANCELLED },
+    });
+    const controller = new BookingsController({ cancelBooking } as unknown as BookingsService);
+    const bookingId = '55555555-5555-4555-8555-555555555555';
+
+    await controller.cancel(estudiante, bookingId);
+
+    expect(cancelBooking).toHaveBeenCalledWith(estudiante, bookingId);
+  });
+
+  it('devuelve `{ booking }` tal cual lo resuelve el servicio', async () => {
+    const respuesta = { booking: { id: 'x', status: BookingStatus.CANCELLED } };
+    const cancelBooking = vi.fn().mockResolvedValue(respuesta);
+    const controller = new BookingsController({ cancelBooking } as unknown as BookingsService);
+
+    await expect(controller.cancel(estudiante, 'x')).resolves.toEqual(respuesta);
+  });
+});

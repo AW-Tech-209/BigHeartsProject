@@ -62,6 +62,8 @@ const AULA_ORIGEN: ClassroomDetail = {
   teacherFirstName: 'Marta',
   teacherLastName: 'Ríos',
   myBookingStatus: null satisfies BookingStatus | null,
+  myBookingId: null,
+  myBookingCancelable: null,
 };
 
 function montarDuplicando() {

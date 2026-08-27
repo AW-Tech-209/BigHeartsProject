@@ -20,6 +20,7 @@ import { PaginaCabecera } from '@/components/layout/pagina-cabecera';
 import { Button } from '@/components/ui/button';
 import { Callout } from '@/components/ui/callout';
 import { Skeleton } from '@/components/ui/skeleton';
+import { AccionCancelarReserva } from '@/features/aulas/components/accion-cancelar-reserva';
 import { AccionesDeAula } from '@/features/aulas/components/acciones-de-aula';
 import { AccionReservarAula } from '@/features/aulas/components/accion-reservar-aula';
 import { esAulaNoEncontrada, useClassroom } from '@/features/aulas/hooks/use-classroom';
@@ -279,6 +280,9 @@ function DetalleDelAula({
 
           {/* HU-301, T7. El único punto de la pantalla que ofrece reservar. */}
           <AccionReservarAula aula={aula} puedeReservar={puedeReservarla} estado={estado} />
+
+          {/* HU-303, T6. Solo pinta si `aula.myBookingId` viaja: la reserva propia. */}
+          <AccionCancelarReserva aula={aula} />
 
           <AccionesDeAula aula={aula} esDueno={esDueno} />
         </aside>

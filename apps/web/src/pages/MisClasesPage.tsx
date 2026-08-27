@@ -32,8 +32,8 @@ const TARJETAS_FANTASMA = 6;
  * parámetro.
  *
  * La tarjeta se reutiliza en `perspectiva="catalogo"` con `puedeReservarla={false}`:
- * es la misma ficha que el catálogo, sin el botón de reservar — cancelar
- * (HU-303) y entrar a la clase (HU-304) son acciones de otra HU.
+ * es la misma ficha que el catálogo, sin el botón de reservar, con el de
+ * cancelar (HU-303) — entrar a la clase es acción de HU-304.
  */
 export function MisClasesPage() {
   const [searchParams, setSearchParams] = useSearchParams();

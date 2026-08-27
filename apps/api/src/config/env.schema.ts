@@ -1,5 +1,6 @@
 import {
   ACCESS_WINDOW_MINUTES_DEFAULT,
+  CANCELLATION_WINDOW_MINUTES_DEFAULT,
   CLASS_MAX_DURATION_MINUTES_DEFAULT,
   CLASS_MIN_LEAD_MINUTES_DEFAULT,
 } from '@academia/types';
@@ -163,6 +164,17 @@ export const envSchema = z.object({
     .positive()
     .max(1440, 'una clase no puede durar más de un día (1440 minutos)')
     .default(CLASS_MAX_DURATION_MINUTES_DEFAULT),
+
+  /**
+   * Hasta cuántos minutos antes de `scheduledAt` se puede cancelar una
+   * reserva (HU-303, `docs/ARQUITECTURA.md` §4.3). Opcional: por defecto 60.
+   * Pasada esta ventana la reserva queda firme: `CANCELLATION_WINDOW_CLOSED`.
+   */
+  CANCELLATION_WINDOW_MINUTES: z.coerce
+    .number()
+    .int()
+    .positive()
+    .default(CANCELLATION_WINDOW_MINUTES_DEFAULT),
 });
 
 /** Variables de entorno ya validadas y con los tipos correctos. */

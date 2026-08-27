@@ -19,6 +19,7 @@ import { darSesion } from '@/test/sesion';
 import { MisClasesPage } from './MisClasesPage';
 
 vi.mock('@/features/aulas/api/get-mis-reservas', () => ({ getMisReservas: vi.fn() }));
+vi.mock('@/features/aulas/api/cancel-booking', () => ({ cancelBooking: vi.fn() }));
 
 const TEMAS: Tema[] = ['light', 'dark', 'hc'];
 
@@ -45,6 +46,8 @@ function claseReservada(overrides: Partial<ClassroomListItem> = {}): ClassroomLi
     createdAt: '2026-08-01T10:00:00.000Z',
     updatedAt: '2026-08-01T10:00:00.000Z',
     myBookingStatus: BookingStatus.CONFIRMED,
+    myBookingId: 'reserva-1',
+    myBookingCancelable: true,
     ...overrides,
   };
 }
@@ -146,6 +149,30 @@ describe('MisClasesPage — el listado del estudiante (AC1)', () => {
 
     await screen.findByRole('article');
     expect(screen.queryByRole('button', { name: /reservar/i })).toBeNull();
+  });
+});
+
+describe('MisClasesPage — cancelar una reserva (HU-303, T6/T7)', () => {
+  it('dentro de la ventana, ofrece cancelar y confirma antes de hacerlo', async () => {
+    vi.mocked(getMisReservas).mockResolvedValue(respuesta([claseReservada()]));
+    const { user } = renderConProviders(<MisClasesPage />);
+
+    await user.click(await screen.findByRole('button', { name: 'Cancelar reserva' }));
+
+    expect(
+      screen.getByRole('heading', { name: '¿Cancelar tu reserva en «Conversación cotidiana»?' }),
+    ).toBeInTheDocument();
+  });
+
+  // AC5: pasada la ventana, no hay botón muerto — se explica por qué.
+  it('pasada la ventana, no ofrece cancelar y explica por qué', async () => {
+    vi.mocked(getMisReservas).mockResolvedValue(
+      respuesta([claseReservada({ myBookingCancelable: false })]),
+    );
+    renderConProviders(<MisClasesPage />);
+
+    expect(await screen.findByText('Ya no se puede cancelar')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Cancelar reserva' })).not.toBeInTheDocument();
   });
 });
 

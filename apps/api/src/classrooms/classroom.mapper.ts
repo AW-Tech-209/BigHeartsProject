@@ -72,12 +72,16 @@ export function toClassroomListItem(
   classroom: PrismaClassroom,
   teacher: { firstName: string; lastName: string },
   myBookingStatus: BookingStatus | null = null,
+  myBookingId: string | null = null,
+  myBookingCancelable: boolean | null = null,
 ): ClassroomListItem {
   return {
     ...toPublicClassroom(classroom),
     teacherFirstName: teacher.firstName,
     teacherLastName: teacher.lastName,
     myBookingStatus,
+    myBookingId,
+    myBookingCancelable,
   };
 }
 
@@ -97,6 +101,10 @@ export type RevelacionesDelDetalle = {
   meetingLink?: string;
   /** La reserva `CONFIRMED` propia (HU-301), o `null` si no tiene. */
   myBookingStatus: BookingStatus | null;
+  /** El `id` de esa reserva (HU-303), o `null` si no tiene. */
+  myBookingId: string | null;
+  /** Si esa reserva todavía se puede cancelar (HU-303), o `null` si no tiene. */
+  myBookingCancelable: boolean | null;
 };
 
 /**
@@ -119,6 +127,8 @@ export function toClassroomDetail(
   return {
     ...toClassroomListItem(classroom, teacher),
     myBookingStatus: revelaciones.myBookingStatus,
+    myBookingId: revelaciones.myBookingId,
+    myBookingCancelable: revelaciones.myBookingCancelable,
     ...(revelaciones.meetingLink !== undefined && { meetingLink: revelaciones.meetingLink }),
   };
 }
