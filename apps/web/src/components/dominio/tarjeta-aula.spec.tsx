@@ -39,6 +39,8 @@ function aula(overrides: Partial<ClassroomListItem> = {}): ClassroomListItem {
     teacherFirstName: 'Ana',
     teacherLastName: 'Restrepo',
     myBookingStatus: null,
+    myBookingId: null,
+    myBookingCancelable: null,
     ...overrides,
   };
 }

@@ -10,11 +10,15 @@ import {
 import { describe, expect, it, vi } from 'vitest';
 
 import type { AuthenticatedUser } from '../auth/auth.types';
+import type { AppConfigService } from '../config/app-config.service';
 import type { NotificationService } from '../notifications/notification.service';
 import type { PrismaService } from '../prisma/prisma.service';
 import { BookingsService } from './bookings.service';
 import type { CreateBookingDto } from './dto/create-booking.dto';
 import type { ListMisReservasDto } from './dto/list-mis-reservas.dto';
+
+/** Ventana de cancelación de fábrica (60 min) para todos los tests de este archivo. */
+const CONFIG = { cancellationWindowMinutes: 60 } as unknown as AppConfigService;
 
 const ESTUDIANTE: AuthenticatedUser = {
   id: '11111111-1111-4111-8111-111111111111',
@@ -80,7 +84,7 @@ function setup(
   const notifications = { notify } as unknown as NotificationService;
 
   return {
-    service: new BookingsService(prisma, notifications),
+    service: new BookingsService(prisma, notifications, CONFIG),
     queryRaw,
     findFirst,
     findMany,
@@ -259,7 +263,7 @@ describe('BookingsService.createBooking — "concurrencia" (lógica de exactamen
     const notifications = {
       notify: vi.fn().mockResolvedValue({}),
     } as unknown as NotificationService;
-    const service = new BookingsService(prisma, notifications);
+    const service = new BookingsService(prisma, notifications, CONFIG);
 
     const OTRO_ESTUDIANTE: AuthenticatedUser = { ...ESTUDIANTE, id: 'otro-estudiante' };
 
@@ -268,6 +272,167 @@ describe('BookingsService.createBooking — "concurrencia" (lógica de exactamen
 
     expect(segundoCodigo).toBe(ApiErrorCode.CLASSROOM_FULL);
     expect(estado.current_bookings).toBe(1);
+  });
+});
+
+/* ------------------------------------------------------------------------- *
+ * Cancelar — POST /bookings/:id/cancelar (HU-303)
+ * ------------------------------------------------------------------------- */
+
+const BOOKING_ID = '55555555-5555-4555-8555-555555555555';
+
+function reservaConfirmada(overrides: Record<string, unknown> = {}) {
+  return {
+    id: BOOKING_ID,
+    studentId: ESTUDIANTE.id,
+    classroomId: AULA_ID,
+    status: 'CONFIRMED',
+    cancelledAt: null,
+    createdAt: new Date('2026-08-01T10:00:00.000Z'),
+    updatedAt: new Date('2026-08-01T10:00:00.000Z'),
+    ...overrides,
+  };
+}
+
+/**
+ * Monta el servicio para `cancelBooking` con un Prisma falso. Mismo criterio
+ * de "concurrencia simulada" que `setup()`: `$transaction` invoca el
+ * callback directamente, así que lo que se prueba es la LÓGICA de la
+ * transacción, no el aislamiento real de Postgres.
+ */
+function setupCancelar(
+  options: {
+    booking?: ReturnType<typeof reservaConfirmada> | null;
+    scheduledAt?: Date;
+    countCancelada?: number;
+    windowMinutes?: number;
+  } = {},
+) {
+  const booking = 'booking' in options ? options.booking : reservaConfirmada();
+  const findUniqueBooking = vi.fn().mockResolvedValue(booking);
+  const queryRaw = vi
+    .fn()
+    .mockResolvedValue([{ scheduled_at: options.scheduledAt ?? FUTURO_LEJANO }]);
+  const updateMany = vi.fn().mockResolvedValue({ count: options.countCancelada ?? 1 });
+  const findUniqueOrThrow = vi.fn().mockResolvedValue({
+    ...reservaConfirmada(),
+    status: 'CANCELLED',
+    cancelledAt: new Date('2026-08-26T10:00:00.000Z'),
+  });
+  const updateClassroom = vi.fn().mockResolvedValue({});
+
+  const tx = {
+    $queryRaw: queryRaw,
+    booking: { findUnique: findUniqueBooking, updateMany, findUniqueOrThrow },
+    classroom: { update: updateClassroom },
+  };
+  const $transaction = vi.fn((callback: (t: typeof tx) => unknown) => callback(tx));
+  const findUniqueUser = vi.fn().mockResolvedValue({ firstName: 'Sofía' });
+  const notify = vi.fn().mockResolvedValue({ delivered: false, channel: 'log' });
+
+  const prisma = {
+    $transaction,
+    user: { findUnique: findUniqueUser },
+  } as unknown as PrismaService;
+  const notifications = { notify } as unknown as NotificationService;
+  const config = {
+    cancellationWindowMinutes: options.windowMinutes ?? 60,
+  } as unknown as AppConfigService;
+
+  return {
+    service: new BookingsService(prisma, notifications, config),
+    findUniqueBooking,
+    queryRaw,
+    updateMany,
+    updateClassroom,
+    notify,
+  };
+}
+
+// Muy por delante en el tiempo: cae dentro de la ventana con cualquier config razonable.
+const FUTURO_LEJANO = new Date('2027-08-12T18:00:00.000Z');
+
+describe('BookingsService.cancelBooking — el camino feliz (AC1)', () => {
+  it('cancela, marca cancelledAt y decrementa el cupo exactamente uno, dentro de la transacción', async () => {
+    const { service, updateMany, updateClassroom } = setupCancelar();
+
+    const respuesta = await service.cancelBooking(ESTUDIANTE, BOOKING_ID);
+
+    expect(updateMany).toHaveBeenCalledWith({
+      where: { id: BOOKING_ID, status: 'CONFIRMED' },
+      data: expect.objectContaining({ status: 'CANCELLED' }),
+    });
+    expect(updateClassroom).toHaveBeenCalledWith({
+      where: { id: AULA_ID },
+      data: { currentBookings: { decrement: 1 } },
+    });
+    expect(respuesta.booking.status).toBe('CANCELLED');
+  });
+
+  it('avisa por el puerto de notificaciones sin tumbar la cancelación si el aviso falla', async () => {
+    const { service, notify } = setupCancelar();
+    notify.mockRejectedValueOnce(new Error('sin conexión'));
+
+    await expect(service.cancelBooking(ESTUDIANTE, BOOKING_ID)).resolves.toBeDefined();
+    expect(notify).toHaveBeenCalledWith({
+      type: 'BOOKING_CANCELLED',
+      recipient: { email: ESTUDIANTE.email, firstName: 'Sofía' },
+    });
+  });
+});
+
+describe('BookingsService.cancelBooking — autorización (AC4)', () => {
+  it('reserva inexistente → 404 BOOKING_NOT_FOUND', async () => {
+    const { service } = setupCancelar({ booking: null });
+
+    expect(await codigoDeError(service.cancelBooking(ESTUDIANTE, BOOKING_ID))).toBe(
+      ApiErrorCode.BOOKING_NOT_FOUND,
+    );
+  });
+
+  it('reserva de otro estudiante → 404 BOOKING_NOT_FOUND, no 403', async () => {
+    const { service } = setupCancelar({
+      booking: reservaConfirmada({ studentId: 'otro-estudiante' }),
+    });
+
+    expect(await codigoDeError(service.cancelBooking(ESTUDIANTE, BOOKING_ID))).toBe(
+      ApiErrorCode.BOOKING_NOT_FOUND,
+    );
+  });
+});
+
+describe('BookingsService.cancelBooking — la ventana (AC3)', () => {
+  it('a 59 minutos del inicio → 409 CANCELLATION_WINDOW_CLOSED', async () => {
+    const { service } = setupCancelar({
+      scheduledAt: new Date(Date.now() + 59 * 60_000),
+      windowMinutes: 60,
+    });
+
+    expect(await codigoDeError(service.cancelBooking(ESTUDIANTE, BOOKING_ID))).toBe(
+      ApiErrorCode.CANCELLATION_WINDOW_CLOSED,
+    );
+  });
+
+  it('a 61 minutos del inicio, cancela sin problema', async () => {
+    const { service, updateMany } = setupCancelar({
+      scheduledAt: new Date(Date.now() + 61 * 60_000),
+      windowMinutes: 60,
+    });
+
+    await service.cancelBooking(ESTUDIANTE, BOOKING_ID);
+
+    expect(updateMany).toHaveBeenCalled();
+  });
+});
+
+describe('BookingsService.cancelBooking — doble cancelación (AC5)', () => {
+  it('cancelar dos veces la misma reserva no decrementa el contador dos veces', async () => {
+    const { service, updateClassroom } = setupCancelar({ countCancelada: 0 });
+
+    expect(await codigoDeError(service.cancelBooking(ESTUDIANTE, BOOKING_ID))).toBe(
+      ApiErrorCode.BOOKING_NOT_FOUND,
+    );
+    expect(updateClassroom).not.toHaveBeenCalled();
   });
 });
 
@@ -389,7 +554,7 @@ function setupMisReservas(
   const prisma = { booking: { findMany, count } } as unknown as PrismaService;
   const notifications = { notify: vi.fn() } as unknown as NotificationService;
 
-  return { service: new BookingsService(prisma, notifications), findMany, count };
+  return { service: new BookingsService(prisma, notifications, CONFIG), findMany, count };
 }
 
 function wheresDeReservas(...espias: ReturnType<typeof vi.fn>[]): WhereReserva[] {

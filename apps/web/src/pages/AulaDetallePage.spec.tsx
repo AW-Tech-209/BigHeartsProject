@@ -24,6 +24,7 @@ vi.mock('@/features/aulas/api/get-classroom', () => ({ getClassroom: vi.fn() }))
 vi.mock('@/features/aulas/api/get-classrooms', () => ({ getClassrooms: vi.fn() }));
 vi.mock('@/features/aulas/api/get-mis-aulas', () => ({ getMisAulas: vi.fn() }));
 vi.mock('@/features/aulas/api/create-booking', () => ({ createBooking: vi.fn() }));
+vi.mock('@/features/aulas/api/cancel-booking', () => ({ cancelBooking: vi.fn() }));
 
 const TEMAS: Tema[] = ['light', 'dark', 'hc'];
 const ID = 'aula-42';
@@ -56,6 +57,8 @@ function aula(overrides: Partial<ClassroomDetail> = {}): ClassroomDetail {
     teacherFirstName: 'Ana',
     teacherLastName: 'Restrepo',
     myBookingStatus: null,
+    myBookingId: null,
+    myBookingCancelable: null,
     ...overrides,
   };
 }

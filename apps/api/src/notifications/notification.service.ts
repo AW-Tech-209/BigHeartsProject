@@ -12,6 +12,8 @@ export const NotificationType = {
   TEACHER_REJECTED: 'TEACHER_REJECTED',
   /** Un estudiante reservó su cupo (HU-301, D29). */
   BOOKING_CONFIRMED: 'BOOKING_CONFIRMED',
+  /** Un estudiante canceló su reserva (HU-303, D29). */
+  BOOKING_CANCELLED: 'BOOKING_CANCELLED',
 } as const;
 
 export type NotificationType = (typeof NotificationType)[keyof typeof NotificationType];

@@ -109,6 +109,11 @@ export class AppConfigService {
     return this.config.get('CLASS_MAX_DURATION_MINUTES', { infer: true });
   }
 
+  /** Hasta cuántos minutos antes del inicio se puede cancelar una reserva (§4.3). */
+  get cancellationWindowMinutes(): number {
+    return this.config.get('CANCELLATION_WINDOW_MINUTES', { infer: true });
+  }
+
   get isProduction(): boolean {
     return this.nodeEnv === 'production';
   }

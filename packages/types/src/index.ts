@@ -525,6 +525,20 @@ export interface ClassroomListItem extends Classroom {
    * «ya la reservaste», y ofrecía reservar otra vez sobre una clase propia.
    */
   myBookingStatus: BookingStatus | null;
+  /**
+   * El `id` de esa misma reserva (HU-303), para poder pedir
+   * `POST /bookings/:id/cancelar`. `null` en los mismos casos que
+   * `myBookingStatus`.
+   */
+  myBookingId: string | null;
+  /**
+   * Si esa reserva todavía se puede cancelar, ya decidido por el servidor
+   * contra `CANCELLATION_WINDOW_MINUTES` (HU-303) — así el frontend pinta la
+   * acción sin recalcular la ventana. `null` cuando `myBookingStatus` es
+   * `null`; nunca decide el permiso, solo evita el redibujado: cancelar sigue
+   * validándose en el servidor en el momento de la petición.
+   */
+  myBookingCancelable: boolean | null;
 }
 
 /**
@@ -580,6 +594,18 @@ export interface CreateBookingInput {
 
 /** Respuesta de `POST /bookings`. Devuelve la reserva ya confirmada. */
 export interface CreateBookingResponse {
+  booking: Booking;
+}
+
+/**
+ * Ventana de cancelación por defecto, en minutos (HU-303,
+ * `ARQUITECTURA.md` §4.3). El servidor manda: el entorno puede fijar otro con
+ * `CANCELLATION_WINDOW_MINUTES`, y ese es el que decide cada respuesta.
+ */
+export const CANCELLATION_WINDOW_MINUTES_DEFAULT = 60;
+
+/** Respuesta de `POST /bookings/:id/cancelar` (HU-303). Devuelve la reserva ya cancelada. */
+export interface CancelBookingResponse {
   booking: Booking;
 }
 
@@ -933,6 +959,20 @@ export const ApiErrorCode = {
    * por la izquierda y abierto por la derecha: dos clases consecutivas no chocan.
    */
   BOOKING_OVERLAP: 'BOOKING_OVERLAP',
+  /**
+   * La reserva no existe, no es del que pregunta, o ya no está `CONFIRMED`
+   * (HU-303, AC4/AC5). Es 404 en los tres casos y no un 403 o un código
+   * propio para "ya cancelada": no confirma que la reserva exista ante quien
+   * no es su dueño, y una cancelación repetida no necesita distinguirse de
+   * "no encontrada" para que el frontend actúe distinto.
+   */
+  BOOKING_NOT_FOUND: 'BOOKING_NOT_FOUND',
+  /**
+   * Se intentó cancelar a menos de `CANCELLATION_WINDOW_MINUTES` del inicio
+   * (HU-303, AC3). Es 409: la reserva existe, lo que ya no existe es la
+   * ventana para cancelarla.
+   */
+  CANCELLATION_WINDOW_CLOSED: 'CANCELLATION_WINDOW_CLOSED',
   /** Se superó el límite de peticiones (rate limiting). */
   TOO_MANY_REQUESTS: 'TOO_MANY_REQUESTS',
   DATABASE_UNAVAILABLE: 'DATABASE_UNAVAILABLE',

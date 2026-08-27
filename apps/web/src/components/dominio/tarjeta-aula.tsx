@@ -11,6 +11,7 @@ import { Presentation, UserCheck } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 import { Badge } from '@/components/ui/badge';
+import { AccionCancelarReserva } from '@/features/aulas/components/accion-cancelar-reserva';
 import { AccionesDeAula } from '@/features/aulas/components/acciones-de-aula';
 import { AccionReservarAula } from '@/features/aulas/components/accion-reservar-aula';
 import { APOYOS_AULA } from '@/features/aulas/lib/apoyos-aula';
@@ -40,7 +41,16 @@ function modosEnOrden(modos: CommunicationPreference[]): CommunicationPreference
  * (`MisAulasResponse`) no, porque el profesor es quien pregunta.
  */
 export type AulaDeTarjeta = Classroom &
-  Partial<Pick<ClassroomListItem, 'teacherFirstName' | 'teacherLastName' | 'myBookingStatus'>>;
+  Partial<
+    Pick<
+      ClassroomListItem,
+      | 'teacherFirstName'
+      | 'teacherLastName'
+      | 'myBookingStatus'
+      | 'myBookingId'
+      | 'myBookingCancelable'
+    >
+  >;
 
 /**
  * Desde dónde se mira el aula. No es una variante estética: cambia **qué
@@ -293,6 +303,21 @@ export function TarjetaAula({
             aula={classroom}
             puedeReservar={puedeReservarla && !esMia}
             estado={estado}
+          />
+        )}
+
+        {/* HU-303. Solo pinta cuando `myBookingId` viaja: «Mis reservas» y el detalle. */}
+        {!esVistaDelProfesor && (
+          <AccionCancelarReserva
+            aula={{
+              id: classroom.id,
+              title: classroom.title,
+              scheduledAt: classroom.scheduledAt,
+              myBookingId: classroom.myBookingId ?? null,
+              myBookingStatus: classroom.myBookingStatus ?? null,
+              myBookingCancelable: classroom.myBookingCancelable ?? null,
+            }}
+            compact
           />
         )}
 

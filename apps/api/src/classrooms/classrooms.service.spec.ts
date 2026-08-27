@@ -59,11 +59,16 @@ function entrada(overrides: Partial<CreateClassroomDto> = {}): CreateClassroomDt
  * probaría una cosa distinta en cada máquina.
  */
 function configuracion(
-  overrides: { classMinLeadMinutes?: number; classMaxDurationMinutes?: number } = {},
+  overrides: {
+    classMinLeadMinutes?: number;
+    classMaxDurationMinutes?: number;
+    cancellationWindowMinutes?: number;
+  } = {},
 ): AppConfigService {
   return {
     classMinLeadMinutes: CLASS_MIN_LEAD_MINUTES_DEFAULT,
     classMaxDurationMinutes: CLASS_MAX_DURATION_MINUTES_DEFAULT,
+    cancellationWindowMinutes: 60,
     ...overrides,
   } as AppConfigService;
 }
@@ -1303,7 +1308,7 @@ const administradora: AuthenticatedUser = {
  */
 function setupDetalle(
   aula: Record<string, unknown> | null = {},
-  options: { miReserva?: { status: string } | null } = {},
+  options: { miReserva?: { id?: string; status: string } | null } = {},
 ) {
   const cipher = new MeetingLinkCipher({ meetingLinkKey: 'a'.repeat(64) } as AppConfigService);
   const cifrado = cipher.encrypt(ENLACE);
@@ -1368,6 +1373,44 @@ describe('ClassroomsService.getClassroomDetail — el aula completa (A1, AC1)', 
     expect(classroom.myBookingStatus).toBeNull();
   });
 
+  /** HU-303: sin reserva, tampoco hay id ni cancelabilidad que pintar. */
+  it('sin reserva, myBookingId y myBookingCancelable llegan en null', async () => {
+    const { service } = setupDetalle();
+
+    const classroom = await service.getClassroomDetail(estudiante, ID_DEL_AULA);
+
+    expect(classroom.myBookingId).toBeNull();
+    expect(classroom.myBookingCancelable).toBeNull();
+  });
+
+  /**
+   * HU-303: con una reserva CONFIRMED dentro de la ventana, el detalle trae
+   * su `id` y la marca como cancelable, con la misma regla que autoriza
+   * `POST /bookings/:id/cancelar` (`puedeCancelarse`).
+   */
+  it('con una reserva CONFIRMED dentro de la ventana, la marca como cancelable', async () => {
+    const { service } = setupDetalle(
+      { scheduledAt: new Date(Date.now() + 61 * 60_000) },
+      { miReserva: { id: 'reserva-1', status: 'CONFIRMED' } },
+    );
+
+    const classroom = await service.getClassroomDetail(estudiante, ID_DEL_AULA);
+
+    expect(classroom.myBookingId).toBe('reserva-1');
+    expect(classroom.myBookingCancelable).toBe(true);
+  });
+
+  it('con una reserva CONFIRMED fuera de la ventana, la marca como no cancelable', async () => {
+    const { service } = setupDetalle(
+      { scheduledAt: new Date(Date.now() + 59 * 60_000) },
+      { miReserva: { id: 'reserva-1', status: 'CONFIRMED' } },
+    );
+
+    const classroom = await service.getClassroomDetail(estudiante, ID_DEL_AULA);
+
+    expect(classroom.myBookingCancelable).toBe(false);
+  });
+
   /** HU-301: con una reserva CONFIRMED propia, el detalle la refleja. */
   it('con una reserva CONFIRMED propia, myBookingStatus la trae', async () => {
     const { service, findFirstBooking } = setupDetalle({}, { miReserva: { status: 'CONFIRMED' } });
@@ -1377,7 +1420,7 @@ describe('ClassroomsService.getClassroomDetail — el aula completa (A1, AC1)', 
     expect(classroom.myBookingStatus).toBe('CONFIRMED');
     expect(findFirstBooking).toHaveBeenCalledWith({
       where: { studentId: ESTUDIANTE_ID, classroomId: ID_DEL_AULA, status: 'CONFIRMED' },
-      select: { status: true },
+      select: { id: true, status: true },
     });
   });
 });

@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import type { Prisma } from '@prisma/client';
 import {
   type BookingStatus,
+  type CancelBookingResponse,
   CLASSROOMS_PAGE_SIZE_DEFAULT,
   ClassroomStatus,
   type CreateBookingResponse,
@@ -11,6 +12,7 @@ import {
 } from '@academia/types';
 
 import type { AuthenticatedUser } from '../auth/auth.types';
+import { AppConfigService } from '../config/app-config.service';
 import {
   type Notification,
   NotificationService,
@@ -21,9 +23,12 @@ import { seSolapan } from '../classrooms/coherencia-temporal.rules';
 import { classroomNotFound } from '../classrooms/classrooms.errors';
 import { toClassroomListItem } from '../classrooms/classroom.mapper';
 import { toPublicBooking } from './booking.mapper';
+import { puedeCancelarse } from './cancelacion.rules';
 import {
   bookingAlreadyExists,
+  bookingNotFound,
   bookingOverlap,
+  cancellationWindowClosed,
   classroomFull,
   classroomNotBookable,
 } from './bookings.errors';
@@ -46,6 +51,7 @@ export class BookingsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly notifications: NotificationService,
+    private readonly config: AppConfigService,
   ) {}
 
   /**
@@ -157,6 +163,78 @@ export class BookingsService {
     }
   }
 
+  /**
+   * `POST /bookings/:id/cancelar` (HU-303). Solo `STUDENT` (`RolesGuard`).
+   *
+   * La transacción bloquea el aula con `FOR UPDATE` (`reglas-reservas.md` §2)
+   * para serializar el decremento del cupo, pero la propiedad y el doble
+   * cancelado se cierran con un `updateMany` condicionado a `status:
+   * 'CONFIRMED'`: dos cancelaciones simultáneas de la misma reserva quedan
+   * serializadas por el mismo bloqueo del aula, y la segunda encuentra el
+   * `count` en 0 —la primera ya la dejó `CANCELLED`— sin decrementar dos veces.
+   */
+  async cancelBooking(
+    student: AuthenticatedUser,
+    bookingId: string,
+  ): Promise<CancelBookingResponse> {
+    const cancelada = await this.prisma.$transaction(async (tx) => {
+      const booking = await tx.booking.findUnique({ where: { id: bookingId } });
+
+      if (!booking || booking.studentId !== student.id) {
+        throw bookingNotFound();
+      }
+
+      const filas = await tx.$queryRaw<{ scheduled_at: Date }[]>`
+        SELECT scheduled_at FROM classrooms WHERE id = ${booking.classroomId}::uuid FOR UPDATE
+      `;
+      // `classroomId` es `onDelete: Restrict` (schema.prisma): el aula de una
+      // reserva existente siempre existe.
+      const aula = filas[0]!;
+
+      if (!puedeCancelarse(aula.scheduled_at, new Date(), this.config.cancellationWindowMinutes)) {
+        throw cancellationWindowClosed();
+      }
+
+      const { count } = await tx.booking.updateMany({
+        where: { id: bookingId, status: 'CONFIRMED' },
+        data: { status: 'CANCELLED', cancelledAt: new Date() },
+      });
+
+      if (count === 0) {
+        throw bookingNotFound();
+      }
+
+      // El contador solo se muta aquí, dentro de la misma transacción que
+      // cancela la reserva (§4.2) — nunca en un `update` suelto.
+      await tx.classroom.update({
+        where: { id: booking.classroomId },
+        data: { currentBookings: { decrement: 1 } },
+      });
+
+      return tx.booking.findUniqueOrThrow({ where: { id: bookingId } });
+    });
+
+    await this.notifyBookingCancelled(student);
+
+    return { booking: toPublicBooking(cancelada) };
+  }
+
+  private async notifyBookingCancelled(student: AuthenticatedUser): Promise<void> {
+    const notification: Notification = {
+      type: NotificationType.BOOKING_CANCELLED,
+      recipient: { email: student.email, firstName: await this.firstNameDe(student.id) },
+    };
+
+    try {
+      await this.notifications.notify(notification);
+    } catch (error) {
+      this.logger.error(
+        `No se pudo notificar ${notification.type} a ${notification.recipient.email}`,
+        error instanceof Error ? error.stack : String(error),
+      );
+    }
+  }
+
   private async firstNameDe(studentId: string): Promise<string> {
     const student = await this.prisma.user.findUnique({
       where: { id: studentId },
@@ -198,6 +276,14 @@ export class BookingsService {
           booking.classroom,
           booking.classroom.teacher,
           booking.status as BookingStatus,
+          booking.id,
+          booking.status === 'CONFIRMED'
+            ? puedeCancelarse(
+                booking.classroom.scheduledAt,
+                ahora,
+                this.config.cancellationWindowMinutes,
+              )
+            : null,
         ),
       ),
       total,

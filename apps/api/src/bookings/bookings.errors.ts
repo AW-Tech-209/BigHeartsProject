@@ -1,4 +1,4 @@
-import { ConflictException } from '@nestjs/common';
+import { ConflictException, NotFoundException } from '@nestjs/common';
 import { ApiErrorCode } from '@academia/types';
 
 /**
@@ -40,4 +40,23 @@ export const bookingOverlap = (): ConflictException =>
   new ConflictException({
     code: ApiErrorCode.BOOKING_OVERLAP,
     message: 'Ya tienes otra clase reservada en ese horario.',
+  });
+
+/**
+ * La reserva no existe, no es de quien la pide, o ya no está `CONFIRMED`
+ * (HU-303, AC4/AC5). Un solo código para los tres casos: no confirma a quien
+ * pregunta si la reserva de otro existe, y cancelar dos veces no necesita un
+ * mensaje distinto de "no encontrada".
+ */
+export const bookingNotFound = (): NotFoundException =>
+  new NotFoundException({
+    code: ApiErrorCode.BOOKING_NOT_FOUND,
+    message: 'No encontramos esa reserva.',
+  });
+
+/** Se intentó cancelar dentro de `CANCELLATION_WINDOW_MINUTES` (HU-303, AC3). */
+export const cancellationWindowClosed = (): ConflictException =>
+  new ConflictException({
+    code: ApiErrorCode.CANCELLATION_WINDOW_CLOSED,
+    message: 'Ya no se puede cancelar esta clase: falta menos del tiempo mínimo permitido.',
   });

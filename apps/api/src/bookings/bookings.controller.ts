@@ -1,12 +1,31 @@
-import { Body, Controller, Get, HttpCode, HttpStatus, Post, Query } from '@nestjs/common';
-import { type CreateBookingResponse, type MisReservasResponse, UserRole } from '@academia/types';
+import {
+  Body,
+  Controller,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Param,
+  ParseUUIDPipe,
+  Post,
+  Query,
+} from '@nestjs/common';
+import {
+  type CancelBookingResponse,
+  type CreateBookingResponse,
+  type MisReservasResponse,
+  UserRole,
+} from '@academia/types';
 
 import type { AuthenticatedUser } from '../auth/auth.types';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { Roles } from '../auth/decorators/roles.decorator';
+import { bookingNotFound } from './bookings.errors';
 import { BookingsService } from './bookings.service';
 import { CreateBookingDto } from './dto/create-booking.dto';
 import { ListMisReservasDto } from './dto/list-mis-reservas.dto';
+
+/** Un `:id` con forma inválida es, de puertas afuera, igual que uno que no existe. */
+export const idDeReserva = new ParseUUIDPipe({ exceptionFactory: () => bookingNotFound() });
 
 /**
  * Reservas de aulas (HU-301). `@Roles(STUDENT)` en la clase: todo el módulo es
@@ -35,5 +54,15 @@ export class BookingsController {
     @Query() query: ListMisReservasDto,
   ): Promise<MisReservasResponse> {
     return this.bookingsService.listMisReservas(student, query);
+  }
+
+  /** POST /bookings/:id/cancelar — libera el cupo dentro de la ventana permitida (HU-303). */
+  @Post(':id/cancelar')
+  @HttpCode(HttpStatus.OK)
+  async cancel(
+    @CurrentUser() student: AuthenticatedUser,
+    @Param('id', idDeReserva) id: string,
+  ): Promise<CancelBookingResponse> {
+    return this.bookingsService.cancelBooking(student, id);
   }
 }

@@ -17,6 +17,7 @@ import {
 import type { AuthenticatedUser } from '../auth/auth.types';
 import { insufficientRole } from '../auth/auth.errors';
 import { AppConfigService } from '../config/app-config.service';
+import { puedeCancelarse } from '../bookings/cancelacion.rules';
 import { PrismaService } from '../prisma/prisma.service';
 import { toClassroomDetail, toClassroomListItem, toPublicClassroom } from './classroom.mapper';
 import {
@@ -345,7 +346,7 @@ export class ClassroomsService {
     const puedeVerlo = this.revelarElEnlace(viewer, classroom);
     const miReserva = await this.prisma.booking.findFirst({
       where: { studentId: viewer.id, classroomId, status: 'CONFIRMED' },
-      select: { status: true },
+      select: { id: true, status: true },
     });
 
     return toClassroomDetail(classroom, classroom.teacher, {
@@ -354,6 +355,12 @@ export class ClassroomsService {
       // un log de la variable para filtrarlo.
       ...(puedeVerlo && { meetingLink: this.meetingLinks.decrypt(classroom.meetingLink) }),
       myBookingStatus: (miReserva?.status as BookingStatus | undefined) ?? null,
+      myBookingId: miReserva?.id ?? null,
+      // HU-303: la misma regla que autoriza `POST /bookings/:id/cancelar`,
+      // solo para pintar sin recalcularla — cancelar sigue validándose ahí.
+      myBookingCancelable: miReserva
+        ? puedeCancelarse(classroom.scheduledAt, new Date(), this.config.cancellationWindowMinutes)
+        : null,
     });
   }
 
