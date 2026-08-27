@@ -114,6 +114,11 @@ export class AppConfigService {
     return this.config.get('CANCELLATION_WINDOW_MINUTES', { infer: true });
   }
 
+  /** Minutos antes de `scheduledAt` en los que se abre el acceso al enlace (§4.1). */
+  get accessWindowMinutes(): number {
+    return this.config.get('ACCESS_WINDOW_MINUTES', { infer: true });
+  }
+
   get isProduction(): boolean {
     return this.nodeEnv === 'production';
   }

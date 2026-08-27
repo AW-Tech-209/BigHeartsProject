@@ -17,8 +17,11 @@ import { BookingsService } from './bookings.service';
 import type { CreateBookingDto } from './dto/create-booking.dto';
 import type { ListMisReservasDto } from './dto/list-mis-reservas.dto';
 
-/** Ventana de cancelación de fábrica (60 min) para todos los tests de este archivo. */
-const CONFIG = { cancellationWindowMinutes: 60 } as unknown as AppConfigService;
+/** Ventana de cancelación y de acceso de fábrica para todos los tests de este archivo. */
+const CONFIG = {
+  cancellationWindowMinutes: 60,
+  accessWindowMinutes: 30,
+} as unknown as AppConfigService;
 
 const ESTUDIANTE: AuthenticatedUser = {
   id: '11111111-1111-4111-8111-111111111111',

@@ -21,6 +21,7 @@ import {
 import { PrismaService } from '../prisma/prisma.service';
 import { seSolapan } from '../classrooms/coherencia-temporal.rules';
 import { classroomNotFound } from '../classrooms/classrooms.errors';
+import { derivarAccesoAlEnlace } from '../classrooms/acceso-enlace.rules';
 import { toClassroomListItem } from '../classrooms/classroom.mapper';
 import { toPublicBooking } from './booking.mapper';
 import { puedeCancelarse } from './cancelacion.rules';
@@ -271,8 +272,21 @@ export class BookingsService {
         : await this.leerMisReservasPorEstado(student.id, estado, ahora, skip, pageSize);
 
     return {
-      items: rows.map((booking) =>
-        toClassroomListItem(
+      items: rows.map((booking) => {
+        // HU-304: mismo cálculo que el detalle, vía la regla compartida —
+        // aquí solo para pintar la cuenta atrás, nunca para revelar el
+        // enlace: `toClassroomListItem` no lo copia.
+        const acceso =
+          booking.status === 'CONFIRMED'
+            ? derivarAccesoAlEnlace(booking.classroom, {
+                esDueno: false,
+                tieneReservaConfirmada: true,
+                ahora,
+                accessWindowMinutes: this.config.accessWindowMinutes,
+              })
+            : { estado: 'sin-acceso' as const, abreEn: null };
+
+        return toClassroomListItem(
           booking.classroom,
           booking.classroom.teacher,
           booking.status as BookingStatus,
@@ -284,8 +298,10 @@ export class BookingsService {
                 this.config.cancellationWindowMinutes,
               )
             : null,
-        ),
-      ),
+          acceso.estado,
+          acceso.abreEn?.toISOString() ?? null,
+        );
+      }),
       total,
       page,
       pageSize,

@@ -7,6 +7,7 @@ import {
   type ClassroomStatus,
   type CommunicationPreference,
   type EnglishLevel,
+  type EstadoAccesoEnlace,
   type MeetingProvider,
 } from '@academia/types';
 
@@ -74,6 +75,11 @@ export function toClassroomListItem(
   myBookingStatus: BookingStatus | null = null,
   myBookingId: string | null = null,
   myBookingCancelable: boolean | null = null,
+  // HU-304. `sin-acceso`/`null` por defecto: solo el detalle y «mis reservas»
+  // ofrecen entrar a la clase desde la tarjeta, así que son los únicos que
+  // calculan de verdad este par — el catálogo y «mis aulas» no lo necesitan.
+  accessState: EstadoAccesoEnlace = 'sin-acceso',
+  accessOpensAt: string | null = null,
 ): ClassroomListItem {
   return {
     ...toPublicClassroom(classroom),
@@ -82,6 +88,8 @@ export function toClassroomListItem(
     myBookingStatus,
     myBookingId,
     myBookingCancelable,
+    accessState,
+    accessOpensAt,
   };
 }
 
@@ -105,6 +113,10 @@ export type RevelacionesDelDetalle = {
   myBookingId: string | null;
   /** Si esa reserva todavía se puede cancelar (HU-303), o `null` si no tiene. */
   myBookingCancelable: boolean | null;
+  /** Estado de acceso al enlace, ya resuelto por `revelarElEnlace()` (HU-304). */
+  accessState: EstadoAccesoEnlace;
+  /** El instante en que se abre la ventana, o `null` si no aplica (HU-304). */
+  accessOpensAt: string | null;
 };
 
 /**
@@ -129,6 +141,8 @@ export function toClassroomDetail(
     myBookingStatus: revelaciones.myBookingStatus,
     myBookingId: revelaciones.myBookingId,
     myBookingCancelable: revelaciones.myBookingCancelable,
+    accessState: revelaciones.accessState,
+    accessOpensAt: revelaciones.accessOpensAt,
     ...(revelaciones.meetingLink !== undefined && { meetingLink: revelaciones.meetingLink }),
   };
 }

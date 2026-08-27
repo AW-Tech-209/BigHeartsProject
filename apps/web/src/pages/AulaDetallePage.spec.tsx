@@ -59,6 +59,8 @@ function aula(overrides: Partial<ClassroomDetail> = {}): ClassroomDetail {
     myBookingStatus: null,
     myBookingId: null,
     myBookingCancelable: null,
+    accessState: 'sin-acceso',
+    accessOpensAt: null,
     ...overrides,
   };
 }
@@ -188,7 +190,9 @@ describe('AulaDetallePage — el estado sale de derivarEstadoAula() (B3, AC6)', 
 describe('AulaDetallePage — el enlace se pinta solo si el servidor lo mandó (AC2)', () => {
   it('cuando llega, se muestra completo y abre la reunión', async () => {
     darSesion(UserRole.TEACHER);
-    vi.mocked(getClassroom).mockResolvedValue({ classroom: aula({ meetingLink: ENLACE }) });
+    vi.mocked(getClassroom).mockResolvedValue({
+      classroom: aula({ meetingLink: ENLACE, accessState: 'abierto' }),
+    });
     montarDetalle();
 
     const enlace = await screen.findByRole('link', { name: /meet\.google\.com/ });
@@ -199,7 +203,9 @@ describe('AulaDetallePage — el enlace se pinta solo si el servidor lo mandó (
 
   it('prioriza una acción clara para entrar a la clase', async () => {
     darSesion(UserRole.TEACHER);
-    vi.mocked(getClassroom).mockResolvedValue({ classroom: aula({ meetingLink: ENLACE }) });
+    vi.mocked(getClassroom).mockResolvedValue({
+      classroom: aula({ meetingLink: ENLACE, accessState: 'abierto' }),
+    });
     montarDetalle();
 
     expect(await screen.findByRole('link', { name: /Entrar a la clase/ })).toHaveAttribute(
@@ -219,6 +225,22 @@ describe('AulaDetallePage — el enlace se pinta solo si el servidor lo mandó (
 
     expect(screen.queryByRole('heading', { name: 'Enlace de la clase' })).not.toBeInTheDocument();
     expect(screen.queryByText(/meet\.google\.com/)).not.toBeInTheDocument();
+  });
+});
+
+describe('AulaDetallePage — antes de la ventana de acceso (HU-304, AC5)', () => {
+  it('con reserva confirmada y la ventana aún cerrada, dice cuándo se abrirá', async () => {
+    vi.mocked(getClassroom).mockResolvedValue({
+      classroom: aula({
+        myBookingStatus: BookingStatus.CONFIRMED,
+        accessState: 'aun-no',
+        accessOpensAt: '2099-08-12T22:30:00.000Z',
+      }),
+    });
+    montarDetalle();
+
+    await screen.findByRole('heading', { name: 'Aún no puedes entrar' });
+    expect(screen.queryByRole('link', { name: /Entrar a la clase/ })).not.toBeInTheDocument();
   });
 });
 
@@ -562,7 +584,9 @@ describe('AulaDetallePage — reservar un cupo (HU-301)', () => {
 describe('AulaDetallePage — accesibilidad automática (AC7)', () => {
   it.each(TEMAS)('el aula, sin violaciones en el tema %s', async (tema) => {
     darSesion(UserRole.TEACHER);
-    vi.mocked(getClassroom).mockResolvedValue({ classroom: aula({ meetingLink: ENLACE }) });
+    vi.mocked(getClassroom).mockResolvedValue({
+      classroom: aula({ meetingLink: ENLACE, accessState: 'abierto' }),
+    });
     const { container } = montarDetalle({ tema });
 
     await screen.findByRole('heading', { level: 1, name: 'Conversación cotidiana' });

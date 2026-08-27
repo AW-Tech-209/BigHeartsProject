@@ -5,7 +5,15 @@ import {
   derivarEstadoAula,
   UserRole,
 } from '@academia/types';
-import { BookOpen, CalendarClock, ExternalLink, RotateCw, UserCheck, Users } from 'lucide-react';
+import {
+  BookOpen,
+  CalendarClock,
+  Clock,
+  ExternalLink,
+  RotateCw,
+  UserCheck,
+  Users,
+} from 'lucide-react';
 import type { ReactNode } from 'react';
 import { Link, useParams } from 'react-router-dom';
 
@@ -23,6 +31,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { AccionCancelarReserva } from '@/features/aulas/components/accion-cancelar-reserva';
 import { AccionesDeAula } from '@/features/aulas/components/acciones-de-aula';
 import { AccionReservarAula } from '@/features/aulas/components/accion-reservar-aula';
+import { useAccesoAlEnlace } from '@/features/aulas/hooks/use-acceso-al-enlace';
 import { esAulaNoEncontrada, useClassroom } from '@/features/aulas/hooks/use-classroom';
 import { APOYOS_AULA } from '@/features/aulas/lib/apoyos-aula';
 import { describirDuracion, describirHorario } from '@/features/aulas/lib/horario';
@@ -169,6 +178,9 @@ function DetalleDelAula({
     tieneReservaConfirmada: aula.myBookingStatus === BookingStatus.CONFIRMED,
   });
 
+  // HU-304, T7: el paso de «aún no» a «abierto» ocurre en vivo, sin recargar.
+  const accesoAlEnlace = useAccesoAlEnlace(aula.accessState, aula.accessOpensAt);
+
   return (
     <div className="space-y-8">
       <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1.35fr)_minmax(18rem,0.65fr)]">
@@ -276,7 +288,13 @@ function DetalleDelAula({
             </div>
           </section>
 
-          {aula.meetingLink && <EnlaceDeLaClase url={aula.meetingLink} />}
+          {/* HU-304, T6. `sin-acceso` no pinta nada: ni cuenta atrás ni botón. */}
+          {accesoAlEnlace === 'abierto' && aula.meetingLink && (
+            <EnlaceDeLaClase url={aula.meetingLink} />
+          )}
+          {accesoAlEnlace === 'aun-no' && aula.accessOpensAt && (
+            <AperturaDelEnlace instanteISO={aula.accessOpensAt} />
+          )}
 
           {/* HU-301, T7. El único punto de la pantalla que ofrece reservar. */}
           <AccionReservarAula aula={aula} puedeReservar={puedeReservarla} estado={estado} />
@@ -316,6 +334,32 @@ function Dato({
       </dt>
       <dd className="text-base text-foreground">{children}</dd>
     </div>
+  );
+}
+
+/**
+ * Antes de la ventana de acceso: cuándo se abrirá, con la zona explícita
+ * (HU-304, AC5). Solo pinta con reserva `CONFIRMED` — es lo único que produce
+ * el estado `aun-no` en el servidor.
+ */
+function AperturaDelEnlace({ instanteISO }: { instanteISO: string }) {
+  return (
+    <section
+      aria-labelledby="aula-apertura-enlace"
+      className="space-y-2 rounded-xl border border-border bg-card p-5"
+    >
+      <div className="flex items-center gap-3">
+        <span className="rounded-lg bg-muted p-2 text-muted-foreground">
+          <Clock aria-hidden="true" strokeWidth={2} className="size-5" />
+        </span>
+        <h2 id="aula-apertura-enlace" className="text-xl font-medium">
+          Aún no puedes entrar
+        </h2>
+      </div>
+      <p className="text-sm text-muted-foreground">
+        Podrás entrar a la clase el {describirHorario(instanteISO)}.
+      </p>
+    </section>
   );
 }
 
