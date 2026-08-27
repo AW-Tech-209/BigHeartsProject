@@ -217,15 +217,9 @@ describe('AulasPage — la clase propia se distingue (T1, AC1)', () => {
   );
 });
 
-/**
- * AC4 — **el elemento no está en el DOM**, no está deshabilitado.
- *
- * Un test por rol, como pide el criterio. Hoy pasan también para el estudiante
- * porque HU-301 todavía no trae la acción; la garantía que fijan es la regla,
- * y se pondrán en rojo si esa HU la rompe al rellenar el hueco.
- */
-describe('AulasPage — la acción de reservar, por rol (T3, AC4)', () => {
-  it.each([UserRole.TEACHER, UserRole.ADMIN, UserRole.STUDENT])(
+/** AC4 — **el elemento no está en el DOM**, no está deshabilitado. Un test por rol. */
+describe('AulasPage — la acción de reservar, por rol (T3, AC4, HU-301)', () => {
+  it.each([UserRole.TEACHER, UserRole.ADMIN])(
     'un %s no encuentra ninguna acción de reservar',
     async (role) => {
       darSesion(role);
@@ -238,6 +232,16 @@ describe('AulasPage — la acción de reservar, por rol (T3, AC4)', () => {
       expect(screen.queryByRole('link', { name: /reservar/i })).not.toBeInTheDocument();
     },
   );
+
+  it('un STUDENT sí ve «Reservar mi cupo» sobre un aula disponible', async () => {
+    darSesion(UserRole.STUDENT);
+    vi.mocked(getClassrooms).mockResolvedValue(respuesta([aula({ teacherId: ID_DEL_PROFESOR })]));
+
+    renderConProviders(<AulasPage />);
+    await screen.findByRole('article');
+
+    expect(screen.getByRole('button', { name: 'Reservar mi cupo' })).toBeInTheDocument();
+  });
 });
 
 describe('AulasPage — el filtro «Solo mis clases» (T4, AC5, AC6)', () => {

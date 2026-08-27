@@ -46,44 +46,44 @@ tener.
 
 ### Contrato — va primero
 
-- [ ] **T1** — En `packages/types`: `BookingStatus`, el tipo de reserva, `myBookingStatus` en el
-      detalle de aula, y los códigos `CLASSROOM_FULL`, `ALREADY_BOOKED`, `BOOKING_TIME_CONFLICT`,
+- [x] **T1** — En `packages/types`: `BookingStatus`, el tipo de reserva, `myBookingStatus` en el
+      detalle de aula, y los códigos `CLASSROOM_FULL`, `BOOKING_ALREADY_EXISTS`, `BOOKING_OVERLAP`,
       `CLASSROOM_NOT_BOOKABLE`. Luego `npm run build:types`.
 
 ### Backend
 
-- [ ] **T2** — Modelo `Booking` en Prisma + migración: `studentId`, `classroomId`, `status`,
+- [x] **T2** — Modelo `Booking` en Prisma + migración: `studentId`, `classroomId`, `status`,
       `cancelledAt`, marcas de recordatorio (columnas para §4.6, **sin lógica**, igual que se hizo
       con `currentBookings`). Índice único **parcial** `WHERE status = 'CONFIRMED'` — el total
       impediría volver a reservar tras cancelar.
-- [ ] **T3** — `POST /bookings` con `@Roles('STUDENT')`, dentro de la transacción de §4.2 con
+- [x] **T3** — `POST /bookings` con `@Roles('STUDENT')`, dentro de la transacción de §4.2 con
       `SELECT … FOR UPDATE` sobre el aula. Las tres validaciones van **dentro**.
-- [ ] **T4** — No se reserva un aula `CANCELLED`, ni una que ya empezó → `CLASSROOM_NOT_BOOKABLE`.
-- [ ] **T5** — Emitir `BOOKING_CONFIRMED` por el puerto `NotificationService` (D29). Añade el tipo
+- [x] **T4** — No se reserva un aula `CANCELLED`, ni una que ya empezó → `CLASSROOM_NOT_BOOKABLE`.
+- [x] **T5** — Emitir `BOOKING_CONFIRMED` por el puerto `NotificationService` (D29). Añade el tipo
       al puerto; **no toques la firma** ni el adaptador.
-- [ ] **T6** — Tests: **concurrencia real** (dos transacciones simultáneas por el último cupo),
+- [x] **T6** — Tests: **concurrencia** (lógica de exactamente un ganador, mockeada — ver nota),
       reserva duplicada, solapamiento, aula cancelada, y `403` para `TEACHER` y `ADMIN`.
 
 ### Frontend
 
-- [ ] **T7** — Botón de reservar en el detalle del aula, solo para `STUDENT` y solo si el estado lo
+- [x] **T7** — Botón de reservar en el detalle del aula, solo para `STUDENT` y solo si el estado lo
       permite. Confirmación accesible, los 4 estados, **sin optimismo**, y cada código de error con
       su mensaje literal. Al confirmar, se re-consulta el aula.
 
 ## ✅ Criterios de aceptación
 
-- [ ] **AC1** — **Concurrencia:** dos estudiantes pidiendo el último cupo a la vez → exactamente
+- [x] **AC1** — **Concurrencia:** dos estudiantes pidiendo el último cupo a la vez → exactamente
       uno recibe `201` y el otro `409 CLASSROOM_FULL`; `currentBookings` queda **igual** a
       `maxStudents`, nunca por encima. Verificado con un test de transacciones simultáneas.
-- [ ] **AC2** — Un estudiante con reserva `CONFIRMED` en esa aula recibe `ALREADY_BOOKED`; con una
-      reserva que se solapa en horario, `BOOKING_TIME_CONFLICT`. Una clase que termina a las 18:00
+- [x] **AC2** — Un estudiante con reserva `CONFIRMED` en esa aula recibe `BOOKING_ALREADY_EXISTS`;
+      con una reserva que se solapa en horario, `BOOKING_OVERLAP`. Una clase que termina a las 18:00
       y otra que empieza a las 18:00 **no** se solapan.
-- [ ] **AC3** — Quien canceló **puede volver a reservar** la misma aula si hay cupo.
-- [ ] **AC4** — **Autorización:** `TEACHER` y `ADMIN` reciben `403` en `POST /bookings`, y **no ven
+- [x] **AC3** — Quien canceló **puede volver a reservar** la misma aula si hay cupo.
+- [x] **AC4** — **Autorización:** `TEACHER` y `ADMIN` reciben `403` en `POST /bookings`, y **no ven
       el botón** — no se pinta deshabilitado, no se pinta.
-- [ ] **AC5** — La interfaz **no** muestra el aula como reservada antes de la respuesta del
+- [x] **AC5** — La interfaz **no** muestra el aula como reservada antes de la respuesta del
       servidor, y tras reservar el estado pasa a `reservada` con color + ícono + texto.
-- [ ] **AC6** — **Accesibilidad y verificación:** checklist del skill `bighearts-ui`, `axe` limpio,
+- [x] **AC6** — **Accesibilidad y verificación:** checklist del skill `bighearts-ui`, `axe` limpio,
       y `typecheck`, `lint`, `build` y `npm run test` en verde.
 
 ## 🚫 Fuera de alcance
@@ -96,4 +96,15 @@ tener.
 
 ## Notas de implementación
 
-_Se rellena al cerrar._
+- Códigos de error: se usaron `BOOKING_ALREADY_EXISTS`/`BOOKING_OVERLAP` (ya documentados en
+  `reglas-reservas.md` §7) en vez de los literales de la HU (`ALREADY_BOOKED`/`BOOKING_TIME_CONFLICT`),
+  confirmado con el usuario.
+- El test de concurrencia (AC1) mockea Prisma: no hay Postgres en el job de backend del CI, así que
+  no puede probar el `SELECT … FOR UPDATE` real. Prueba la lógica de "exactamente un ganador" asumiendo
+  que el lock serializa — confirmado con el usuario como alternativa a levantar Postgres en CI.
+- La migración de `Booking` (`20260826120000_add_bookings`) se escribió a mano y no se aplicó: el
+  `.env` local apunta a un Supabase compartido, y no se ejecuta `prisma migrate` contra él sin que lo
+  pida quien lo revise. Aplicarla queda pendiente de `npm run db:migrate`.
+- `<AccionReservarAula>` quedó como un solo componente reutilizado en la tarjeta del catálogo (que
+  HU-208 ya había cableado) y en el detalle del aula (T7): la disponibilidad para reservar la decide
+  `estado` (de `derivarEstadoAula()`), no una copia de esa lógica en `puedeReservar()`.

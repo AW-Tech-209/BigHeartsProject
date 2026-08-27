@@ -476,22 +476,41 @@ describe('<TarjetaAula esMia /> — la acción de gestión (T2, AC3)', () => {
 });
 
 /**
- * AC4 — el elemento **no está en el DOM**, no está deshabilitado.
- *
- * Hoy `<AccionReservarAula>` devuelve `null` para todos, así que estos tests
- * pasan también para el estudiante. Se escriben igual, y a propósito: son la
- * red que se pone en rojo el día que HU-301 rellene ese hueco sin respetar la
- * regla. Quien decide por rol es `puedeReservar()`, con su propio spec.
+ * AC4 — el elemento **no está en el DOM** cuando no corresponde, nunca
+ * deshabilitado. Quien decide por rol es `puedeReservar()`, con su propio
+ * spec; aquí solo se comprueba que la tarjeta respeta lo que le llega.
  */
-describe('<TarjetaAula /> — la acción de reservar (T3, AC4)', () => {
-  it.each([
-    ['con `puedeReservarla`', true],
-    ['sin `puedeReservarla`', false],
-  ])('%s, no existe ningún elemento de reservar (HU-301 aún no la trae)', (_caso, puede) => {
-    renderConProviders(<TarjetaAula classroom={aula()} puedeReservarla={puede} ahora={AHORA} />);
+describe('<TarjetaAula /> — la acción de reservar (T3, AC4, HU-301)', () => {
+  it('con `puedeReservarla` y cupo disponible, aparece «Reservar mi cupo»', () => {
+    renderConProviders(<TarjetaAula classroom={aula()} puedeReservarla ahora={AHORA} />);
+
+    expect(screen.getByRole('button', { name: 'Reservar mi cupo' })).toBeInTheDocument();
+  });
+
+  it('sin `puedeReservarla`, no existe ningún elemento de reservar', () => {
+    renderConProviders(<TarjetaAula classroom={aula()} puedeReservarla={false} ahora={AHORA} />);
 
     expect(screen.queryByRole('button', { name: /reservar/i })).not.toBeInTheDocument();
-    expect(screen.queryByRole('link', { name: /reservar/i })).not.toBeInTheDocument();
+  });
+
+  // Sobre la propia clase, ni con `puedeReservarla` se ofrece reservar.
+  it('sobre la clase propia no aparece el botón, aunque `puedeReservarla` sea true', () => {
+    renderConProviders(<TarjetaAula classroom={aula()} puedeReservarla esMia ahora={AHORA} />);
+
+    expect(screen.queryByRole('button', { name: /reservar/i })).not.toBeInTheDocument();
+  });
+
+  // Un aula llena no ofrece reservar, aunque el rol sí pueda.
+  it('un aula llena no ofrece reservar', () => {
+    renderConProviders(
+      <TarjetaAula
+        classroom={aula({ currentBookings: 10, maxStudents: 10 })}
+        puedeReservarla
+        ahora={AHORA}
+      />,
+    );
+
+    expect(screen.queryByRole('button', { name: /reservar/i })).not.toBeInTheDocument();
   });
 
   // Ni deshabilitado: el skill prohíbe deshabilitar sin explicar.

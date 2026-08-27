@@ -1,9 +1,13 @@
 import { Module } from '@nestjs/common';
 
-/**
- * Reservas de aulas por parte de los usuarios.
- *
- * TODO: controller y service. Usar PrismaService (@Global) para el acceso a datos.
- */
-@Module({})
+import { NotificationsModule } from '../notifications/notifications.module';
+import { BookingsController } from './bookings.controller';
+import { BookingsService } from './bookings.service';
+
+/** Reservas de aulas por parte de los estudiantes (HU-301). */
+@Module({
+  imports: [NotificationsModule],
+  controllers: [BookingsController],
+  providers: [BookingsService],
+})
 export class BookingsModule {}

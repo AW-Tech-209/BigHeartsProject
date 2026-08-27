@@ -551,6 +551,31 @@ export enum BookingStatus {
 }
 
 /**
+ * La reserva de un estudiante en un aula (HU-301). Es historial: nunca se
+ * borra, solo cambia de `status` (`ARQUITECTURA.md` §4.3).
+ */
+export interface Booking {
+  id: string;
+  studentId: string;
+  classroomId: string;
+  status: BookingStatus;
+  /** Cuándo se canceló. `null` mientras esté vigente (HU-303). */
+  cancelledAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+/** Cuerpo de `POST /bookings` (HU-301). El estudiante sale del token. */
+export interface CreateBookingInput {
+  classroomId: string;
+}
+
+/** Respuesta de `POST /bookings`. Devuelve la reserva ya confirmada. */
+export interface CreateBookingResponse {
+  booking: Booking;
+}
+
+/**
  * El aula completa que devuelve `GET /classrooms/:id` (HU-204).
  *
  * Es `ClassroomListItem` —el aula pública más el nombre de su profesor— y no
@@ -569,11 +594,8 @@ export enum BookingStatus {
  */
 export interface ClassroomDetail extends ClassroomListItem {
   /**
-   * La reserva de **quien pide**, si tiene alguna. `null` si no la tiene.
-   *
-   * **En el Sprint 2 siempre llega `null`** y eso no es un olvido: `Booking` no
-   * existe todavía. Lo rellena HU-301, y HU-303 lo usa para abrir la ventana de
-   * acceso al enlace.
+   * La reserva `CONFIRMED` de **quien pide**, si tiene alguna (HU-301). `null`
+   * si no la tiene. HU-303 lo usa para abrir la ventana de acceso al enlace.
    *
    * Va en `null` y no omitido —al revés que `meetingLink`— a propósito: omitir
    * significa «no te corresponde saberlo», y aquí el hecho es «no hay reserva».
@@ -855,6 +877,29 @@ export const ApiErrorCode = {
    * existe ya es la ventana para actuar sobre ella.
    */
   CLASSROOM_NOT_EDITABLE: 'CLASSROOM_NOT_EDITABLE',
+  /**
+   * El aula ya tiene tantas reservas `CONFIRMED` como `maxStudents` (HU-301,
+   * AC1). Es 409: el cuerpo es válido, lo que falta es cupo. Se decide dentro
+   * de la transacción de `ARQUITECTURA.md` §4.2 — comprobarlo antes de bloquear
+   * la fila del aula dejaría la carrera abierta que esta HU existe para cerrar.
+   */
+  CLASSROOM_FULL: 'CLASSROOM_FULL',
+  /**
+   * El aula no admite reservas: no está `PUBLISHED`, está `CANCELLED`, o ya
+   * empezó (`now ≥ scheduledAt`) (HU-301, T4).
+   */
+  CLASSROOM_NOT_BOOKABLE: 'CLASSROOM_NOT_BOOKABLE',
+  /**
+   * El estudiante ya tiene una reserva `CONFIRMED` en esa aula (HU-301, AC2).
+   * Es 409 y no un duplicado silencioso: reservar dos veces no da dos cupos.
+   */
+  BOOKING_ALREADY_EXISTS: 'BOOKING_ALREADY_EXISTS',
+  /**
+   * La nueva reserva se solapa en horario con otra `CONFIRMED` del mismo
+   * estudiante (HU-301, AC2; `ARQUITECTURA.md` §4.4). El intervalo es cerrado
+   * por la izquierda y abierto por la derecha: dos clases consecutivas no chocan.
+   */
+  BOOKING_OVERLAP: 'BOOKING_OVERLAP',
   /** Se superó el límite de peticiones (rate limiting). */
   TOO_MANY_REQUESTS: 'TOO_MANY_REQUESTS',
   DATABASE_UNAVAILABLE: 'DATABASE_UNAVAILABLE',

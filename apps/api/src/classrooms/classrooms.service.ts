@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import type { Classroom as PrismaClassroom, Prisma } from '@prisma/client';
 import {
+  type BookingStatus,
   type Classroom,
   CLASSROOMS_PAGE_SIZE_DEFAULT,
   type ClassroomDetail,
@@ -297,8 +298,9 @@ export class ClassroomsService {
    * qué pasó en vez de toparse con un 404 —que se lee como un fallo de la
    * plataforma justo cuando el usuario está confundido—.
    *
-   * `myBookingStatus` llega `null` sin consultar nada: el modelo `Booking` no
-   * existe hasta el Sprint 3. Lo rellena HU-301.
+   * `myBookingStatus` es la reserva `CONFIRMED` de quien pregunta, si tiene
+   * una (HU-301). `null` para quien no reservó — que es cualquiera que no sea
+   * `STUDENT`, o un estudiante que nunca reservó esta aula.
    */
   async getClassroomDetail(
     viewer: AuthenticatedUser,
@@ -314,13 +316,17 @@ export class ClassroomsService {
     }
 
     const puedeVerlo = this.revelarElEnlace(viewer, classroom);
+    const miReserva = await this.prisma.booking.findFirst({
+      where: { studentId: viewer.id, classroomId, status: 'CONFIRMED' },
+      select: { status: true },
+    });
 
     return toClassroomDetail(classroom, classroom.teacher, {
       // Se descifra SOLO si va a viajar: sin esta condición, el texto en claro
       // existiría en memoria en cada petición de cualquier usuario, y bastaría
       // un log de la variable para filtrarlo.
       ...(puedeVerlo && { meetingLink: this.meetingLinks.decrypt(classroom.meetingLink) }),
-      myBookingStatus: null,
+      myBookingStatus: (miReserva?.status as BookingStatus | undefined) ?? null,
     });
   }
 
