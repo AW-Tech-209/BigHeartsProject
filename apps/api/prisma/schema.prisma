@@ -207,6 +207,11 @@ model Classroom {
   /// Existe desde el Sprint 2 aunque nadie lo mueva hasta el Sprint 3: añadirlo
   /// después sería otra migración, y la regla más crítica del sistema estaba ya
   /// especificada contra esta columna.
+  ///
+  /// La migración que sigue a esta añade a mano `CHECK (current_bookings >=
+  /// 0)`: Prisma no modela `CHECK`, así que no aparece aquí, pero existe en la
+  /// BD como red de seguridad — la garantía primaria sigue siendo la
+  /// transacción de §4.2.
   currentBookings Int @default(0) @map("current_bookings")
 
   /// Inicio de la clase. `timestamptz` en UTC, sin excepciones (§4.7). Toda
