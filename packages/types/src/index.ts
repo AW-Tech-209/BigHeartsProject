@@ -693,6 +693,19 @@ export interface UpdateClassroomInput {
   confirmarPocaAntelacion?: boolean;
 }
 
+/**
+ * `details` de `CLASSROOM_HAS_BOOKINGS` (HU-306, D30).
+ *
+ * El número de reservas vivas es el mismo `currentBookings` del aula: no hay
+ * un segundo contador. Viaja aquí, y no solo en el propio aula, porque el
+ * mensaje de error necesita explicar la consecuencia sin que el frontend
+ * tenga que ir a buscarlo a otra respuesta.
+ */
+export interface ClassroomHasBookingsDetails {
+  /** Reservas `CONFIRMED` vigentes que el cambio dejaría sin clase. */
+  reservasActivas: number;
+}
+
 /** Respuesta de `PATCH /classrooms/:id`. Devuelve el aula ya actualizada. */
 export interface UpdateClassroomResponse {
   classroom: Classroom;
@@ -973,6 +986,17 @@ export const ApiErrorCode = {
    * existe ya es la ventana para actuar sobre ella.
    */
   CLASSROOM_NOT_EDITABLE: 'CLASSROOM_NOT_EDITABLE',
+  /**
+   * Se intentó mover `scheduledAt` o `durationMinutes` de un aula con reservas
+   * `CONFIRMED` vivas (HU-306, decisión D30). Es 409: el aula existe y sigue
+   * siendo editable, pero esos dos campos concretos están bloqueados —cada
+   * estudiante ya reservado tiene su propia agenda, y reprogramar es un
+   * problema de producto mayor que un `UPDATE` (ver la decisión completa en la
+   * HU). El resto de campos del mismo `PATCH` sigue aceptándose.
+   *
+   * Lleva `details` con la forma de `ClassroomHasBookingsDetails`.
+   */
+  CLASSROOM_HAS_BOOKINGS: 'CLASSROOM_HAS_BOOKINGS',
   /**
    * El aula ya tiene tantas reservas `CONFIRMED` como `maxStudents` (HU-301,
    * AC1). Es 409: el cuerpo es válido, lo que falta es cupo. Se decide dentro

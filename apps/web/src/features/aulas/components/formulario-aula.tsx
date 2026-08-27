@@ -9,8 +9,9 @@ import {
   MeetingProvider,
   type ValidationErrorDetail,
 } from '@academia/types';
-import { CalendarClock, LoaderCircle, Lock } from 'lucide-react';
+import { CalendarClock, Copy, LoaderCircle, Lock } from 'lucide-react';
 import { type FormEvent, useEffect, useRef, useState } from 'react';
+import { Link } from 'react-router-dom';
 
 import { Button } from '@/components/ui/button';
 import { Callout } from '@/components/ui/callout';
@@ -171,6 +172,14 @@ export function FormularioAula({ aula, duplicarDesde, onGuardada }: FormularioAu
   const announce = useAnnounce();
   /** El verbo que nombran los mensajes de error, según el modo. */
   const verboFallido = aula ? 'guardar los cambios' : 'publicar la clase';
+
+  /**
+   * HU-306, D30: con reservas `CONFIRMED` vivas, el horario se bloquea —
+   * reprogramar puede chocar con la agenda de cada estudiante ya reservado.
+   * El servidor es quien manda (§4.8); esto solo evita un `PATCH` que ya sabe
+   * que va a rechazarse.
+   */
+  const horarioBloqueado = Boolean(aula && aula.currentBookings > 0);
 
   const duracionesOfrecidas = duracionesHasta(maximoDuracion);
 
@@ -410,11 +419,35 @@ export function FormularioAula({ aula, duplicarDesde, onGuardada }: FormularioAu
       <fieldset className="space-y-4 rounded-xl border border-border bg-muted/40 p-5">
         <legend className="px-1 text-base font-medium text-foreground">Cuándo es la clase</legend>
 
+        {/* HU-306, T6: nunca un campo deshabilitado sin motivo — la razón y la
+            salida van justo encima de los tres campos que bloquea. */}
+        {horarioBloqueado && (
+          <Callout variant="attention" icon={Lock} title="La fecha y la duración están bloqueadas">
+            <div className="space-y-3">
+              <p>
+                Esta clase ya tiene estudiantes con un cupo reservado: cambiar la fecha o la
+                duración podría chocar con otra clase que ya tienen agendada. Si necesitas otro
+                horario, cancela esta clase y crea otra.
+              </p>
+              <Button
+                type="button"
+                variant="outline"
+                render={<Link to={`/mis-aulas/nueva?desde=${aula?.id}`} />}
+                className="h-11 gap-2 px-5 text-base"
+              >
+                <Copy aria-hidden="true" strokeWidth={2} className="size-4" />
+                Duplicar clase
+              </Button>
+            </div>
+          </Callout>
+        )}
+
         <div className="grid gap-4 sm:grid-cols-3">
           <Field id="fecha" label="Día" required error={errors.fecha}>
             <Input
               type="date"
               name="fecha"
+              disabled={horarioBloqueado}
               value={values.fecha}
               onChange={(event) => updateField('fecha', event.target.value)}
             />
@@ -425,6 +458,7 @@ export function FormularioAula({ aula, duplicarDesde, onGuardada }: FormularioAu
               type="time"
               name="hora"
               ref={horaRef}
+              disabled={horarioBloqueado}
               value={values.hora}
               onChange={(event) => updateField('hora', event.target.value)}
             />
@@ -433,6 +467,7 @@ export function FormularioAula({ aula, duplicarDesde, onGuardada }: FormularioAu
           <Field id="durationMinutes" label="Duración" required error={errors.durationMinutes}>
             <NativeSelect
               name="durationMinutes"
+              disabled={horarioBloqueado}
               value={values.durationMinutes}
               onChange={(event) => updateField('durationMinutes', event.target.value)}
             >

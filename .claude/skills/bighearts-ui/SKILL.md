@@ -13,6 +13,8 @@ Academia de inglés **para personas hipoacúsicas y sordomudas**. La videollamad
 > y llega a la videollamada sin pedirle ayuda a nadie, el diseño funcionó. Ante la duda entre dos
 > opciones, esa es la pregunta que decide.
 
+- No hagas comentarios en el código a menos que sea exclusivamente necesario, y si se agregan comentarios, que sean breves, al punto.
+
 ## Por qué el diseño es así (léelo antes de improvisar)
 
 En una interfaz para usuarios oyentes el color decora y el audio avisa. Aquí el usuario no recibe

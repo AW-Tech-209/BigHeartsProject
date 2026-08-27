@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import type { Classroom as PrismaClassroom, Prisma } from '@prisma/client';
 import {
   BookingStatus,
@@ -19,6 +19,11 @@ import type { AuthenticatedUser } from '../auth/auth.types';
 import { insufficientRole } from '../auth/auth.errors';
 import { AppConfigService } from '../config/app-config.service';
 import { puedeCancelarse } from '../bookings/cancelacion.rules';
+import {
+  type Notification,
+  NotificationService,
+  NotificationType,
+} from '../notifications/notification.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { derivarAccesoAlEnlace, type ResultadoAccesoEnlace } from './acceso-enlace.rules';
 import {
@@ -30,6 +35,7 @@ import {
 import {
   classroomDurationInvalid,
   classroomForbidden,
+  classroomHasBookings,
   classroomLeadTimeWarning,
   classroomNotEditable,
   classroomNotFound,
@@ -53,10 +59,13 @@ import { MeetingLinkCipher } from './meeting-link.cipher';
 
 @Injectable()
 export class ClassroomsService {
+  private readonly logger = new Logger(ClassroomsService.name);
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly meetingLinks: MeetingLinkCipher,
     private readonly config: AppConfigService,
+    private readonly notifications: NotificationService,
   ) {}
 
   /**
@@ -479,6 +488,16 @@ export class ClassroomsService {
 
     this.assertEsEditable(classroom);
 
+    if (
+      (dto.scheduledAt !== undefined || dto.durationMinutes !== undefined) &&
+      classroom.currentBookings > 0
+    ) {
+      // D30: reprogramar puede chocar con la agenda de cada estudiante ya
+      // reservado, y decidir a quién se expulsa es un problema de producto,
+      // no un `UPDATE`. El resto del aula sigue editable (AC1).
+      throw classroomHasBookings(classroom.currentBookings);
+    }
+
     if (dto.scheduledAt !== undefined || dto.durationMinutes !== undefined) {
       await this.assertCoherenciaTemporal({
         teacherId: teacher.id,
@@ -515,12 +534,16 @@ export class ClassroomsService {
   }
 
   /**
-   * `POST /classrooms/:id/cancel` (HU-202, AC2). Solo el dueño, y solo
-   * mientras el aula sea editable — cancelar dos veces responde
-   * `CLASSROOM_NOT_EDITABLE`, no un éxito silencioso.
+   * `POST /classrooms/:id/cancel` (HU-202, AC2; extendido por HU-306 D30).
+   * Solo el dueño, y solo mientras el aula sea editable — cancelar dos veces
+   * responde `CLASSROOM_NOT_EDITABLE`, no un éxito silencioso.
    *
-   * No libera cupos ni notifica a nadie: `Booking` no existe hasta el Sprint 3
-   * (decisión de auditoría 1 de la HU).
+   * **Una sola transacción** (AC3): el aula pasa a `CANCELLED`, cada reserva
+   * `CONFIRMED` pasa a `CANCELLED` con `cancelledAt`, y `currentBookings`
+   * queda en 0 — ninguna fila de `bookings` se borra, es historial (§4.3). El
+   * aviso a cada estudiante sale DESPUÉS de que la transacción confirme: el
+   * puerto nunca lanza, así que un fallo de notificación no puede tumbar una
+   * cancelación ya escrita.
    */
   async cancelClassroom(teacher: AuthenticatedUser, classroomId: string): Promise<Classroom> {
     const classroom = await this.prisma.classroom.findUnique({ where: { id: classroomId } });
@@ -535,12 +558,55 @@ export class ClassroomsService {
 
     this.assertEsEditable(classroom);
 
-    const cancelada = await this.prisma.classroom.update({
-      where: { id: classroomId },
-      data: { status: ClassroomStatus.CANCELLED },
+    const { cancelada, afectados } = await this.prisma.$transaction(async (tx) => {
+      const reservasVivas = await tx.booking.findMany({
+        where: { classroomId, status: BookingStatus.CONFIRMED },
+        select: { student: { select: { email: true, firstName: true } } },
+      });
+
+      await tx.booking.updateMany({
+        where: { classroomId, status: BookingStatus.CONFIRMED },
+        data: { status: BookingStatus.CANCELLED, cancelledAt: new Date() },
+      });
+
+      const cancelada = await tx.classroom.update({
+        where: { id: classroomId },
+        data: { status: ClassroomStatus.CANCELLED, currentBookings: 0 },
+      });
+
+      return { cancelada, afectados: reservasVivas.map((reserva) => reserva.student) };
     });
 
+    await this.notifyClassroomCancelled(afectados);
+
     return toPublicClassroom(cancelada);
+  }
+
+  /**
+   * Avisa por el puerto `NotificationService` a cada estudiante que perdió su
+   * cupo (HU-306, AC4, D29). En paralelo y con `try/catch` por estudiante: que
+   * un aviso falle no debe impedir que salgan los demás.
+   */
+  private async notifyClassroomCancelled(
+    afectados: { email: string; firstName: string }[],
+  ): Promise<void> {
+    await Promise.all(
+      afectados.map(async (estudiante) => {
+        const notification: Notification = {
+          type: NotificationType.CLASSROOM_CANCELLED,
+          recipient: estudiante,
+        };
+
+        try {
+          await this.notifications.notify(notification);
+        } catch (error) {
+          this.logger.error(
+            `No se pudo notificar ${notification.type} a ${notification.recipient.email}`,
+            error instanceof Error ? error.stack : String(error),
+          );
+        }
+      }),
+    );
   }
 
   /**

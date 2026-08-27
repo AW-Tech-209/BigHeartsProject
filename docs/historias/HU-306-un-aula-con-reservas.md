@@ -54,44 +54,44 @@ estudiantes.
 
 ### Contrato — va primero
 
-- [ ] **T1** — En `packages/types`: código `CLASSROOM_HAS_BOOKINGS` y el recuento de reservas vivas
+- [x] **T1** — En `packages/types`: código `CLASSROOM_HAS_BOOKINGS` y el recuento de reservas vivas
       en el aula propia, para que el formulario sepa qué bloquear. Luego `npm run build:types`.
 
 ### Backend
 
-- [ ] **T2** — En `PATCH /classrooms/:id`: si hay reservas `CONFIRMED`, rechazar los cambios de
+- [x] **T2** — En `PATCH /classrooms/:id`: si hay reservas `CONFIRMED`, rechazar los cambios de
       `scheduledAt` y `durationMinutes` con `CLASSROOM_HAS_BOOKINGS`. **El resto de campos sigue
       siendo editable.**
-- [ ] **T3** — En la cancelación del aula: **una sola transacción** que marca el aula `CANCELLED`,
+- [x] **T3** — En la cancelación del aula: **una sola transacción** que marca el aula `CANCELLED`,
       pasa todas sus reservas `CONFIRMED` a `CANCELLED` con `cancelledAt`, y deja
       `currentBookings` en 0. Las filas de reserva no se borran.
-- [ ] **T4** — Emitir `CLASSROOM_CANCELLED` por el puerto a **cada** estudiante afectado (D29). Un
+- [x] **T4** — Emitir `CLASSROOM_CANCELLED` por el puerto a **cada** estudiante afectado (D29). Un
       fallo de aviso **no deshace** la cancelación ya escrita: el puerto nunca lanza.
-- [ ] **T5** — Tests: mover el horario con reservas → `CLASSROOM_HAS_BOOKINGS`; sin reservas →
+- [x] **T5** — Tests: mover el horario con reservas → `CLASSROOM_HAS_BOOKINGS`; sin reservas →
       `200`; editar el título con reservas → `200`; cancelar deja todo consistente; y **el cupo
       liberado no es reutilizable** porque el aula ya está cancelada.
 
 ### Frontend
 
-- [ ] **T6** — El formulario de editar **deshabilita fecha y duración** cuando hay reservas vivas y
+- [x] **T6** — El formulario de editar **deshabilita fecha y duración** cuando hay reservas vivas y
       **explica por qué**, ofreciendo duplicar el aula como salida. Nunca un campo muerto sin
       motivo.
-- [ ] **T7** — El diálogo de cancelar dice **cuántos estudiantes** pierden su cupo y que se les
+- [x] **T7** — El diálogo de cancelar dice **cuántos estudiantes** pierden su cupo y que se les
       avisará. Es la información que cambia la decisión.
 
 ## ✅ Criterios de aceptación
 
-- [ ] **AC1** — Con reservas `CONFIRMED` vivas, cambiar `scheduledAt` o `durationMinutes` responde
+- [x] **AC1** — Con reservas `CONFIRMED` vivas, cambiar `scheduledAt` o `durationMinutes` responde
       `CLASSROOM_HAS_BOOKINGS`; cambiar título, descripción, modos o enlace responde `200`.
-- [ ] **AC2** — Sin reservas vivas, el horario se sigue editando como hasta ahora. Esta HU **no**
+- [x] **AC2** — Sin reservas vivas, el horario se sigue editando como hasta ahora. Esta HU **no**
       rompe HU-202.
-- [ ] **AC3** — Al cancelar el aula, **todas** sus reservas `CONFIRMED` quedan `CANCELLED` con
+- [x] **AC3** — Al cancelar el aula, **todas** sus reservas `CONFIRMED` quedan `CANCELLED` con
       `cancelledAt`, `currentBookings` queda en 0, y **ninguna fila se borra**.
-- [ ] **AC4** — Se emite un aviso **por cada** estudiante afectado. Verificado con un espía en los
+- [x] **AC4** — Se emite un aviso **por cada** estudiante afectado. Verificado con un espía en los
       tests.
-- [ ] **AC5** — El diálogo de cancelar dice cuántos estudiantes se quedan sin clase **antes** de
+- [x] **AC5** — El diálogo de cancelar dice cuántos estudiantes se quedan sin clase **antes** de
       confirmar, y el formulario de editar explica por qué la fecha está bloqueada.
-- [ ] **AC6** — **Accesibilidad y verificación:** checklist del skill `bighearts-ui`, `axe` limpio,
+- [x] **AC6** — **Accesibilidad y verificación:** checklist del skill `bighearts-ui`, `axe` limpio,
       y `typecheck`, `lint`, `build` y `npm run test` en verde.
 
 ## 🚫 Fuera de alcance
@@ -104,4 +104,6 @@ estudiantes.
 
 ## Notas de implementación
 
-_Se rellena al cerrar._
+Sin desviaciones. `currentBookings` ya era el recuento de reservas `CONFIRMED` vivas (§4.2), así que
+T1 reutiliza ese campo en vez de añadir uno paralelo — solo se sumó el código de error y su
+`details`.

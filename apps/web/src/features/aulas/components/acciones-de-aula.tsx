@@ -19,7 +19,10 @@ import { useCancelClassroom } from '@/features/aulas/hooks/use-cancel-classroom'
 import { esAulaEditable } from '@/features/aulas/lib/editabilidad-aula';
 import { ApiClientError } from '@/lib/api-error';
 
-type AulaGestionable = Pick<ClassroomDetail, 'id' | 'title' | 'status' | 'scheduledAt'>;
+type AulaGestionable = Pick<
+  ClassroomDetail,
+  'id' | 'title' | 'status' | 'scheduledAt' | 'currentBookings'
+>;
 
 type AccionesDeAulaProps = {
   aula: AulaGestionable;
@@ -162,6 +165,14 @@ function DialogoCancelarAula({ aula, compact }: { aula: AulaGestionable; compact
         <AlertDialogDescription>
           Esta acción no se puede deshacer. La clase quedará marcada como cancelada y ya no se podrá
           editar.
+          {aula.currentBookings > 0 && (
+            <>
+              {' '}
+              {aula.currentBookings === 1
+                ? 'Hay 1 estudiante con un cupo reservado: perderá su cupo y se le avisará por correo.'
+                : `Hay ${aula.currentBookings} estudiantes con un cupo reservado: perderán su cupo y se les avisará por correo.`}
+            </>
+          )}
         </AlertDialogDescription>
 
         {error && (

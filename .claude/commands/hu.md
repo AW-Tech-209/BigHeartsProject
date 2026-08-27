@@ -9,13 +9,13 @@ Implementa la HU de **$ARGUMENTS**.
 
 ## Reglas de gasto — obedécelas
 
+- No hagas comentarios a menos que sea exclusivamente necesario, y si se agregan comentarios, que sean breves, al punto.
 - **Verifica UNA vez, al final.** Durante la implementación, como mucho el spec concreto que
   acabas de escribir (`npx vitest run <ruta>`). Nada de suites completas, `lint`, `build` ni
   `format:check` a mitad.
 - **Nunca formatees ni lintes archivos `.md`.**
 - **No releas un archivo que ya leíste** en esta sesión salvo que lo hayas editado tú.
 - **No expliques lo que vas a hacer antes de hacerlo.** Hazlo y reporta al final.
-- No hagas comentarios a menos que sea exclusivamente necesario, si el código no se explica solo ahí si agregar comentarios, y si se agregan comentarios, que sean breves, al punto.
 
 ## Fase 1 — Orientarse (breve)
 
