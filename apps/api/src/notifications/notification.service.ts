@@ -10,6 +10,8 @@ export const NotificationType = {
   TEACHER_APPROVED: 'TEACHER_APPROVED',
   /** Un administrador denegó la solicitud de un profesor. */
   TEACHER_REJECTED: 'TEACHER_REJECTED',
+  /** Un estudiante reservó su cupo (HU-301, D29). */
+  BOOKING_CONFIRMED: 'BOOKING_CONFIRMED',
 } as const;
 
 export type NotificationType = (typeof NotificationType)[keyof typeof NotificationType];

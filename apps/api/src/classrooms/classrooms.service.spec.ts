@@ -1235,16 +1235,28 @@ const administradora: AuthenticatedUser = {
  *
  * `aula: null` simula un `id` que no existe.
  */
-function setupDetalle(aula: Record<string, unknown> | null = {}) {
+function setupDetalle(
+  aula: Record<string, unknown> | null = {},
+  options: { miReserva?: { status: string } | null } = {},
+) {
   const cipher = new MeetingLinkCipher({ meetingLinkKey: 'a'.repeat(64) } as AppConfigService);
   const cifrado = cipher.encrypt(ENLACE);
 
   const findUnique = vi
     .fn()
     .mockResolvedValue(aula === null ? null : filaDeAula({ meetingLink: cifrado, ...aula }));
-  const prisma = { classroom: { findUnique } } as unknown as PrismaService;
+  const findFirstBooking = vi.fn().mockResolvedValue(options.miReserva ?? null);
+  const prisma = {
+    classroom: { findUnique },
+    booking: { findFirst: findFirstBooking },
+  } as unknown as PrismaService;
 
-  return { service: new ClassroomsService(prisma, cipher, configuracion()), findUnique, cifrado };
+  return {
+    service: new ClassroomsService(prisma, cipher, configuracion()),
+    findUnique,
+    findFirstBooking,
+    cifrado,
+  };
 }
 
 const ID_DEL_AULA = '44444444-4444-4444-8444-444444444444';
@@ -1281,17 +1293,26 @@ describe('ClassroomsService.getClassroomDetail — el aula completa (A1, AC1)', 
     });
   });
 
-  /**
-   * Decisión de auditoría 2 de la HU: el campo existe en el contrato y llega
-   * vacío. `null` y no ausente — «no tienes reserva» es un hecho, no un «no te
-   * corresponde saberlo».
-   */
-  it('myBookingStatus llega en null: Booking no existe hasta el Sprint 3', async () => {
+  /** `null` y no ausente — «no tienes reserva» es un hecho, no un «no te corresponde saberlo». */
+  it('sin reserva, myBookingStatus llega en null', async () => {
     const { service } = setupDetalle();
 
     const classroom = await service.getClassroomDetail(estudiante, ID_DEL_AULA);
 
     expect(classroom.myBookingStatus).toBeNull();
+  });
+
+  /** HU-301: con una reserva CONFIRMED propia, el detalle la refleja. */
+  it('con una reserva CONFIRMED propia, myBookingStatus la trae', async () => {
+    const { service, findFirstBooking } = setupDetalle({}, { miReserva: { status: 'CONFIRMED' } });
+
+    const classroom = await service.getClassroomDetail(estudiante, ID_DEL_AULA);
+
+    expect(classroom.myBookingStatus).toBe('CONFIRMED');
+    expect(findFirstBooking).toHaveBeenCalledWith({
+      where: { studentId: ESTUDIANTE_ID, classroomId: ID_DEL_AULA, status: 'CONFIRMED' },
+      select: { status: true },
+    });
   });
 });
 

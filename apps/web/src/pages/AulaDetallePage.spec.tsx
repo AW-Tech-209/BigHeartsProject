@@ -1,5 +1,6 @@
 import {
   ApiErrorCode,
+  BookingStatus,
   type ClassroomDetail,
   ClassroomStatus,
   EnglishLevel,
@@ -10,6 +11,7 @@ import { screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { AppRoutes } from '@/app/router';
+import { createBooking } from '@/features/aulas/api/create-booking';
 import { getClassroom } from '@/features/aulas/api/get-classroom';
 import { getClassrooms } from '@/features/aulas/api/get-classrooms';
 import { getMisAulas } from '@/features/aulas/api/get-mis-aulas';
@@ -21,6 +23,7 @@ import { darSesion } from '@/test/sesion';
 vi.mock('@/features/aulas/api/get-classroom', () => ({ getClassroom: vi.fn() }));
 vi.mock('@/features/aulas/api/get-classrooms', () => ({ getClassrooms: vi.fn() }));
 vi.mock('@/features/aulas/api/get-mis-aulas', () => ({ getMisAulas: vi.fn() }));
+vi.mock('@/features/aulas/api/create-booking', () => ({ createBooking: vi.fn() }));
 
 const TEMAS: Tema[] = ['light', 'dark', 'hc'];
 const ID = 'aula-42';
@@ -428,6 +431,122 @@ describe('De la tarjeta al detalle (B6, AC8)', () => {
 
     expect(await screen.findByRole('heading', { level: 2, name: 'De qué trata la clase' }));
     expect(getClassroom).toHaveBeenCalledWith(ID);
+  });
+});
+
+/**
+ * HU-301, T7 — reservar desde el detalle del aula. `darSesion(STUDENT)` ya es
+ * el default del `beforeEach`, y `aula()` por defecto queda en `disponible`.
+ */
+describe('AulaDetallePage — reservar un cupo (HU-301)', () => {
+  it('un STUDENT ve «Reservar mi cupo» sobre un aula disponible', async () => {
+    montarDetalle();
+
+    expect(await screen.findByRole('button', { name: 'Reservar mi cupo' })).toBeInTheDocument();
+  });
+
+  // AC4: el elemento no existe en el DOM, nunca deshabilitado.
+  it.each([UserRole.TEACHER, UserRole.ADMIN])('un %s no ve el botón de reservar', async (rol) => {
+    darSesion(rol);
+    montarDetalle();
+
+    await screen.findByRole('heading', { level: 1, name: 'Conversación cotidiana' });
+
+    expect(screen.queryByRole('button', { name: /reservar/i })).not.toBeInTheDocument();
+  });
+
+  it('con la reserva ya CONFIRMED, no ofrece reservar otra vez y pinta «Tienes tu cupo»', async () => {
+    vi.mocked(getClassroom).mockResolvedValue({
+      classroom: aula({ myBookingStatus: BookingStatus.CONFIRMED }),
+    });
+    montarDetalle();
+
+    expect(await screen.findByText('Tienes tu cupo')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /reservar/i })).not.toBeInTheDocument();
+  });
+
+  it('un aula llena no ofrece reservar', async () => {
+    vi.mocked(getClassroom).mockResolvedValue({
+      classroom: aula({ currentBookings: 10, maxStudents: 10 }),
+    });
+    montarDetalle();
+
+    await screen.findByText('Sin cupos');
+
+    expect(screen.queryByRole('button', { name: /reservar/i })).not.toBeInTheDocument();
+  });
+
+  /**
+   * AC5 — sin optimismo. Mientras la petición está en vuelo, el estado sigue
+   * siendo `disponible`: nada se pinta como reservado hasta que el servidor
+   * confirma.
+   */
+  it('mientras reserva, no pinta el aula como reservada todavía', async () => {
+    vi.mocked(createBooking).mockReturnValue(new Promise(() => {}));
+    const { user } = montarDetalle();
+
+    await user.click(await screen.findByRole('button', { name: 'Reservar mi cupo' }));
+
+    expect(screen.getByRole('button', { name: 'Reservando…' })).toBeDisabled();
+    expect(screen.queryByText('Tienes tu cupo')).not.toBeInTheDocument();
+    expect(screen.getByText('Hay cupo')).toBeInTheDocument();
+  });
+
+  /**
+   * AC5, segunda mitad. Al confirmar, se re-consulta el aula (T7): la
+   * respuesta trae `myBookingStatus: CONFIRMED` y el estado pasa a
+   * `reservada`, con color + ícono + texto.
+   */
+  it('al confirmar, re-consulta el aula y el estado pasa a reservada', async () => {
+    vi.mocked(createBooking).mockResolvedValue({
+      booking: {
+        id: 'reserva-1',
+        studentId: 'user-student',
+        classroomId: ID,
+        status: BookingStatus.CONFIRMED,
+        cancelledAt: null,
+        createdAt: '2026-08-26T10:00:00.000Z',
+        updatedAt: '2026-08-26T10:00:00.000Z',
+      },
+    });
+    const { user } = montarDetalle();
+
+    vi.mocked(getClassroom).mockResolvedValue({
+      classroom: aula({ myBookingStatus: BookingStatus.CONFIRMED }),
+    });
+
+    await user.click(await screen.findByRole('button', { name: 'Reservar mi cupo' }));
+
+    // Se invalida y se re-consulta el aula al confirmar (T7): la segunda
+    // respuesta ya trae la reserva, y el estado se actualiza con ella.
+    await waitFor(() => expect(getClassroom).toHaveBeenCalledTimes(2));
+    expect(await screen.findByText('Tienes tu cupo')).toBeInTheDocument();
+  });
+
+  /**
+   * AC2 — cada código de error con su mensaje literal, nunca el texto crudo
+   * del servidor (`contrato-api.md` §3).
+   */
+  it.each([
+    [
+      ApiErrorCode.CLASSROOM_FULL,
+      'Ya no quedan cupos en esta clase. Alguien reservó el último mientras tanto.',
+    ],
+    [ApiErrorCode.BOOKING_ALREADY_EXISTS, 'Ya tienes una reserva en esta clase.'],
+    [ApiErrorCode.BOOKING_OVERLAP, 'Ya tienes otra clase reservada en ese horario.'],
+    [
+      ApiErrorCode.CLASSROOM_NOT_BOOKABLE,
+      'Esta clase ya no admite reservas: se canceló o ya empezó.',
+    ],
+  ])('%s muestra su mensaje literal', async (code, mensaje) => {
+    vi.mocked(createBooking).mockRejectedValue(new ApiClientError({ code, message: 'x' }, 409));
+    const { user } = montarDetalle();
+
+    await user.click(await screen.findByRole('button', { name: 'Reservar mi cupo' }));
+
+    expect(await screen.findByText(mensaje)).toBeInTheDocument();
+    // El botón sigue ahí: el fallo no se lleva la posibilidad de reintentar.
+    expect(screen.getByRole('button', { name: 'Reservar mi cupo' })).toBeInTheDocument();
   });
 });
 

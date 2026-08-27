@@ -275,13 +275,16 @@ export function TarjetaAula({
         )}
 
         {/*
-          HU-208, T3/AC4. El hueco de `Reservar mi cupo` (HU-301). Devuelve
-          `null` hoy para todos los roles, pero la regla de quién lo vería ya
-          está puesta y verificada: `puedeReservar()` fuera, y aquí el `&&
-          !esMia` que impide ofrecérselo a nadie sobre su propia clase.
+          HU-208, T3/AC4 y HU-301. `puedeReservar()` decide el rol fuera; el `&&
+          !esMia` impide ofrecérselo a nadie sobre su propia clase; `estado` ya
+          descarta llena/cancelada/reservada — ver `ESTADOS_RESERVABLES`.
         */}
         {!esVistaDelProfesor && (
-          <AccionReservarAula aula={classroom} puedeReservar={puedeReservarla && !esMia} />
+          <AccionReservarAula
+            aula={classroom}
+            puedeReservar={puedeReservarla && !esMia}
+            estado={estado}
+          />
         )}
 
         {/* T15: la vía para que un aula «sin indicar» deje de estarlo. */}

@@ -87,6 +87,17 @@ enum ClassroomStatus {
   COMPLETED
 }
 
+/// Estado de una reserva. Coincide con `BookingStatus` de @academia/types.
+///
+/// `ATTENDED` y `NO_SHOW` los fija el profesor al marcar asistencia (HU-404):
+/// sin escritor hasta entonces, igual que `ClassroomStatus.COMPLETED`.
+enum BookingStatus {
+  CONFIRMED
+  CANCELLED
+  ATTENDED
+  NO_SHOW
+}
+
 /// A qué plataforma apunta el enlace de la reunión. Coincide con
 /// `MeetingProvider` de @academia/types.
 ///
@@ -130,6 +141,9 @@ model User {
 
   /// Aulas que imparte, si es profesor. Ver la nota de borrado en `Classroom`.
   classrooms Classroom[]
+
+  /// Reservas hechas como estudiante. Ver la nota de borrado en `Booking`.
+  bookings Booking[]
 
   @@map("users")
 }
@@ -242,6 +256,9 @@ model Classroom {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
+  /// Reservas de estudiantes en esta aula. Ver la nota de borrado en `Booking`.
+  bookings Booking[]
+
   /// Las aulas de un profesor, para «Mis aulas».
   @@index([teacherId])
   /// El listado público (HU-203): aulas publicadas ordenadas por horario. El
@@ -249,4 +266,46 @@ model Classroom {
   /// `scheduledAt` por rango, así que la de igualdad va primero.
   @@index([status, scheduledAt])
   @@map("classrooms")
+}
+
+/// Reserva de un estudiante en un aula (HU-301). Es historial: nunca se borra,
+/// solo cambia de `status` (`ARQUITECTURA.md` §4.3).
+model Booking {
+  id String @id @default(uuid()) @db.Uuid
+
+  /// Quien reserva. `onDelete: Restrict` por la misma razón que `teacherId` en
+  /// `Classroom`: no hay flujo de borrado de usuarios en Fase 1 (solo
+  /// suspensión), y una reserva es historial que no puede desaparecer.
+  studentId String @map("student_id") @db.Uuid
+  student   User   @relation(fields: [studentId], references: [id], onDelete: Restrict)
+
+  classroomId String    @map("classroom_id") @db.Uuid
+  classroom   Classroom @relation(fields: [classroomId], references: [id], onDelete: Restrict)
+
+  /// `CONFIRMED` al nacer. La transacción de §4.2 es el único escritor.
+  status BookingStatus @default(CONFIRMED)
+
+  /// Cuándo se canceló. `null` mientras esté vigente. Sin escritor hasta
+  /// HU-303 — aquí solo nace la columna.
+  cancelledAt DateTime? @map("cancelled_at")
+
+  /// Marcas de envío de los recordatorios de 24h y 30min (§4.6). Solo
+  /// columnas, sin lógica: el cron que las escribe y las usa para no duplicar
+  /// envíos al reiniciar el proceso llega en el Sprint 4.
+  reminder24hSentAt DateTime? @map("reminder_24h_sent_at")
+  reminder30mSentAt DateTime? @map("reminder_30m_sent_at")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  /// Índice único PARCIAL, no total (`ARQUITECTURA.md` §4.3,
+  /// `reglas-reservas.md` §3): un índice total impediría volver a reservar
+  /// tras cancelar, porque la fila `CANCELLED` seguiría ocupándolo. Prisma no
+  /// modela el `WHERE`, así que esta declaración es la aproximación más
+  /// cercana; la migración que la acompaña añade la cláusula a mano — ver su
+  /// comentario.
+  @@unique([studentId, classroomId])
+  @@index([studentId])
+  @@index([classroomId])
+  @@map("bookings")
 }

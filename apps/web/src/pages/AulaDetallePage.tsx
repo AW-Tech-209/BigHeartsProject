@@ -21,11 +21,13 @@ import { Button } from '@/components/ui/button';
 import { Callout } from '@/components/ui/callout';
 import { Skeleton } from '@/components/ui/skeleton';
 import { AccionesDeAula } from '@/features/aulas/components/acciones-de-aula';
+import { AccionReservarAula } from '@/features/aulas/components/accion-reservar-aula';
 import { esAulaNoEncontrada, useClassroom } from '@/features/aulas/hooks/use-classroom';
 import { APOYOS_AULA } from '@/features/aulas/lib/apoyos-aula';
 import { describirDuracion, describirHorario } from '@/features/aulas/lib/horario';
 import { nivelesDeIngles } from '@/features/aulas/lib/niveles';
 import { etiquetaPlataformaReunion } from '@/features/aulas/lib/plataforma-reunion';
+import { puedeReservar } from '@/features/aulas/lib/puede-reservar';
 import { useAuth } from '@/features/auth/hooks/use-auth';
 import { cn } from '@/lib/utils';
 
@@ -126,6 +128,7 @@ export function AulaDetallePage() {
         <DetalleDelAula
           aula={aula}
           esDueno={user?.id === aula.teacherId}
+          puedeReservarla={puedeReservar(user)}
           preferenciaEstudiante={
             user?.role === UserRole.STUDENT ? user.communicationPreference : undefined
           }
@@ -144,15 +147,21 @@ function describirLaClase(aula: ClassroomDetail): string {
 type DetalleDelAulaProps = {
   aula: ClassroomDetail;
   esDueno: boolean;
+  /** Lo que decidió `puedeReservar()`. Ya resuelto: aquí no se vuelve a razonar sobre el rol. */
+  puedeReservarla: boolean;
   /** `undefined` si quien mira no es estudiante o no declaró preferencia. */
   preferenciaEstudiante?: ClassroomDetail['communicationModes'][number] | null;
 };
 
-function DetalleDelAula({ aula, esDueno, preferenciaEstudiante }: DetalleDelAulaProps) {
+function DetalleDelAula({
+  aula,
+  esDueno,
+  puedeReservarla,
+  preferenciaEstudiante,
+}: DetalleDelAulaProps) {
   // El estado sale SIEMPRE de la función compartida de `@academia/types`
-  // (AC6, §7.3). En el Sprint 2 `myBookingStatus` llega en `null`, así que
-  // `reservada` y `acceso-abierto` no son alcanzables todavía; la comparación se
-  // escribe igual para que HU-301 solo tenga que empezar a rellenar el campo.
+  // (AC6, §7.3): `myBookingStatus` ya llega relleno desde HU-301, así que
+  // `reservada` y `acceso-abierto` son alcanzables de verdad.
   const estado = derivarEstadoAula({
     classroom: aula,
     ahora: new Date(),
@@ -267,6 +276,9 @@ function DetalleDelAula({ aula, esDueno, preferenciaEstudiante }: DetalleDelAula
           </section>
 
           {aula.meetingLink && <EnlaceDeLaClase url={aula.meetingLink} />}
+
+          {/* HU-301, T7. El único punto de la pantalla que ofrece reservar. */}
+          <AccionReservarAula aula={aula} puedeReservar={puedeReservarla} estado={estado} />
 
           <AccionesDeAula aula={aula} esDueno={esDueno} />
         </aside>
