@@ -646,13 +646,23 @@ function filaDeAula(overrides: Record<string, unknown> = {}) {
 function setupParaListado(
   filas: ReturnType<typeof filaDeAula>[] = [filaDeAula()],
   total = filas.length,
+  options: { misReservas?: { classroomId: string }[] } = {},
 ) {
   const findMany = vi.fn().mockResolvedValue(filas);
   const count = vi.fn().mockResolvedValue(total);
-  const prisma = { classroom: { findMany, count } } as unknown as PrismaService;
+  const findManyBooking = vi.fn().mockResolvedValue(options.misReservas ?? []);
+  const prisma = {
+    classroom: { findMany, count },
+    booking: { findMany: findManyBooking },
+  } as unknown as PrismaService;
   const cipher = new MeetingLinkCipher({ meetingLinkKey: 'a'.repeat(64) } as AppConfigService);
 
-  return { service: new ClassroomsService(prisma, cipher, configuracion()), findMany, count };
+  return {
+    service: new ClassroomsService(prisma, cipher, configuracion()),
+    findMany,
+    count,
+    findManyBooking,
+  };
 }
 
 /** El `where` con el que se llamó a `findMany` (idéntico al de `count`). */
@@ -928,6 +938,62 @@ describe('ClassroomsService.listClassrooms', () => {
     const [item] = (await service.listClassrooms(profesorDelToken, {})).items;
 
     expect(item).toMatchObject({ teacherFirstName: 'Ana', teacherLastName: 'Restrepo' });
+  });
+
+  /**
+   * Ajuste post-cierre de HU-301: el catálogo ofrecía «Reservar mi cupo» sobre
+   * una clase que el estudiante ya tenía `CONFIRMED`, porque `ClassroomListItem`
+   * no traía su reserva propia.
+   */
+  describe('myBookingStatus por fila (ajuste post-cierre de HU-301)', () => {
+    const estudiante: AuthenticatedUser = {
+      id: '99999999-9999-4999-8999-999999999999',
+      email: 'ana@academia.local',
+      role: UserRole.STUDENT,
+      status: UserStatus.ACTIVE,
+    };
+
+    it('con una reserva CONFIRMED en esa aula, la fila la trae', async () => {
+      const { service, findManyBooking } = setupParaListado([filaDeAula()], 1, {
+        misReservas: [{ classroomId: filaDeAula().id }],
+      });
+
+      const [item] = (await service.listClassrooms(estudiante, {})).items;
+
+      expect(item?.myBookingStatus).toBe('CONFIRMED');
+      expect(findManyBooking).toHaveBeenCalledWith({
+        where: {
+          studentId: estudiante.id,
+          status: 'CONFIRMED',
+          classroomId: { in: [filaDeAula().id] },
+        },
+        select: { classroomId: true },
+      });
+    });
+
+    it('sin reserva en esa aula, la fila llega en null', async () => {
+      const { service } = setupParaListado([filaDeAula()]);
+
+      const [item] = (await service.listClassrooms(estudiante, {})).items;
+
+      expect(item?.myBookingStatus).toBeNull();
+    });
+
+    it('un TEACHER o un ADMIN nunca consultan reservas propias', async () => {
+      const { service, findManyBooking } = setupParaListado([filaDeAula()]);
+
+      await service.listClassrooms(profesorDelToken, {});
+
+      expect(findManyBooking).not.toHaveBeenCalled();
+    });
+
+    it('con la página vacía, no consulta reservas', async () => {
+      const { service, findManyBooking } = setupParaListado([], 0);
+
+      await service.listClassrooms(estudiante, {});
+
+      expect(findManyBooking).not.toHaveBeenCalled();
+    });
   });
 });
 

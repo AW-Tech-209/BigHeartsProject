@@ -1,4 +1,5 @@
 import {
+  BookingStatus,
   type ClassroomListItem,
   ClassroomStatus,
   EnglishLevel,
@@ -39,6 +40,7 @@ function aula(overrides: Partial<ClassroomListItem> = {}): ClassroomListItem {
     updatedAt: '2026-08-01T10:00:00.000Z',
     teacherFirstName: 'Ana',
     teacherLastName: 'Restrepo',
+    myBookingStatus: null,
     ...overrides,
   };
 }
@@ -241,6 +243,37 @@ describe('AulasPage — la acción de reservar, por rol (T3, AC4, HU-301)', () =
     await screen.findByRole('article');
 
     expect(screen.getByRole('button', { name: 'Reservar mi cupo' })).toBeInTheDocument();
+  });
+
+  /**
+   * Ajuste post-cierre de HU-301: `myBookingStatus` ya viaja en el catálogo,
+   * así que el estudiante ve «Cupo reservado» inhabilitado en vez de un botón
+   * activo que invite a reservar otra vez su propia clase.
+   */
+  it('sobre una clase ya reservada por el estudiante, ve «Cupo reservado» inhabilitado', async () => {
+    darSesion(UserRole.STUDENT);
+    vi.mocked(getClassrooms).mockResolvedValue(
+      respuesta([aula({ teacherId: ID_DEL_PROFESOR, myBookingStatus: BookingStatus.CONFIRMED })]),
+    );
+
+    renderConProviders(<AulasPage />);
+    await screen.findByRole('article');
+
+    expect(screen.queryByRole('button', { name: 'Reservar mi cupo' })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Cupo reservado' })).toBeDisabled();
+  });
+
+  it('sobre un aula llena, ve «Sin cupos disponibles» inhabilitado', async () => {
+    darSesion(UserRole.STUDENT);
+    vi.mocked(getClassrooms).mockResolvedValue(
+      respuesta([aula({ teacherId: ID_DEL_PROFESOR, currentBookings: 10, maxStudents: 10 })]),
+    );
+
+    renderConProviders(<AulasPage />);
+    await screen.findByRole('article');
+
+    expect(screen.queryByRole('button', { name: 'Reservar mi cupo' })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Sin cupos disponibles' })).toBeDisabled();
   });
 });
 

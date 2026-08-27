@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import type { Classroom as PrismaClassroom, Prisma } from '@prisma/client';
 import {
-  type BookingStatus,
+  BookingStatus,
   type Classroom,
   CLASSROOMS_PAGE_SIZE_DEFAULT,
   type ClassroomDetail,
@@ -281,8 +281,35 @@ export class ClassroomsService {
       this.prisma.classroom.count({ where }),
     ]);
 
+    // Ajuste post-cierre de HU-301: el catálogo ofrecía "Reservar mi cupo"
+    // sobre una clase que el estudiante ya tenía CONFIRMED, porque
+    // `ClassroomListItem` no traía su reserva propia. Una sola consulta por
+    // página basta — solo importa a un `STUDENT`, y para los demás roles
+    // nunca hay filas que devolver.
+    const idsReservados =
+      viewer.role === UserRole.STUDENT && rows.length > 0
+        ? new Set(
+            (
+              await this.prisma.booking.findMany({
+                where: {
+                  studentId: viewer.id,
+                  status: 'CONFIRMED',
+                  classroomId: { in: rows.map((row) => row.id) },
+                },
+                select: { classroomId: true },
+              })
+            ).map((booking) => booking.classroomId),
+          )
+        : new Set<string>();
+
     return {
-      items: rows.map((row) => toClassroomListItem(row, row.teacher)),
+      items: rows.map((row) =>
+        toClassroomListItem(
+          row,
+          row.teacher,
+          idsReservados.has(row.id) ? BookingStatus.CONFIRMED : null,
+        ),
+      ),
       total,
       page,
       pageSize,

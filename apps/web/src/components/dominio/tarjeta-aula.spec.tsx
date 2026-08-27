@@ -1,4 +1,5 @@
 import {
+  BookingStatus,
   type ClassroomListItem,
   ClassroomStatus,
   CommunicationPreference,
@@ -37,6 +38,7 @@ function aula(overrides: Partial<ClassroomListItem> = {}): ClassroomListItem {
     updatedAt: '2026-08-01T10:00:00.000Z',
     teacherFirstName: 'Ana',
     teacherLastName: 'Restrepo',
+    myBookingStatus: null,
     ...overrides,
   };
 }
@@ -500,8 +502,9 @@ describe('<TarjetaAula /> — la acción de reservar (T3, AC4, HU-301)', () => {
     expect(screen.queryByRole('button', { name: /reservar/i })).not.toBeInTheDocument();
   });
 
-  // Un aula llena no ofrece reservar, aunque el rol sí pueda.
-  it('un aula llena no ofrece reservar', () => {
+  // Un aula llena no ofrece reservar, aunque el rol sí pueda: en su lugar,
+  // un botón inhabilitado que dice por qué (ajuste post-cierre de HU-301).
+  it('un aula llena muestra «Sin cupos disponibles» inhabilitado, no oculta sin más', () => {
     renderConProviders(
       <TarjetaAula
         classroom={aula({ currentBookings: 10, maxStudents: 10 })}
@@ -510,7 +513,22 @@ describe('<TarjetaAula /> — la acción de reservar (T3, AC4, HU-301)', () => {
       />,
     );
 
-    expect(screen.queryByRole('button', { name: /reservar/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Reservar mi cupo' })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Sin cupos disponibles' })).toBeDisabled();
+  });
+
+  // Ajuste post-cierre de HU-301: `myBookingStatus` ya viaja en el catálogo.
+  it('una clase ya reservada por el estudiante muestra «Cupo reservado» inhabilitado', () => {
+    renderConProviders(
+      <TarjetaAula
+        classroom={aula({ myBookingStatus: BookingStatus.CONFIRMED })}
+        puedeReservarla
+        ahora={AHORA}
+      />,
+    );
+
+    expect(screen.queryByRole('button', { name: 'Reservar mi cupo' })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Cupo reservado' })).toBeDisabled();
   });
 
   // Ni deshabilitado: el skill prohíbe deshabilitar sin explicar.

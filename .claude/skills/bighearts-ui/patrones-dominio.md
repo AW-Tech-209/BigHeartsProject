@@ -44,7 +44,10 @@ Sin porcentajes ni gráficos. Usa `role="progressbar"` con `aria-valuemin/max/no
 
 - `variante="cupos"` (Default - Estudiante):
   - Color: `success` (>3 libres), `attention` (1-3 libres), `muted` (0 libres).
-  - Con 0 cupos: texto "Sin cupos disponibles" y el botón de reservar se **oculta** (nunca deshabilitado sin explicación).
+  - Con 0 cupos, o si el estudiante ya reservó esa clase: el botón de reservar
+    se **reemplaza** por uno inhabilitado con ícono + texto propio ("Sin cupos
+    disponibles" / "Cupo reservado", HU-301) — nunca desaparece sin explicación
+    ni queda un botón activo que invite a "re-reservar".
 - `variante="inscritos"` (Profesor - HU-207):
   - Texto: `{n} de {m} inscritos`. Tono **siempre neutro**.
 

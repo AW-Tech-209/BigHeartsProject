@@ -61,15 +61,23 @@ export function toPublicClassroom(classroom: PrismaClassroom): Classroom {
  * La misma vista pública, con el nombre del profesor (HU-203, A3). El
  * catálogo lo necesita para que la tarjeta diga quién da la clase sin una
  * segunda petición por aula.
+ *
+ * `myBookingStatus` por defecto `null`: es lo correcto para `AdminController`
+ * (un administrador nunca tiene reserva propia) y para `toClassroomDetail`
+ * (que lo sobrescribe siempre después de este spread). Solo
+ * `ClassroomsService.listClassrooms` lo pasa de verdad, calculado en bloque
+ * para toda la página — ver su comentario.
  */
 export function toClassroomListItem(
   classroom: PrismaClassroom,
   teacher: { firstName: string; lastName: string },
+  myBookingStatus: BookingStatus | null = null,
 ): ClassroomListItem {
   return {
     ...toPublicClassroom(classroom),
     teacherFirstName: teacher.firstName,
     teacherLastName: teacher.lastName,
+    myBookingStatus,
   };
 }
 
@@ -87,7 +95,7 @@ export type RevelacionesDelDetalle = {
    * clave en `null`.
    */
   meetingLink?: string;
-  /** La reserva propia. `null` en todo el Sprint 2: `Booking` no existe. */
+  /** La reserva `CONFIRMED` propia (HU-301), o `null` si no tiene. */
   myBookingStatus: BookingStatus | null;
 };
 

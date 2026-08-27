@@ -1,5 +1,5 @@
 import { type Classroom, type EstadoAula } from '@academia/types';
-import { BookmarkCheck, BookmarkPlus, LoaderCircle } from 'lucide-react';
+import { BookmarkCheck, BookmarkPlus, LoaderCircle, type LucideIcon, Users } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Callout } from '@/components/ui/callout';
@@ -16,12 +16,18 @@ import { mensajeErrorReserva } from '@/features/aulas/lib/mensaje-error-reserva'
 const ESTADOS_RESERVABLES: readonly EstadoAula[] = ['disponible', 'ultimos-cupos'];
 
 /**
- * El estudiante ya tiene su cupo: el botón se reemplaza por uno inhabilitado
- * que lo dice, en vez de desaparecer. `<EstadoAula>` ya lo comunica con color +
- * ícono + texto en la ficha; esto lo repite en el propio hueco de la acción,
- * que es donde el estudiante vuelve a mirar después de reservar.
+ * Los estados donde NO se ofrece reservar, pero sí se explica por qué: un
+ * botón inhabilitado con ícono + texto propios, en vez de desaparecer sin más
+ * o esconderse detrás solo del badge `<EstadoAula>` de la ficha. Cada uno dice
+ * una razón distinta — «ya la tienes» no es lo mismo que «no queda sitio», y
+ * confundirlas le haría pensar al estudiante que puede liberar su propio cupo
+ * reservando otra vez.
  */
-const ESTADOS_YA_RESERVADO: readonly EstadoAula[] = ['reservada', 'acceso-abierto'];
+const RAZON_NO_RESERVABLE: Partial<Record<EstadoAula, { icon: LucideIcon; texto: string }>> = {
+  reservada: { icon: BookmarkCheck, texto: 'Cupo reservado' },
+  'acceso-abierto': { icon: BookmarkCheck, texto: 'Cupo reservado' },
+  llena: { icon: Users, texto: 'Sin cupos disponibles' },
+};
 
 type AccionReservarAulaProps = {
   aula: Pick<Classroom, 'id' | 'title'>;
@@ -49,12 +55,13 @@ export function AccionReservarAula({ aula, puedeReservar, estado }: AccionReserv
     return null;
   }
 
-  if (ESTADOS_YA_RESERVADO.includes(estado)) {
+  const razon = RAZON_NO_RESERVABLE[estado];
+  if (razon) {
     return (
       <div className="relative z-10">
         <Button disabled variant="outline" className="h-11 w-full gap-2 px-5 text-base">
-          <BookmarkCheck aria-hidden="true" strokeWidth={2} className="size-4" />
-          Cupo reservado
+          <razon.icon aria-hidden="true" strokeWidth={2} className="size-4" />
+          {razon.texto}
         </Button>
       </div>
     );
