@@ -5,7 +5,7 @@
 | **Sprint**          | Sprint 3 — Sistema de Reservas                    |
 | **Prioridad**       | 🔴 Crítica                                        |
 | **Estimación**      | 2 días                                            |
-| **Estado**          | ⬜ Pendiente                                      |
+| **Estado**          | ✅ Hecho                                          |
 | **Rama**            | `hu-304-acceso-al-enlace-<persona>`               |
 | **Alcance técnico** | fullstack                                         |
 | **Depende de**      | HU-301, HU-302                                    |
@@ -44,42 +44,42 @@ nadie**, ni al profesor dueño. Esa reunión no va a ocurrir.
 
 ### Contrato — va primero
 
-- [ ] **T1** — En `packages/types`: el estado de acceso que ve el frontend (`aún no` · `abierto` ·
+- [x] **T1** — En `packages/types`: el estado de acceso que ve el frontend (`aún no` · `abierto` ·
       `sin acceso`) y el instante en que se abre la ventana, para pintar la cuenta atrás sin
       recalcular la regla. Luego `npm run build:types`.
 
 ### Backend
 
-- [ ] **T2** — `ACCESS_WINDOW_MINUTES` en `config/env.schema.ts`, por defecto 30, y
+- [x] **T2** — `ACCESS_WINDOW_MINUTES` en `config/env.schema.ts`, por defecto 30, y
       `CLASS_MIN_LEAD_MINUTES` pasa a validarse contra esta variable.
-- [ ] **T3** — Extender `revelarElEnlace()` con la mitad que faltaba: un `STUDENT` con
+- [x] **T3** — Extender `revelarElEnlace()` con la mitad que faltaba: un `STUDENT` con
       `Booking.status = CONFIRMED` lo ve desde `scheduledAt − ACCESS_WINDOW_MINUTES` hasta el final
       de la clase. **Un método, no dos ramas sueltas.**
-- [ ] **T4** — Fuera de la ventana el campo **se omite**: no viaja vacío, ni cifrado, ni `null`.
+- [x] **T4** — Fuera de la ventana el campo **se omite**: no viaja vacío, ni cifrado, ni `null`.
       Con el aula `CANCELLED`, no viaja para nadie.
-- [ ] **T5** — Tests de la tabla de §4.1 **completa**: a 31 min ausente y a 29 min presente; el
+- [x] **T5** — Tests de la tabla de §4.1 **completa**: a 31 min ausente y a 29 min presente; el
       estudiante sin reserva nunca lo obtiene **aunque conozca el id**; con reserva `CANCELLED`
       tampoco; el profesor dueño sí, siempre, salvo aula cancelada; y otro profesor no.
 
 ### Frontend
 
-- [ ] **T6** — En el detalle y en «Mis reservas»: antes de la ventana, cuándo se abrirá, en la zona
+- [x] **T6** — En el detalle y en «Mis reservas»: antes de la ventana, cuándo se abrirá, en la zona
       del usuario. Al abrirse, el botón de entrar a la clase. Sin reserva, ni una cosa ni la otra.
-- [ ] **T7** — El paso de «aún no» a «abierto» se **anuncia por región viva** al ocurrir en
+- [x] **T7** — El paso de «aún no» a «abierto» se **anuncia por región viva** al ocurrir en
       pantalla, y el estado se comunica con color + ícono + texto. Cero dependencia del audio.
 
 ## ✅ Criterios de aceptación
 
-- [ ] **AC1** — A **31 minutos** del inicio el campo del enlace **no aparece** en la respuesta; a
+- [x] **AC1** — A **31 minutos** del inicio el campo del enlace **no aparece** en la respuesta; a
       **29 minutos**, sí. Verificado con tests, no a ojo.
-- [ ] **AC2** — Un usuario **sin reserva `CONFIRMED`** nunca obtiene el enlace, aunque pida el aula
+- [x] **AC2** — Un usuario **sin reserva `CONFIRMED`** nunca obtiene el enlace, aunque pida el aula
       por su id directamente. Tampoco quien canceló.
-- [ ] **AC3** — Un aula `CANCELLED` **no revela el enlace a nadie**, ni al profesor dueño.
-- [ ] **AC4** — El profesor dueño lo ve **siempre** —fuera de la ventana también—, y otro profesor
+- [x] **AC3** — Un aula `CANCELLED` **no revela el enlace a nadie**, ni al profesor dueño.
+- [x] **AC4** — El profesor dueño lo ve **siempre** —fuera de la ventana también—, y otro profesor
       no lo ve nunca.
-- [ ] **AC5** — Fuera de la ventana la interfaz dice **cuándo** se abrirá, con la zona explícita, y
+- [x] **AC5** — Fuera de la ventana la interfaz dice **cuándo** se abrirá, con la zona explícita, y
       la apertura se anuncia por región viva.
-- [ ] **AC6** — **Accesibilidad y verificación:** checklist del skill `bighearts-ui`, `axe` limpio,
+- [x] **AC6** — **Accesibilidad y verificación:** checklist del skill `bighearts-ui`, `axe` limpio,
       y `typecheck`, `lint`, `build` y `npm run test` en verde.
 
 ## 🚫 Fuera de alcance
@@ -93,4 +93,8 @@ nadie**, ni al profesor dueño. Esa reunión no va a ocurrir.
 
 ## Notas de implementación
 
-_Se rellena al cerrar._
+`accessState`/`accessOpensAt` se añadieron a `ClassroomListItem` (no solo a `ClassroomDetail`), con
+default `sin-acceso`/`null`: solo `GET /classrooms/:id` y `GET /bookings/mias` los calculan de
+verdad, vía la regla pura compartida `derivarAccesoAlEnlace()` (`apps/api/src/classrooms/acceso-enlace.rules.ts`).
+`CLASS_MIN_LEAD_MINUTES` pasó de `.min()` de campo a un `.refine()` del esquema completo, porque el
+suelo ya es otra variable del entorno y no una constante.

@@ -1,5 +1,6 @@
 import type { ForbiddenException } from '@nestjs/common';
 import {
+  ACCESS_WINDOW_MINUTES_DEFAULT,
   ApiErrorCode,
   CLASS_MAX_DURATION_MINUTES_DEFAULT,
   CLASS_MIN_LEAD_MINUTES_DEFAULT,
@@ -63,12 +64,14 @@ function configuracion(
     classMinLeadMinutes?: number;
     classMaxDurationMinutes?: number;
     cancellationWindowMinutes?: number;
+    accessWindowMinutes?: number;
   } = {},
 ): AppConfigService {
   return {
     classMinLeadMinutes: CLASS_MIN_LEAD_MINUTES_DEFAULT,
     classMaxDurationMinutes: CLASS_MAX_DURATION_MINUTES_DEFAULT,
     cancellationWindowMinutes: 60,
+    accessWindowMinutes: ACCESS_WINDOW_MINUTES_DEFAULT,
     ...overrides,
   } as AppConfigService;
 }
@@ -1458,6 +1461,103 @@ describe('ClassroomsService.getClassroomDetail — quién ve el enlace (A2, AC2)
   });
 });
 
+/**
+ * HU-304 — la mitad de §4.1 que faltaba: el estudiante con reserva
+ * `CONFIRMED`, dentro de la ventana.
+ */
+describe('ClassroomsService.getClassroomDetail — ventana de acceso del estudiante (AC1, AC2)', () => {
+  const dentroDe = (minutos: number) => new Date(Date.now() + minutos * 60_000);
+
+  it('a 31 minutos del inicio, el enlace no viaja y el estado es "aun-no"', async () => {
+    const { service } = setupDetalle(
+      { scheduledAt: dentroDe(31) },
+      { miReserva: { id: 'reserva-1', status: 'CONFIRMED' } },
+    );
+
+    const classroom = await service.getClassroomDetail(estudiante, ID_DEL_AULA);
+
+    expect(classroom).not.toHaveProperty('meetingLink');
+    expect(classroom.accessState).toBe('aun-no');
+    expect(classroom.accessOpensAt).not.toBeNull();
+  });
+
+  it('a 29 minutos del inicio, el enlace viaja descifrado y el estado es "abierto"', async () => {
+    const { service } = setupDetalle(
+      { scheduledAt: dentroDe(29) },
+      { miReserva: { id: 'reserva-1', status: 'CONFIRMED' } },
+    );
+
+    const classroom = await service.getClassroomDetail(estudiante, ID_DEL_AULA);
+
+    expect(classroom.meetingLink).toBe(ENLACE);
+    expect(classroom.accessState).toBe('abierto');
+    expect(classroom.accessOpensAt).toBeNull();
+  });
+
+  // AC2: sin reserva CONFIRMED, nunca — ni conociendo el id y aunque la
+  // ventana esté abierta.
+  it('un estudiante sin reserva CONFIRMED no obtiene el enlace, aunque la ventana esté abierta', async () => {
+    const { service } = setupDetalle({ scheduledAt: dentroDe(5) }, { miReserva: null });
+
+    const classroom = await service.getClassroomDetail(estudiante, ID_DEL_AULA);
+
+    expect(classroom).not.toHaveProperty('meetingLink');
+    expect(classroom.accessState).toBe('sin-acceso');
+  });
+
+  // AC2: quien canceló tampoco — el `findFirst` real solo trae reservas
+  // CONFIRMED, así que una cancelada nunca llega aquí como `miReserva`.
+  it('un estudiante que canceló su reserva no obtiene el enlace', async () => {
+    const { service, findFirstBooking } = setupDetalle(
+      { scheduledAt: dentroDe(5) },
+      { miReserva: null },
+    );
+
+    const classroom = await service.getClassroomDetail(estudiante, ID_DEL_AULA);
+
+    expect(findFirstBooking).toHaveBeenCalledWith(
+      expect.objectContaining({ where: expect.objectContaining({ status: 'CONFIRMED' }) }),
+    );
+    expect(classroom).not.toHaveProperty('meetingLink');
+    expect(classroom.accessState).toBe('sin-acceso');
+  });
+
+  // AC4: el dueño lo ve siempre, dentro y fuera de la ventana — sin depender
+  // de ninguna reserva.
+  it('el profesor dueño ve el enlace fuera de la ventana también', async () => {
+    const { service } = setupDetalle({ scheduledAt: dentroDe(120) });
+
+    const classroom = await service.getClassroomDetail(profesorDelToken, ID_DEL_AULA);
+
+    expect(classroom.meetingLink).toBe(ENLACE);
+    expect(classroom.accessState).toBe('abierto');
+  });
+
+  it('respeta ACCESS_WINDOW_MINUTES configurado, no el de fábrica', async () => {
+    const cipher = new MeetingLinkCipher({ meetingLinkKey: 'a'.repeat(64) } as AppConfigService);
+    const findUnique = vi
+      .fn()
+      .mockResolvedValue(
+        filaDeAula({ scheduledAt: dentroDe(50), meetingLink: cipher.encrypt(ENLACE) }),
+      );
+    const findFirstBooking = vi.fn().mockResolvedValue({ id: 'reserva-1', status: 'CONFIRMED' });
+    const prisma = {
+      classroom: { findUnique },
+      booking: { findFirst: findFirstBooking },
+    } as unknown as PrismaService;
+    const service = new ClassroomsService(
+      prisma,
+      cipher,
+      configuracion({ accessWindowMinutes: 60 }),
+    );
+
+    const classroom = await service.getClassroomDetail(estudiante, ID_DEL_AULA);
+
+    expect(classroom.accessState).toBe('abierto');
+    expect(classroom.meetingLink).toBe(ENLACE);
+  });
+});
+
 describe('ClassroomsService.getClassroomDetail — aula cancelada e id inexistente (A3, AC3, AC4)', () => {
   /**
    * AC4. La cancelada **se abre**: no aparece en el catálogo, pero quien tenga
@@ -1480,6 +1580,7 @@ describe('ClassroomsService.getClassroomDetail — aula cancelada e id inexisten
     const classroom = await service.getClassroomDetail(profesorDelToken, ID_DEL_AULA);
 
     expect(classroom).not.toHaveProperty('meetingLink');
+    expect(classroom.accessState).toBe('sin-acceso');
     expect(JSON.stringify(classroom)).not.toContain(cifrado);
   });
 

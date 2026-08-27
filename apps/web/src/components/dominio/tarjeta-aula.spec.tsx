@@ -41,6 +41,8 @@ function aula(overrides: Partial<ClassroomListItem> = {}): ClassroomListItem {
     myBookingStatus: null,
     myBookingId: null,
     myBookingCancelable: null,
+    accessState: 'sin-acceso',
+    accessOpensAt: null,
     ...overrides,
   };
 }

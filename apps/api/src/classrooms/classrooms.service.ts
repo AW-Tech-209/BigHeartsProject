@@ -19,6 +19,7 @@ import { insufficientRole } from '../auth/auth.errors';
 import { AppConfigService } from '../config/app-config.service';
 import { puedeCancelarse } from '../bookings/cancelacion.rules';
 import { PrismaService } from '../prisma/prisma.service';
+import { derivarAccesoAlEnlace, type ResultadoAccesoEnlace } from './acceso-enlace.rules';
 import { toClassroomDetail, toClassroomListItem, toPublicClassroom } from './classroom.mapper';
 import {
   classroomDurationInvalid,
@@ -343,17 +344,21 @@ export class ClassroomsService {
       throw classroomNotFound();
     }
 
-    const puedeVerlo = this.revelarElEnlace(viewer, classroom);
     const miReserva = await this.prisma.booking.findFirst({
       where: { studentId: viewer.id, classroomId, status: 'CONFIRMED' },
       select: { id: true, status: true },
     });
+    const acceso = this.revelarElEnlace(viewer, classroom, Boolean(miReserva), new Date());
 
     return toClassroomDetail(classroom, classroom.teacher, {
       // Se descifra SOLO si va a viajar: sin esta condición, el texto en claro
       // existiría en memoria en cada petición de cualquier usuario, y bastaría
       // un log de la variable para filtrarlo.
-      ...(puedeVerlo && { meetingLink: this.meetingLinks.decrypt(classroom.meetingLink) }),
+      ...(acceso.estado === 'abierto' && {
+        meetingLink: this.meetingLinks.decrypt(classroom.meetingLink),
+      }),
+      accessState: acceso.estado,
+      accessOpensAt: acceso.abreEn?.toISOString() ?? null,
       myBookingStatus: (miReserva?.status as BookingStatus | undefined) ?? null,
       myBookingId: miReserva?.id ?? null,
       // HU-303: la misma regla que autoriza `POST /bookings/:id/cancelar`,
@@ -367,30 +372,31 @@ export class ClassroomsService {
   /**
    * **El único punto del servidor que decide si el enlace viaja** (A2, §4.1).
    *
-   * En el Sprint 2 la regla completa es «el que pide es el profesor dueño».
-   * `Booking` no existe todavía, así que la otra mitad de §4.1 —un estudiante
-   * con reserva `CONFIRMED`, y solo desde `scheduledAt − ACCESS_WINDOW_MINUTES`—
-   * no tiene forma de evaluarse.
+   * Envuelve `derivarAccesoAlEnlace()` —la regla pura, compartida con
+   * `BookingsService.listMisReservas()` para pintar la cuenta atrás sin
+   * duplicarla— con la identidad de quien pregunta. **Un aula cancelada no
+   * revela su enlace a nadie, ni al dueño** (decisión de auditoría 3 de
+   * HU-204): esa reunión no va a ocurrir, y dar la URL solo serviría para que
+   * alguien entre a una sala que ya nadie atiende.
    *
-   * **HU-303 extiende ESTE método**, no el endpoint: le añade la rama del
-   * estudiante y la comparación temporal contra el reloj del servidor. Si
-   * alguien necesita revelar el enlace desde otro sitio, la respuesta es llamar
-   * aquí, nunca escribir una segunda condición — un permiso decidido en dos
-   * lugares acaba divergiendo, y este es el dato más sensible del producto.
-   *
-   * **Un aula cancelada no revela su enlace a nadie, ni al dueño** (decisión de
-   * auditoría 3 de HU-204). Esa reunión no va a ocurrir: dar la URL solo
-   * serviría para que alguien entre a una sala que ya nadie atiende.
-   *
-   * No hace falta comprobar el rol: solo un `TEACHER` puede ser `teacherId` de
-   * un aula, así que la identidad ya lo implica.
+   * Si alguien necesita revelar el enlace desde otro sitio, la respuesta es
+   * llamar aquí, nunca escribir una segunda condición — un permiso decidido en
+   * dos lugares acaba divergiendo, y este es el dato más sensible del
+   * producto. No hace falta comprobar el rol: solo un `TEACHER` puede ser
+   * `teacherId` de un aula, así que la identidad ya lo implica.
    */
-  private revelarElEnlace(viewer: AuthenticatedUser, classroom: PrismaClassroom): boolean {
-    if (classroom.status === ClassroomStatus.CANCELLED) {
-      return false;
-    }
-
-    return viewer.id === classroom.teacherId;
+  private revelarElEnlace(
+    viewer: AuthenticatedUser,
+    classroom: PrismaClassroom,
+    tieneReservaConfirmada: boolean,
+    ahora: Date,
+  ): ResultadoAccesoEnlace {
+    return derivarAccesoAlEnlace(classroom, {
+      esDueno: viewer.id === classroom.teacherId,
+      tieneReservaConfirmada,
+      ahora,
+      accessWindowMinutes: this.config.accessWindowMinutes,
+    });
   }
 
   /**

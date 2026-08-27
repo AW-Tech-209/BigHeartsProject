@@ -12,6 +12,7 @@ import { Link } from 'react-router-dom';
 
 import { Badge } from '@/components/ui/badge';
 import { AccionCancelarReserva } from '@/features/aulas/components/accion-cancelar-reserva';
+import { AccionEntrarAClase } from '@/features/aulas/components/accion-entrar-a-clase';
 import { AccionesDeAula } from '@/features/aulas/components/acciones-de-aula';
 import { AccionReservarAula } from '@/features/aulas/components/accion-reservar-aula';
 import { APOYOS_AULA } from '@/features/aulas/lib/apoyos-aula';
@@ -49,6 +50,8 @@ export type AulaDeTarjeta = Classroom &
       | 'myBookingStatus'
       | 'myBookingId'
       | 'myBookingCancelable'
+      | 'accessState'
+      | 'accessOpensAt'
     >
   >;
 
@@ -318,6 +321,17 @@ export function TarjetaAula({
               myBookingCancelable: classroom.myBookingCancelable ?? null,
             }}
             compact
+          />
+        )}
+
+        {/* HU-304, T6. `accessState` solo llega calculado en «Mis reservas». */}
+        {!esVistaDelProfesor && (
+          <AccionEntrarAClase
+            aula={{
+              id: classroom.id,
+              accessState: classroom.accessState ?? 'sin-acceso',
+              accessOpensAt: classroom.accessOpensAt ?? null,
+            }}
           />
         )}
 

@@ -48,6 +48,8 @@ function claseReservada(overrides: Partial<ClassroomListItem> = {}): ClassroomLi
     myBookingStatus: BookingStatus.CONFIRMED,
     myBookingId: 'reserva-1',
     myBookingCancelable: true,
+    accessState: 'sin-acceso',
+    accessOpensAt: null,
     ...overrides,
   };
 }

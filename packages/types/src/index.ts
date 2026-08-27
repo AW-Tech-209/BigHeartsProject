@@ -1,3 +1,5 @@
+import type { EstadoAccesoEnlace } from './acceso-enlace';
+
 /**
  * Tipos compartidos entre el backend (@academia/api) y el frontend (@academia/web).
  *
@@ -539,6 +541,21 @@ export interface ClassroomListItem extends Classroom {
    * validándose en el servidor en el momento de la petición.
    */
   myBookingCancelable: boolean | null;
+  /**
+   * Estado de acceso al enlace, ya decidido por el servidor (HU-304, §4.1).
+   * `sin-acceso` por defecto: solo `GET /classrooms/:id` y `GET /bookings/mias`
+   * lo calculan de verdad — el catálogo y «mis aulas» no ofrecen entrar a la
+   * clase desde la tarjeta, así que no hace falta la cuenta exacta ahí.
+   */
+  accessState: EstadoAccesoEnlace;
+  /**
+   * El instante en que se abrirá la ventana, ISO 8601 en UTC. Solo tiene
+   * sentido cuando `accessState` es `aun-no` — en el resto de casos, `null`.
+   * Viaja para que el frontend pinte la cuenta atrás sin reconstruir
+   * `scheduledAt − ACCESS_WINDOW_MINUTES` con un valor que podría no coincidir
+   * con el que configuró el servidor.
+   */
+  accessOpensAt: string | null;
 }
 
 /**
@@ -1038,3 +1055,9 @@ export * from './estado-aula';
  * propios tests.
  */
 export * from './accesibilidad-aula';
+
+/**
+ * `EstadoAccesoEnlace` (HU-304) vive en su propio archivo por el mismo motivo
+ * que los anteriores: es parte del contrato, no lógica de negocio derivada.
+ */
+export * from './acceso-enlace';

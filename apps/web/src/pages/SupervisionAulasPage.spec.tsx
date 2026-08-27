@@ -30,6 +30,8 @@ function aula(overrides: Partial<ClassroomListItem> = {}): ClassroomListItem {
     myBookingStatus: null,
     myBookingId: null,
     myBookingCancelable: null,
+    accessState: 'sin-acceso',
+    accessOpensAt: null,
     title: 'Conversación cotidiana',
     description: 'Practicamos saludos y presentaciones.',
     level: EnglishLevel.INTERMEDIATE,

@@ -137,7 +137,9 @@ Aquí está su especificación técnica.
 > decisión vive en **un único método privado del servicio** (`revelarElEnlace()`). En el Sprint 2 su
 > regla completa es «el que pide es el profesor dueño»: la otra mitad de esta tabla —el estudiante
 > con `Booking.status = CONFIRMED` dentro de la ventana— no tiene forma de evaluarse porque `Booking`
-> no existe hasta el Sprint 3. **HU-303 extiende ese método, no el endpoint.**
+> no existe hasta el Sprint 3. **HU-304 extiende ese método, no el endpoint** — la regla en sí vive
+> en la función pura `derivarAccesoAlEnlace()`, compartida con `BookingsService.listMisReservas()`
+> para pintar la cuenta atrás en «Mis reservas» sin duplicarla.
 >
 > Y una regla que esta tabla no cubría: **un aula `CANCELLED` no revela su enlace a nadie, ni al
 > profesor dueño.** Esa reunión no va a ocurrir; dar la URL solo serviría para que alguien entre a
@@ -434,19 +436,19 @@ juntos.
 
 ### 6.1 Módulos
 
-| Módulo          | Responsabilidad                                                                     | Estado                                                                                         |
-| --------------- | ----------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
-| `config`        | Validación del entorno con Zod y config global.                                     | ✅                                                                                             |
-| `prisma`        | `PrismaService` global.                                                             | ✅                                                                                             |
-| `common`        | Filtro de excepciones, interceptor de respuesta, factoría de errores de validación. | ✅                                                                                             |
-| `health`        | `GET /health` — proceso + BD.                                                       | ✅                                                                                             |
-| `auth`          | Registro, login, refresh, logout, guards.                                           | ✅                                                                                             |
-| `users`         | Perfil propio (`GET`/`PATCH /users/me`). La gestión de terceros vive en `admin`.    | ✅                                                                                             |
-| `classrooms`    | Aulas, horarios, cupos, enlace. Incluye `MeetingLinkCipher` (§4.1), que exporta.    | ✅ Crear, listar, detalle, editar, cancelar, «mis aulas», accesibilidad y coherencia temporal. |
-| `bookings`      | Reservas, concurrencia, cancelaciones.                                              | ⬜ Stub                                                                                        |
-| `sessions`      | Reservado (ver nota).                                                               | ⬜ Stub                                                                                        |
-| `notifications` | Emails transaccionales y recordatorios.                                             | 🟨 Puerto + `LoggingNotificationService` (HU-104, D14). Adaptador real en Sprint 4.            |
-| `admin`         | Aprobación de profesores y supervisión de aulas (solo lectura).                     | ✅ HU-104, HU-210                                                                              |
+| Módulo          | Responsabilidad                                                                     | Estado                                                                                                                      |
+| --------------- | ----------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| `config`        | Validación del entorno con Zod y config global.                                     | ✅                                                                                                                          |
+| `prisma`        | `PrismaService` global.                                                             | ✅                                                                                                                          |
+| `common`        | Filtro de excepciones, interceptor de respuesta, factoría de errores de validación. | ✅                                                                                                                          |
+| `health`        | `GET /health` — proceso + BD.                                                       | ✅                                                                                                                          |
+| `auth`          | Registro, login, refresh, logout, guards.                                           | ✅                                                                                                                          |
+| `users`         | Perfil propio (`GET`/`PATCH /users/me`). La gestión de terceros vive en `admin`.    | ✅                                                                                                                          |
+| `classrooms`    | Aulas, horarios, cupos, enlace. Incluye `MeetingLinkCipher` (§4.1), que exporta.    | ✅ Crear, listar, detalle, editar, cancelar, «mis aulas», accesibilidad, coherencia temporal y ventana de acceso al enlace. |
+| `bookings`      | Reservas, concurrencia, cancelaciones.                                              | ⬜ Stub                                                                                                                     |
+| `sessions`      | Reservado (ver nota).                                                               | ⬜ Stub                                                                                                                     |
+| `notifications` | Emails transaccionales y recordatorios.                                             | 🟨 Puerto + `LoggingNotificationService` (HU-104, D14). Adaptador real en Sprint 4.                                         |
+| `admin`         | Aprobación de profesores y supervisión de aulas (solo lectura).                     | ✅ HU-104, HU-210                                                                                                           |
 
 > **Nota de auditoría — `SessionsModule` no tiene datos que gobernar.** El `.docx` lo declaraba
 > como módulo pero **nunca definió una entidad `Session`**: el historial y la asistencia viven en
@@ -497,7 +499,7 @@ Variables que introdujo esta auditoría:
 | Variable                      | Por defecto     | Estado                                                                  |
 | ----------------------------- | --------------- | ----------------------------------------------------------------------- |
 | `MEETING_LINK_KEY`            | — (obligatoria) | ✅ **En el esquema desde HU-201.** Clave AES-256-GCM del enlace (§4.1). |
-| `ACCESS_WINDOW_MINUTES`       | `30`            | ⬜ Pendiente. La introduce HU-303, que abre la ventana (§4.1).          |
+| `ACCESS_WINDOW_MINUTES`       | `30`            | ✅ **En el esquema desde HU-304.** Ventana de acceso al enlace (§4.1).  |
 | `CANCELLATION_WINDOW_MINUTES` | `60`            | ⬜ Pendiente. La introduce el Sprint 3 (§4.3).                          |
 | `CLASS_MIN_LEAD_MINUTES`      | `60`            | ✅ **En el esquema desde HU-212.** Antelación mínima (§4.4).            |
 | `CLASS_MAX_DURATION_MINUTES`  | `240`           | ✅ **En el esquema desde HU-212.** Duración máxima (§4.4).              |

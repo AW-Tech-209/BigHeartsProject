@@ -47,6 +47,8 @@ function aulaOrigen(overrides: Partial<ClassroomDetail> = {}): ClassroomDetail {
     myBookingStatus: null,
     myBookingId: null,
     myBookingCancelable: null,
+    accessState: 'sin-acceso',
+    accessOpensAt: null,
     ...overrides,
   };
 }

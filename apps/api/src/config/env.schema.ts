@@ -27,7 +27,7 @@ const postgresUrl = z
     message: 'debe empezar por postgresql://',
   });
 
-export const envSchema = z.object({
+const camposEnv = z.object({
   /** Entorno de ejecución. Opcional: por defecto `development`. */
   NODE_ENV: z.enum(['development', 'staging', 'production']).default('development'),
 
@@ -134,20 +134,17 @@ export const envSchema = z.object({
    * con `confirmarPocaAntelacion: true` se acepta: publicar con poca antelación
    * solo perjudica al propio profesor.
    *
-   * **El suelo no es arbitrario: es `ACCESS_WINDOW_MINUTES` (30).** Por debajo
-   * de la ventana de acceso de §4.1, el enlace se revelaría en el mismo
-   * instante en que se publica la clase, y entonces la ventana deja de
-   * significar nada. Se valida contra la constante de `@academia/types` en vez
-   * de contra un 30 escrito aquí para que las dos no puedan divergir el día que
-   * `ACCESS_WINDOW_MINUTES` entre en este esquema (HU-303).
+   * **El suelo no es arbitrario: es `ACCESS_WINDOW_MINUTES`.** Por debajo de la
+   * ventana de acceso de §4.1, el enlace se revelaría en el mismo instante en
+   * que se publica la clase, y entonces la ventana deja de significar nada. La
+   * comprobación vive en `envSchemaConReglasCruzadas`, más abajo: es contra el
+   * valor real de `ACCESS_WINDOW_MINUTES`, no contra la constante de fábrica,
+   * para que los dos umbrales no puedan divergir.
    */
   CLASS_MIN_LEAD_MINUTES: z.coerce
     .number()
     .int()
-    .min(
-      ACCESS_WINDOW_MINUTES_DEFAULT,
-      `no puede bajar de ${ACCESS_WINDOW_MINUTES_DEFAULT}: es la ventana de acceso al enlace, y por debajo el enlace se revelaría al publicar la clase`,
-    )
+    .positive()
     .default(CLASS_MIN_LEAD_MINUTES_DEFAULT),
 
   /**
@@ -175,7 +172,29 @@ export const envSchema = z.object({
     .int()
     .positive()
     .default(CANCELLATION_WINDOW_MINUTES_DEFAULT),
+
+  /**
+   * Minutos antes de `scheduledAt` en los que se abre el acceso al enlace
+   * (HU-304, §4.1). Opcional: por defecto 30.
+   */
+  ACCESS_WINDOW_MINUTES: z.coerce.number().int().positive().default(ACCESS_WINDOW_MINUTES_DEFAULT),
 });
+
+/**
+ * `CLASS_MIN_LEAD_MINUTES` no puede bajar de `ACCESS_WINDOW_MINUTES`, sea cual
+ * sea el valor que el entorno le dé a cada uno: por debajo, el enlace se
+ * revelaría en el mismo instante en que se publica la clase (§4.4). Va como
+ * `.refine()` del objeto entero, no como `.min()` del campo, porque el suelo
+ * ya no es una constante: es otro valor del mismo entorno.
+ */
+export const envSchema = camposEnv.refine(
+  (env) => env.CLASS_MIN_LEAD_MINUTES >= env.ACCESS_WINDOW_MINUTES,
+  {
+    message:
+      'CLASS_MIN_LEAD_MINUTES no puede bajar de ACCESS_WINDOW_MINUTES: es la ventana de acceso al enlace, y por debajo el enlace se revelaría al publicar la clase',
+    path: ['CLASS_MIN_LEAD_MINUTES'],
+  },
+);
 
 /** Variables de entorno ya validadas y con los tipos correctos. */
 export type Env = z.infer<typeof envSchema>;

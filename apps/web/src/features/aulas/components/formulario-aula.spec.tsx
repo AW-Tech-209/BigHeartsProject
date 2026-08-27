@@ -64,6 +64,8 @@ const AULA_ORIGEN: ClassroomDetail = {
   myBookingStatus: null satisfies BookingStatus | null,
   myBookingId: null,
   myBookingCancelable: null,
+  accessState: 'sin-acceso',
+  accessOpensAt: null,
 };
 
 function montarDuplicando() {
