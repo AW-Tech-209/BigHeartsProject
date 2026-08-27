@@ -2,6 +2,7 @@ import type { ForbiddenException } from '@nestjs/common';
 import {
   ACCESS_WINDOW_MINUTES_DEFAULT,
   ApiErrorCode,
+  BookingStatus,
   CLASS_MAX_DURATION_MINUTES_DEFAULT,
   CLASS_MIN_LEAD_MINUTES_DEFAULT,
   ClassroomStatus,
@@ -16,6 +17,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { AuthenticatedUser } from '../auth/auth.types';
 import type { AppConfigService } from '../config/app-config.service';
+import type { NotificationService } from '../notifications/notification.service';
 import type { PrismaService } from '../prisma/prisma.service';
 import { ClassroomsService } from './classrooms.service';
 import type { CreateClassroomDto } from './dto/create-classroom.dto';
@@ -27,6 +29,12 @@ import { MeetingLinkCipher } from './meeting-link.cipher';
 const PROFESOR_ID = '11111111-1111-4111-8111-111111111111';
 const OTRO_PROFESOR_ID = '22222222-2222-4222-8222-222222222222';
 const ENLACE = 'https://meet.google.com/abc-defg-hij';
+
+/** Un puerto de notificaciones falso: nunca lanza, y su espía es opcional. */
+function notificacionesFalsas() {
+  const notify = vi.fn().mockResolvedValue({ delivered: false, channel: 'log' });
+  return { notify, service: { notify } as unknown as NotificationService };
+}
 
 /** El profesor tal y como llega en el token. */
 const profesorDelToken: AuthenticatedUser = {
@@ -120,7 +128,12 @@ function setup(
   const cipher = new MeetingLinkCipher({ meetingLinkKey: 'a'.repeat(64) } as AppConfigService);
 
   return {
-    service: new ClassroomsService(prisma, cipher, configuracion(options.config)),
+    service: new ClassroomsService(
+      prisma,
+      cipher,
+      configuracion(options.config),
+      notificacionesFalsas().service,
+    ),
     create,
     findUnique,
     findMany,
@@ -666,7 +679,7 @@ function setupParaListado(
   const cipher = new MeetingLinkCipher({ meetingLinkKey: 'a'.repeat(64) } as AppConfigService);
 
   return {
-    service: new ClassroomsService(prisma, cipher, configuracion()),
+    service: new ClassroomsService(prisma, cipher, configuracion(), notificacionesFalsas().service),
     findMany,
     count,
     findManyBooking,
@@ -1076,7 +1089,11 @@ function setupMisAulas(
   const prisma = { classroom: { findMany, count } } as unknown as PrismaService;
   const cipher = new MeetingLinkCipher({ meetingLinkKey: 'a'.repeat(64) } as AppConfigService);
 
-  return { service: new ClassroomsService(prisma, cipher, configuracion()), findMany, count };
+  return {
+    service: new ClassroomsService(prisma, cipher, configuracion(), notificacionesFalsas().service),
+    findMany,
+    count,
+  };
 }
 
 /** Los `where` de todas las consultas que se lanzaron, `findMany` y `count`. */
@@ -1326,7 +1343,7 @@ function setupDetalle(
   } as unknown as PrismaService;
 
   return {
-    service: new ClassroomsService(prisma, cipher, configuracion()),
+    service: new ClassroomsService(prisma, cipher, configuracion(), notificacionesFalsas().service),
     findUnique,
     findFirstBooking,
     cifrado,
@@ -1549,6 +1566,7 @@ describe('ClassroomsService.getClassroomDetail — ventana de acceso del estudia
       prisma,
       cipher,
       configuracion({ accessWindowMinutes: 60 }),
+      notificacionesFalsas().service,
     );
 
     const classroom = await service.getClassroomDetail(estudiante, ID_DEL_AULA);
@@ -1572,7 +1590,7 @@ function setupInscritos(
   } as unknown as PrismaService;
 
   return {
-    service: new ClassroomsService(prisma, cipher, configuracion()),
+    service: new ClassroomsService(prisma, cipher, configuracion(), notificacionesFalsas().service),
     findUnique,
     findMany,
   };
@@ -1694,10 +1712,18 @@ function entradaEdicion(overrides: Partial<UpdateClassroomDto> = {}): UpdateClas
   return { ...overrides };
 }
 
-/** Monta el servicio solo con lo que necesitan `editClassroom` y `cancelClassroom`. */
+/**
+ * Monta el servicio solo con lo que necesitan `editClassroom` y
+ * `cancelClassroom`. `$transaction` invoca el callback directamente con un
+ * `tx` que comparte los mismos dobles: no hay bloqueo real, solo la lógica
+ * (mismo criterio que `bookings.service.spec.ts`).
+ */
 function setupEditar(
   aula: Record<string, unknown> | null,
-  options: { agenda?: ReturnType<typeof aulaEnAgenda>[] } = {},
+  options: {
+    agenda?: ReturnType<typeof aulaEnAgenda>[];
+    reservasVivas?: { student: { email: string; firstName: string } }[];
+  } = {},
 ) {
   const findUnique = vi.fn().mockResolvedValue(aula === null ? null : filaDeAula(aula));
   const update = vi
@@ -1706,14 +1732,28 @@ function setupEditar(
       Promise.resolve(filaDeAula({ ...aula, ...data })),
     );
   const findMany = vi.fn().mockResolvedValue(options.agenda ?? []);
-  const prisma = { classroom: { findUnique, update, findMany } } as unknown as PrismaService;
+  const bookingFindMany = vi.fn().mockResolvedValue(options.reservasVivas ?? []);
+  const updateMany = vi.fn().mockResolvedValue({ count: options.reservasVivas?.length ?? 0 });
+
+  const tx = { classroom: { update }, booking: { findMany: bookingFindMany, updateMany } };
+  const $transaction = vi.fn((callback: (t: typeof tx) => unknown) => callback(tx));
+
+  const prisma = {
+    $transaction,
+    classroom: { findUnique, update, findMany },
+    booking: { findMany: bookingFindMany, updateMany },
+  } as unknown as PrismaService;
   const cipher = new MeetingLinkCipher({ meetingLinkKey: 'a'.repeat(64) } as AppConfigService);
+  const { notify, service: notifications } = notificacionesFalsas();
 
   return {
-    service: new ClassroomsService(prisma, cipher, configuracion()),
+    service: new ClassroomsService(prisma, cipher, configuracion(), notifications),
     findUnique,
     update,
+    updateMany,
     findMany,
+    bookingFindMany,
+    notify,
   };
 }
 
@@ -1811,6 +1851,7 @@ describe('ClassroomsService.editClassroom', () => {
       // BD); aquí se comprueba que el servicio la pide con esa exclusión.
       const { service, update, findMany } = setupEditar({
         teacherId: PROFESOR_ID,
+        currentBookings: 0,
         scheduledAt: new Date('2027-08-12T23:00:00.000Z'),
       });
 
@@ -1826,7 +1867,7 @@ describe('ClassroomsService.editClassroom', () => {
 
     it('mover el horario a uno ocupado por otra aula responde TEACHER_SCHEDULE_CONFLICT', async () => {
       const { service, update } = setupEditar(
-        { teacherId: PROFESOR_ID },
+        { teacherId: PROFESOR_ID, currentBookings: 0 },
         { agenda: [aulaEnAgenda({ hora: '18:00' })] },
       );
 
@@ -1854,6 +1895,65 @@ describe('ClassroomsService.editClassroom', () => {
       expect(findMany).not.toHaveBeenCalled();
     });
   });
+
+  /** HU-306, D30: reprogramar puede chocar con la agenda ajena; el resto del aula no. */
+  describe('reservas vivas bloquean fecha y duración (AC1, D30)', () => {
+    it('mover scheduledAt con reservas CONFIRMED responde CLASSROOM_HAS_BOOKINGS', async () => {
+      const { service, update } = setupEditar({ teacherId: PROFESOR_ID, currentBookings: 3 });
+
+      const cuerpo = await cuerpoDe(
+        service.editClassroom(
+          profesorDelToken,
+          ID_DEL_AULA,
+          entradaEdicion({ scheduledAt: '2027-08-12T23:00:00.000Z' }),
+        ),
+      );
+
+      expect(cuerpo.code).toBe(ApiErrorCode.CLASSROOM_HAS_BOOKINGS);
+      expect(cuerpo.details).toEqual({ reservasActivas: 3 });
+      expect(update).not.toHaveBeenCalled();
+    });
+
+    it('mover durationMinutes con reservas CONFIRMED responde CLASSROOM_HAS_BOOKINGS', async () => {
+      const { service, update } = setupEditar({ teacherId: PROFESOR_ID, currentBookings: 1 });
+
+      const codigo = await codigoDe(
+        service.editClassroom(
+          profesorDelToken,
+          ID_DEL_AULA,
+          entradaEdicion({ durationMinutes: 90 }),
+        ),
+      );
+
+      expect(codigo).toBe(ApiErrorCode.CLASSROOM_HAS_BOOKINGS);
+      expect(update).not.toHaveBeenCalled();
+    });
+
+    it('sin reservas vivas, el horario se sigue editando (AC2)', async () => {
+      const { service, update } = setupEditar({ teacherId: PROFESOR_ID, currentBookings: 0 });
+
+      await service.editClassroom(
+        profesorDelToken,
+        ID_DEL_AULA,
+        entradaEdicion({ scheduledAt: '2027-08-12T23:00:00.000Z' }),
+      );
+
+      expect(update).toHaveBeenCalledOnce();
+    });
+
+    it('editar el título con reservas vivas responde 200: solo fecha y duración se bloquean', async () => {
+      const { service, update } = setupEditar({ teacherId: PROFESOR_ID, currentBookings: 3 });
+
+      const classroom = await service.editClassroom(
+        profesorDelToken,
+        ID_DEL_AULA,
+        entradaEdicion({ title: 'Nuevo título' }),
+      );
+
+      expect(classroom.title).toBe('Nuevo título');
+      expect(update).toHaveBeenCalledOnce();
+    });
+  });
 });
 
 describe('ClassroomsService.cancelClassroom', () => {
@@ -1864,7 +1964,7 @@ describe('ClassroomsService.cancelClassroom', () => {
 
     expect(update.mock.calls[0]?.[0]).toMatchObject({
       where: { id: ID_DEL_AULA },
-      data: { status: ClassroomStatus.CANCELLED },
+      data: { status: ClassroomStatus.CANCELLED, currentBookings: 0 },
     });
     expect(classroom.status).toBe(ClassroomStatus.CANCELLED);
   });
@@ -1910,5 +2010,67 @@ describe('ClassroomsService.cancelClassroom', () => {
       ApiErrorCode.CLASSROOM_NOT_EDITABLE,
     );
     expect(update).not.toHaveBeenCalled();
+  });
+
+  /** HU-306, AC3, AC4: la corrección de auditoría que abrió esta HU. */
+  describe('reservas vivas se cierran con el aula (AC3, AC4)', () => {
+    const reservasVivas = [
+      { student: { email: 'ana@academia.local', firstName: 'Ana' } },
+      { student: { email: 'luis@academia.local', firstName: 'Luis' } },
+    ];
+
+    it('pasa todas las reservas CONFIRMED a CANCELLED con cancelledAt, sin borrar filas', async () => {
+      const { service, updateMany } = setupEditar(
+        { teacherId: PROFESOR_ID, currentBookings: 2 },
+        { reservasVivas },
+      );
+
+      await service.cancelClassroom(profesorDelToken, ID_DEL_AULA);
+
+      expect(updateMany).toHaveBeenCalledWith({
+        where: { classroomId: ID_DEL_AULA, status: BookingStatus.CONFIRMED },
+        data: { status: BookingStatus.CANCELLED, cancelledAt: expect.any(Date) },
+      });
+    });
+
+    it('emite un aviso por cada estudiante afectado, y ninguno más', async () => {
+      const { service, notify } = setupEditar(
+        { teacherId: PROFESOR_ID, currentBookings: 2 },
+        { reservasVivas },
+      );
+
+      await service.cancelClassroom(profesorDelToken, ID_DEL_AULA);
+
+      expect(notify).toHaveBeenCalledTimes(2);
+      expect(notify).toHaveBeenCalledWith({
+        type: 'CLASSROOM_CANCELLED',
+        recipient: { email: 'ana@academia.local', firstName: 'Ana' },
+      });
+      expect(notify).toHaveBeenCalledWith({
+        type: 'CLASSROOM_CANCELLED',
+        recipient: { email: 'luis@academia.local', firstName: 'Luis' },
+      });
+    });
+
+    // Un fallo de aviso no deshace la cancelación ya escrita (§4.6, el puerto nunca lanza).
+    it('un fallo al notificar no impide que la cancelación se complete', async () => {
+      const { service, notify } = setupEditar(
+        { teacherId: PROFESOR_ID, currentBookings: 1 },
+        { reservasVivas: [reservasVivas[0]!] },
+      );
+      notify.mockRejectedValueOnce(new Error('SMTP caído'));
+
+      const classroom = await service.cancelClassroom(profesorDelToken, ID_DEL_AULA);
+
+      expect(classroom.status).toBe(ClassroomStatus.CANCELLED);
+    });
+
+    it('sin reservas vivas, no emite ningún aviso', async () => {
+      const { service, notify } = setupEditar({ teacherId: PROFESOR_ID, currentBookings: 0 });
+
+      await service.cancelClassroom(profesorDelToken, ID_DEL_AULA);
+
+      expect(notify).not.toHaveBeenCalled();
+    });
   });
 });

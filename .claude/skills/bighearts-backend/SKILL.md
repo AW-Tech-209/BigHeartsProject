@@ -13,6 +13,8 @@ tres garantías, así que la lógica de servidor no puede fallar en ellas.
 > **La regla que ordena todas las demás:** el servidor es la única autoridad. El frontend replica
 > lógica para pintar la pantalla, **nunca** para decidir un permiso, un cupo o una ventana temporal.
 
+- No hagas comentarios en el código a menos que sea exclusivamente necesario, y si se agregan comentarios, que sean breves, al punto.
+
 ## Stack (no negociable)
 
 NestJS 11 · **Prisma ^6** (no subir a 7) · PostgreSQL 17 · Zod para validar el entorno ·

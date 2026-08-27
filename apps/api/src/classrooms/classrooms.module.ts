@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 
+import { NotificationsModule } from '../notifications/notifications.module';
 import { ClassroomsController } from './classrooms.controller';
 import { ClassroomsService } from './classrooms.service';
 import { MeetingLinkCipher } from './meeting-link.cipher';
@@ -13,8 +14,12 @@ import { MeetingLinkCipher } from './meeting-link.cipher';
  * haya que importar `ClassroomsModule` para poder descifrar es intencional —
  * deja el alcance del secreto visible en el grafo de módulos, en vez de
  * repartido en un helper global que cualquiera puede llamar.
+ *
+ * `NotificationsModule` entra desde HU-306: cancelar un aula avisa a cada
+ * estudiante afectado por el mismo puerto que usa `BookingsModule`.
  */
 @Module({
+  imports: [NotificationsModule],
   controllers: [ClassroomsController],
   providers: [ClassroomsService, MeetingLinkCipher],
   exports: [MeetingLinkCipher],

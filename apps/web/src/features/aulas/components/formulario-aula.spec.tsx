@@ -16,9 +16,13 @@ import { renderConProviders, type Tema } from '@/test/render-con-providers';
 import { aInstanteISO } from '../lib/horario';
 import { FormularioAula } from './formulario-aula';
 
-const { createClassroomMock } = vi.hoisted(() => ({ createClassroomMock: vi.fn() }));
+const { createClassroomMock, updateClassroomMock } = vi.hoisted(() => ({
+  createClassroomMock: vi.fn(),
+  updateClassroomMock: vi.fn(),
+}));
 
 vi.mock('../api/create-classroom', () => ({ createClassroom: createClassroomMock }));
+vi.mock('../api/update-classroom', () => ({ updateClassroom: updateClassroomMock }));
 
 const AULA_CREADA = {
   id: '33333333-3333-4333-8333-333333333333',
@@ -133,6 +137,7 @@ async function elegirHorario(user: ReturnType<typeof montar>['user'], fecha: str
 beforeEach(() => {
   createClassroomMock.mockReset();
   createClassroomMock.mockResolvedValue({ classroom: AULA_CREADA });
+  updateClassroomMock.mockReset();
 });
 
 afterEach(() => vi.useRealTimers());
@@ -654,6 +659,53 @@ describe('FormularioAula — aviso de poca antelación (T8, AC7)', () => {
 /* ------------------------------------------------------------------ *
  *  HU-213 — duplicar un aula                                          *
  * ------------------------------------------------------------------ */
+
+/* ------------------------------------------------------------------ *
+ *  HU-306 — fecha y duración bloqueadas con reservas vivas (D30)      *
+ * ------------------------------------------------------------------ */
+
+function montarEditando(aula: ClassroomDetail) {
+  const onGuardada = vi.fn();
+  const utils = renderConProviders(<FormularioAula aula={aula} onGuardada={onGuardada} />);
+
+  return { ...utils, onGuardada };
+}
+
+describe('FormularioAula — editar con reservas vivas (AC1, AC2, AC5)', () => {
+  it('con reservas vivas, deshabilita fecha, hora y duración, y explica por qué', () => {
+    montarEditando({ ...AULA_ORIGEN, currentBookings: 2 });
+
+    expect(screen.getByLabelText(/^día/i)).toBeDisabled();
+    expect(screen.getByLabelText(/hora de inicio/i)).toBeDisabled();
+    expect(screen.getByLabelText(/duración/i)).toBeDisabled();
+    expect(screen.getByText(/ya tiene estudiantes con un cupo reservado/i)).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /duplicar clase/i })).toBeInTheDocument();
+  });
+
+  it('sin reservas vivas, el horario se sigue editando (AC2)', () => {
+    montarEditando({ ...AULA_ORIGEN, currentBookings: 0 });
+
+    expect(screen.getByLabelText(/^día/i)).not.toBeDisabled();
+    expect(screen.getByLabelText(/duración/i)).not.toBeDisabled();
+    expect(screen.queryByText(/ya tiene estudiantes con un cupo reservado/i)).toBeNull();
+  });
+
+  it('con reservas vivas, el resto de campos del aula se sigue editando', async () => {
+    updateClassroomMock.mockResolvedValue({ classroom: { ...AULA_ORIGEN, title: 'Nuevo título' } });
+    const { user, onGuardada } = montarEditando({ ...AULA_ORIGEN, currentBookings: 2 });
+
+    const titulo = screen.getByLabelText(/nombre de la clase/i);
+    await user.clear(titulo);
+    await user.type(titulo, 'Nuevo título');
+    await user.click(screen.getByRole('button', { name: /guardar los cambios/i }));
+
+    await waitFor(() => expect(onGuardada).toHaveBeenCalled());
+    expect(updateClassroomMock).toHaveBeenCalledWith(
+      AULA_ORIGEN.id,
+      expect.objectContaining({ title: 'Nuevo título' }),
+    );
+  });
+});
 
 describe('FormularioAula — duplicando (AC1, AC2, AC3)', () => {
   it('precarga todos los campos salvo fecha y hora', () => {

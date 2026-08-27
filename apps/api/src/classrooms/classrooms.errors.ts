@@ -7,6 +7,7 @@ import {
 import {
   ApiErrorCode,
   type ClassroomDurationInvalidDetails,
+  type ClassroomHasBookingsDetails,
   type ClassroomLeadTimeWarningDetails,
   type TeacherScheduleConflictDetails,
   UserStatus,
@@ -163,6 +164,22 @@ export const classroomNotEditable = (): ConflictException =>
     code: ApiErrorCode.CLASSROOM_NOT_EDITABLE,
     message: 'Esta clase ya no se puede editar ni cancelar.',
   });
+
+/**
+ * Se intentó mover `scheduledAt` o `durationMinutes` con reservas `CONFIRMED`
+ * vivas (HU-306, D30). El resto del aula sigue editable; solo estos dos campos
+ * se bloquean, porque reprogramar puede chocar con la agenda de cada
+ * estudiante ya reservado.
+ */
+export const classroomHasBookings = (reservasActivas: number): ConflictException => {
+  const details: ClassroomHasBookingsDetails = { reservasActivas };
+
+  return new ConflictException({
+    code: ApiErrorCode.CLASSROOM_HAS_BOOKINGS,
+    message: `${reservasActivas} ${reservasActivas === 1 ? 'estudiante tiene' : 'estudiantes tienen'} un cupo reservado en esta clase: cancélala y crea otra si necesitas cambiar la fecha o la duración.`,
+    details,
+  });
+};
 
 /**
  * Traduce el estado de la cuenta del profesor al 403 que le corresponde.
