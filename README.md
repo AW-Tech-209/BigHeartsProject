@@ -69,19 +69,23 @@ curl http://localhost:3000/health
 El seed crea usuarios y, en entornos no productivos, aulas de ejemplo. Todos los usuarios comparten
 la misma contraseña:
 
-| Rol     | Email                            | Estado  | Contraseña     |
-| ------- | -------------------------------- | ------- | -------------- |
-| ADMIN   | `admin@academia.local`           | ACTIVE  | `Password123!` |
-| TEACHER | `profe@academia.local`           | ACTIVE  | `Password123!` |
-| TEACHER | `profe2@academia.local`          | ACTIVE  | `Password123!` |
-| TEACHER | `profe.pendiente@academia.local` | PENDING | `Password123!` |
-| STUDENT | `alumno@academia.local`          | ACTIVE  | `Password123!` |
+| Rol     | Email                                | Estado  | Contraseña     |
+| ------- | ------------------------------------ | ------- | -------------- |
+| ADMIN   | `admin@academia.local`               | ACTIVE  | `Password123!` |
+| TEACHER | `profe@academia.local`               | ACTIVE  | `Password123!` |
+| TEACHER | `profe2@academia.local`              | ACTIVE  | `Password123!` |
+| TEACHER | `profe.pendiente@academia.local`     | PENDING | `Password123!` |
+| STUDENT | `alumno@academia.local`              | ACTIVE  | `Password123!` |
+| STUDENT | `alumno2@academia.local`             | ACTIVE  | `Password123!` |
+| STUDENT | `alumno3` a `alumno6@academia.local` | ACTIVE  | `Password123!` |
 
-Además, ocho aulas repartidas entre los dos profesores `ACTIVE`, con fechas relativas al momento
-de sembrar, para poder enseñar el catálogo, la supervisión del admin y «Mis aulas» sin construir
-datos a mano.
+Además, nueve aulas repartidas entre los dos profesores `ACTIVE`, con fechas relativas al momento
+de sembrar, y reservas reales sobre ellas: `alumno@academia.local` ve en «Mis reservas» una clase
+próxima, una a punto de empezar (con el enlace ya visible) y una pasada, más una cancelada.
+`alumno3`–`alumno6` son relleno, solo para que `currentBookings` de cada aula cuadre con reservas
+`CONFIRMED` de verdad — incluida una con el último cupo libre y otra llena.
 
-El seed es idempotente (usuarios por `upsert` de email, aulas por un id fijo): se puede
+El seed es idempotente (usuarios por `upsert` de email, aulas y reservas por un id fijo): se puede
 re-ejecutar sin duplicar. Para lanzarlo a mano: `npm run db:seed` (o dentro del contenedor, ya
 corre solo al arrancar).
 
