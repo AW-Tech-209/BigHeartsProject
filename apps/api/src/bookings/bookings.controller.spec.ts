@@ -82,3 +82,66 @@ describe('BookingsController.create — POST /bookings (HU-301)', () => {
     });
   });
 });
+
+describe('BookingsController.listMias — GET /bookings/mias (HU-302)', () => {
+  it('pasa al servicio el usuario del token y el query', async () => {
+    const listMisReservas = vi
+      .fn()
+      .mockResolvedValue({ items: [], total: 0, page: 1, pageSize: 20 });
+    const controller = new BookingsController({ listMisReservas } as unknown as BookingsService);
+    const query = { estado: 'proximas' } as never;
+
+    await controller.listMias(estudiante, query);
+
+    expect(listMisReservas).toHaveBeenCalledWith(estudiante, query);
+  });
+
+  it('devuelve la respuesta tal cual la resuelve el servicio', async () => {
+    const respuesta = { items: [], total: 0, page: 1, pageSize: 20 };
+    const listMisReservas = vi.fn().mockResolvedValue(respuesta);
+    const controller = new BookingsController({ listMisReservas } as unknown as BookingsService);
+
+    await expect(controller.listMias(estudiante, {} as never)).resolves.toEqual(respuesta);
+  });
+
+  /**
+   * `@Roles(STUDENT)` sigue en la clase (AC3): mismo guard, mismo metadato,
+   * el `describe` de arriba ya lo cubre para todo el controlador.
+   */
+  describe('autorización por rol (AC3)', () => {
+    const guard = new RolesGuard(new Reflector());
+
+    function contextoMias(role: UserRole): ExecutionContext {
+      const user: AuthenticatedUser = {
+        id: `id-${role}`,
+        email: 'u@academia.local',
+        role,
+        status: UserStatus.ACTIVE,
+      };
+
+      return {
+        getHandler: () => BookingsController.prototype.listMias,
+        getClass: () => BookingsController,
+        switchToHttp: () => ({ getRequest: () => ({ user }) }),
+      } as unknown as ExecutionContext;
+    }
+
+    it('deja pasar a STUDENT', () => {
+      expect(guard.canActivate(contextoMias(UserRole.STUDENT))).toBe(true);
+    });
+
+    it.each([UserRole.TEACHER, UserRole.ADMIN])('responde 403 INSUFFICIENT_ROLE a %s', (role) => {
+      try {
+        guard.canActivate(contextoMias(role));
+        throw new Error('Se esperaba un 403 y el guard dejó pasar.');
+      } catch (error) {
+        const excepcion = error as {
+          getStatus?: () => number;
+          getResponse?: () => { code: string };
+        };
+        expect(excepcion.getStatus?.()).toBe(403);
+        expect(excepcion.getResponse?.().code).toBe(ApiErrorCode.INSUFFICIENT_ROLE);
+      }
+    });
+  });
+});

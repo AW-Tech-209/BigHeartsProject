@@ -755,6 +755,31 @@ export interface AdminClassroomsResponse {
 }
 
 /**
+ * Query de `GET /bookings/mias` (HU-302). Misma forma que `MisAulasQuery`: no
+ * declara `studentId`, así que el alcance sale del token (§4.8, regla 3), y
+ * comparte el mismo filtro temporal disjunto (D24).
+ */
+export interface MisReservasQuery {
+  /** Por defecto, `todas`: la primera vez que llega, quiere ver todo lo suyo. */
+  estado?: EstadoTemporalAula;
+  page?: number;
+  pageSize?: number;
+}
+
+/**
+ * Respuesta de `GET /bookings/mias`. Reutiliza `ClassroomListItem` —no un tipo
+ * paralelo—: el estudiante ve el aula reservada con el nombre de su profesor y
+ * su propio `myBookingStatus`, igual que en el catálogo. `meetingLink` no
+ * viaja, por la misma regla que en cualquier otro listado.
+ */
+export interface MisReservasResponse {
+  items: ClassroomListItem[];
+  total: number;
+  page: number;
+  pageSize: number;
+}
+
+/**
  * Respuesta de `GET /admin/teachers`: todos los profesores de la academia, sin
  * filtrar por estado. Sirve al selector del filtro de supervisión (HU-210) y
  * es un superconjunto de `PendingTeachersResponse`, que solo trae los

@@ -1,4 +1,12 @@
-import { ApiErrorCode, ClassroomStatus, UserRole, UserStatus } from '@academia/types';
+import {
+  ApiErrorCode,
+  ClassroomStatus,
+  EnglishLevel,
+  EstadoTemporalAula,
+  MeetingProvider,
+  UserRole,
+  UserStatus,
+} from '@academia/types';
 import { describe, expect, it, vi } from 'vitest';
 
 import type { AuthenticatedUser } from '../auth/auth.types';
@@ -6,6 +14,7 @@ import type { NotificationService } from '../notifications/notification.service'
 import type { PrismaService } from '../prisma/prisma.service';
 import { BookingsService } from './bookings.service';
 import type { CreateBookingDto } from './dto/create-booking.dto';
+import type { ListMisReservasDto } from './dto/list-mis-reservas.dto';
 
 const ESTUDIANTE: AuthenticatedUser = {
   id: '11111111-1111-4111-8111-111111111111',
@@ -259,5 +268,323 @@ describe('BookingsService.createBooking — "concurrencia" (lógica de exactamen
 
     expect(segundoCodigo).toBe(ApiErrorCode.CLASSROOM_FULL);
     expect(estado.current_bookings).toBe(1);
+  });
+});
+
+/* ------------------------------------------------------------------------- *
+ * «Mis reservas» — GET /bookings/mias (HU-302)
+ * ------------------------------------------------------------------------- */
+
+const OTRO_ESTUDIANTE_ID = '99999999-9999-4999-8999-999999999999';
+
+function aulaDeReserva(overrides: Record<string, unknown> = {}) {
+  return {
+    id: '44444444-4444-4444-8444-444444444444',
+    teacherId: 'profesor-id',
+    title: 'Conversación cotidiana',
+    description: 'Practicamos saludos y presentaciones.',
+    level: EnglishLevel.BEGINNER,
+    maxStudents: 8,
+    currentBookings: 2,
+    scheduledAt: new Date('2099-08-12T23:00:00.000Z'),
+    durationMinutes: 60,
+    meetingLink: 'v1.iv.tag.texto',
+    meetingProvider: MeetingProvider.MANUAL,
+    status: ClassroomStatus.PUBLISHED,
+    isRecurring: false,
+    communicationModes: [],
+    hasInterpreter: false,
+    hasLiveCaptions: false,
+    hasVisualMaterials: false,
+    createdAt: new Date('2026-08-01T10:00:00.000Z'),
+    updatedAt: new Date('2026-08-01T10:00:00.000Z'),
+    teacher: { firstName: 'Paula', lastName: 'Profesora' },
+    ...overrides,
+  };
+}
+
+type FilaReserva = ReturnType<typeof filaReserva>;
+
+/**
+ * El `id` que importa para los tests es el del AULA, no el de la reserva:
+ * `toClassroomListItem` proyecta el objeto del aula, y es su `id` el que llega
+ * a `resultado.items[].id`.
+ */
+function filaReserva(
+  classroomId: string,
+  scheduledAt: string,
+  overrides: Record<string, unknown> = {},
+) {
+  return {
+    id: `reserva-${classroomId}`,
+    studentId: ESTUDIANTE.id,
+    classroomId,
+    status: 'CONFIRMED',
+    cancelledAt: null,
+    createdAt: new Date('2026-08-01T10:00:00.000Z'),
+    updatedAt: new Date('2026-08-01T10:00:00.000Z'),
+    classroom: aulaDeReserva({ id: classroomId, scheduledAt: new Date(scheduledAt) }),
+    ...overrides,
+  };
+}
+
+function reservaCancelada(classroomId: string, scheduledAt: string) {
+  return filaReserva(classroomId, scheduledAt, {
+    classroom: aulaDeReserva({
+      id: classroomId,
+      scheduledAt: new Date(scheduledAt),
+      status: ClassroomStatus.CANCELLED,
+    }),
+  });
+}
+
+type WhereReserva = {
+  studentId?: string;
+  classroom?: { status?: unknown; scheduledAt?: { gt?: Date; lte?: Date }; OR?: unknown[] };
+};
+
+/**
+ * Prisma falso que entiende las cuatro cláusulas de `listMisReservas` sobre
+ * `Booking.classroom`, igual que `setupMisAulas` en `classrooms.service.spec.ts`
+ * las entiende sobre `Classroom` directo.
+ */
+function setupMisReservas(
+  grupos: { proximas?: FilaReserva[]; pasadas?: FilaReserva[]; canceladas?: FilaReserva[] } = {},
+) {
+  const proximas = grupos.proximas ?? [];
+  const pasadas = grupos.pasadas ?? [];
+  const canceladas = grupos.canceladas ?? [];
+
+  function filasDe(where: WhereReserva): FilaReserva[] {
+    const c = where.classroom ?? {};
+    if (c.OR) return [...canceladas, ...pasadas];
+    if (c.status === ClassroomStatus.CANCELLED) return canceladas;
+    return c.scheduledAt?.gt ? proximas : pasadas;
+  }
+
+  const findMany = vi.fn(
+    ({
+      where,
+      orderBy,
+      skip = 0,
+      take,
+    }: {
+      where: WhereReserva;
+      orderBy: { classroom: { scheduledAt: 'asc' | 'desc' } };
+      skip?: number;
+      take: number;
+    }) => {
+      const ordenadas = [...filasDe(where)].sort((a, b) => {
+        const diferencia = a.classroom.scheduledAt.getTime() - b.classroom.scheduledAt.getTime();
+        return orderBy.classroom.scheduledAt === 'asc' ? diferencia : -diferencia;
+      });
+      return Promise.resolve(ordenadas.slice(skip, skip + take));
+    },
+  );
+
+  const count = vi.fn(({ where }: { where: WhereReserva }) =>
+    Promise.resolve(filasDe(where).length),
+  );
+
+  const prisma = { booking: { findMany, count } } as unknown as PrismaService;
+  const notifications = { notify: vi.fn() } as unknown as NotificationService;
+
+  return { service: new BookingsService(prisma, notifications), findMany, count };
+}
+
+function wheresDeReservas(...espias: ReturnType<typeof vi.fn>[]): WhereReserva[] {
+  return espias.flatMap((espia) =>
+    espia.mock.calls.map((llamada) => (llamada[0] as { where: WhereReserva }).where),
+  );
+}
+
+const AYER = '2020-08-11T23:00:00.000Z';
+const ANTEAYER = '2020-08-10T23:00:00.000Z';
+const PRONTO = '2099-08-12T23:00:00.000Z';
+const MAS_TARDE = '2099-09-12T23:00:00.000Z';
+
+describe('BookingsService.listMisReservas — alcance (AC3)', () => {
+  it('acota SIEMPRE al estudiante del token, en todas las consultas', async () => {
+    const { service, findMany, count } = setupMisReservas({
+      proximas: [filaReserva('a', PRONTO)],
+    });
+
+    await service.listMisReservas(ESTUDIANTE, {});
+
+    const wheres = wheresDeReservas(findMany, count);
+    expect(wheres.length).toBeGreaterThan(0);
+    for (const where of wheres) {
+      expect(where.studentId).toBe(ESTUDIANTE.id);
+    }
+  });
+
+  it('ignora un studentId colado en el query: nunca lee las reservas de otro', async () => {
+    const { service, findMany, count } = setupMisReservas({
+      proximas: [filaReserva('a', PRONTO)],
+    });
+    const conIntruso = { studentId: OTRO_ESTUDIANTE_ID } as ListMisReservasDto;
+
+    await service.listMisReservas(ESTUDIANTE, conIntruso);
+
+    for (const where of wheresDeReservas(findMany, count)) {
+      expect(where.studentId).toBe(ESTUDIANTE.id);
+      expect(where.studentId).not.toBe(OTRO_ESTUDIANTE_ID);
+    }
+  });
+});
+
+describe('BookingsService.listMisReservas — filtro temporal disjunto (AC1, AC2)', () => {
+  it('sin filtro devuelve las tres, próximas ascendente y el historial descendente', async () => {
+    const { service } = setupMisReservas({
+      proximas: [filaReserva('lejana', MAS_TARDE), filaReserva('cercana', PRONTO)],
+      pasadas: [filaReserva('ayer', AYER)],
+      canceladas: [reservaCancelada('cancelada', ANTEAYER)],
+    });
+
+    const resultado = await service.listMisReservas(ESTUDIANTE, {});
+
+    expect(resultado.total).toBe(4);
+    expect(resultado.items.map((item) => item.id)).toEqual([
+      'cercana',
+      'lejana',
+      'ayer',
+      'cancelada',
+    ]);
+  });
+
+  it('el filtro proximas deja fuera las pasadas y las canceladas', async () => {
+    const { service } = setupMisReservas({
+      proximas: [filaReserva('proxima', PRONTO)],
+      pasadas: [filaReserva('pasada', AYER)],
+      canceladas: [reservaCancelada('cancelada', MAS_TARDE)],
+    });
+
+    const resultado = await service.listMisReservas(ESTUDIANTE, {
+      estado: EstadoTemporalAula.PROXIMAS,
+    });
+
+    expect(resultado.items.map((item) => item.id)).toEqual(['proxima']);
+    expect(resultado.total).toBe(1);
+  });
+
+  it('el filtro pasadas devuelve solo lo ya impartido, lo más reciente primero', async () => {
+    const { service } = setupMisReservas({
+      pasadas: [filaReserva('anteayer', ANTEAYER), filaReserva('ayer', AYER)],
+    });
+
+    const resultado = await service.listMisReservas(ESTUDIANTE, {
+      estado: EstadoTemporalAula.PASADAS,
+    });
+
+    expect(resultado.items.map((item) => item.id)).toEqual(['ayer', 'anteayer']);
+  });
+
+  /**
+   * AC2 — el estado gana sobre la fecha: una clase cancelada del mes que
+   * viene sale en `canceladas`, no en `proximas`.
+   */
+  it('el filtro canceladas incluye las de fecha futura, y solo esas', async () => {
+    const { service } = setupMisReservas({
+      proximas: [filaReserva('proxima', PRONTO)],
+      canceladas: [
+        reservaCancelada('cancelada-futura', MAS_TARDE),
+        reservaCancelada('cancelada-vieja', AYER),
+      ],
+    });
+
+    const resultado = await service.listMisReservas(ESTUDIANTE, {
+      estado: EstadoTemporalAula.CANCELADAS,
+    });
+
+    expect(resultado.items.map((item) => item.id)).toEqual(['cancelada-futura', 'cancelada-vieja']);
+  });
+
+  it('los tres filtros suman el total de todas y ninguna reserva sale dos veces', async () => {
+    const grupos = {
+      proximas: [filaReserva('proxima', PRONTO)],
+      pasadas: [filaReserva('pasada', AYER)],
+      canceladas: [reservaCancelada('cancelada', MAS_TARDE)],
+    };
+
+    const [todas, proximas, pasadas, canceladas] = await Promise.all([
+      setupMisReservas(grupos).service.listMisReservas(ESTUDIANTE, {}),
+      setupMisReservas(grupos).service.listMisReservas(ESTUDIANTE, {
+        estado: EstadoTemporalAula.PROXIMAS,
+      }),
+      setupMisReservas(grupos).service.listMisReservas(ESTUDIANTE, {
+        estado: EstadoTemporalAula.PASADAS,
+      }),
+      setupMisReservas(grupos).service.listMisReservas(ESTUDIANTE, {
+        estado: EstadoTemporalAula.CANCELADAS,
+      }),
+    ]);
+
+    expect(proximas.total + pasadas.total + canceladas.total).toBe(todas.total);
+
+    const idsSueltos = [...proximas.items, ...pasadas.items, ...canceladas.items].map(
+      (item) => item.id,
+    );
+    expect(new Set(idsSueltos).size).toBe(idsSueltos.length);
+    expect(idsSueltos.sort()).toEqual(todas.items.map((item) => item.id).sort());
+  });
+});
+
+describe('BookingsService.listMisReservas — paginación', () => {
+  it('usa página 1 y el tamaño por defecto, y devuelve el formato del catálogo', async () => {
+    const { service } = setupMisReservas({ proximas: [filaReserva('a', PRONTO)] });
+
+    const resultado = await service.listMisReservas(ESTUDIANTE, {});
+
+    expect(resultado).toMatchObject({ total: 1, page: 1, pageSize: 20 });
+    expect(Object.keys(resultado).sort()).toEqual(['items', 'page', 'pageSize', 'total']);
+  });
+
+  it('una página a caballo entre los dos bloques no duplica ni pierde filas', async () => {
+    const grupos = {
+      proximas: [filaReserva('cercana', PRONTO), filaReserva('lejana', MAS_TARDE)],
+      pasadas: [filaReserva('ayer', AYER), filaReserva('anteayer', ANTEAYER)],
+    };
+
+    const primera = await setupMisReservas(grupos).service.listMisReservas(ESTUDIANTE, {
+      pageSize: 3,
+    });
+    const segunda = await setupMisReservas(grupos).service.listMisReservas(ESTUDIANTE, {
+      page: 2,
+      pageSize: 3,
+    });
+
+    expect(primera.items.map((item) => item.id)).toEqual(['cercana', 'lejana', 'ayer']);
+    expect(segunda.items.map((item) => item.id)).toEqual(['anteayer']);
+  });
+});
+
+// AC4 — `meetingLink` no viaja en el listado, ni siquiera al confirmado.
+describe('BookingsService.listMisReservas — el enlace nunca viaja (AC4)', () => {
+  it('ninguna reserva trae meetingLink, ni cifrado ni en claro', async () => {
+    const { service } = setupMisReservas({
+      proximas: [filaReserva('proxima', PRONTO)],
+      pasadas: [filaReserva('pasada', AYER)],
+      canceladas: [reservaCancelada('cancelada', ANTEAYER)],
+    });
+
+    const resultado = await service.listMisReservas(ESTUDIANTE, {});
+
+    expect(resultado.items).toHaveLength(3);
+    for (const item of resultado.items) {
+      expect(item).not.toHaveProperty('meetingLink');
+    }
+    expect(JSON.stringify(resultado)).not.toContain('v1.iv.tag.texto');
+  });
+
+  it('trae el nombre del profesor y el myBookingStatus propio', async () => {
+    const { service } = setupMisReservas({ proximas: [filaReserva('proxima', PRONTO)] });
+
+    const resultado = await service.listMisReservas(ESTUDIANTE, {});
+
+    expect(resultado.items[0]).toMatchObject({
+      teacherFirstName: 'Paula',
+      teacherLastName: 'Profesora',
+      myBookingStatus: 'CONFIRMED',
+    });
   });
 });

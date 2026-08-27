@@ -6,6 +6,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { getPendingTeachers } from '@/features/admin/api/get-pending-teachers';
 import { getClassrooms } from '@/features/aulas/api/get-classrooms';
 import { getMisAulas } from '@/features/aulas/api/get-mis-aulas';
+import { getMisReservas } from '@/features/aulas/api/get-mis-reservas';
 import { getProfile } from '@/features/profile/api/get-profile';
 import { httpClient } from '@/lib/http-client';
 import { esperarSinFallosDeAccesibilidad } from '@/test/accesibilidad';
@@ -36,6 +37,7 @@ vi.mock('@/features/profile/api/get-profile', () => ({ getProfile: vi.fn() }));
 vi.mock('@/features/admin/api/get-pending-teachers', () => ({ getPendingTeachers: vi.fn() }));
 vi.mock('@/features/aulas/api/get-classrooms', () => ({ getClassrooms: vi.fn() }));
 vi.mock('@/features/aulas/api/get-mis-aulas', () => ({ getMisAulas: vi.fn() }));
+vi.mock('@/features/aulas/api/get-mis-reservas', () => ({ getMisReservas: vi.fn() }));
 
 const TEMAS: Tema[] = ['light', 'dark', 'hc'];
 
@@ -111,6 +113,8 @@ beforeEach(() => {
   vi.mocked(getClassrooms).mockResolvedValue({ items: [], total: 0, page: 1, pageSize: 20 });
   // Y para «Mis aulas», que se prueba entera en `MisAulasPage.spec.tsx`.
   vi.mocked(getMisAulas).mockResolvedValue({ items: [], total: 0, page: 1, pageSize: 20 });
+  // Y para «Mis clases», que se prueba entera en `MisClasesPage.spec.tsx`.
+  vi.mocked(getMisReservas).mockResolvedValue({ items: [], total: 0, page: 1, pageSize: 20 });
 });
 
 describe.each(PAGINAS)('$nombre', ({ elemento, h1, rol }) => {
