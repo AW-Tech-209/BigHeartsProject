@@ -1,5 +1,14 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { ClassroomStatus, type CreateBookingResponse } from '@academia/types';
+import type { Prisma } from '@prisma/client';
+import {
+  type BookingStatus,
+  CLASSROOMS_PAGE_SIZE_DEFAULT,
+  ClassroomStatus,
+  type CreateBookingResponse,
+  ESTADO_TEMPORAL_POR_DEFECTO,
+  EstadoTemporalAula,
+  type MisReservasResponse,
+} from '@academia/types';
 
 import type { AuthenticatedUser } from '../auth/auth.types';
 import {
@@ -10,6 +19,7 @@ import {
 import { PrismaService } from '../prisma/prisma.service';
 import { seSolapan } from '../classrooms/coherencia-temporal.rules';
 import { classroomNotFound } from '../classrooms/classrooms.errors';
+import { toClassroomListItem } from '../classrooms/classroom.mapper';
 import { toPublicBooking } from './booking.mapper';
 import {
   bookingAlreadyExists,
@@ -18,6 +28,7 @@ import {
   classroomNotBookable,
 } from './bookings.errors';
 import type { CreateBookingDto } from './dto/create-booking.dto';
+import type { ListMisReservasDto } from './dto/list-mis-reservas.dto';
 
 /** La fila del aula tal y como sale del `SELECT … FOR UPDATE` (§4.2). */
 interface AulaBloqueada {
@@ -154,4 +165,144 @@ export class BookingsService {
 
     return student?.firstName ?? '';
   }
+
+  /**
+   * `GET /bookings/mias` (HU-302). Copia la forma de
+   * `ClassroomsService.listMisAulas` (HU-207): mismo filtro disjunto D24,
+   * mismo orden, misma paginación de dos listas concatenadas en `todas`.
+   *
+   * **El `studentId` sale del token**, igual que el `teacherId` de «Mis
+   * aulas» (§4.8, regla 3): el DTO no lo declara, así que no hay forma de
+   * pedir las reservas de otro.
+   *
+   * `meetingLink` no viaja: `toClassroomListItem` nunca lo copia.
+   */
+  async listMisReservas(
+    student: AuthenticatedUser,
+    query: ListMisReservasDto,
+  ): Promise<MisReservasResponse> {
+    const page = query.page ?? 1;
+    const pageSize = query.pageSize ?? CLASSROOMS_PAGE_SIZE_DEFAULT;
+    const estado = query.estado ?? ESTADO_TEMPORAL_POR_DEFECTO;
+    const ahora = new Date();
+    const skip = (page - 1) * pageSize;
+
+    const { rows, total } =
+      estado === EstadoTemporalAula.TODAS
+        ? await this.leerTodasMisReservas(student.id, ahora, skip, pageSize)
+        : await this.leerMisReservasPorEstado(student.id, estado, ahora, skip, pageSize);
+
+    return {
+      items: rows.map((booking) =>
+        toClassroomListItem(
+          booking.classroom,
+          booking.classroom.teacher,
+          booking.status as BookingStatus,
+        ),
+      ),
+      total,
+      page,
+      pageSize,
+    };
+  }
+
+  private async leerMisReservasPorEstado(
+    studentId: string,
+    estado: Exclude<EstadoTemporalAula, EstadoTemporalAula.TODAS>,
+    ahora: Date,
+    skip: number,
+    take: number,
+  ) {
+    const where = {
+      [EstadoTemporalAula.PROXIMAS]: proximasDe(studentId, ahora),
+      [EstadoTemporalAula.PASADAS]: pasadasDe(studentId, ahora),
+      [EstadoTemporalAula.CANCELADAS]: canceladasDe(studentId),
+    }[estado];
+
+    const orderBy: Prisma.BookingOrderByWithRelationInput = {
+      classroom: { scheduledAt: estado === EstadoTemporalAula.PROXIMAS ? 'asc' : 'desc' },
+    };
+
+    const [rows, total] = await Promise.all([
+      this.prisma.booking.findMany({
+        where,
+        orderBy,
+        skip,
+        take,
+        include: BOOKING_CLASSROOM_INCLUDE,
+      }),
+      this.prisma.booking.count({ where }),
+    ]);
+
+    return { rows, total };
+  }
+
+  private async leerTodasMisReservas(studentId: string, ahora: Date, skip: number, take: number) {
+    const whereProximas = proximasDe(studentId, ahora);
+    const whereHistorial = historialDe(studentId, ahora);
+
+    const [totalProximas, totalHistorial] = await Promise.all([
+      this.prisma.booking.count({ where: whereProximas }),
+      this.prisma.booking.count({ where: whereHistorial }),
+    ]);
+
+    const proximas =
+      skip < totalProximas
+        ? await this.prisma.booking.findMany({
+            where: whereProximas,
+            orderBy: { classroom: { scheduledAt: 'asc' } },
+            skip,
+            take,
+            include: BOOKING_CLASSROOM_INCLUDE,
+          })
+        : [];
+
+    const huecoRestante = take - proximas.length;
+    const historial =
+      huecoRestante > 0
+        ? await this.prisma.booking.findMany({
+            where: whereHistorial,
+            orderBy: { classroom: { scheduledAt: 'desc' } },
+            skip: Math.max(skip - totalProximas, 0),
+            take: huecoRestante,
+            include: BOOKING_CLASSROOM_INCLUDE,
+          })
+        : [];
+
+    return { rows: [...proximas, ...historial], total: totalProximas + totalHistorial };
+  }
+}
+
+const BOOKING_CLASSROOM_INCLUDE = {
+  classroom: { include: { teacher: { select: { firstName: true, lastName: true } } } },
+} satisfies Prisma.BookingInclude;
+
+/**
+ * Los tres grupos disjuntos de D24, sobre la reserva del estudiante en vez
+ * del aula del profesor: el estado gana sobre la fecha, así que una clase
+ * cancelada cuenta como `canceladas` aunque sea futura.
+ */
+function proximasDe(studentId: string, ahora: Date): Prisma.BookingWhereInput {
+  return {
+    studentId,
+    classroom: { status: { not: ClassroomStatus.CANCELLED }, scheduledAt: { gt: ahora } },
+  };
+}
+
+function pasadasDe(studentId: string, ahora: Date): Prisma.BookingWhereInput {
+  return {
+    studentId,
+    classroom: { status: { not: ClassroomStatus.CANCELLED }, scheduledAt: { lte: ahora } },
+  };
+}
+
+function canceladasDe(studentId: string): Prisma.BookingWhereInput {
+  return { studentId, classroom: { status: ClassroomStatus.CANCELLED } };
+}
+
+function historialDe(studentId: string, ahora: Date): Prisma.BookingWhereInput {
+  return {
+    studentId,
+    classroom: { OR: [{ status: ClassroomStatus.CANCELLED }, { scheduledAt: { lte: ahora } }] },
+  };
 }
