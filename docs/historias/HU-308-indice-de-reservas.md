@@ -5,7 +5,7 @@
 | **Sprint**          | Sprint 3 — Sistema de Reservas                                     |
 | **Prioridad**       | 🔴 Crítica (bomba de relojería: la desactiva la próxima migración) |
 | **Estimación**      | 0.5 días                                                           |
-| **Estado**          | ⬜ Pendiente                                                       |
+| **Estado**          | ✅ Hecho                                                           |
 | **Rama**            | `hu-308-indice-de-reservas-<persona>`                              |
 | **Alcance técnico** | backend                                                            |
 | **Depende de**      | HU-301 (✅)                                                        |
@@ -58,37 +58,37 @@ sí a quien canceló. La lógica de HU-301 hoy no la usa; nada impide que mañan
 
 ### Backend
 
-- [ ] **T1** — Quitar `@@unique([studentId, classroomId])` del modelo `Booking`, dejando el
+- [x] **T1** — Quitar `@@unique([studentId, classroomId])` del modelo `Booking`, dejando el
       `@@index([studentId])` y `@@index([classroomId])` que ya existen.
-- [ ] **T2** — Comprobar con `prisma migrate diff` que schema y base de datos **ya no divergen**, y
+- [x] **T2** — Comprobar con `prisma migrate diff` que schema y base de datos **ya no divergen**, y
       generar la migración que haga falta si divergen. **La migración no puede borrar
       `bookings_active_uniq`.**
-- [ ] **T3** — Un test que verifique que el índice parcial **existe y es parcial**. Consúltalo por
+- [x] **T3** — Un test que verifique que el índice parcial **existe y es parcial**. Consúltalo por
       Prisma Client o por `DIRECT_URL`: con el pooler de Supabase, `information_schema` no es de
       fiar (trampa conocida #5).
-- [ ] **T4** — Un test que reserve, cancele y **vuelva a reservar** la misma aula. Es el AC3 de
+- [x] **T4** — Un test que reserve, cancele y **vuelva a reservar** la misma aula. Es el AC3 de
       HU-301 comprobado contra la base de datos real, no contra un mock.
-- [ ] **T5** — Añadir la comprobación de deriva al CI, para que la próxima vez lo diga la máquina.
+- [x] **T5** — Añadir la comprobación de deriva al CI, para que la próxima vez lo diga la máquina.
 
 ### Documentación
 
-- [ ] **T6** — Anotar la salida elegida en `ARQUITECTURA.md` §4.3, junto a la nota de auditoría del
+- [x] **T6** — Anotar la salida elegida en `ARQUITECTURA.md` §4.3, junto a la nota de auditoría del
       índice, y añadirla a las trampas conocidas del `README.md`. Es la sexta: **«Prisma no modela
       índices parciales; no vuelvas a declararlos con `@@unique`.»**
 
 ## ✅ Criterios de aceptación
 
-- [ ] **AC1** — `prisma migrate diff` entre el schema y la base de datos migrada **no reporta
+- [x] **AC1** — `prisma migrate diff` entre el schema y la base de datos migrada **no reporta
       diferencias** sobre la tabla `bookings`.
-- [ ] **AC2** — Tras aplicar todas las migraciones desde cero, existe `bookings_active_uniq` **con
+- [x] **AC2** — Tras aplicar todas las migraciones desde cero, existe `bookings_active_uniq` **con
       su cláusula `WHERE status = 'CONFIRMED'`**, y **no** existe ningún índice único total sobre
       `(student_id, classroom_id)`.
-- [ ] **AC3** — Un estudiante que reserva, cancela y vuelve a reservar la misma aula **lo consigue**,
+- [x] **AC3** — Un estudiante que reserva, cancela y vuelve a reservar la misma aula **lo consigue**,
       verificado contra la base de datos.
-- [ ] **AC4** — Dos reservas `CONFIRMED` simultáneas del mismo estudiante en la misma aula siguen
+- [x] **AC4** — Dos reservas `CONFIRMED` simultáneas del mismo estudiante en la misma aula siguen
       siendo imposibles: la red de seguridad no se ha perdido al quitar `@@unique`.
-- [ ] **AC5** — El CI falla si alguien vuelve a introducir la deriva.
-- [ ] **AC6** — **Verificación:** `typecheck`, `lint`, `build` y `npm run test` en verde.
+- [x] **AC5** — El CI falla si alguien vuelve a introducir la deriva.
+- [x] **AC6** — **Verificación:** `typecheck`, `lint`, `build` y `npm run test` en verde.
 
 ## 🚫 Fuera de alcance
 
@@ -98,4 +98,6 @@ sí a quien canceló. La lógica de HU-301 hoy no la usa; nada impide que mañan
 
 ## Notas de implementación
 
-_Se rellena al cerrar._
+Sin migración nueva: la BD nunca tuvo el índice total (solo el parcial escrito a mano), así que
+quitar `@@unique` del schema deja schema y BD ya sincronizados. El CI ahora levanta un servicio
+Postgres para aplicar migraciones y correr `prisma migrate diff --exit-code` como gate de deriva.

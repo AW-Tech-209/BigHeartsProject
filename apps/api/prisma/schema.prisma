@@ -303,13 +303,10 @@ model Booking {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  /// Índice único PARCIAL, no total (`ARQUITECTURA.md` §4.3,
-  /// `reglas-reservas.md` §3): un índice total impediría volver a reservar
-  /// tras cancelar, porque la fila `CANCELLED` seguiría ocupándolo. Prisma no
-  /// modela el `WHERE`, así que esta declaración es la aproximación más
-  /// cercana; la migración que la acompaña añade la cláusula a mano — ver su
-  /// comentario.
-  @@unique([studentId, classroomId])
+  /// El índice único PARCIAL vive solo en SQL (`bookings_active_uniq`,
+  /// migración `20260826120000_add_bookings`): Prisma no modela `WHERE` en
+  /// `@@unique`, y declararlo aquí generaría uno TOTAL que rompería §4.3
+  /// (HU-308). No lo vuelvas a declarar; el CI verifica que no haya deriva.
   @@index([studentId])
   @@index([classroomId])
   @@map("bookings")

@@ -209,6 +209,13 @@ Reglas que se derivan de esto y **no son negociables**:
 > impedido** de volver a reservar esa clase, porque la fila cancelada seguía ocupando el índice.
 > Sustituido por el índice parcial de arriba.
 
+> **Decisión HU-308 — Prisma no declara el índice, solo lo protege.** El `schema.prisma` no puede
+> expresar el `WHERE` de un índice parcial: declarar `@@unique([studentId, classroomId])` describe
+> un índice **total** que Prisma recrearía en la próxima `migrate dev`, reintroduciendo el bug de
+> arriba. El modelo `Booking` no declara ninguna unicidad sobre esas columnas; `bookings_active_uniq`
+> vive solo en SQL, escrito a mano en su migración, y el CI corre `prisma migrate diff` para que
+> cualquier deriva futura falle en vez de reintroducirse en silencio.
+
 ### 4.4 No solapamiento
 
 Un estudiante no puede tener dos reservas `CONFIRMED` cuyos intervalos
