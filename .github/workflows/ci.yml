@@ -23,6 +23,26 @@ jobs:
   backend:
     name: Backend (lint + build + test)
     runs-on: ubuntu-latest
+    # HU-308: los tests de @academia/api verifican el índice de `bookings`
+    # contra una BD real, y `prisma migrate diff` necesita una a la que
+    # aplicar las migraciones para comparar.
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: academia
+          POSTGRES_PASSWORD: academia
+          POSTGRES_DB: academia
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U academia -d academia"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgresql://academia:academia@localhost:5432/academia
+      DIRECT_URL: postgresql://academia:academia@localhost:5432/academia
     steps:
       - uses: actions/checkout@v4
 
@@ -46,6 +66,18 @@ jobs:
 
       - name: Build
         run: npm run build --workspace @academia/api
+
+      - name: Apply migrations
+        run: npx prisma migrate deploy --schema apps/api/prisma/schema.prisma
+
+      # AC1/AC5: si el schema vuelve a divergir de las migraciones aplicadas
+      # (por ejemplo, reintroduciendo `@@unique` sobre `bookings`), esto falla.
+      - name: Check schema drift
+        run: |
+          npx prisma migrate diff \
+            --from-url "$DATABASE_URL" \
+            --to-schema-datamodel apps/api/prisma/schema.prisma \
+            --exit-code
 
       - name: Test
         run: npm run test --workspace @academia/api

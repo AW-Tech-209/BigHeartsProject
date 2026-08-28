@@ -209,6 +209,13 @@ Reglas que se derivan de esto y **no son negociables**:
 > impedido** de volver a reservar esa clase, porque la fila cancelada seguía ocupando el índice.
 > Sustituido por el índice parcial de arriba.
 
+> **Decisión HU-308 — Prisma no declara el índice, solo lo protege.** El `schema.prisma` no puede
+> expresar el `WHERE` de un índice parcial: declarar `@@unique([studentId, classroomId])` describe
+> un índice **total** que Prisma recrearía en la próxima `migrate dev`, reintroduciendo el bug de
+> arriba. El modelo `Booking` no declara ninguna unicidad sobre esas columnas; `bookings_active_uniq`
+> vive solo en SQL, escrito a mano en su migración, y el CI corre `prisma migrate diff` para que
+> cualquier deriva futura falle en vez de reintroducirse en silencio.
+
 ### 4.4 No solapamiento
 
 Un estudiante no puede tener dos reservas `CONFIRMED` cuyos intervalos
@@ -445,9 +452,9 @@ juntos.
 | `auth`          | Registro, login, refresh, logout, guards.                                           | ✅                                                                                                                          |
 | `users`         | Perfil propio (`GET`/`PATCH /users/me`). La gestión de terceros vive en `admin`.    | ✅                                                                                                                          |
 | `classrooms`    | Aulas, horarios, cupos, enlace. Incluye `MeetingLinkCipher` (§4.1), que exporta.    | ✅ Crear, listar, detalle, editar, cancelar, «mis aulas», accesibilidad, coherencia temporal y ventana de acceso al enlace. |
-| `bookings`      | Reservas, concurrencia, cancelaciones.                                              | ⬜ Stub                                                                                                                     |
+| `bookings`      | Reservas, concurrencia, cancelaciones.                                              | ✅ Reservar, «mis reservas», cancelar (Sprint 3)                                                                            |
 | `sessions`      | Reservado (ver nota).                                                               | ⬜ Stub                                                                                                                     |
-| `notifications` | Emails transaccionales y recordatorios.                                             | 🟨 Puerto + `LoggingNotificationService` (HU-104, D14). Adaptador real en Sprint 4.                                         |
+| `notifications` | Emails transaccionales y recordatorios.                                             | 🟨 Puerto + `LoggingNotificationService`; 5 tipos de aviso (HU-104, D14). Adaptador real en Sprint 4.                       |
 | `admin`         | Aprobación de profesores y supervisión de aulas (solo lectura).                     | ✅ HU-104, HU-210                                                                                                           |
 
 > **Nota de auditoría — `SessionsModule` no tiene datos que gobernar.** El `.docx` lo declaraba

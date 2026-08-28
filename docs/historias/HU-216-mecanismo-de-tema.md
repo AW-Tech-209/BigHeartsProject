@@ -5,7 +5,7 @@
 | **Sprint**          | Sprint 3                                                    |
 | **Prioridad**       | 🟠 Alta (bloquea verificación visual de a11y de varias HUs) |
 | **Estimación**      | 0.5 días                                                    |
-| **Estado**          | ⬜ Pendiente                                                |
+| **Estado**          | ✅ Completada                                               |
 | **Rama**            | `hu-216-mecanismo-de-tema-<persona>`                        |
 | **Alcance técnico** | frontend                                                    |
 | **Depende de**      | ninguna                                                     |

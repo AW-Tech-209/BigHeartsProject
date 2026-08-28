@@ -5,7 +5,7 @@
 | **Sprint**          | Sprint 2 — Gestión de Aulas              |
 | **Prioridad**       | 🔴 Crítica (bloquea la demo al cliente)  |
 | **Estimación**      | 0.5 días                                 |
-| **Estado**          | ⬜ Pendiente                             |
+| **Estado**          | ✅ Completada                            |
 | **Rama**            | `hu-214-datos-de-demostracion-<persona>` |
 | **Alcance técnico** | backend                                  |
 | **Depende de**      | HU-211 (✅), HU-212 (✅)                 |

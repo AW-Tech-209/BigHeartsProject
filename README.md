@@ -410,7 +410,7 @@ El paso a paso completo (conectar cuentas, secretos, protección de rama, smoke 
 
 ## Trampas conocidas
 
-Cinco cosas que ya nos han mordido, están resueltas, y **no hay que reintroducir**. Todas están
+Seis cosas que ya nos han mordido, están resueltas, y **no hay que reintroducir**. Todas están
 comentadas también en el código, junto a la línea que las evita.
 
 ### 1. `optimizeDeps.include: ['@academia/types']` en `apps/web/vite.config.ts`
@@ -458,6 +458,15 @@ El pooler de Supabase en modo transacción (`DATABASE_URL`, puerto 6543) cachea 
 y puede devolver resultados parciales/obsoletos al consultar el catálogo (`information_schema`)
 directamente. No es un fallo del esquema: para verificar el estado real de la BD usa Prisma Client
 (un `create`/`findMany`) o conéctate por `DIRECT_URL` (puerto 5432).
+
+### 6. Prisma no modela índices parciales; no vuelvas a declararlos con `@@unique`
+
+El índice único de `bookings` (`bookings_active_uniq`) es **parcial** (`WHERE status =
+'CONFIRMED'`): un estudiante que cancela puede volver a reservar la misma clase. Si el modelo
+`Booking` declarase `@@unique([studentId, classroomId])`, Prisma generaría en la próxima `migrate
+dev` un índice **total** que reintroduce ese bug ya corregido (`docs/ARQUITECTURA.md` §4.3,
+HU-308). El índice vive solo en SQL, escrito a mano en su migración; el CI corre `prisma migrate
+diff` para detectar la deriva si alguien lo vuelve a declarar.
 
 ## Convención de commits
 

@@ -5,7 +5,7 @@
 | **Sprint**          | Sprint 3 — Sistema de Reservas                   |
 | **Prioridad**       | 🟠 Alta (cierra un agujero abierto desde HU-202) |
 | **Estimación**      | 1.5 días                                         |
-| **Estado**          | ⬜ Pendiente                                     |
+| **Estado**          | ✅ Completada                                    |
 | **Rama**            | `hu-306-un-aula-con-reservas-<persona>`          |
 | **Alcance técnico** | fullstack                                        |
 | **Depende de**      | HU-301, HU-303                                   |
