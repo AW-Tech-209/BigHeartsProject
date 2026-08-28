@@ -1084,3 +1084,29 @@ Correcciones aplicadas a las HUs del Sprint 3 al convertirlas, sin necesidad de 
 > **Deriva menor pendiente.** La tabla de §15 repite los números **D18, D19 y D20** en dos filas
 > distintas. No afecta a ninguna regla —el texto de cada una es correcto— pero conviene renumerar
 > las tres segundas ocurrencias antes de que alguien cite «D19» y no se sepa cuál.
+
+---
+
+## 17. Registro de decisiones — Sprint 4 (2026-08-27)
+
+Las cuatro se toman al planificar el sprint que **cierra la Fase 1**.
+
+| #   | Decisión                                                                                      | Dónde  | Por qué se tomó                                                                                                                                                                                                 |
+| --- | --------------------------------------------------------------------------------------------- | ------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| D32 | El proveedor de email es **Resend**                                                           | §4.6   | Cierra el punto 5 de §14.6, abierto desde el Sprint 1. 3.000 envíos/mes gratis y buena entregabilidad. Se enchufa cambiando el `useClass` de `NotificationsModule`: D14 dejó el puerto montado justo para esto. |
+| D33 | La asistencia **se marca desde que la clase termina y se puede corregir sin límite**          | HU-403 | Antes de terminar no significa nada. Y sin ventana de bloqueo porque un profesor que se equivoca no tiene otra vía de arreglarlo: un registro falso congelado es peor que permitir la corrección.               |
+| D34 | El pasado **se muda a `/historial`**: `/mis-clases` y `/mis-aulas` solo muestran lo que viene | HU-404 | Con una pantalla de historial propia, dejar los filtros `pasadas` donde estaban daría dos pantallas listando lo mismo. **Ajusta D24**: su semántica de grupos disjuntos se conserva, pero vive en el historial. |
+| D35 | **`SessionsModule` se borra**                                                                 | HU-405 | Cierra el punto 1 de §14.6, abierto desde el Sprint 0. `Booking` ya lleva `ATTENDED`/`NO_SHOW` y `Classroom` lleva horario y duración: una entidad `Session` duplicaría ambas sin añadir nada en Fase 1.        |
+
+Correcciones aplicadas a las HUs del Sprint 4 al convertirlas, sin necesidad de decisión nueva:
+
+- **HU-404 (antigua)** — «prerrellenar con la señal de asistencia automática capturada en HU-303».
+  Esa señal **no existe y no va a existir**: la nota de auditoría #2 de la Definición la descartó
+  porque, con una sala de Zoom que la plataforma no controla, un clic en «entrar» no prueba que
+  nadie entrara ni que se quedara.
+- **HU-404 (antigua)** — creaba registros en `SessionsModule`. Descartado por **D35**.
+- **HU-401 (antigua)** — su tarea de frontend proponía una vista de preferencias de notificación
+  como «opcional Fase 1». Queda **fuera**: no está en §5.1, y los cinco avisos son transaccionales
+  —silenciarlos dejaría a alguien sin saber que su clase se canceló—.
+- **Tres HUs que las historias originales no contemplaban:** cerrar §14.6 (HU-405), sembrar el
+  historial (HU-406) y la pasada final de la Fase 1 (HU-407), que es la que verifica §8.1.

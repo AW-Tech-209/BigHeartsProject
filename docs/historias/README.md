@@ -99,30 +99,43 @@ cuerpo del issue.
 | [HU-305](./HU-305-el-profesor-ve-quien-viene.md)       | El profesor ve quién viene a su clase          | ✅ Completada                         |
 | [HU-306](./HU-306-un-aula-con-reservas.md)             | Un aula con reservas no cambia en silencio     | ✅ Completada                         |
 | [HU-307](./HU-307-seed-con-reservas.md)                | El seed siembra reservas                       | ✅ Completada                         |
-| [HU-308](./HU-308-indice-de-reservas.md)               | El schema de Prisma miente sobre el índice     | ⬜ Pendiente                          |
-| [HU-309](./HU-309-el-panel-conoce-las-reservas.md)     | El panel del estudiante no conoce las reservas | ⬜ Pendiente                          |
-| HU-401…404                                             | Sprint 4 — Notificaciones e historial          | ⬜ Sin convertir a `.md`              |
+| [HU-308](./HU-308-indice-de-reservas.md)               | El schema de Prisma miente sobre el índice     | ✅ Completada                         |
+| [HU-309](./HU-309-el-panel-conoce-las-reservas.md)     | El panel del estudiante no conoce las reservas | ✅ Completada                         |
+| [HU-401](./HU-401-adaptador-real-de-email.md)          | El adaptador real de email (Resend)            | ⬜ Pendiente                          |
+| [HU-402](./HU-402-recordatorios-de-clase.md)           | Recordatorios de clase                         | ⬜ Pendiente                          |
+| [HU-403](./HU-403-marcar-la-asistencia.md)             | El profesor marca la asistencia                | ⬜ Pendiente                          |
+| [HU-404](./HU-404-historial-de-clases.md)              | El historial de clases                         | ⬜ Pendiente                          |
+| [HU-405](./HU-405-cerrar-las-decisiones-abiertas.md)   | Cerrar las decisiones abiertas de la Fase 1    | ⬜ Pendiente                          |
+| [HU-406](./HU-406-seed-con-historial.md)               | El seed siembra historial y asistencia         | ⬜ Pendiente                          |
+| [HU-407](./HU-407-pasada-final-de-la-fase-1.md)        | Pasada final de la Fase 1                      | ⬜ Pendiente                          |
 
 **Sprint 2 — cerrado (2026-08-25).** Las quince HUs de gestión de aulas, incluidas HU-214 y HU-215,
 están implementadas.
 
-**Sprint 3 — Sistema de Reservas.** Las siete HUs planificadas (HU-301…307) están implementadas
-con sus AC verificados, más HU-216. El recorrido completo funciona: reservar con concurrencia real,
-encontrar lo reservado, cancelar liberando el cupo, y entrar a la videollamada en su ventana.
+**Sprint 3 — cerrado (2026-08-27).** Las nueve HUs del sistema de reservas están implementadas.
+El recorrido completo funciona: reservar con concurrencia real, encontrar lo reservado, cancelar
+liberando el cupo y entrar a la videollamada en su ventana.
 
-**Quedan dos para cerrarlo**, las dos encontradas en la pasada final y las dos del mismo tipo —algo
-que el Sprint 2 dejó escrito y que el Sprint 3 debía recoger:
+**Sprint 4 — Notificaciones e Historial. Cierra la Fase 1.** Siete HUs, ~9.5 días, un solo
+developer.
 
 ```
-HU-308 (índice de reservas) · HU-309 (panel del estudiante)   ← independientes entre sí
+HU-401 (email real) ──► HU-402 (recordatorios)
+HU-403 (asistencia) ──► HU-404 (historial) ──► HU-406 (seed) ──► HU-407 (pasada final)
+HU-405 (decisiones abiertas) ── sin dependencias, entra por donde quepa
 ```
 
-- **HU-308** es una bomba de relojería, no un fallo visible: la base de datos está bien, pero el
-  schema de Prisma declara un índice único **total** donde la migración creó uno **parcial**. La
-  próxima `prisma migrate dev` reintroduce el bug de §4.3 que ya se corrigió una vez.
-- **HU-309** es una mentira en la pantalla de inicio: `panel-estudiante.tsx` tiene escrito en su
-  propio comentario que HU-301 lo llenaría de datos. HU-301 llegó y nadie volvió. Un estudiante que
-  acaba de reservar entra a `/panel` y lee «No tienes clases reservadas».
+Las dos cadenas de arriba son **independientes entre sí**: se puede tener el correo funcionando sin
+haber tocado la asistencia, y al revés. **HU-407 va la última siempre** — es la puerta de salida de
+la Fase 1, y recorre el producto entero con teclado y sin ayuda, que es como §8.1 mide si funcionó.
+
+Lo que este sprint cierra del alcance de §5.1: los avisos por email pasan de escribirse en un log a
+enviarse de verdad, aparecen los recordatorios de 24 h y 30 min, y llega el último punto que
+quedaba sin construir — **historial y asistencia manual del profesor**.
+
+**Fuera del sprint, por decisión:** las preferencias de notificación (los cinco avisos son
+transaccionales; silenciarlos dejaría a alguien sin saber que su clase se canceló) y **el corte a
+producción**, que `DEPLOYMENT.md` aplaza explícitamente. El Sprint 4 termina en staging.
 
 Las HUs de Sprint 0 y las primeras de Sprint 1 se implementaron antes de que existiera esta
 carpeta; su texto original está en GitHub Projects. No se reconstruyen aquí.
