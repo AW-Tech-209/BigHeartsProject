@@ -53,32 +53,32 @@ entrar.
 
 ### Frontend
 
-- [ ] **T1** — `PanelEstudiante` consulta sus reservas próximas con el hook de HU-302 y pinta **sus
+- [x] **T1** — `PanelEstudiante` consulta sus reservas próximas con el hook de HU-302 y pinta **sus
       cuatro estados**: cargando con texto, vacío, error y lista.
-- [ ] **T2** — Muestra **hasta tres** clases próximas, con fecha y zona explícita, estado del aula y
+- [x] **T2** — Muestra **hasta tres** clases próximas, con fecha y zona explícita, estado del aula y
       modos de comunicación. Un enlace a `/mis-clases` para el resto.
-- [ ] **T3** — Si alguna está **dentro de la ventana de acceso**, el botón de entrar aparece aquí
+- [x] **T3** — Si alguna está **dentro de la ventana de acceso**, el botón de entrar aparece aquí
       también. Es el caso que más importa: el estudiante entra a la plataforma justo antes de clase.
-- [ ] **T4** — El estado vacío se mantiene **solo cuando de verdad no hay reservas**, con el texto
+- [x] **T4** — El estado vacío se mantiene **solo cuando de verdad no hay reservas**, con el texto
       actual, que ya es correcto.
-- [ ] **T5** — Revisar el panel del **profesor** por el mismo motivo: comprobar si su bloque asume
+- [x] **T5** — Revisar el panel del **profesor** por el mismo motivo: comprobar si su bloque asume
       un mundo sin reservas y corregirlo si es así.
-- [ ] **T6** — Tests: con reservas se listan y no aparece «No tienes clases reservadas»; sin
+- [x] **T6** — Tests: con reservas se listan y no aparece «No tienes clases reservadas»; sin
       reservas aparece; `axe` limpio.
-- [ ] **T7** — Borrar el comentario de cabecera que anuncia el vacío como provisional, y con él la
+- [x] **T7** — Borrar el comentario de cabecera que anuncia el vacío como provisional, y con él la
       deuda que describía.
 
 ## ✅ Criterios de aceptación
 
-- [ ] **AC1** — Un estudiante con reservas `CONFIRMED` ve sus próximas clases en `/panel`, y **no**
+- [x] **AC1** — Un estudiante con reservas `CONFIRMED` ve sus próximas clases en `/panel`, y **no**
       aparece por ninguna parte «No tienes clases reservadas».
-- [ ] **AC2** — Un estudiante sin reservas sigue viendo el estado vacío actual, con su invitación al
+- [x] **AC2** — Un estudiante sin reservas sigue viendo el estado vacío actual, con su invitación al
       catálogo.
-- [ ] **AC3** — El panel muestra **como mucho tres** clases y enlaza a `/mis-clases`. No es la misma
+- [x] **AC3** — El panel muestra **como mucho tres** clases y enlaza a `/mis-clases`. No es la misma
       lista con otro título.
-- [ ] **AC4** — Con una clase dentro de la ventana de acceso, el botón de entrar está en el panel.
-- [ ] **AC5** — El bloque tiene sus cuatro estados, y el de error no se confunde con el vacío.
-- [ ] **AC6** — **Accesibilidad y verificación:** checklist del skill `bighearts-ui`, `axe` limpio, y
+- [x] **AC4** — Con una clase dentro de la ventana de acceso, el botón de entrar está en el panel.
+- [x] **AC5** — El bloque tiene sus cuatro estados, y el de error no se confunde con el vacío.
+- [x] **AC6** — **Accesibilidad y verificación:** checklist del skill `bighearts-ui`, `axe` limpio, y
       `typecheck`, `lint`, `build` y `npm run test` en verde.
 
 ## 🚫 Fuera de alcance
@@ -90,4 +90,7 @@ entrar.
 
 ## Notas de implementación
 
-_Se rellena al cerrar._
+`PanelEstudiante` no reutiliza `<TarjetaAula>` completa: monta una ficha propia (fecha, `<EstadoAula>`,
+modos de comunicación, `<AccionEntrarAClase>`) para no arrastrar reservar/cancelar, que están fuera
+de alcance en el panel. El panel del profesor (T5) ya pintaba sus cuatro estados con dato real desde
+HU-207 y no necesitó cambios.
