@@ -1,5 +1,7 @@
 import {
+  BookingStatus,
   type Classroom,
+  type ClassroomListItem,
   ClassroomStatus,
   EnglishLevel,
   EstadoTemporalAula,
@@ -14,6 +16,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { AppRoutes } from '@/app/router';
 import { getPendingTeachers } from '@/features/admin/api/get-pending-teachers';
 import { getMisAulas } from '@/features/aulas/api/get-mis-aulas';
+import { getMisReservas } from '@/features/aulas/api/get-mis-reservas';
 import { ApiClientError } from '@/lib/api-error';
 import { esperarSinFallosDeAccesibilidad } from '@/test/accesibilidad';
 import { renderConProviders, type Tema } from '@/test/render-con-providers';
@@ -24,6 +27,7 @@ import { PanelPage } from './PanelPage';
 // la del profesor es `GET /classrooms/mias`, no el catálogo público.
 vi.mock('@/features/admin/api/get-pending-teachers', () => ({ getPendingTeachers: vi.fn() }));
 vi.mock('@/features/aulas/api/get-mis-aulas', () => ({ getMisAulas: vi.fn() }));
+vi.mock('@/features/aulas/api/get-mis-reservas', () => ({ getMisReservas: vi.fn() }));
 
 /** El id que `usuarioDePrueba` le da al profesor de la sesión. */
 const PROFESOR_DE_LA_SESION = 'user-teacher';
@@ -52,8 +56,22 @@ function aula(overrides: Partial<Classroom> = {}): Classroom {
   };
 }
 
-function respuesta(items: Classroom[]) {
+function respuesta<T extends Classroom>(items: T[]) {
   return { items, total: items.length, page: 1, pageSize: 3 };
+}
+
+function claseReservada(overrides: Partial<ClassroomListItem> = {}): ClassroomListItem {
+  return {
+    ...aula(),
+    teacherFirstName: 'Paula',
+    teacherLastName: 'Profesora',
+    myBookingStatus: BookingStatus.CONFIRMED,
+    myBookingId: 'reserva-1',
+    myBookingCancelable: true,
+    accessState: 'sin-acceso',
+    accessOpensAt: null,
+    ...overrides,
+  };
 }
 
 /** Una solicitud de cuenta de profesor esperando decisión. */
@@ -83,6 +101,7 @@ beforeEach(() => {
   vi.clearAllMocks();
   vi.mocked(getPendingTeachers).mockResolvedValue({ teachers: [] });
   vi.mocked(getMisAulas).mockResolvedValue(respuesta([]));
+  vi.mocked(getMisReservas).mockResolvedValue(respuesta([]));
 });
 
 describe('PanelPage — cada rol ve su panel, y solo el suyo (AC2, AC3, AC4)', () => {
@@ -265,6 +284,66 @@ describe('Panel del profesor — los cuatro estados (T7)', () => {
   });
 });
 
+describe('Panel del estudiante — sus reservas (HU-309, AC1-AC5)', () => {
+  beforeEach(() => darSesion(UserRole.STUDENT));
+
+  it('con reservas, ve sus próximas clases y no aparece el vacío (AC1)', async () => {
+    vi.mocked(getMisReservas).mockResolvedValue(respuesta([claseReservada()]));
+
+    renderConProviders(<PanelPage />);
+
+    expect(
+      await screen.findByRole('heading', { level: 3, name: 'Conversación cotidiana' }),
+    ).toBeInTheDocument();
+    expect(screen.queryByText('No tienes clases reservadas')).toBeNull();
+  });
+
+  it('sin reservas, mantiene el estado vacío actual (AC2)', async () => {
+    vi.mocked(getMisReservas).mockResolvedValue(respuesta([]));
+
+    renderConProviders(<PanelPage />);
+
+    expect(await screen.findByText('No tienes clases reservadas')).toBeInTheDocument();
+  });
+
+  it('con reservas, pide como mucho tres y enlaza a «Mis clases» (AC3)', async () => {
+    vi.mocked(getMisReservas).mockResolvedValue(respuesta([claseReservada()]));
+
+    renderConProviders(<PanelPage />);
+
+    await waitFor(() =>
+      expect(getMisReservas).toHaveBeenCalledWith({
+        estado: EstadoTemporalAula.PROXIMAS,
+        pageSize: 3,
+      }),
+    );
+    expect(await screen.findByRole('link', { name: 'Ver todas mis clases' })).toHaveAttribute(
+      'href',
+      '/mis-clases',
+    );
+  });
+
+  it('una clase dentro de la ventana de acceso ofrece entrar (AC4)', async () => {
+    vi.mocked(getMisReservas).mockResolvedValue(
+      respuesta([claseReservada({ accessState: 'abierto', accessOpensAt: null })]),
+    );
+
+    renderConProviders(<PanelPage />);
+
+    expect(await screen.findByRole('link', { name: /entrar a la clase/i })).toBeInTheDocument();
+  });
+
+  it('error: explica y ofrece volver a cargar (AC5)', async () => {
+    vi.mocked(getMisReservas).mockRejectedValue(
+      new ApiClientError({ code: 'NETWORK_ERROR', message: 'No pudimos conectar.' }),
+    );
+
+    renderConProviders(<PanelPage />);
+
+    expect(await screen.findByText('No pudimos cargar tus clases')).toBeInTheDocument();
+  });
+});
+
 /**
  * AC9 — `axe` sobre los paneles **con contenido**.
  *
@@ -279,6 +358,16 @@ describe('PanelPage — accesibilidad con datos (AC9)', () => {
   it.each(TEMAS)('el profesor con clases sale limpio en el tema %s', async (tema) => {
     darSesion(UserRole.TEACHER);
     vi.mocked(getMisAulas).mockResolvedValue(respuesta([aula()]));
+
+    const { container } = renderConProviders(<PanelPage />, { tema });
+
+    await screen.findByRole('heading', { level: 3, name: 'Conversación cotidiana' });
+    await esperarSinFallosDeAccesibilidad(container);
+  });
+
+  it.each(TEMAS)('el estudiante con reservas sale limpio en el tema %s', async (tema) => {
+    darSesion(UserRole.STUDENT);
+    vi.mocked(getMisReservas).mockResolvedValue(respuesta([claseReservada()]));
 
     const { container } = renderConProviders(<PanelPage />, { tema });
 
