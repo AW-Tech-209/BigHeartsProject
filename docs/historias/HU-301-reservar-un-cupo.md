@@ -5,7 +5,7 @@
 | **Sprint**          | Sprint 3 — Sistema de Reservas             |
 | **Prioridad**       | 🔴 Crítica (núcleo del producto)           |
 | **Estimación**      | 3 días                                     |
-| **Estado**          | ⬜ Pendiente                               |
+| **Estado**          | ✅ Completada                              |
 | **Rama**            | `hu-301-reservar-un-cupo-<persona>`        |
 | **Alcance técnico** | fullstack                                  |
 | **Depende de**      | HU-204 (✅)                                |

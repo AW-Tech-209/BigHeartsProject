@@ -91,42 +91,38 @@ cuerpo del issue.
 | [HU-213](./HU-213-duplicar-un-aula.md)                 | Duplicar un aula                               | ✅ Completada                         |
 | [HU-214](./HU-214-datos-de-demostracion.md)            | Datos de demostración en el seed               | ✅ Completada                         |
 | [HU-215](./HU-215-pasada-de-accesibilidad.md)          | Pasada manual de accesibilidad                 | ✅ Completada                         |
-| [HU-216](./HU-216-mecanismo-de-tema.md)                | Mecanismo real para `.dark` y `.hc`            | ⬜ Pendiente                          |
-| [HU-301](./HU-301-reservar-un-cupo.md)                 | Reservar un cupo                               | ⬜ Pendiente                          |
-| [HU-302](./HU-302-mis-reservas.md)                     | Mis reservas: el estudiante encuentra su clase | ⬜ Pendiente                          |
-| [HU-303](./HU-303-cancelar-una-reserva.md)             | Cancelar una reserva                           | ⬜ Pendiente                          |
-| [HU-304](./HU-304-acceso-al-enlace.md)                 | El enlace se revela dentro de su ventana       | ⬜ Pendiente                          |
-| [HU-305](./HU-305-el-profesor-ve-quien-viene.md)       | El profesor ve quién viene a su clase          | ⬜ Pendiente                          |
-| [HU-306](./HU-306-un-aula-con-reservas.md)             | Un aula con reservas no cambia en silencio     | ⬜ Pendiente                          |
-| [HU-307](./HU-307-seed-con-reservas.md)                | El seed siembra reservas                       | ⬜ Pendiente                          |
+| [HU-216](./HU-216-mecanismo-de-tema.md)                | Mecanismo real para `.dark` y `.hc`            | ✅ Completada                         |
+| [HU-301](./HU-301-reservar-un-cupo.md)                 | Reservar un cupo                               | ✅ Completada                         |
+| [HU-302](./HU-302-mis-reservas.md)                     | Mis reservas: el estudiante encuentra su clase | ✅ Completada                         |
+| [HU-303](./HU-303-cancelar-una-reserva.md)             | Cancelar una reserva                           | ✅ Completada                         |
+| [HU-304](./HU-304-acceso-al-enlace.md)                 | El enlace se revela dentro de su ventana       | ✅ Completada                         |
+| [HU-305](./HU-305-el-profesor-ve-quien-viene.md)       | El profesor ve quién viene a su clase          | ✅ Completada                         |
+| [HU-306](./HU-306-un-aula-con-reservas.md)             | Un aula con reservas no cambia en silencio     | ✅ Completada                         |
+| [HU-307](./HU-307-seed-con-reservas.md)                | El seed siembra reservas                       | ✅ Completada                         |
+| [HU-308](./HU-308-indice-de-reservas.md)               | El schema de Prisma miente sobre el índice     | ⬜ Pendiente                          |
+| [HU-309](./HU-309-el-panel-conoce-las-reservas.md)     | El panel del estudiante no conoce las reservas | ⬜ Pendiente                          |
 | HU-401…404                                             | Sprint 4 — Notificaciones e historial          | ⬜ Sin convertir a `.md`              |
 
 **Sprint 2 — cerrado (2026-08-25).** Las quince HUs de gestión de aulas, incluidas HU-214 y HU-215,
 están implementadas.
 
-**Sprint 3 — Sistema de Reservas.** Siete HUs, ~11.5 días, un solo developer. Más HU-216, que
-salió de la pasada de accesibilidad del Sprint 2 y no depende de nada, así que entra por donde
-quepa.
+**Sprint 3 — Sistema de Reservas.** Las siete HUs planificadas (HU-301…307) están implementadas
+con sus AC verificados, más HU-216. El recorrido completo funciona: reservar con concurrencia real,
+encontrar lo reservado, cancelar liberando el cupo, y entrar a la videollamada en su ventana.
+
+**Quedan dos para cerrarlo**, las dos encontradas en la pasada final y las dos del mismo tipo —algo
+que el Sprint 2 dejó escrito y que el Sprint 3 debía recoger:
 
 ```
-HU-301 (reservar) ─┬─► HU-302 (mis reservas) ─┬─► HU-303 (cancelar) ─┬─► HU-306 (aula con reservas)
-                   │                          └─► HU-304 (enlace)     │
-                   └─► HU-305 (quién viene)                           └─► HU-307 (seed)
+HU-308 (índice de reservas) · HU-309 (panel del estudiante)   ← independientes entre sí
 ```
 
-**HU-301 va primera y sola.** Crea `Booking` y la transacción de cupos; todo lo demás la presupone.
-**HU-302 va inmediatamente después**, no al final: reservar sin un sitio donde volver a encontrar
-lo reservado no es un sistema de reservas, y es la mitad de la prueba definitiva del producto.
-**HU-307 va última** por definición: siembra lo que las demás construyeron.
-
-Tres HUs cierran agujeros que las historias originales no veían:
-
-- **HU-302** rellena `/mis-clases`, registrada vacía desde HU-206 (D18) y que ninguna HU antigua
-  llegaba a llenar.
-- **HU-306** cierra el agujero que **se abre con HU-301**: HU-202 dejó al profesor cancelar un aula
-  cuando no había nadie dentro. En cuanto exista la primera reserva, ese mismo botón deja
-  estudiantes con una clase fantasma.
-- **HU-307** evita repetir lo del Sprint 2, que terminó con todo hecho y nada que enseñar.
+- **HU-308** es una bomba de relojería, no un fallo visible: la base de datos está bien, pero el
+  schema de Prisma declara un índice único **total** donde la migración creó uno **parcial**. La
+  próxima `prisma migrate dev` reintroduce el bug de §4.3 que ya se corrigió una vez.
+- **HU-309** es una mentira en la pantalla de inicio: `panel-estudiante.tsx` tiene escrito en su
+  propio comentario que HU-301 lo llenaría de datos. HU-301 llegó y nadie volvió. Un estudiante que
+  acaba de reservar entra a `/panel` y lee «No tienes clases reservadas».
 
 Las HUs de Sprint 0 y las primeras de Sprint 1 se implementaron antes de que existiera esta
 carpeta; su texto original está en GitHub Projects. No se reconstruyen aquí.

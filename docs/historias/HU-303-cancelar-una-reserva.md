@@ -5,7 +5,7 @@
 | **Sprint**          | Sprint 3 — Sistema de Reservas          |
 | **Prioridad**       | 🟠 Alta                                 |
 | **Estimación**      | 1.5 días                                |
-| **Estado**          | ⬜ Pendiente                            |
+| **Estado**          | ✅ Completada                           |
 | **Rama**            | `hu-303-cancelar-una-reserva-<persona>` |
 | **Alcance técnico** | fullstack                               |
 | **Depende de**      | HU-301, HU-302                          |

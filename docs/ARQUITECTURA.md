@@ -445,9 +445,9 @@ juntos.
 | `auth`          | Registro, login, refresh, logout, guards.                                           | ✅                                                                                                                          |
 | `users`         | Perfil propio (`GET`/`PATCH /users/me`). La gestión de terceros vive en `admin`.    | ✅                                                                                                                          |
 | `classrooms`    | Aulas, horarios, cupos, enlace. Incluye `MeetingLinkCipher` (§4.1), que exporta.    | ✅ Crear, listar, detalle, editar, cancelar, «mis aulas», accesibilidad, coherencia temporal y ventana de acceso al enlace. |
-| `bookings`      | Reservas, concurrencia, cancelaciones.                                              | ⬜ Stub                                                                                                                     |
+| `bookings`      | Reservas, concurrencia, cancelaciones.                                              | ✅ Reservar, «mis reservas», cancelar (Sprint 3)                                                                            |
 | `sessions`      | Reservado (ver nota).                                                               | ⬜ Stub                                                                                                                     |
-| `notifications` | Emails transaccionales y recordatorios.                                             | 🟨 Puerto + `LoggingNotificationService` (HU-104, D14). Adaptador real en Sprint 4.                                         |
+| `notifications` | Emails transaccionales y recordatorios.                                             | 🟨 Puerto + `LoggingNotificationService`; 5 tipos de aviso (HU-104, D14). Adaptador real en Sprint 4.                       |
 | `admin`         | Aprobación de profesores y supervisión de aulas (solo lectura).                     | ✅ HU-104, HU-210                                                                                                           |
 
 > **Nota de auditoría — `SessionsModule` no tiene datos que gobernar.** El `.docx` lo declaraba
