@@ -115,3 +115,32 @@ describe('validateEnv — coherencia temporal del aula', () => {
     );
   });
 });
+
+// HU-401 AC4: sin proveedor de email configurado, la app arranca igual con
+// el adaptador de log. Con RESEND_API_KEY, EMAIL_FROM pasa a ser obligatoria.
+describe('validateEnv — adaptador de email (D32)', () => {
+  it('arranca sin RESEND_API_KEY ni EMAIL_FROM', () => {
+    const env = validateEnv(entornoValido());
+
+    expect(env.RESEND_API_KEY).toBeUndefined();
+    expect(env.EMAIL_FROM).toBeUndefined();
+  });
+
+  it('no arranca con RESEND_API_KEY sin EMAIL_FROM', () => {
+    expect(() => validateEnv(entornoValido({ RESEND_API_KEY: 'un-secreto-de-resend' }))).toThrow(
+      /EMAIL_FROM/,
+    );
+  });
+
+  it('arranca con RESEND_API_KEY y EMAIL_FROM juntas', () => {
+    const env = validateEnv(
+      entornoValido({
+        RESEND_API_KEY: 'un-secreto-de-resend',
+        EMAIL_FROM: 'avisos@academia.local',
+      }),
+    );
+
+    expect(env.RESEND_API_KEY).toBe('un-secreto-de-resend');
+    expect(env.EMAIL_FROM).toBe('avisos@academia.local');
+  });
+});

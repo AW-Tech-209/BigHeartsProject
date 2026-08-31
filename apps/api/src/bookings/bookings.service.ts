@@ -41,6 +41,7 @@ interface AulaBloqueada {
   status: string;
   current_bookings: number;
   max_students: number;
+  title: string;
   scheduled_at: Date;
   duration_minutes: number;
 }
@@ -70,9 +71,11 @@ export class BookingsService {
     student: AuthenticatedUser,
     dto: CreateBookingDto,
   ): Promise<CreateBookingResponse> {
+    let aulaReservada!: AulaBloqueada;
+
     const creada = await this.prisma.$transaction(async (tx) => {
       const filas = await tx.$queryRaw<AulaBloqueada[]>`
-        SELECT status, current_bookings, max_students, scheduled_at, duration_minutes
+        SELECT status, current_bookings, max_students, title, scheduled_at, duration_minutes
           FROM classrooms
          WHERE id = ${dto.classroomId}::uuid
            FOR UPDATE
@@ -134,10 +137,12 @@ export class BookingsService {
         data: { currentBookings: { increment: 1 } },
       });
 
+      aulaReservada = aula;
+
       return booking;
     });
 
-    await this.notifyBookingConfirmed(student);
+    await this.notifyBookingConfirmed(student, aulaReservada);
 
     return { booking: toPublicBooking(creada) };
   }
@@ -148,10 +153,18 @@ export class BookingsService {
    * que un fallo de notificación no puede tumbarla — mismo criterio que
    * `AdminService.notify()` con la aprobación de profesores.
    */
-  private async notifyBookingConfirmed(student: AuthenticatedUser): Promise<void> {
+  private async notifyBookingConfirmed(
+    student: AuthenticatedUser,
+    aula: AulaBloqueada,
+  ): Promise<void> {
     const notification: Notification = {
       type: NotificationType.BOOKING_CONFIRMED,
       recipient: { email: student.email, firstName: await this.firstNameDe(student.id) },
+      classroom: {
+        title: aula.title,
+        scheduledAt: aula.scheduled_at,
+        durationMinutes: aula.duration_minutes,
+      },
     };
 
     try {
@@ -178,6 +191,8 @@ export class BookingsService {
     student: AuthenticatedUser,
     bookingId: string,
   ): Promise<CancelBookingResponse> {
+    let aulaCancelada!: { title: string; scheduled_at: Date; duration_minutes: number };
+
     const cancelada = await this.prisma.$transaction(async (tx) => {
       const booking = await tx.booking.findUnique({ where: { id: bookingId } });
 
@@ -185,8 +200,11 @@ export class BookingsService {
         throw bookingNotFound();
       }
 
-      const filas = await tx.$queryRaw<{ scheduled_at: Date }[]>`
-        SELECT scheduled_at FROM classrooms WHERE id = ${booking.classroomId}::uuid FOR UPDATE
+      const filas = await tx.$queryRaw<
+        { title: string; scheduled_at: Date; duration_minutes: number }[]
+      >`
+        SELECT title, scheduled_at, duration_minutes FROM classrooms
+         WHERE id = ${booking.classroomId}::uuid FOR UPDATE
       `;
       // `classroomId` es `onDelete: Restrict` (schema.prisma): el aula de una
       // reserva existente siempre existe.
@@ -212,18 +230,28 @@ export class BookingsService {
         data: { currentBookings: { decrement: 1 } },
       });
 
+      aulaCancelada = aula;
+
       return tx.booking.findUniqueOrThrow({ where: { id: bookingId } });
     });
 
-    await this.notifyBookingCancelled(student);
+    await this.notifyBookingCancelled(student, aulaCancelada);
 
     return { booking: toPublicBooking(cancelada) };
   }
 
-  private async notifyBookingCancelled(student: AuthenticatedUser): Promise<void> {
+  private async notifyBookingCancelled(
+    student: AuthenticatedUser,
+    aula: { title: string; scheduled_at: Date; duration_minutes: number },
+  ): Promise<void> {
     const notification: Notification = {
       type: NotificationType.BOOKING_CANCELLED,
       recipient: { email: student.email, firstName: await this.firstNameDe(student.id) },
+      classroom: {
+        title: aula.title,
+        scheduledAt: aula.scheduled_at,
+        durationMinutes: aula.duration_minutes,
+      },
     };
 
     try {

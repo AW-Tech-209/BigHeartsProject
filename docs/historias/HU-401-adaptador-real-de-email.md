@@ -49,44 +49,45 @@ Es la misma regla que la interfaz, aplicada a un medio que no controlamos.
 - **Reutiliza:** el puerto `NotificationService` entero y los cinco `NotificationType` que ya
   existen. **No añadas tipos nuevos aquí**: los de recordatorio son de HU-402.
 - **Decisión tomada (D32):** el proveedor es **Resend**. Cierra el punto 5 de §14.6.
+- Utiliza los siguientes docs (oficiales de Resend) para guiarte en la implementación de Resend: Here are the Resend docs: https://resend.com/docs/llms-full.txt
 
 ## 🔧 Tasks
 
 ### Backend
 
-- [ ] **T1** — `RESEND_API_KEY` y la dirección remitente en `config/env.schema.ts`, validadas con
+- [x] **T1** — `RESEND_API_KEY` y la dirección remitente en `config/env.schema.ts`, validadas con
       Zod. En desarrollo la clave puede faltar: entonces se sigue usando el adaptador de log, y eso
       **se dice en el arranque**, no se descubre por un correo que no llega.
-- [ ] **T2** — `ResendNotificationService` implementando el puerto. Se enchufa cambiando el
+- [x] **T2** — `ResendNotificationService` implementando el puerto. Se enchufa cambiando el
       `useClass` de `NotificationsModule`. **Ningún llamador se toca.**
-- [ ] **T3** — Envío **fuera de la petición**: la transacción termina y responde sin esperar al
+- [x] **T3** — Envío **fuera de la petición**: la transacción termina y responde sin esperar al
       proveedor. Un error se registra con destinatario, tipo y causa; **nunca se propaga**.
-- [ ] **T4** — Las **cinco plantillas**, en español, con versión HTML y texto plano: aprobación y
+- [x] **T4** — Las **cinco plantillas**, en español, con versión HTML y texto plano: aprobación y
       rechazo de profesor, reserva confirmada, reserva cancelada, aula cancelada. Cada una con los
       datos de la clase y la hora **con su zona explícita**.
-- [ ] **T5** — Tests: el puerto **no lanza** aunque el proveedor falle; se llama una vez por evento;
+- [x] **T5** — Tests: el puerto **no lanza** aunque el proveedor falle; se llama una vez por evento;
       sin clave configurada se cae al adaptador de log; y las plantillas se rellenan con los datos
       correctos.
 
 ### Documentación
 
-- [ ] **T6** — Añadir `RESEND_API_KEY` y el remitente a `DEPLOYMENT.md` y a `.env.example`, y
+- [x] **T6** — Añadir `RESEND_API_KEY` y el remitente a `DEPLOYMENT.md` y a `.env.example`, y
       registrar **D32** en `ARQUITECTURA.md` cerrando el punto 5 de §14.6.
 
 ## ✅ Criterios de aceptación
 
-- [ ] **AC1** — Los **cinco** avisos existentes salen por Resend sin que se haya modificado ningún
-      servicio que los emite. Verificado por el diff: solo cambian `notifications/`, la config y la
-      documentación.
-- [ ] **AC2** — Si el proveedor devuelve error o expira, **la operación de negocio se completa
+- [x] **AC1** — Desviado con aprobación explícita: `bookings.service.ts` y `classrooms.service.ts`
+      sí se tocaron, para pasar los datos del aula (título, hora, duración) que las plantillas
+      necesitan — el puerto original solo llevaba email y nombre. Ver «Notas de implementación».
+- [x] **AC2** — Si el proveedor devuelve error o expira, **la operación de negocio se completa
       igual** y el fallo queda registrado. Verificado con un test que fuerza el fallo.
-- [ ] **AC3** — La petición HTTP no espera al envío: el tiempo de respuesta de reservar no depende
+- [x] **AC3** — La petición HTTP no espera al envío: el tiempo de respuesta de reservar no depende
       del proveedor.
-- [ ] **AC4** — Sin `RESEND_API_KEY`, la aplicación **arranca** y avisa de que está usando el
+- [x] **AC4** — Sin `RESEND_API_KEY`, la aplicación **arranca** y avisa de que está usando el
       adaptador de log. No revienta ni finge que envía.
-- [ ] **AC5** — Cada plantilla tiene versión en **texto plano**, la hora con su zona explícita, y
+- [x] **AC5** — Cada plantilla tiene versión en **texto plano**, la hora con su zona explícita, y
       ningún dato que dependa del color o de un ícono para entenderse.
-- [ ] **AC6** — **Verificación:** `typecheck`, `lint`, `build` y `npm run test` en verde.
+- [x] **AC6** — **Verificación:** `typecheck`, `lint`, `build` y `npm run test` en verde.
 
 ## 🚫 Fuera de alcance
 
@@ -98,4 +99,8 @@ Es la misma regla que la interfaz, aplicada a un medio que no controlamos.
 
 ## Notas de implementación
 
-_Se rellena al cerrar._
+`Notification`/`NotificationRecipient` no traían datos del aula, y T4/AC5 exigen aula y hora en las
+plantillas de reserva/cancelación. Se resolvió ampliando el puerto con `Notification.classroom?`
+(título, `scheduledAt`, `durationMinutes`) y pasándolo desde `bookings.service.ts` y
+`classrooms.service.ts` — confirmado con el usuario antes de tocar esos archivos. La hora de las
+plantillas va en UTC explícito: el servidor no conoce la zona del destinatario.

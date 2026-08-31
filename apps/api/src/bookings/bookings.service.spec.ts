@@ -38,6 +38,7 @@ function aulaBloqueada(overrides: Partial<Record<string, unknown>> = {}) {
     status: ClassroomStatus.PUBLISHED,
     current_bookings: 0,
     max_students: 10,
+    title: 'Conversación cotidiana',
     scheduled_at: FUTURO,
     duration_minutes: 60,
     ...overrides,
@@ -132,6 +133,7 @@ describe('BookingsService.createBooking — el camino feliz', () => {
     expect(notify).toHaveBeenCalledWith({
       type: 'BOOKING_CONFIRMED',
       recipient: { email: ESTUDIANTE.email, firstName: 'Sofía' },
+      classroom: { title: 'Conversación cotidiana', scheduledAt: FUTURO, durationMinutes: 60 },
     });
   });
 });
@@ -313,9 +315,13 @@ function setupCancelar(
 ) {
   const booking = 'booking' in options ? options.booking : reservaConfirmada();
   const findUniqueBooking = vi.fn().mockResolvedValue(booking);
-  const queryRaw = vi
-    .fn()
-    .mockResolvedValue([{ scheduled_at: options.scheduledAt ?? FUTURO_LEJANO }]);
+  const queryRaw = vi.fn().mockResolvedValue([
+    {
+      title: 'Conversación cotidiana',
+      scheduled_at: options.scheduledAt ?? FUTURO_LEJANO,
+      duration_minutes: 60,
+    },
+  ]);
   const updateMany = vi.fn().mockResolvedValue({ count: options.countCancelada ?? 1 });
   const findUniqueOrThrow = vi.fn().mockResolvedValue({
     ...reservaConfirmada(),
@@ -380,6 +386,11 @@ describe('BookingsService.cancelBooking — el camino feliz (AC1)', () => {
     expect(notify).toHaveBeenCalledWith({
       type: 'BOOKING_CANCELLED',
       recipient: { email: ESTUDIANTE.email, firstName: 'Sofía' },
+      classroom: {
+        title: 'Conversación cotidiana',
+        scheduledAt: FUTURO_LEJANO,
+        durationMinutes: 60,
+      },
     });
   });
 });

@@ -26,10 +26,19 @@ export interface NotificationRecipient {
   firstName: string;
 }
 
-/** Un aviso a punto de salir: a quién, de qué tipo. */
+/** Datos del aula que necesitan las plantillas de reserva y cancelación. */
+export interface NotificationClassroom {
+  title: string;
+  scheduledAt: Date;
+  durationMinutes: number;
+}
+
+/** Un aviso a punto de salir: a quién, de qué tipo, con qué datos. */
 export interface Notification {
   type: NotificationType;
   recipient: NotificationRecipient;
+  /** Ausente en TEACHER_APPROVED/TEACHER_REJECTED: no hay aula involucrada. */
+  classroom?: NotificationClassroom;
 }
 
 /** Qué pasó al intentar entregarlo. */

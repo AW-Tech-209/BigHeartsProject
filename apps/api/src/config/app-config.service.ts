@@ -119,6 +119,16 @@ export class AppConfigService {
     return this.config.get('ACCESS_WINDOW_MINUTES', { infer: true });
   }
 
+  /** Clave de API de Resend. `undefined` si no está configurada (D32). */
+  get resendApiKey(): string | undefined {
+    return this.config.get('RESEND_API_KEY', { infer: true });
+  }
+
+  /** Dirección remitente de los correos transaccionales. */
+  get emailFrom(): string | undefined {
+    return this.config.get('EMAIL_FROM', { infer: true });
+  }
+
   get isProduction(): boolean {
     return this.nodeEnv === 'production';
   }

@@ -2041,14 +2041,22 @@ describe('ClassroomsService.cancelClassroom', () => {
 
       await service.cancelClassroom(profesorDelToken, ID_DEL_AULA);
 
+      const classroom = {
+        title: 'Conversación cotidiana',
+        scheduledAt: new Date('2099-08-12T23:00:00.000Z'),
+        durationMinutes: 60,
+      };
+
       expect(notify).toHaveBeenCalledTimes(2);
       expect(notify).toHaveBeenCalledWith({
         type: 'CLASSROOM_CANCELLED',
         recipient: { email: 'ana@academia.local', firstName: 'Ana' },
+        classroom,
       });
       expect(notify).toHaveBeenCalledWith({
         type: 'CLASSROOM_CANCELLED',
         recipient: { email: 'luis@academia.local', firstName: 'Luis' },
+        classroom,
       });
     });
 

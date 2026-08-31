@@ -71,6 +71,8 @@ En el servicio → **Environment**, rellena las marcadas `sync: false` en el blu
 | `CORS_ORIGIN`      | La URL del frontend en Vercel (la tendrás tras el paso 3). Ej: `https://academia-web.vercel.app`                                                 |
 | `ADMIN_EMAIL`      | Email del Admin que crea el seed. **No uses el de dev** (`admin@academia.local`).                                                                |
 | `ADMIN_PASSWORD`   | Contraseña del Admin del seed. Genera una fuerte, no la de dev.                                                                                  |
+| `RESEND_API_KEY`   | Clave de API de Resend (resend.com → API Keys). Sin ella la API arranca igual pero solo registra los avisos en el log, no los envía (D32).       |
+| `EMAIL_FROM`       | Dirección remitente de los correos. Obligatoria si defines `RESEND_API_KEY`.                                                                     |
 
 `NODE_ENV=staging`, `NODE_VERSION=22` y `PORT` ya los gestiona Render (los dos primeros vía el
 blueprint, `PORT` lo inyecta Render solo).
