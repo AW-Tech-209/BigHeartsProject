@@ -11,11 +11,9 @@ import { RejillaAulas } from '@/components/layout/rejilla-aulas';
 import { Button } from '@/components/ui/button';
 import { Callout } from '@/components/ui/callout';
 import { Skeleton } from '@/components/ui/skeleton';
-import { FiltroEstadoAulas } from '@/features/aulas/components/filtro-estado-aulas';
 import { useMisReservas } from '@/features/aulas/hooks/use-mis-reservas';
 import {
   buildMisAulasSearchParams,
-  estadoActivo,
   parseMisAulasQuery,
 } from '@/features/aulas/lib/filtros-mis-aulas';
 import { useAnnounce } from '@/hooks/use-announce';
@@ -24,12 +22,12 @@ import { useAnnounce } from '@/hooks/use-announce';
 const TARJETAS_FANTASMA = 6;
 
 /**
- * Las clases que el estudiante tiene reservadas (HU-302).
+ * Las clases que el estudiante tiene reservadas y todavía no pasaron
+ * (HU-302; D34 de HU-404 la acota a lo próximo, con el resto en `/historial`).
  *
- * Es la contraparte de «Mis aulas» del profesor (HU-207) y copia su forma,
- * incluido el filtro temporal disjunto D24: el filtro y la página viven en la
- * URL, y el alcance lo decide el servidor a partir del token, nunca un
- * parámetro.
+ * Es la contraparte de «Mis aulas» del profesor (HU-207) y copia su forma: la
+ * página vive en la URL, y el alcance lo decide el servidor a partir del
+ * token, nunca un parámetro.
  *
  * La tarjeta se reutiliza en `perspectiva="catalogo"` con `puedeReservarla={false}`:
  * es la misma ficha que el catálogo, sin el botón de reservar, con el de
@@ -37,30 +35,25 @@ const TARJETAS_FANTASMA = 6;
  */
 export function MisClasesPage() {
   const [searchParams, setSearchParams] = useSearchParams();
-  const query: MisReservasQuery = parseMisAulasQuery(searchParams);
+  const query: MisReservasQuery = {
+    ...parseMisAulasQuery(searchParams),
+    estado: EstadoTemporalAula.PROXIMAS,
+  };
   const { data, isPending, isError, refetch, isRefetching } = useMisReservas(query);
   const announce = useAnnounce();
 
-  const hayFiltro = estadoActivo(query) !== EstadoTemporalAula.TODAS;
   const hayLista = Boolean(data && data.items.length > 0);
 
   useEffect(() => {
     if (!data) return;
 
     if (data.total === 0) {
-      announce(
-        hayFiltro ? 'No tienes clases en este estado.' : 'Todavía no tienes clases reservadas.',
-      );
+      announce('Todavía no tienes clases reservadas.');
       return;
     }
 
     announce(`Se encontraron ${data.total} clase${data.total === 1 ? '' : 's'}.`);
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- `hayFiltro` decide SOLO el texto del caso "0 resultados"; incluirlo dispararía el anuncio al cambiar de filtro, antes de que llegue la respuesta nueva.
   }, [data, announce]);
-
-  function actualizarFiltro(siguiente: MisReservasQuery) {
-    setSearchParams(buildMisAulasSearchParams(siguiente));
-  }
 
   function irAPagina(pagina: number) {
     setSearchParams(buildMisAulasSearchParams({ ...query, page: pagina }));
@@ -79,10 +72,17 @@ export function MisClasesPage() {
     <AppShell>
       <PaginaCabecera
         titulo="Mis clases"
-        contexto="Las clases que reservaste, con la hora en que se abre el acceso a cada una."
+        contexto="Las clases que reservaste y todavía no pasaron, con la hora en que se abre el acceso a cada una."
+        accion={
+          <Button
+            variant="outline"
+            render={<Link to="/historial" />}
+            className="h-11 px-5 text-base"
+          >
+            Ver historial
+          </Button>
+        }
       />
-
-      <FiltroEstadoAulas value={query} onChange={actualizarFiltro} />
 
       {/* Estado 1 — cargando. Con texto, nunca un spinner mudo. */}
       {isPending && (
@@ -118,35 +118,13 @@ export function MisClasesPage() {
         </Callout>
       )}
 
-      {/*
-        Estado 3 — vacío, con dos textos distintos (AC5). Sin filtro significa
-        que el estudiante no reservó nunca y la salida es ir al catálogo; con
-        filtro significa que no tiene clases EN ESE ESTADO, y la salida es
-        quitar el filtro, no reservar otra vez.
-      */}
+      {/* Estado 3 — vacío. */}
       {!isPending && !isError && data && data.items.length === 0 && (
-        <>
-          {hayFiltro ? (
-            <EstadoVacio
-              titular="No tienes clases en este estado"
-              ayuda="Prueba con otro estado para ver el resto de tus reservas."
-              accion={
-                <Button
-                  variant="outline"
-                  onClick={() => actualizarFiltro({ estado: EstadoTemporalAula.TODAS })}
-                >
-                  Ver todas mis clases
-                </Button>
-              }
-            />
-          ) : (
-            <EstadoVacio
-              titular="Todavía no tienes clases reservadas"
-              ayuda="Cuando reserves tu cupo en un aula, la verás aquí con su fecha y su enlace de acceso."
-              accion={explorarElCatalogo}
-            />
-          )}
-        </>
+        <EstadoVacio
+          titular="Todavía no tienes clases reservadas"
+          ayuda="Cuando reserves tu cupo en un aula, la verás aquí con su fecha y su enlace de acceso."
+          accion={explorarElCatalogo}
+        />
       )}
 
       {/* Estado 4 — la lista. */}

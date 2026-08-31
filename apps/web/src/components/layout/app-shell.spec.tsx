@@ -17,8 +17,8 @@ import { AppShell } from './app-shell';
 const TEMAS: Tema[] = ['light', 'dark', 'hc'];
 
 const DESTINOS_ESPERADOS: Record<UserRole, string[]> = {
-  [UserRole.STUDENT]: ['Aulas', 'Mis clases', 'Perfil'],
-  [UserRole.TEACHER]: ['Aulas', 'Mis aulas', 'Perfil'],
+  [UserRole.STUDENT]: ['Aulas', 'Mis clases', 'Historial', 'Perfil'],
+  [UserRole.TEACHER]: ['Aulas', 'Mis aulas', 'Historial', 'Perfil'],
   [UserRole.ADMIN]: ['Aulas', 'Panel', 'Perfil'],
 };
 
@@ -86,13 +86,13 @@ describe('AppShell — navegación por rol', () => {
 });
 
 describe('AppShell — sin estado oculto', () => {
-  it('en escritorio los tres destinos se ven sin pulsar nada', () => {
+  it('en escritorio los destinos se ven sin pulsar nada', () => {
     darSesion(UserRole.STUDENT);
     renderConProviders(<AppShell>Contenido</AppShell>);
 
     // Sin una sola interacción previa: los enlaces ya están ahí.
     const navegacion = screen.getByRole('navigation', { name: 'Secciones' });
-    expect(within(navegacion).getAllByRole('link')).toHaveLength(3);
+    expect(within(navegacion).getAllByRole('link')).toHaveLength(4);
   });
 
   it('no existe ningún control que despliegue la navegación', () => {
@@ -120,7 +120,7 @@ describe('AppShell — sin estado oculto', () => {
       within(navegacion)
         .getAllByRole('link')
         .map((e) => e.textContent),
-    ).toEqual(['Aulas', 'Mis clases', 'Perfil']);
+    ).toEqual(['Aulas', 'Mis clases', 'Historial', 'Perfil']);
     expect(navegacion.className).toContain('fixed');
     expect(navegacion.className).toContain('bottom-0');
     expect(container.querySelector('[aria-expanded]')).toBeNull();

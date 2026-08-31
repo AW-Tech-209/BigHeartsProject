@@ -872,6 +872,62 @@ export interface InscritosAulaResponse {
 }
 
 /**
+ * Resultado por el que se filtra el historial de un `STUDENT` (`GET
+ * /historial`, HU-404). Nunca `CONFIRMED`: eso no es un resultado, es una
+ * reserva que todavía no tiene desenlace.
+ */
+export type ResultadoHistorial =
+  BookingStatus.ATTENDED | BookingStatus.NO_SHOW | BookingStatus.CANCELLED;
+
+/**
+ * Query de `GET /historial` (HU-404). No declara `studentId` ni `teacherId`:
+ * el alcance, y la forma misma de la respuesta, salen del rol de quien pide
+ * (`ARQUITECTURA.md` §4.8, regla 3).
+ */
+export interface HistorialQuery {
+  /** Solo tiene efecto para un `STUDENT`; un `TEACHER` no tiene "resultado" propio. */
+  resultado?: ResultadoHistorial;
+  /** ISO 8601. Cota inferior de `scheduledAt`, combinable con `hasta`. */
+  desde?: string;
+  /** ISO 8601. Cota superior de `scheduledAt`, combinable con `desde`. */
+  hasta?: string;
+  page?: number;
+  pageSize?: number;
+}
+
+/**
+ * Respuesta de `GET /historial` para un `STUDENT`: sus reservas ya pasadas o
+ * canceladas. Reutiliza `ClassroomListItem` —mismo criterio que
+ * `MisReservasResponse`—: el aula con el nombre del profesor y el propio
+ * `myBookingStatus`, que aquí ES el resultado (D34).
+ */
+export interface HistorialEstudianteResponse {
+  items: ClassroomListItem[];
+  total: number;
+  page: number;
+  pageSize: number;
+}
+
+/**
+ * Una fila del historial de un `TEACHER`: el aula que impartió, más cuántos se
+ * inscribieron y cuántos asistieron de verdad (HU-404, AC2).
+ */
+export interface AulaImpartida extends Classroom {
+  /** Reservas que llegaron a tener cupo confirmado: `CONFIRMED`, `ATTENDED` o `NO_SHOW`, sin las `CANCELLED`. */
+  totalInscritos: number;
+  /** Cuántas de esas se marcaron `ATTENDED`. */
+  totalAsistieron: number;
+}
+
+/** Respuesta de `GET /historial` para un `TEACHER`: sus aulas ya impartidas. */
+export interface HistorialProfesorResponse {
+  items: AulaImpartida[];
+  total: number;
+  page: number;
+  pageSize: number;
+}
+
+/**
  * Respuesta de `GET /admin/teachers`: todos los profesores de la academia, sin
  * filtrar por estado. Sirve al selector del filtro de supervisión (HU-210) y
  * es un superconjunto de `PendingTeachersResponse`, que solo trae los

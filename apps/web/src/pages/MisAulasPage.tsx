@@ -11,11 +11,9 @@ import { RejillaAulas } from '@/components/layout/rejilla-aulas';
 import { Button } from '@/components/ui/button';
 import { Callout } from '@/components/ui/callout';
 import { Skeleton } from '@/components/ui/skeleton';
-import { FiltroEstadoAulas } from '@/features/aulas/components/filtro-estado-aulas';
 import { useMisAulas } from '@/features/aulas/hooks/use-mis-aulas';
 import {
   buildMisAulasSearchParams,
-  estadoActivo,
   parseMisAulasQuery,
 } from '@/features/aulas/lib/filtros-mis-aulas';
 import { useAnnounce } from '@/hooks/use-announce';
@@ -24,29 +22,31 @@ import { useAnnounce } from '@/hooks/use-announce';
 const TARJETAS_FANTASMA = 6;
 
 /**
- * Las aulas que imparte el profesor (HU-207).
+ * Las aulas que el profesor imparte y todavía no pasaron (HU-207; D34 de
+ * HU-404 la acota a lo próximo, con el resto en `/historial`).
  *
  * **No es el catálogo con otro filtro.** `/aulas` es la vista pública —solo
  * publicadas y futuras, para que un estudiante descubra una clase—; esta es el
- * registro del dueño: incluye **las canceladas y las que ya pasaron**, porque
- * es también su historial (§4.8). El alcance lo decide el servidor a partir del
- * token: aquí no se filtra por `teacherId` en el cliente, ni se puede.
+ * registro del dueño. El alcance lo decide el servidor a partir del token:
+ * aquí no se filtra por `teacherId` en el cliente, ni se puede.
  *
- * El filtro y la página viven en la URL (AC6): copiar el enlace y abrirlo en
- * otra pestaña reproduce la misma vista.
+ * La página vive en la URL: copiar el enlace y abrirlo en otra pestaña
+ * reproduce la misma vista.
  *
- * La acción primaria vive en UN solo sitio a la vez (AC10, decisión 4 de la
- * HU): en la cabecera cuando hay lista, y dentro del estado vacío cuando no la
- * hay. Pintarla en los dos deja dos acciones primarias compitiendo, que es lo
- * que prohíbe `layout-y-composicion.md`.
+ * La acción primaria vive en UN solo sitio a la vez (decisión 4 de la HU): en
+ * la cabecera cuando hay lista, y dentro del estado vacío cuando no la hay.
+ * Pintarla en los dos deja dos acciones primarias compitiendo, que es lo que
+ * prohíbe `layout-y-composicion.md`.
  */
 export function MisAulasPage() {
   const [searchParams, setSearchParams] = useSearchParams();
-  const query = parseMisAulasQuery(searchParams);
+  const query: MisAulasQuery = {
+    ...parseMisAulasQuery(searchParams),
+    estado: EstadoTemporalAula.PROXIMAS,
+  };
   const { data, isPending, isError, refetch, isRefetching } = useMisAulas(query);
   const announce = useAnnounce();
 
-  const hayFiltro = estadoActivo(query) !== EstadoTemporalAula.TODAS;
   const hayLista = Boolean(data && data.items.length > 0);
 
   // AC12: cada resultado nuevo se anuncia por región viva. Solo se dispara
@@ -56,17 +56,12 @@ export function MisAulasPage() {
     if (!data) return;
 
     if (data.total === 0) {
-      announce(hayFiltro ? 'No tienes aulas en este estado.' : 'Todavía no creaste ninguna aula.');
+      announce('Todavía no creaste ninguna aula.');
       return;
     }
 
     announce(`Se encontraron ${data.total} aula${data.total === 1 ? '' : 's'}.`);
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- `hayFiltro` decide SOLO el texto del caso "0 resultados"; incluirlo dispararía el anuncio al cambiar de filtro, antes de que llegue la respuesta nueva.
   }, [data, announce]);
-
-  function actualizarFiltro(siguiente: MisAulasQuery) {
-    setSearchParams(buildMisAulasSearchParams(siguiente));
-  }
 
   function irAPagina(pagina: number) {
     setSearchParams(buildMisAulasSearchParams({ ...query, page: pagina }));
@@ -80,16 +75,24 @@ export function MisAulasPage() {
       Crear una clase
     </Button>
   );
+  const verHistorial = (
+    <Button variant="outline" render={<Link to="/historial" />} className="h-11 px-5 text-base">
+      Ver historial
+    </Button>
+  );
 
   return (
     <AppShell>
       <PaginaCabecera
         titulo="Mis aulas"
-        contexto="Las clases que impartes, con su horario, su cupo y los estudiantes inscritos."
-        accion={hayLista ? crearUnaClase : undefined}
+        contexto="Las clases que impartes y todavía no pasaron, con su horario, su cupo y los estudiantes inscritos."
+        accion={
+          <div className="flex flex-wrap gap-3">
+            {verHistorial}
+            {hayLista && crearUnaClase}
+          </div>
+        }
       />
-
-      <FiltroEstadoAulas value={query} onChange={actualizarFiltro} />
 
       {/* Estado 1 — cargando. Con texto, nunca un spinner mudo (B6). */}
       {isPending && (
@@ -125,35 +128,13 @@ export function MisAulasPage() {
         </Callout>
       )}
 
-      {/*
-        Estado 3 — vacío, con dos textos distintos. Sin filtro significa que el
-        profesor no ha publicado nada nunca y la salida es crear; con filtro
-        significa que no tiene aulas EN ESE ESTADO, y la salida es quitar el
-        filtro, no publicar otra clase.
-      */}
+      {/* Estado 3 — vacío. */}
       {!isPending && !isError && data && data.items.length === 0 && (
-        <>
-          {hayFiltro ? (
-            <EstadoVacio
-              titular="No tienes aulas en este estado"
-              ayuda="Prueba con otro estado para ver el resto de tus clases."
-              accion={
-                <Button
-                  variant="outline"
-                  onClick={() => actualizarFiltro({ estado: EstadoTemporalAula.TODAS })}
-                >
-                  Ver todas mis aulas
-                </Button>
-              }
-            />
-          ) : (
-            <EstadoVacio
-              titular="Todavía no creaste ninguna aula"
-              ayuda="Publica tu primera clase con su horario y su cupo. Aquí verás quién reservó en cada una."
-              accion={crearUnaClase}
-            />
-          )}
-        </>
+        <EstadoVacio
+          titular="Todavía no creaste ninguna aula"
+          ayuda="Publica tu primera clase con su horario y su cupo. Aquí verás quién reservó en cada una."
+          accion={crearUnaClase}
+        />
       )}
 
       {/* Estado 4 — la lista. */}

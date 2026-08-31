@@ -8,7 +8,7 @@ import {
   MeetingProvider,
   UserRole,
 } from '@academia/types';
-import { screen, waitFor, within } from '@testing-library/react';
+import { screen, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { getMisReservas } from '@/features/aulas/api/get-mis-reservas';
@@ -76,7 +76,7 @@ describe('MisClasesPage — los cuatro estados', () => {
   });
 
   // AC5: sin reservas, la pantalla explica cómo conseguir una y enlaza al catálogo.
-  it('vacío sin filtro: enlaza al catálogo', async () => {
+  it('vacío: enlaza al catálogo', async () => {
     vi.mocked(getMisReservas).mockResolvedValue(respuesta([]));
 
     renderConProviders(<MisClasesPage />);
@@ -86,15 +86,6 @@ describe('MisClasesPage — los cuatro estados', () => {
       'href',
       '/aulas',
     );
-  });
-
-  it('vacío con filtro: la salida es volver a verlas todas', async () => {
-    vi.mocked(getMisReservas).mockResolvedValue(respuesta([]));
-
-    renderConProviders(<MisClasesPage />, { ruta: '/mis-clases?estado=canceladas' });
-
-    expect(await screen.findByText('No tienes clases en este estado')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Ver todas mis clases' })).toBeInTheDocument();
   });
 
   it('error: explica y ofrece volver a cargar', async () => {
@@ -123,24 +114,6 @@ describe('MisClasesPage — el listado del estudiante (AC1)', () => {
     const tarjeta = await screen.findByRole('article', { name: 'Conversación cotidiana' });
     expect(within(tarjeta).getByText(/Paula Profesora/)).toBeInTheDocument();
     expect(screen.getByRole('article', { name: 'Inglés de negocios' })).toBeInTheDocument();
-  });
-
-  // AC2: una clase cancelada del mes que viene aparece con su propio estado.
-  it('una clase cancelada se muestra como cancelada, no como próxima', async () => {
-    vi.mocked(getMisReservas).mockResolvedValue(
-      respuesta([
-        claseReservada({
-          id: 'cancelada',
-          title: 'Clase cancelada de agosto',
-          status: ClassroomStatus.CANCELLED,
-        }),
-      ]),
-    );
-
-    renderConProviders(<MisClasesPage />);
-
-    const tarjeta = await screen.findByRole('article', { name: 'Clase cancelada de agosto' });
-    expect(within(tarjeta).getByText('Clase cancelada')).toBeInTheDocument();
   });
 
   // No es el catálogo: aquí no hay botón de reservar, la clase ya está confirmada.
@@ -178,28 +151,20 @@ describe('MisClasesPage — cancelar una reserva (HU-303, T6/T7)', () => {
   });
 });
 
-describe('MisClasesPage — filtro temporal en la URL (AC2)', () => {
-  it('una URL con filtro deja el control marcado y pide ese estado', async () => {
-    vi.mocked(getMisReservas).mockResolvedValue(respuesta([]));
+describe('MisClasesPage — D34: solo lo próximo, con enlace al historial', () => {
+  it('pide siempre el filtro próximas, y enlaza al historial', async () => {
+    vi.mocked(getMisReservas).mockResolvedValue(respuesta([claseReservada()]));
 
-    renderConProviders(<MisClasesPage />, { ruta: '/mis-clases?estado=pasadas' });
-    await screen.findByText('No tienes clases en este estado');
+    renderConProviders(<MisClasesPage />);
 
-    expect(screen.getByLabelText('Estado')).toHaveValue(EstadoTemporalAula.PASADAS);
+    await screen.findByRole('article');
     expect(vi.mocked(getMisReservas).mock.calls[0]?.[0]).toEqual({
-      estado: EstadoTemporalAula.PASADAS,
+      estado: EstadoTemporalAula.PROXIMAS,
     });
-  });
-
-  it('quitar el filtro desde el vacío vuelve a pedirlas todas', async () => {
-    vi.mocked(getMisReservas).mockResolvedValue(respuesta([]));
-    const { user } = renderConProviders(<MisClasesPage />, {
-      ruta: '/mis-clases?estado=canceladas',
-    });
-
-    await user.click(await screen.findByRole('button', { name: 'Ver todas mis clases' }));
-
-    await waitFor(() => expect(vi.mocked(getMisReservas).mock.calls.at(-1)?.[0]).toEqual({}));
+    expect(screen.getByRole('link', { name: 'Ver historial' })).toHaveAttribute(
+      'href',
+      '/historial',
+    );
   });
 });
 
@@ -211,7 +176,6 @@ describe('MisClasesPage — accesibilidad con datos (AC6)', () => {
         claseReservada({
           id: 'aula-2',
           title: 'Inglés de negocios',
-          status: ClassroomStatus.CANCELLED,
           communicationModes: [CommunicationPreference.SIGN_LANGUAGE],
         }),
       ]),

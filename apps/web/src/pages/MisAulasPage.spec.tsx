@@ -79,24 +79,12 @@ describe('MisAulasPage — los cuatro estados (B6)', () => {
     expect(screen.getByText('Cargando tus aulas…')).toBeInTheDocument();
   });
 
-  it('vacío sin filtro: invita a publicar la primera clase', async () => {
+  it('vacío: invita a publicar la primera clase', async () => {
     vi.mocked(getMisAulas).mockResolvedValue(respuesta([]));
 
     renderConProviders(<MisAulasPage />);
 
     expect(await screen.findByText('Todavía no creaste ninguna aula')).toBeInTheDocument();
-  });
-
-  // Con un filtro puesto, el vacío significa otra cosa: tiene aulas, pero no de
-  // ese tipo. La salida es quitar el filtro, no publicar otra clase.
-  it('vacío con filtro: la salida es volver a verlas todas', async () => {
-    vi.mocked(getMisAulas).mockResolvedValue(respuesta([]));
-
-    renderConProviders(<MisAulasPage />, { ruta: '/mis-aulas?estado=canceladas' });
-
-    expect(await screen.findByText('No tienes aulas en este estado')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Ver todas mis aulas' })).toBeInTheDocument();
-    expect(screen.queryByText('Sin resultados.')).toBeNull();
   });
 
   it('error: explica y ofrece volver a cargar', async () => {
@@ -111,7 +99,7 @@ describe('MisAulasPage — los cuatro estados (B6)', () => {
   });
 });
 
-describe('MisAulasPage — el listado del profesor (AC1, AC2)', () => {
+describe('MisAulasPage — el listado del profesor (AC1)', () => {
   // AC1: el hueco que originó la HU. Con tres aulas creadas se ven las tres.
   it('un profesor con tres aulas las ve las tres, y ya no el estado vacío', async () => {
     vi.mocked(getMisAulas).mockResolvedValue(
@@ -130,37 +118,6 @@ describe('MisAulasPage — el listado del profesor (AC1, AC2)', () => {
     expect(screen.getByRole('article', { name: 'Inglés de negocios' })).toBeInTheDocument();
     expect(screen.getByRole('article', { name: 'Pronunciación' })).toBeInTheDocument();
     expect(screen.queryByText('Todavía no creaste ninguna aula')).toBeNull();
-  });
-
-  /**
-   * AC2 — lo que separa esta pantalla del catálogo: **también las canceladas y
-   * las que ya pasaron**, cada una con su estado en color + ícono + texto. Una
-   * clase de la semana pasada sigue estando: es el historial del profesor.
-   */
-  it('muestra las canceladas y las pasadas, cada una con su estado', async () => {
-    vi.mocked(getMisAulas).mockResolvedValue(
-      respuesta([
-        aula({ id: 'futura', title: 'Clase de la semana que viene' }),
-        aula({
-          id: 'cancelada',
-          title: 'Clase cancelada de agosto',
-          status: ClassroomStatus.CANCELLED,
-        }),
-        aula({
-          id: 'pasada',
-          title: 'Clase de la semana pasada',
-          scheduledAt: '2020-08-12T23:00:00.000Z',
-        }),
-      ]),
-    );
-
-    renderConProviders(<MisAulasPage />);
-
-    const cancelada = await screen.findByRole('article', { name: 'Clase cancelada de agosto' });
-    const pasada = screen.getByRole('article', { name: 'Clase de la semana pasada' });
-
-    expect(within(cancelada).getByText('Clase cancelada')).toBeInTheDocument();
-    expect(within(pasada).getByText('Clase finalizada')).toBeInTheDocument();
   });
 
   // AC8: al profesor le importa cuánta gente viene, no cuánto queda.
@@ -189,78 +146,20 @@ describe('MisAulasPage — el listado del profesor (AC1, AC2)', () => {
   });
 });
 
-/**
- * AC6 — el filtro vive en la URL.
- *
- * La página deriva su consulta de los search params, así que comprobar **con
- * qué se llamó a la API** es comprobar qué había en la URL: si el filtro no se
- * hubiera escrito ahí, la petición saldría sin él.
- */
-describe('MisAulasPage — filtro temporal en la URL (B2, AC6)', () => {
-  it('una URL con filtro deja el control marcado y pide ese estado', async () => {
-    vi.mocked(getMisAulas).mockResolvedValue(respuesta([]));
-
-    renderConProviders(<MisAulasPage />, { ruta: '/mis-aulas?estado=pasadas' });
-    await screen.findByText('No tienes aulas en este estado');
-
-    expect(screen.getByLabelText('Estado')).toHaveValue(EstadoTemporalAula.PASADAS);
-    expect(vi.mocked(getMisAulas).mock.calls[0]?.[0]).toEqual({
-      estado: EstadoTemporalAula.PASADAS,
-    });
-  });
-
-  it('sin filtro en la URL, el control muestra «Todas» y no se pide ningún estado', async () => {
+describe('MisAulasPage — D34: solo lo próximo, con enlace al historial', () => {
+  it('pide siempre el filtro próximas, y enlaza al historial', async () => {
     vi.mocked(getMisAulas).mockResolvedValue(respuesta([aula()]));
 
     renderConProviders(<MisAulasPage />);
+
     await screen.findByRole('article');
-
-    expect(screen.getByLabelText('Estado')).toHaveValue(EstadoTemporalAula.TODAS);
-    expect(vi.mocked(getMisAulas).mock.calls[0]?.[0]).toEqual({});
-  });
-
-  it('elegir un estado vuelve a pedir la lista con ese filtro', async () => {
-    vi.mocked(getMisAulas).mockResolvedValue(respuesta([aula()]));
-    const { user } = renderConProviders(<MisAulasPage />);
-    await screen.findByRole('article');
-
-    await user.selectOptions(screen.getByLabelText('Estado'), EstadoTemporalAula.CANCELADAS);
-
-    await waitFor(() =>
-      expect(vi.mocked(getMisAulas).mock.calls.at(-1)?.[0]).toEqual({
-        estado: EstadoTemporalAula.CANCELADAS,
-      }),
-    );
-  });
-
-  // AC12: el filtro se alcanza y se opera con teclado, sin ratón.
-  it('el filtro se alcanza con el tabulador y se cambia con el teclado', async () => {
-    vi.mocked(getMisAulas).mockResolvedValue(respuesta([aula()]));
-    const { user } = renderConProviders(<MisAulasPage />);
-    await screen.findByRole('article');
-
-    const filtro = screen.getByLabelText('Estado');
-    filtro.focus();
-    expect(filtro).toHaveFocus();
-
-    await user.selectOptions(filtro, EstadoTemporalAula.PROXIMAS);
-
-    await waitFor(() =>
-      expect(vi.mocked(getMisAulas).mock.calls.at(-1)?.[0]).toEqual({
-        estado: EstadoTemporalAula.PROXIMAS,
-      }),
-    );
-  });
-
-  it('quitar el filtro desde el vacío vuelve a pedirlas todas', async () => {
-    vi.mocked(getMisAulas).mockResolvedValue(respuesta([]));
-    const { user } = renderConProviders(<MisAulasPage />, {
-      ruta: '/mis-aulas?estado=canceladas',
+    expect(vi.mocked(getMisAulas).mock.calls[0]?.[0]).toEqual({
+      estado: EstadoTemporalAula.PROXIMAS,
     });
-
-    await user.click(await screen.findByRole('button', { name: 'Ver todas mis aulas' }));
-
-    await waitFor(() => expect(vi.mocked(getMisAulas).mock.calls.at(-1)?.[0]).toEqual({}));
+    expect(screen.getByRole('link', { name: 'Ver historial' })).toHaveAttribute(
+      'href',
+      '/historial',
+    );
   });
 });
 
@@ -335,20 +234,12 @@ describe('MisAulasPage — anuncio del resultado (AC12)', () => {
     await waitFor(() => expect(regionViva()).toHaveTextContent('Se encontraron 2 aulas.'));
   });
 
-  it('anuncia el vacío sin filtro con el mismo texto que se ve en pantalla', async () => {
+  it('anuncia el vacío con el mismo texto que se ve en pantalla', async () => {
     vi.mocked(getMisAulas).mockResolvedValue(respuesta([]));
 
     renderConProviders(<MisAulasPage />);
 
     await waitFor(() => expect(regionViva()).toHaveTextContent('Todavía no creaste ninguna aula.'));
-  });
-
-  it('anuncia el vacío con filtro activo con su propio texto', async () => {
-    vi.mocked(getMisAulas).mockResolvedValue(respuesta([]));
-
-    renderConProviders(<MisAulasPage />, { ruta: '/mis-aulas?estado=canceladas' });
-
-    await waitFor(() => expect(regionViva()).toHaveTextContent('No tienes aulas en este estado.'));
   });
 });
 
@@ -372,22 +263,24 @@ describe('MisAulasPage — paginación (A5)', () => {
 
     await user.click(paginacion.getByRole('button', { name: 'Siguiente' }));
 
-    await waitFor(() => expect(vi.mocked(getMisAulas).mock.calls.at(-1)?.[0]).toEqual({ page: 2 }));
+    await waitFor(() =>
+      expect(vi.mocked(getMisAulas).mock.calls.at(-1)?.[0]).toEqual({
+        estado: EstadoTemporalAula.PROXIMAS,
+        page: 2,
+      }),
+    );
   });
 });
 
 /**
  * AC12 — `axe` sobre la pantalla **con contenido**. `paginas.spec.tsx` ya la
- * recorre en los tres temas, pero siempre en su estado vacío; la rejilla y el
- * filtro solo aparecen con respuesta.
+ * recorre en los tres temas, pero siempre en su estado vacío; la rejilla solo
+ * aparece con respuesta.
  */
 describe('MisAulasPage — accesibilidad con datos (AC12)', () => {
   it.each(TEMAS)('sale limpia en el tema %s', async (tema) => {
     vi.mocked(getMisAulas).mockResolvedValue(
-      respuesta([
-        aula(),
-        aula({ id: 'aula-2', title: 'Inglés de negocios', status: ClassroomStatus.CANCELLED }),
-      ]),
+      respuesta([aula(), aula({ id: 'aula-2', title: 'Inglés de negocios' })]),
     );
 
     const { container } = renderConProviders(<MisAulasPage />, { tema });
