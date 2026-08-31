@@ -21,7 +21,7 @@ describe('buildEmail', () => {
     expect(email.html).toContain('Inglés A1');
   });
 
-  it('tiene versión en texto plano para los cinco tipos de aviso', () => {
+  it('tiene versión en texto plano para todos los tipos de aviso', () => {
     const base = { recipient: { email: 'x@academia.local', firstName: 'X' } };
     const classroom = {
       title: 'Inglés A1',
@@ -34,5 +34,22 @@ describe('buildEmail', () => {
       expect(email.text.length).toBeGreaterThan(0);
       expect(email.subject.length).toBeGreaterThan(0);
     }
+  });
+
+  it('BOOKING_REMINDER_30M enlaza a la pantalla del aula, no a la videollamada', () => {
+    const email = buildEmail({
+      type: NotificationType.BOOKING_REMINDER_30M,
+      recipient: { email: 'ana@academia.local', firstName: 'Ana' },
+      classroom: {
+        title: 'Inglés A1',
+        scheduledAt: new Date('2026-08-12T18:00:00.000Z'),
+        durationMinutes: 60,
+        url: 'https://academia-web.vercel.app/aulas/aula-1',
+      },
+    });
+
+    expect(email.html).toContain('https://academia-web.vercel.app/aulas/aula-1');
+    expect(email.text).toContain('https://academia-web.vercel.app/aulas/aula-1');
+    expect(email.html).not.toMatch(/zoom\.us|meet\.google\.com/);
   });
 });

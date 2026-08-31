@@ -191,6 +191,19 @@ const camposEnv = z.object({
    * `RESEND_API_KEY` está configurada (ver `.refine()` más abajo).
    */
   EMAIL_FROM: z.string().email('debe ser una dirección de correo válida').optional(),
+
+  /**
+   * URL del frontend desplegado. La usa el recordatorio de 30 min (HU-402,
+   * §4.6) para enlazar a la pantalla del aula, nunca al enlace de la
+   * videollamada. Opcional: por defecto el Vite dev server local.
+   */
+  FRONTEND_URL: z.string().url('debe ser una URL válida').default('http://localhost:5173'),
+
+  /**
+   * Cada cuántos segundos el cron interno barre reservas con recordatorio
+   * pendiente (HU-402, §4.6). Opcional: por defecto 60.
+   */
+  REMINDER_SWEEP_INTERVAL_SECONDS: z.coerce.number().int().positive().default(60),
 });
 
 /**

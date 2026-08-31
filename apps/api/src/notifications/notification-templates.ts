@@ -97,6 +97,34 @@ export function buildEmail(notification: Notification): EmailContent {
         ]),
       };
 
+    case NotificationType.BOOKING_REMINDER_24H:
+      return {
+        subject: 'Tu clase es mañana',
+        html: html([
+          `Hola ${nombre},`,
+          `En menos de 24 horas empieza tu clase «${aula}» (${cuando}).`,
+        ]),
+        text: text([
+          `Hola ${nombre},`,
+          `En menos de 24 horas empieza tu clase «${aula}» (${cuando}).`,
+        ]),
+      };
+
+    case NotificationType.BOOKING_REMINDER_30M:
+      return {
+        subject: 'Tu clase empieza en 30 minutos',
+        html: html([
+          `Hola ${nombre},`,
+          `Tu clase «${aula}» empieza en 30 minutos (${cuando}).`,
+          `Entra a la plataforma para ver el enlace: <a href="${classroom?.url}">${classroom?.url}</a>.`,
+        ]),
+        text: text([
+          `Hola ${nombre},`,
+          `Tu clase «${aula}» empieza en 30 minutos (${cuando}).`,
+          `Entra a la plataforma para ver el enlace: ${classroom?.url}`,
+        ]),
+      };
+
     case NotificationType.CLASSROOM_CANCELLED:
       return {
         subject: 'La clase que reservaste fue cancelada',

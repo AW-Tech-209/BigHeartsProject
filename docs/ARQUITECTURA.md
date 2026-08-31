@@ -266,6 +266,16 @@ reservas `CONFIRMED` con aviso pendiente. Implicaciones:
 - Con más de una instancia de la API, este diseño duplicaría envíos. Hoy Render corre una sola. Si
   eso cambia, hay que migrar a BullMQ (D11) o poner un lock en BD.
 
+> **Decisión (HU-402) — el barrido escribe la marca solo si `notify()` no lanza.** El puerto
+> `NotificationService` nunca lanza en condiciones normales (ver más abajo), así que "no lanzó" es
+> la única señal de éxito disponible para el cron: `ResendNotificationService.notify()` es
+> fire-and-forget (dispara el envío y devuelve antes de que Resend responda), de modo que un fallo
+> real del proveedor ocurre después de que la promesa ya resolvió y el cron no puede enterarse. Esto
+> es una limitación conocida y aceptada, no un bug: cubre el caso que sí puede detectarse (fallo al
+> preparar o disparar el envío), igual que ya hace `BookingsService` con `BOOKING_CONFIRMED` y
+> `BOOKING_CANCELLED`. `RemindersService` vive en `apps/api/src/reminders/`, con `@nestjs/schedule` y
+> un intervalo leído de `REMINDER_SWEEP_INTERVAL_SECONDS`.
+
 > **Decisión D14 (2026-08-18) — el envío es un puerto con dos adaptadores.** `NotificationsModule`
 > expone la interfaz **`NotificationService`**; quien la llama nunca sabe cómo se envía. En Fase 1
 > la implementación activa es **`LoggingNotificationService`**, que registra destinatario, tipo de

@@ -16,6 +16,10 @@ export const NotificationType = {
   BOOKING_CANCELLED: 'BOOKING_CANCELLED',
   /** El profesor canceló el aula: la reserva del estudiante también (HU-306, D29). */
   CLASSROOM_CANCELLED: 'CLASSROOM_CANCELLED',
+  /** Recordatorio 24 h antes de la clase (HU-402, §4.6). */
+  BOOKING_REMINDER_24H: 'BOOKING_REMINDER_24H',
+  /** Recordatorio 30 min antes: mismo instante que la apertura del enlace (§4.1, §4.6). */
+  BOOKING_REMINDER_30M: 'BOOKING_REMINDER_30M',
 } as const;
 
 export type NotificationType = (typeof NotificationType)[keyof typeof NotificationType];
@@ -31,6 +35,8 @@ export interface NotificationClassroom {
   title: string;
   scheduledAt: Date;
   durationMinutes: number;
+  /** Solo lo usa BOOKING_REMINDER_30M, para enlazar a la pantalla del aula (§4.6). */
+  url?: string;
 }
 
 /** Un aviso a punto de salir: a quién, de qué tipo, con qué datos. */
