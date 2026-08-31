@@ -5,7 +5,7 @@
 | **Sprint**          | Sprint 4 — Notificaciones e Historial         |
 | **Prioridad**       | 🟡 Media (sin esto no se demuestra el sprint) |
 | **Estimación**      | 0.5 días                                      |
-| **Estado**          | ⬜ Pendiente                                  |
+| **Estado**          | ✅ Hecho                                      |
 | **Rama**            | `hu-406-seed-con-historial-<persona>`         |
 | **Alcance técnico** | backend                                       |
 | **Depende de**      | HU-403, HU-404                                |
@@ -43,33 +43,33 @@ Una fila de historial donde todos asistieron no enseña que la pantalla distingu
 
 ### Backend
 
-- [ ] **T1** — Al menos **dos aulas pasadas** con sus reservas ya marcadas, repartidas entre los dos
+- [x] **T1** — Al menos **dos aulas pasadas** con sus reservas ya marcadas, repartidas entre los dos
       profesores del seed.
-- [ ] **T2** — En una de ellas, **`ATTENDED` y `NO_SHOW` mezclados**, para que el historial del
+- [x] **T2** — En una de ellas, **`ATTENDED` y `NO_SHOW` mezclados**, para que el historial del
       profesor enseñe inscritos y asistentes con números distintos.
-- [ ] **T3** — El estudiante del seed termina con las **tres salidas** en su historial: una a la que
+- [x] **T3** — El estudiante del seed termina con las **tres salidas** en su historial: una a la que
       asistió, una a la que no, y una que canceló.
-- [ ] **T4** — Al menos una clase pasada **sin marcar**, que es el caso real más frecuente: el
+- [x] **T4** — Al menos una clase pasada **sin marcar**, que es el caso real más frecuente: el
       profesor todavía no ha pasado por ahí.
-- [ ] **T5** — `currentBookings` sigue cuadrando con las reservas que ocupan cupo, y el seed sigue
+- [x] **T5** — `currentBookings` sigue cuadrando con las reservas que ocupan cupo, y el seed sigue
       siendo **idempotente**.
 
 ### Documentación
 
-- [ ] **T6** — Actualizar la descripción del seed en `README.md`.
+- [x] **T6** — Actualizar la descripción del seed en `README.md`.
 
 ## ✅ Criterios de aceptación
 
-- [ ] **AC1** — Tras `npm run db:seed`, el estudiante del seed ve en `/historial` **las tres
+- [x] **AC1** — Tras `npm run db:seed`, el estudiante del seed ve en `/historial` **las tres
       salidas**: asistió, no asistió y canceló.
-- [ ] **AC2** — El profesor del seed ve en su historial al menos un aula donde **inscritos y
+- [x] **AC2** — El profesor del seed ve en su historial al menos un aula donde **inscritos y
       asistentes son números distintos**.
-- [ ] **AC3** — Hay al menos una clase pasada **sin marcar**, y la pantalla de inscritos ofrece ahí
+- [x] **AC3** — Hay al menos una clase pasada **sin marcar**, y la pantalla de inscritos ofrece ahí
       la acción de marcar.
-- [ ] **AC4** — `currentBookings` de cada aula sigue cuadrando con sus reservas que ocupan cupo.
+- [x] **AC4** — `currentBookings` de cada aula sigue cuadrando con sus reservas que ocupan cupo.
       Verificado con un test.
-- [ ] **AC5** — Ejecutar el seed dos veces **no duplica** nada ni descuadra ningún contador.
-- [ ] **AC6** — **Verificación:** `typecheck`, `lint`, `build` y `npm run test` en verde.
+- [x] **AC5** — Ejecutar el seed dos veces **no duplica** nada ni descuadra ningún contador.
+- [x] **AC6** — **Verificación:** `typecheck`, `lint`, `build` y `npm run test` en verde.
 
 ## 🚫 Fuera de alcance
 
@@ -80,4 +80,6 @@ Una fila de historial donde todos asistieron no enseña que la pantalla distingu
 
 ## Notas de implementación
 
-_Se rellena al cerrar._
+`contarConfirmadasPorAula` pasó a `contarReservasConCupoPorAula`: `currentBookings` debe incluir
+`ATTENDED`/`NO_SHOW` además de `CONFIRMED` (no solo esta última), porque marcar asistencia no libera
+el cupo (HU-403 AC4). Dos aulas nuevas (`AULA_HISTORIAL_PROFE1/2`) sostienen el historial marcado.

@@ -126,6 +126,8 @@ export const AULA_CANCELADA = '00000000-0000-4000-8000-000000000006';
 export const AULA_SIN_MODOS = '00000000-0000-4000-8000-000000000007';
 export const AULA_BASICA = '00000000-0000-4000-8000-000000000008';
 export const AULA_A_PUNTO_DE_EMPEZAR = '00000000-0000-4000-8000-000000000009';
+export const AULA_HISTORIAL_PROFE1 = '00000000-0000-4000-8000-000000000010';
+export const AULA_HISTORIAL_PROFE2 = '00000000-0000-4000-8000-000000000011';
 
 /**
  * Nueve aulas repartidas entre los dos profesores activos, con fechas
@@ -257,6 +259,32 @@ export const AULAS_DE_DEMOSTRACION: AulaDeDemostracion[] = [
     communicationModes: ['SIGN_LANGUAGE'],
     hasInterpreter: true,
   },
+  {
+    id: AULA_HISTORIAL_PROFE1,
+    teacherEmail: 'profe@academia.local',
+    title: 'Clase con asistencia marcada (demo historial)',
+    description: 'Aula pasada donde el profesor ya marcó asistencia, mezclando resultados.',
+    level: 'INTERMEDIATE',
+    maxStudents: 6,
+    scheduledInMinutes: -3 * 24 * 60,
+    durationMinutes: 60,
+    meetingLink: 'https://meet.google.com/demo-historial-profe1',
+    meetingProvider: 'GOOGLE_MEET',
+    communicationModes: ['SIGN_LANGUAGE'],
+  },
+  {
+    id: AULA_HISTORIAL_PROFE2,
+    teacherEmail: 'profe2@academia.local',
+    title: 'Clase con asistencia marcada (demo historial 2)',
+    description: 'Aula pasada donde el profesor ya marcó asistencia, mezclando resultados.',
+    level: 'ADVANCED',
+    maxStudents: 6,
+    scheduledInMinutes: -4 * 24 * 60,
+    durationMinutes: 60,
+    meetingLink: 'https://meet.google.com/demo-historial-profe2',
+    meetingProvider: 'GOOGLE_MEET',
+    communicationModes: ['WRITTEN_TEXT'],
+  },
 ];
 
 export type ReservaDeDemostracion = {
@@ -291,8 +319,8 @@ export const RESERVAS_DE_DEMOSTRACION: ReservaDeDemostracion[] = [
   {
     id: '00000000-0000-4000-9000-000000000003',
     studentEmail: 'alumno@academia.local',
-    classroomId: AULA_FINALIZADA,
-    status: 'CONFIRMED',
+    classroomId: AULA_HISTORIAL_PROFE1,
+    status: 'ATTENDED',
   },
   {
     id: '00000000-0000-4000-9000-000000000004',
@@ -397,15 +425,49 @@ export const RESERVAS_DE_DEMOSTRACION: ReservaDeDemostracion[] = [
     classroomId: AULA_SIN_MODOS,
     status: 'CONFIRMED',
   },
+  {
+    id: '00000000-0000-4000-9000-000000000021',
+    studentEmail: 'alumno4@academia.local',
+    classroomId: AULA_HISTORIAL_PROFE1,
+    status: 'NO_SHOW',
+  },
+  {
+    id: '00000000-0000-4000-9000-000000000022',
+    studentEmail: 'alumno5@academia.local',
+    classroomId: AULA_HISTORIAL_PROFE1,
+    status: 'ATTENDED',
+  },
+  {
+    id: '00000000-0000-4000-9000-000000000023',
+    studentEmail: 'alumno@academia.local',
+    classroomId: AULA_HISTORIAL_PROFE2,
+    status: 'NO_SHOW',
+  },
+  {
+    id: '00000000-0000-4000-9000-000000000024',
+    studentEmail: 'alumno3@academia.local',
+    classroomId: AULA_HISTORIAL_PROFE2,
+    status: 'ATTENDED',
+  },
+  {
+    id: '00000000-0000-4000-9000-000000000025',
+    studentEmail: 'alumno6@academia.local',
+    classroomId: AULA_HISTORIAL_PROFE2,
+    status: 'ATTENDED',
+  },
 ];
 
-/** Cuenta reservas `CONFIRMED` por aula. Es lo único que decide `currentBookings` (T6). */
-export function contarConfirmadasPorAula(
+/**
+ * Cuenta por aula las reservas que ocupan cupo: `CONFIRMED`, `ATTENDED` y
+ * `NO_SHOW` (marcar asistencia no libera el cupo, HU-403 AC4). Es lo único
+ * que decide `currentBookings` (T6, HU-406 T5).
+ */
+export function contarReservasConCupoPorAula(
   reservas: Pick<ReservaDeDemostracion, 'classroomId' | 'status'>[],
 ): Map<string, number> {
   const conteo = new Map<string, number>();
   for (const reserva of reservas) {
-    if (reserva.status !== 'CONFIRMED') continue;
+    if (reserva.status === 'CANCELLED') continue;
     conteo.set(reserva.classroomId, (conteo.get(reserva.classroomId) ?? 0) + 1);
   }
   return conteo;

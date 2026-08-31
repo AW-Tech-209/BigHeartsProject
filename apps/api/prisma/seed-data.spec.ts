@@ -5,18 +5,18 @@ import {
   AULA_LLENA,
   AULA_ULTIMO_CUPO,
   AULAS_DE_DEMOSTRACION,
-  contarConfirmadasPorAula,
+  contarReservasConCupoPorAula,
   RESERVAS_DE_DEMOSTRACION,
   USUARIOS_DE_PRUEBA,
 } from './seed-data';
 
-describe('contarConfirmadasPorAula', () => {
-  it('cuenta solo las CONFIRMED, agrupadas por aula', () => {
-    const conteo = contarConfirmadasPorAula([
+describe('contarReservasConCupoPorAula', () => {
+  it('cuenta CONFIRMED, ATTENDED y NO_SHOW, agrupadas por aula, sin las CANCELLED', () => {
+    const conteo = contarReservasConCupoPorAula([
       { classroomId: 'a', status: 'CONFIRMED' },
-      { classroomId: 'a', status: 'CONFIRMED' },
+      { classroomId: 'a', status: 'ATTENDED' },
       { classroomId: 'a', status: 'CANCELLED' },
-      { classroomId: 'b', status: 'CONFIRMED' },
+      { classroomId: 'b', status: 'NO_SHOW' },
     ]);
 
     expect(conteo.get('a')).toBe(2);
@@ -25,7 +25,7 @@ describe('contarConfirmadasPorAula', () => {
 });
 
 describe('RESERVAS_DE_DEMOSTRACION — invariantes del seed (HU-307)', () => {
-  const confirmadasPorAula = contarConfirmadasPorAula(RESERVAS_DE_DEMOSTRACION);
+  const confirmadasPorAula = contarReservasConCupoPorAula(RESERVAS_DE_DEMOSTRACION);
   const emailsDeUsuarios = new Set(USUARIOS_DE_PRUEBA.map((u) => u.email));
 
   it('AC4: currentBookings nunca supera maxStudents en ninguna aula', () => {
@@ -84,5 +84,41 @@ describe('RESERVAS_DE_DEMOSTRACION — invariantes del seed (HU-307)', () => {
   it('ninguna pareja (estudiante, aula) se repite', () => {
     const claves = RESERVAS_DE_DEMOSTRACION.map((r) => `${r.studentEmail}:${r.classroomId}`);
     expect(new Set(claves).size).toBe(claves.length);
+  });
+
+  it('HU-406 AC2/T2: al menos un aula pasada mezcla ATTENDED y NO_SHOW', () => {
+    const estadosPorAula = new Map<string, Set<string>>();
+    for (const reserva of RESERVAS_DE_DEMOSTRACION) {
+      const estados = estadosPorAula.get(reserva.classroomId) ?? new Set<string>();
+      estados.add(reserva.status);
+      estadosPorAula.set(reserva.classroomId, estados);
+    }
+
+    const hayAulaMixta = [...estadosPorAula.values()].some(
+      (estados) => estados.has('ATTENDED') && estados.has('NO_SHOW'),
+    );
+    expect(hayAulaMixta).toBe(true);
+  });
+
+  it('HU-406 AC1/T3: el estudiante del seed tiene las tres salidas', () => {
+    const delEstudiante = RESERVAS_DE_DEMOSTRACION.filter(
+      (r) => r.studentEmail === 'alumno@academia.local',
+    ).map((r) => r.status);
+
+    expect(delEstudiante).toContain('ATTENDED');
+    expect(delEstudiante).toContain('NO_SHOW');
+    expect(delEstudiante).toContain('CANCELLED');
+  });
+
+  it('HU-406 AC3/T4: hay un aula pasada sin ninguna reserva marcada', () => {
+    const ahora = Date.now();
+    const aulasPasadasSinMarcar = AULAS_DE_DEMOSTRACION.filter((aula) => {
+      const yaPaso = ahora + aula.scheduledInMinutes * 60_000 < ahora;
+      if (!yaPaso) return false;
+      const reservas = RESERVAS_DE_DEMOSTRACION.filter((r) => r.classroomId === aula.id);
+      return reservas.every((r) => r.status === 'CONFIRMED');
+    });
+
+    expect(aulasPasadasSinMarcar.length).toBeGreaterThan(0);
   });
 });
