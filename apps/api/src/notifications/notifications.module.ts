@@ -1,24 +1,36 @@
-import { Module } from '@nestjs/common';
+import { Logger, Module } from '@nestjs/common';
 
+import { AppConfigService } from '../config/app-config.service';
 import { LoggingNotificationService } from './logging-notification.service';
 import { NotificationService } from './notification.service';
+import { ResendNotificationService } from './resend-notification.service';
 
 /**
- * Notificaciones a usuarios: un PUERTO con un adaptador enchufado.
- *
- * `NotificationService` (abstracto) es a la vez el contrato y el token de
- * inyección; `LoggingNotificationService` es la implementación activa en Fase 1.
- * Quien inyecta el puerto no sabe —ni debe saber— cuál de los dos recibe.
- *
- * **Para el Sprint 4:** enchufar el proveedor real es cambiar el `useClass` de
- * abajo por el adaptador nuevo. Nada más. Ningún llamador se toca, ningún test
- * de dominio se reescribe: eso es exactamente lo que compra este módulo
- * (decisión D14, `docs/ARQUITECTURA.md` §4.6). El proveedor concreto sigue sin
- * decidirse (§14.6 nº5); esa decisión no bloquea a nadie mientras el puerto
- * exista.
+ * Decide el adaptador activo según `RESEND_API_KEY` (D32) y lo dice en el log
+ * de arranque: no se descubre por un correo que no llega (AC4).
  */
+export function crearAdaptadorDeNotificaciones(config: AppConfigService): NotificationService {
+  if (config.resendApiKey) {
+    Logger.log('Adaptador de notificaciones: Resend', 'NotificationsModule');
+    return new ResendNotificationService(config);
+  }
+
+  Logger.warn(
+    'RESEND_API_KEY no configurada: los avisos solo se registran en el log, no se envían.',
+    'NotificationsModule',
+  );
+  return new LoggingNotificationService();
+}
+
+/** Notificaciones a usuarios: un PUERTO con dos adaptadores (D14, D32). */
 @Module({
-  providers: [{ provide: NotificationService, useClass: LoggingNotificationService }],
+  providers: [
+    {
+      provide: NotificationService,
+      useFactory: crearAdaptadorDeNotificaciones,
+      inject: [AppConfigService],
+    },
+  ],
   exports: [NotificationService],
 })
 export class NotificationsModule {}

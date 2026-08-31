@@ -178,6 +178,19 @@ const camposEnv = z.object({
    * (HU-304, §4.1). Opcional: por defecto 30.
    */
   ACCESS_WINDOW_MINUTES: z.coerce.number().int().positive().default(ACCESS_WINDOW_MINUTES_DEFAULT),
+
+  /**
+   * Clave de API de Resend (D32, `docs/ARQUITECTURA.md` §4.6). OPCIONAL a
+   * propósito: sin ella la app arranca igual y usa `LoggingNotificationService`
+   * — así un entorno de desarrollo sin proveedor de correo no se rompe.
+   */
+  RESEND_API_KEY: z.string().optional(),
+
+  /**
+   * Dirección remitente de los correos transaccionales. Obligatoria solo si
+   * `RESEND_API_KEY` está configurada (ver `.refine()` más abajo).
+   */
+  EMAIL_FROM: z.string().email('debe ser una dirección de correo válida').optional(),
 });
 
 /**
@@ -187,14 +200,16 @@ const camposEnv = z.object({
  * `.refine()` del objeto entero, no como `.min()` del campo, porque el suelo
  * ya no es una constante: es otro valor del mismo entorno.
  */
-export const envSchema = camposEnv.refine(
-  (env) => env.CLASS_MIN_LEAD_MINUTES >= env.ACCESS_WINDOW_MINUTES,
-  {
+export const envSchema = camposEnv
+  .refine((env) => env.CLASS_MIN_LEAD_MINUTES >= env.ACCESS_WINDOW_MINUTES, {
     message:
       'CLASS_MIN_LEAD_MINUTES no puede bajar de ACCESS_WINDOW_MINUTES: es la ventana de acceso al enlace, y por debajo el enlace se revelaría al publicar la clase',
     path: ['CLASS_MIN_LEAD_MINUTES'],
-  },
-);
+  })
+  .refine((env) => !env.RESEND_API_KEY || !!env.EMAIL_FROM, {
+    message: 'EMAIL_FROM es obligatoria cuando se configura RESEND_API_KEY',
+    path: ['EMAIL_FROM'],
+  });
 
 /** Variables de entorno ya validadas y con los tipos correctos. */
 export type Env = z.infer<typeof envSchema>;

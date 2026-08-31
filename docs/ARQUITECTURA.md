@@ -274,7 +274,13 @@ reservas `CONFIRMED` con aviso pendiente. Implicaciones:
 >
 > Esto existe porque HU-104 necesita notificar el resultado de una aprobación antes de que haya
 > infraestructura de correo. El puerto deja el AC verificable hoy —con un espía en los tests— y
-> evita rehacer el cableado después. **El proveedor concreto sigue sin decidir; ver §14.6.**
+> evita rehacer el cableado después.
+>
+> **Decisión D32 (2026-08-31) — el proveedor es Resend (HU-401).** `NotificationsModule` elige el
+> adaptador en el arranque: con `RESEND_API_KEY` configurada, `ResendNotificationService`; sin
+> ella, sigue con `LoggingNotificationService`, y lo dice en el log de arranque. `notify()` no
+> espera la respuesta de Resend —dispara el envío y devuelve—, y un fallo del proveedor se registra
+> sin propagarse. Cierra el punto 5 de §14.6.
 
 ### 4.7 Tiempo y zonas horarias
 
@@ -443,19 +449,19 @@ juntos.
 
 ### 6.1 Módulos
 
-| Módulo          | Responsabilidad                                                                     | Estado                                                                                                                      |
-| --------------- | ----------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
-| `config`        | Validación del entorno con Zod y config global.                                     | ✅                                                                                                                          |
-| `prisma`        | `PrismaService` global.                                                             | ✅                                                                                                                          |
-| `common`        | Filtro de excepciones, interceptor de respuesta, factoría de errores de validación. | ✅                                                                                                                          |
-| `health`        | `GET /health` — proceso + BD.                                                       | ✅                                                                                                                          |
-| `auth`          | Registro, login, refresh, logout, guards.                                           | ✅                                                                                                                          |
-| `users`         | Perfil propio (`GET`/`PATCH /users/me`). La gestión de terceros vive en `admin`.    | ✅                                                                                                                          |
-| `classrooms`    | Aulas, horarios, cupos, enlace. Incluye `MeetingLinkCipher` (§4.1), que exporta.    | ✅ Crear, listar, detalle, editar, cancelar, «mis aulas», accesibilidad, coherencia temporal y ventana de acceso al enlace. |
-| `bookings`      | Reservas, concurrencia, cancelaciones.                                              | ✅ Reservar, «mis reservas», cancelar (Sprint 3)                                                                            |
-| `sessions`      | Reservado (ver nota).                                                               | ⬜ Stub                                                                                                                     |
-| `notifications` | Emails transaccionales y recordatorios.                                             | 🟨 Puerto + `LoggingNotificationService`; 5 tipos de aviso (HU-104, D14). Adaptador real en Sprint 4.                       |
-| `admin`         | Aprobación de profesores y supervisión de aulas (solo lectura).                     | ✅ HU-104, HU-210                                                                                                           |
+| Módulo          | Responsabilidad                                                                     | Estado                                                                                                                                |
+| --------------- | ----------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| `config`        | Validación del entorno con Zod y config global.                                     | ✅                                                                                                                                    |
+| `prisma`        | `PrismaService` global.                                                             | ✅                                                                                                                                    |
+| `common`        | Filtro de excepciones, interceptor de respuesta, factoría de errores de validación. | ✅                                                                                                                                    |
+| `health`        | `GET /health` — proceso + BD.                                                       | ✅                                                                                                                                    |
+| `auth`          | Registro, login, refresh, logout, guards.                                           | ✅                                                                                                                                    |
+| `users`         | Perfil propio (`GET`/`PATCH /users/me`). La gestión de terceros vive en `admin`.    | ✅                                                                                                                                    |
+| `classrooms`    | Aulas, horarios, cupos, enlace. Incluye `MeetingLinkCipher` (§4.1), que exporta.    | ✅ Crear, listar, detalle, editar, cancelar, «mis aulas», accesibilidad, coherencia temporal y ventana de acceso al enlace.           |
+| `bookings`      | Reservas, concurrencia, cancelaciones.                                              | ✅ Reservar, «mis reservas», cancelar (Sprint 3)                                                                                      |
+| `sessions`      | Reservado (ver nota).                                                               | ⬜ Stub                                                                                                                               |
+| `notifications` | Emails transaccionales y recordatorios.                                             | ✅ Puerto + `LoggingNotificationService` y `ResendNotificationService` (HU-104, D14, D32); 5 tipos de aviso. Recordatorios en HU-402. |
+| `admin`         | Aprobación de profesores y supervisión de aulas (solo lectura).                     | ✅ HU-104, HU-210                                                                                                                     |
 
 > **Nota de auditoría — `SessionsModule` no tiene datos que gobernar.** El `.docx` lo declaraba
 > como módulo pero **nunca definió una entidad `Session`**: el historial y la asistencia viven en
@@ -1012,9 +1018,9 @@ en marcha se reducen a invariantes + enlace a `DEPLOYMENT.md`, `AUTH_FLOW.md` y 
 4. ~~Qué hacer con la ausencia de tests en el frontend antes de Sprint 2 (§10.2).~~
    **✅ Resuelto (2026-08-18) — D17, e implementado en HU-205.** Vitest + Testing Library + `axe`,
    bloqueando en CI, sin umbral de cobertura y sin cobertura retroactiva. Ver §10.2.
-5. **Proveedor de email** para el adaptador real de `NotificationService` (§4.6, D14). Bloquea el
-   Sprint 4; **no bloquea el Sprint 3**: D29 emite los avisos de reserva por el puerto, que hoy
-   escribe a log. El Sprint 4 cambia el `useClass` y nada más.
+5. ~~Proveedor de email para el adaptador real de `NotificationService` (§4.6, D14).~~
+   **✅ Resuelto (2026-08-31) — D32, implementado en HU-401.** El proveedor es Resend;
+   `NotificationsModule` elige el adaptador según `RESEND_API_KEY` al arrancar. Ver §4.6.
 6. **Formato de paginación** del listado de aulas: `{ items, total, page, pageSize }` con
    `pageSize` 20 por defecto. Propuesto en HU-203, sin decidir formalmente.
 

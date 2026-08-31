@@ -577,7 +577,7 @@ export class ClassroomsService {
       return { cancelada, afectados: reservasVivas.map((reserva) => reserva.student) };
     });
 
-    await this.notifyClassroomCancelled(afectados);
+    await this.notifyClassroomCancelled(afectados, cancelada);
 
     return toPublicClassroom(cancelada);
   }
@@ -589,12 +589,18 @@ export class ClassroomsService {
    */
   private async notifyClassroomCancelled(
     afectados: { email: string; firstName: string }[],
+    classroom: { title: string; scheduledAt: Date; durationMinutes: number },
   ): Promise<void> {
     await Promise.all(
       afectados.map(async (estudiante) => {
         const notification: Notification = {
           type: NotificationType.CLASSROOM_CANCELLED,
           recipient: estudiante,
+          classroom: {
+            title: classroom.title,
+            scheduledAt: classroom.scheduledAt,
+            durationMinutes: classroom.durationMinutes,
+          },
         };
 
         try {
