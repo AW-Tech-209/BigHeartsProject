@@ -35,7 +35,7 @@ Tres capas, un solo despliegue de backend:
 ┌───────────────────────┴─────────────────────────────────┐
 │  BACKEND — NestJS 11, monolito modular                  │
 │  Render · auth │ users │ classrooms │ bookings          │
-│              │ sessions │ notifications │ admin         │
+│              │ notifications │ admin                    │
 └───────────────────────┬─────────────────────────────────┘
                         │  Prisma 6
 ┌───────────────────────┴─────────────────────────────────┐
@@ -469,15 +469,12 @@ juntos.
 | `users`         | Perfil propio (`GET`/`PATCH /users/me`). La gestión de terceros vive en `admin`.    | ✅                                                                                                                                    |
 | `classrooms`    | Aulas, horarios, cupos, enlace. Incluye `MeetingLinkCipher` (§4.1), que exporta.    | ✅ Crear, listar, detalle, editar, cancelar, «mis aulas», accesibilidad, coherencia temporal y ventana de acceso al enlace.           |
 | `bookings`      | Reservas, concurrencia, cancelaciones.                                              | ✅ Reservar, «mis reservas», cancelar (Sprint 3)                                                                                      |
-| `sessions`      | Reservado (ver nota).                                                               | ⬜ Stub                                                                                                                               |
 | `notifications` | Emails transaccionales y recordatorios.                                             | ✅ Puerto + `LoggingNotificationService` y `ResendNotificationService` (HU-104, D14, D32); 5 tipos de aviso. Recordatorios en HU-402. |
 | `admin`         | Aprobación de profesores y supervisión de aulas (solo lectura).                     | ✅ HU-104, HU-210                                                                                                                     |
 
-> **Nota de auditoría — `SessionsModule` no tiene datos que gobernar.** El `.docx` lo declaraba
-> como módulo pero **nunca definió una entidad `Session`**: el historial y la asistencia viven en
-> `Booking`. En Fase 1 no se crea esa entidad; la carpeta queda reservada para Fase 1.5, donde una
-> serie recurrente sí necesitará instancias de sesión separadas del aula. **Decisión de auditoría,
-> márcala si no estás de acuerdo.**
+> **`SessionsModule` no existe.** El `.docx` lo declaraba como módulo pero nunca definió una
+> entidad `Session`: el historial y la asistencia viven en `Booking`, horario y duración en
+> `Classroom`. Se borró en HU-405 (D35).
 
 ### 6.2 Patrón por módulo
 
@@ -510,6 +507,10 @@ juntos.
 qué mensaje mostrar a partir de él, nunca parseando `message`. Los errores de validación llevan
 `details.fields[]` con `{ field, message }`, que es lo que el formulario usa para pintar el error
 bajo cada input.
+
+**Paginación (D38).** Todo listado pagina con `{ items, total, page, pageSize }`, `pageSize` 20 por
+defecto. Es el formato de los cinco endpoints paginados: catálogo, «mis aulas», supervisión de
+admin, «mis reservas» e historial.
 
 ### 6.4 Configuración y arranque
 
@@ -677,8 +678,8 @@ contradigan. Los estados 4, 5 y 3 dependen del reloj, así que la API envía los
 el cliente re-deriva al re-renderizar; **pero el permiso para ver el enlace lo decide solo el
 servidor** (§4.1).
 
-> **Decisiones de auditoría a revisar:** el umbral de `ultimos-cupos` (≤ 3) y la ubicación de la
-> función derivadora son propuestas mías; no estaban decididas en ningún sitio.
+> **Confirmado (D36, D37).** El umbral de `ultimos-cupos` (≤ 3) y la ubicación de la función
+> derivadora en `@academia/types` dejan de ser propuestas: llevan cuatro sprints funcionando así.
 
 ---
 
@@ -992,7 +993,7 @@ frontend → CloudFront + S3; Redis → ElastiCache. La arquitectura monolítica
 | 12  | Estados del aula: `activa/pausada/finalizada` vs `DRAFT/PUBLISHED/CANCELLED/COMPLETED` | Se adopta el segundo. Sin estado "pausada" (§7.2).                                                           |
 | 13  | Asistencia automática (§4.4) vs manual (Definición y HU-404)                           | **Manual**, marcada por el profesor (D10).                                                                   |
 | 14  | Recurrencia prometida en §4.2, "futuro" en §8.2, ausente del alcance                   | **Fuera de Fase 1**; se conserva `isRecurring` como gancho.                                                  |
-| 15  | `SessionsModule` declarado sin entidad `Session`                                       | Carpeta **reservada**, sin entidad en Fase 1 (§6.1). Decisión de auditoría a revisar.                        |
+| 15  | `SessionsModule` declarado sin entidad `Session`                                       | Módulo **borrado** (§6.1, D35).                                                                              |
 | 16  | Cancelación "e.g. 1 hora antes"                                                        | **60 min, configurable** por `CANCELLATION_WINDOW_MINUTES` (§4.3).                                           |
 | 17  | No solapamiento sin respaldo en el alcance                                             | **Regla de Fase 1**, validada dentro de la transacción (§4.4).                                               |
 
@@ -1021,18 +1022,8 @@ en marcha se reducen a invariantes + enlace a `DEPLOYMENT.md`, `AUTH_FLOW.md` y 
 
 ### 14.6 Pendiente de tu revisión
 
-1. `SessionsModule` sin entidad en Fase 1 (§6.1).
-2. Umbral de `ultimos-cupos` en 3 (§7.3).
-3. Ubicación de la función derivadora de estado en `@academia/types` (§7.3).
-   _Se materializa en HU-203, que la implementa con tests propios._
-4. ~~Qué hacer con la ausencia de tests en el frontend antes de Sprint 2 (§10.2).~~
-   **✅ Resuelto (2026-08-18) — D17, e implementado en HU-205.** Vitest + Testing Library + `axe`,
-   bloqueando en CI, sin umbral de cobertura y sin cobertura retroactiva. Ver §10.2.
-5. ~~Proveedor de email para el adaptador real de `NotificationService` (§4.6, D14).~~
-   **✅ Resuelto (2026-08-31) — D32, implementado en HU-401.** El proveedor es Resend;
-   `NotificationsModule` elige el adaptador según `RESEND_API_KEY` al arrancar. Ver §4.6.
-6. **Formato de paginación** del listado de aulas: `{ items, total, page, pageSize }` con
-   `pageSize` 20 por defecto. Propuesto en HU-203, sin decidir formalmente.
+No queda ninguna decisión abierta de la Fase 1. Las últimas cuatro se cerraron en HU-405 (D35–D38,
+§17); las dos anteriores, en D17 (§10.2) y D32 (§4.6).
 
 ---
 
@@ -1113,6 +1104,9 @@ Las cuatro se toman al planificar el sprint que **cierra la Fase 1**.
 | D33 | La asistencia **se marca desde que la clase termina y se puede corregir sin límite**          | HU-403 | Antes de terminar no significa nada. Y sin ventana de bloqueo porque un profesor que se equivoca no tiene otra vía de arreglarlo: un registro falso congelado es peor que permitir la corrección.               |
 | D34 | El pasado **se muda a `/historial`**: `/mis-clases` y `/mis-aulas` solo muestran lo que viene | HU-404 | Con una pantalla de historial propia, dejar los filtros `pasadas` donde estaban daría dos pantallas listando lo mismo. **Ajusta D24**: su semántica de grupos disjuntos se conserva, pero vive en el historial. |
 | D35 | **`SessionsModule` se borra**                                                                 | HU-405 | Cierra el punto 1 de §14.6, abierto desde el Sprint 0. `Booking` ya lleva `ATTENDED`/`NO_SHOW` y `Classroom` lleva horario y duración: una entidad `Session` duplicaría ambas sin añadir nada en Fase 1.        |
+| D36 | El umbral de `ultimos-cupos` se confirma en `maxStudents − currentBookings ≤ 3`               | HU-405 | Cierra el punto 2 de §14.6. Lleva cuatro sprints funcionando sin que nadie haya reportado el número como incorrecto.                                                                                            |
+| D37 | `derivarEstadoAula()` se confirma en `@academia/types`, no en cada app                        | HU-405 | Cierra el punto 3 de §14.6. Ya se materializó en HU-203; moverla ahora reabriría un contrato que back y front ya consumen.                                                                                      |
+| D38 | El formato de paginación se confirma en `{ items, total, page, pageSize }`, `pageSize` 20     | HU-405 | Cierra el punto 6 de §14.6. Es el que ya usan los cinco endpoints paginados (HU-203, HU-207, HU-210, HU-302, HU-404); solo faltaba decirlo.                                                                     |
 
 Correcciones aplicadas a las HUs del Sprint 4 al convertirlas, sin necesidad de decisión nueva:
 
