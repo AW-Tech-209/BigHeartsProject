@@ -79,11 +79,14 @@ la misma contraseña:
 | STUDENT | `alumno2@academia.local`             | ACTIVE  | `Password123!` |
 | STUDENT | `alumno3` a `alumno6@academia.local` | ACTIVE  | `Password123!` |
 
-Además, nueve aulas repartidas entre los dos profesores `ACTIVE`, con fechas relativas al momento
-de sembrar, y reservas reales sobre ellas: `alumno@academia.local` ve en «Mis reservas» una clase
-próxima, una a punto de empezar (con el enlace ya visible) y una pasada, más una cancelada.
-`alumno3`–`alumno6` son relleno, solo para que `currentBookings` de cada aula cuadre con reservas
-`CONFIRMED` de verdad — incluida una con el último cupo libre y otra llena.
+Además, once aulas repartidas entre los dos profesores `ACTIVE`, con fechas relativas al momento de
+sembrar, y reservas reales sobre ellas: `alumno@academia.local` ve en «Mis reservas» una clase
+próxima y una a punto de empezar (con el enlace ya visible), y en «Historial» las tres salidas
+posibles — asistió, no asistió y canceló. Dos de esas aulas pasadas ya tienen la asistencia
+marcada por su profesor (una por profesor, mezclando `ATTENDED` y `NO_SHOW`), y una más queda
+pasada y sin marcar, el caso real más frecuente. `alumno3`–`alumno6` son relleno, solo para que
+`currentBookings` de cada aula cuadre con las reservas que ocupan cupo de verdad — incluida una con
+el último cupo libre y otra llena.
 
 El seed es idempotente (usuarios por `upsert` de email, aulas y reservas por un id fijo): se puede
 re-ejecutar sin duplicar. Para lanzarlo a mano: `npm run db:seed` (o dentro del contenedor, ya

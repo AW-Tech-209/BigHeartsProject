@@ -11,8 +11,8 @@
  * Idempotente: `upsert` por email (usuarios) o por un id fijo (aulas,
  * reservas). Las fechas son SIEMPRE relativas a `now()`: un seed con fechas
  * absolutas caduca. `currentBookings` de cada aula se recalcula siempre a
- * partir de las reservas `CONFIRMED` realmente sembradas, así que reejecutar
- * el seed nunca lo descuadra.
+ * partir de las reservas que ocupan cupo (`CONFIRMED`, `ATTENDED`, `NO_SHOW`)
+ * realmente sembradas, así que reejecutar el seed nunca lo descuadra.
  *
  * Ejecución: npm run db:seed --workspace @academia/api
  */
@@ -24,7 +24,7 @@ import type { AppConfigService } from '../src/config/app-config.service';
 import { MeetingLinkCipher } from '../src/classrooms/meeting-link.cipher';
 import {
   AULAS_DE_DEMOSTRACION,
-  contarConfirmadasPorAula,
+  contarReservasConCupoPorAula,
   RESERVAS_DE_DEMOSTRACION,
   USUARIOS_DE_PRUEBA,
 } from './seed-data';
@@ -165,17 +165,17 @@ async function seedBookings(): Promise<void> {
 }
 
 /**
- * `currentBookings` de cada aula sembrada se fija a partir de las reservas
- * `CONFIRMED` realmente escritas (T6): un solo cálculo, nunca dos números que
+ * `currentBookings` de cada aula sembrada se fija a partir de las reservas que
+ * ocupan cupo realmente escritas (T6): un solo cálculo, nunca dos números que
  * puedan discrepar entre sí ni entre ejecuciones del seed.
  */
 async function cuadrarCuposConReservas(): Promise<void> {
-  const confirmadasPorAula = contarConfirmadasPorAula(RESERVAS_DE_DEMOSTRACION);
+  const reservasConCupoPorAula = contarReservasConCupoPorAula(RESERVAS_DE_DEMOSTRACION);
 
   for (const aula of AULAS_DE_DEMOSTRACION) {
     await prisma.classroom.update({
       where: { id: aula.id },
-      data: { currentBookings: confirmadasPorAula.get(aula.id) ?? 0 },
+      data: { currentBookings: reservasConCupoPorAula.get(aula.id) ?? 0 },
     });
   }
 }
