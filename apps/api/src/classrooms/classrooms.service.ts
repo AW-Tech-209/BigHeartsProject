@@ -10,6 +10,7 @@ import {
   EstadoTemporalAula,
   type InscritosAulaResponse,
   type ListClassroomsResponse,
+  type MarkAttendanceResponse,
   type MisAulasResponse,
   UserRole,
   UserStatus,
@@ -33,6 +34,8 @@ import {
   toPublicClassroom,
 } from './classroom.mapper';
 import {
+  bookingNotInClassroom,
+  classNotFinished,
   classroomDurationInvalid,
   classroomForbidden,
   classroomHasBookings,
@@ -54,6 +57,7 @@ import {
 import type { CreateClassroomDto } from './dto/create-classroom.dto';
 import type { ListClassroomsDto } from './dto/list-classrooms.dto';
 import type { ListMisAulasDto } from './dto/list-mis-aulas.dto';
+import type { MarkAttendanceDto } from './dto/mark-attendance.dto';
 import type { UpdateClassroomDto } from './dto/update-classroom.dto';
 import { MeetingLinkCipher } from './meeting-link.cipher';
 
@@ -434,8 +438,9 @@ export class ClassroomsService {
     }
 
     const bookings = await this.prisma.booking.findMany({
-      where: { classroomId, status: { in: [BookingStatus.CONFIRMED, BookingStatus.CANCELLED] } },
+      where: { classroomId },
       select: {
+        id: true,
         status: true,
         student: {
           select: {
@@ -451,14 +456,87 @@ export class ClassroomsService {
 
     const inscritos = bookings.map(toInscritoAula);
 
+    // "confirmados" agrupa toda reserva vigente, incluida la ya marcada
+    // (ATTENDED/NO_SHOW son un CONFIRMED con asistencia decidida, no un grupo
+    // aparte): solo CANCELLED sale de ahí (HU-403).
     return {
       confirmados: inscritos.filter(
-        (inscrito) => inscrito.bookingStatus === BookingStatus.CONFIRMED,
+        (inscrito) => inscrito.bookingStatus !== BookingStatus.CANCELLED,
       ),
       cancelados: inscritos.filter(
         (inscrito) => inscrito.bookingStatus === BookingStatus.CANCELLED,
       ),
     };
+  }
+
+  /**
+   * `POST /classrooms/:id/asistencia` — el profesor dueño marca quién asistió
+   * (HU-403, D33). Solo después de que la clase termine, y sin límite para
+   * corregir: `CONFIRMED → ATTENDED | NO_SHOW`, y corregir entre esos dos, son
+   * las únicas transiciones. `currentBookings` nunca se toca: marcar
+   * asistencia no libera ni ocupa cupos.
+   */
+  async markAttendance(
+    teacher: AuthenticatedUser,
+    classroomId: string,
+    dto: MarkAttendanceDto,
+  ): Promise<MarkAttendanceResponse> {
+    const classroom = await this.prisma.classroom.findUnique({
+      where: { id: classroomId },
+      select: { teacherId: true, scheduledAt: true, durationMinutes: true },
+    });
+
+    if (!classroom || classroom.teacherId !== teacher.id) {
+      throw classroomNotFound();
+    }
+
+    const fin = classroom.scheduledAt.getTime() + classroom.durationMinutes * 60_000;
+    if (Date.now() < fin) {
+      throw classNotFinished();
+    }
+
+    const booking = await this.prisma.booking.findUnique({
+      where: { id: dto.bookingId },
+      select: {
+        classroomId: true,
+        status: true,
+        student: {
+          select: {
+            firstName: true,
+            lastName: true,
+            hearingLossLevel: true,
+            communicationPreference: true,
+          },
+        },
+      },
+    });
+
+    if (
+      !booking ||
+      booking.classroomId !== classroomId ||
+      booking.status === BookingStatus.CANCELLED
+    ) {
+      throw bookingNotInClassroom();
+    }
+
+    const actualizada = await this.prisma.booking.update({
+      where: { id: dto.bookingId },
+      data: { status: dto.status },
+      select: {
+        id: true,
+        status: true,
+        student: {
+          select: {
+            firstName: true,
+            lastName: true,
+            hearingLossLevel: true,
+            communicationPreference: true,
+          },
+        },
+      },
+    });
+
+    return { inscrito: toInscritoAula(actualizada) };
   }
 
   /**

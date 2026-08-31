@@ -1,5 +1,11 @@
-import { BookingStatus, type CommunicationPreference, type InscritoAula } from '@academia/types';
-import { CircleCheck, CircleHelp, CircleX, RotateCw, Users } from 'lucide-react';
+import {
+  type AttendanceStatus,
+  BookingStatus,
+  type CommunicationPreference,
+  type InscritoAula,
+} from '@academia/types';
+import { CircleCheck, CircleHelp, CircleMinus, CircleX, RotateCw, Users } from 'lucide-react';
+import { useState } from 'react';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -15,26 +21,41 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { useAnnounce } from '@/hooks/use-announce';
 import { useInscritosAula } from '@/features/aulas/hooks/use-inscritos-aula';
+import { useMarkAttendance } from '@/features/aulas/hooks/use-mark-attendance';
+import { describirHorario } from '@/features/aulas/lib/horario';
+import { mensajeErrorAsistencia } from '@/features/aulas/lib/mensaje-error-asistencia';
 import {
   etiquetaModoComunicacion,
   iconoModoComunicacion,
   MODOS_COMUNICACION_EN_ORDEN,
 } from '@/features/aulas/lib/modos-comunicacion';
 import { hearingLossLevelLabels } from '@/features/auth/lib/accessibility-labels';
+import { cn } from '@/lib/utils';
 
 type InscritosAulaProps = {
   classroomId: string;
   /** Solo el dueño ve esta sección; para el resto, el componente no pinta nada. */
   esDueno: boolean;
+  /** Desde que la clase termina se puede marcar asistencia, sin límite (HU-403, D33). */
+  claseTerminada: boolean;
+  /** Instante en que termina la clase, ISO 8601 (`scheduledAt + durationMinutes`). */
+  finDeClaseISO: string;
 };
 
 /**
- * Quién reservó la clase, con su perfil de accesibilidad (HU-305). Es
- * pedagógica, no administrativa: el profesor prepara la sesión sabiendo cómo
- * se comunica cada estudiante, no solo cuántos son.
+ * Quién reservó la clase, con su perfil de accesibilidad (HU-305), y desde
+ * HU-403 el control para marcar asistencia. Es pedagógica, no administrativa:
+ * el profesor prepara la sesión sabiendo cómo se comunica cada estudiante, no
+ * solo cuántos son.
  */
-export function InscritosAula({ classroomId, esDueno }: InscritosAulaProps) {
+export function InscritosAula({
+  classroomId,
+  esDueno,
+  claseTerminada,
+  finDeClaseISO,
+}: InscritosAulaProps) {
   const { data, isPending, isError, refetch, isRefetching } = useInscritosAula(classroomId, {
     enabled: esDueno,
   });
@@ -97,6 +118,12 @@ export function InscritosAula({ classroomId, esDueno }: InscritosAulaProps) {
         <>
           <ResumenAccesibilidad inscritos={data.confirmados} />
 
+          {!claseTerminada && (
+            <Callout title="Aún no puedes marcar asistencia">
+              <p>Podrás hacerlo cuando la clase termine, el {describirHorario(finDeClaseISO)}.</p>
+            </Callout>
+          )}
+
           <Table>
             <TableCaption>
               {data.confirmados.length === 1
@@ -109,11 +136,17 @@ export function InscritosAula({ classroomId, esDueno }: InscritosAulaProps) {
                 <TableHead>Modo de comunicación</TableHead>
                 <TableHead>Pérdida auditiva</TableHead>
                 <TableHead>Reserva</TableHead>
+                {claseTerminada && <TableHead>Asistencia</TableHead>}
               </TableRow>
             </TableHeader>
             <TableBody>
-              {[...data.confirmados, ...data.cancelados].map((inscrito, indice) => (
-                <FilaInscrito key={indice} inscrito={inscrito} />
+              {[...data.confirmados, ...data.cancelados].map((inscrito) => (
+                <FilaInscrito
+                  key={inscrito.bookingId}
+                  inscrito={inscrito}
+                  classroomId={classroomId}
+                  claseTerminada={claseTerminada}
+                />
               ))}
             </TableBody>
           </Table>
@@ -155,11 +188,21 @@ function ResumenAccesibilidad({ inscritos }: { inscritos: InscritoAula[] }) {
   );
 }
 
-function FilaInscrito({ inscrito }: { inscrito: InscritoAula }) {
+function FilaInscrito({
+  inscrito,
+  classroomId,
+  claseTerminada,
+}: {
+  inscrito: InscritoAula;
+  classroomId: string;
+  claseTerminada: boolean;
+}) {
+  const nombre = `${inscrito.firstName} ${inscrito.lastName}`;
+
   return (
     <TableRow>
       <TableHead scope="row" className="font-normal text-foreground">
-        {inscrito.firstName} {inscrito.lastName}
+        {nombre}
       </TableHead>
       <TableCell>
         <ModoDelEstudiante modo={inscrito.communicationPreference} />
@@ -170,17 +213,128 @@ function FilaInscrito({ inscrito }: { inscrito: InscritoAula }) {
           : 'Sin declarar'}
       </TableCell>
       <TableCell>
-        {inscrito.bookingStatus === BookingStatus.CONFIRMED ? (
-          <Badge tono="success" icon={CircleCheck}>
-            Confirmada
-          </Badge>
-        ) : (
-          <Badge tono="destructive" icon={CircleX}>
-            Cancelada
-          </Badge>
-        )}
+        <BadgeDeReserva estado={inscrito.bookingStatus} />
       </TableCell>
+      {claseTerminada && (
+        <TableCell>
+          {inscrito.bookingStatus === BookingStatus.CANCELLED ? (
+            <span className="text-sm text-muted-foreground">No aplica</span>
+          ) : (
+            <ControlAsistencia
+              classroomId={classroomId}
+              bookingId={inscrito.bookingId}
+              nombre={nombre}
+              estadoActual={inscrito.bookingStatus}
+            />
+          )}
+        </TableCell>
+      )}
     </TableRow>
+  );
+}
+
+function BadgeDeReserva({ estado }: { estado: BookingStatus }) {
+  switch (estado) {
+    case BookingStatus.CANCELLED:
+      return (
+        <Badge tono="destructive" icon={CircleX}>
+          Cancelada
+        </Badge>
+      );
+    case BookingStatus.ATTENDED:
+      return (
+        <Badge tono="success" icon={CircleCheck}>
+          Asistió
+        </Badge>
+      );
+    case BookingStatus.NO_SHOW:
+      // Neutro y sin juicio (HU-403): nunca un ícono de alerta.
+      return (
+        <Badge tono="neutral" icon={CircleMinus}>
+          No asistió
+        </Badge>
+      );
+    default:
+      return (
+        <Badge tono="success" icon={CircleCheck}>
+          Confirmada
+        </Badge>
+      );
+  }
+}
+
+/** Marcar / corregir asistencia (HU-403, T6). Guardado explícito: cada botón guarda al pulsarlo. */
+function ControlAsistencia({
+  classroomId,
+  bookingId,
+  nombre,
+  estadoActual,
+}: {
+  classroomId: string;
+  bookingId: string;
+  nombre: string;
+  estadoActual: BookingStatus;
+}) {
+  const mutation = useMarkAttendance(classroomId);
+  const announce = useAnnounce();
+  const [error, setError] = useState<string | null>(null);
+
+  function marcar(status: AttendanceStatus) {
+    if (estadoActual === status || mutation.isPending) return;
+
+    setError(null);
+    mutation.mutate(
+      { bookingId, status },
+      {
+        onSuccess: () => {
+          announce(
+            `${nombre}: ${status === BookingStatus.ATTENDED ? 'marcado como asistió' : 'marcado como no asistió'}.`,
+          );
+        },
+        onError: (err) => setError(mensajeErrorAsistencia(err)),
+      },
+    );
+  }
+
+  return (
+    <div className="space-y-2">
+      <div role="group" aria-label={`Asistencia de ${nombre}`} className="flex flex-wrap gap-2">
+        <Button
+          type="button"
+          variant="outline"
+          aria-pressed={estadoActual === BookingStatus.ATTENDED}
+          disabled={mutation.isPending}
+          onClick={() => marcar(BookingStatus.ATTENDED)}
+          className={cn(
+            'h-11 gap-1.5 px-3 text-sm',
+            estadoActual === BookingStatus.ATTENDED &&
+              'border-success bg-success-soft text-success-soft-foreground',
+          )}
+        >
+          <CircleCheck aria-hidden="true" strokeWidth={2} className="size-4" />
+          Asistió
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
+          aria-pressed={estadoActual === BookingStatus.NO_SHOW}
+          disabled={mutation.isPending}
+          onClick={() => marcar(BookingStatus.NO_SHOW)}
+          className={cn(
+            'h-11 gap-1.5 px-3 text-sm',
+            estadoActual === BookingStatus.NO_SHOW && 'border-foreground bg-muted text-foreground',
+          )}
+        >
+          <CircleMinus aria-hidden="true" strokeWidth={2} className="size-4" />
+          No asistió
+        </Button>
+      </div>
+      {error && (
+        <p role="alert" className="text-sm text-destructive">
+          {error}
+        </p>
+      )}
+    </div>
   );
 }
 

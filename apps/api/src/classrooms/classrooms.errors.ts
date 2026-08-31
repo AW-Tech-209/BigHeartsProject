@@ -181,6 +181,23 @@ export const classroomHasBookings = (reservasActivas: number): ConflictException
   });
 };
 
+/** Se intentó marcar asistencia antes de que la clase terminara (HU-403, D33). */
+export const classNotFinished = (): ConflictException =>
+  new ConflictException({
+    code: ApiErrorCode.CLASS_NOT_FINISHED,
+    message: 'Todavía no puedes marcar asistencia: la clase no ha terminado.',
+  });
+
+/**
+ * El `bookingId` no existe, no es de esta aula, o su reserva está
+ * `CANCELLED` (HU-403, T4).
+ */
+export const bookingNotInClassroom = (): NotFoundException =>
+  new NotFoundException({
+    code: ApiErrorCode.BOOKING_NOT_IN_CLASSROOM,
+    message: 'No encontramos esa reserva en esta clase.',
+  });
+
 /**
  * Traduce el estado de la cuenta del profesor al 403 que le corresponde.
  *

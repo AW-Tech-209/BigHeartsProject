@@ -10,6 +10,7 @@ import type { ClassroomsService } from './classrooms.service';
 import type { CreateClassroomDto } from './dto/create-classroom.dto';
 import type { ListClassroomsDto } from './dto/list-classrooms.dto';
 import type { ListMisAulasDto } from './dto/list-mis-aulas.dto';
+import type { MarkAttendanceDto } from './dto/mark-attendance.dto';
 import type { UpdateClassroomDto } from './dto/update-classroom.dto';
 
 const profesor: AuthenticatedUser = {
@@ -37,6 +38,9 @@ function setup() {
     .fn()
     .mockResolvedValue({ id: ID_DEL_AULA, status: ClassroomStatus.CANCELLED });
   const getInscritos = vi.fn().mockResolvedValue({ confirmados: [], cancelados: [] });
+  const markAttendance = vi.fn().mockResolvedValue({
+    inscrito: { bookingId: 'reserva-1', bookingStatus: 'ATTENDED' },
+  });
   const service = {
     createClassroom,
     listClassrooms,
@@ -45,6 +49,7 @@ function setup() {
     editClassroom,
     cancelClassroom,
     getInscritos,
+    markAttendance,
   } as unknown as ClassroomsService;
 
   return {
@@ -56,6 +61,7 @@ function setup() {
     editClassroom,
     cancelClassroom,
     getInscritos,
+    markAttendance,
   };
 }
 
@@ -347,6 +353,52 @@ describe('ClassroomsController.inscritos — GET /classrooms/:id/inscritos (HU-3
     it.each([UserRole.STUDENT, UserRole.ADMIN])('responde 403 INSUFFICIENT_ROLE a %s', (role) => {
       try {
         guard.canActivate(contextoDeRol(ClassroomsController.prototype.inscritos, role));
+        throw new Error('Se esperaba un 403 y el guard dejó pasar.');
+      } catch (error) {
+        const excepcion = error as {
+          getStatus?: () => number;
+          getResponse?: () => { code: string };
+        };
+        expect(excepcion.getStatus?.()).toBe(403);
+        expect(excepcion.getResponse?.().code).toBe(ApiErrorCode.INSUFFICIENT_ROLE);
+      }
+    });
+  });
+});
+
+describe('ClassroomsController.markAttendance — POST /classrooms/:id/asistencia (HU-403)', () => {
+  it('pasa al servicio el usuario del token, el id de la ruta y el cuerpo', async () => {
+    const { controller, markAttendance } = setup();
+    const dto = { bookingId: 'reserva-1', status: 'ATTENDED' } as MarkAttendanceDto;
+
+    await controller.markAttendance(profesor, ID_DEL_AULA, dto);
+
+    expect(markAttendance).toHaveBeenCalledWith(profesor, ID_DEL_AULA, dto);
+  });
+
+  it('devuelve la respuesta del servicio tal cual', async () => {
+    const { controller } = setup();
+    const dto = { bookingId: 'reserva-1', status: 'ATTENDED' } as MarkAttendanceDto;
+
+    await expect(controller.markAttendance(profesor, ID_DEL_AULA, dto)).resolves.toEqual({
+      inscrito: { bookingId: 'reserva-1', bookingStatus: 'ATTENDED' },
+    });
+  });
+
+  describe('autorización por rol (AC3)', () => {
+    const guard = new RolesGuard(new Reflector());
+
+    it('deja pasar a TEACHER', () => {
+      expect(
+        guard.canActivate(
+          contextoDeRol(ClassroomsController.prototype.markAttendance, UserRole.TEACHER),
+        ),
+      ).toBe(true);
+    });
+
+    it.each([UserRole.STUDENT, UserRole.ADMIN])('responde 403 INSUFFICIENT_ROLE a %s', (role) => {
+      try {
+        guard.canActivate(contextoDeRol(ClassroomsController.prototype.markAttendance, role));
         throw new Error('Se esperaba un 403 y el guard dejó pasar.');
       } catch (error) {
         const excepcion = error as {

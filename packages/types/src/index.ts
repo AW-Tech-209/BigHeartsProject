@@ -838,15 +838,31 @@ export interface MisReservasResponse {
 /**
  * Un inscrito en un aula, tal y como lo ve el profesor dueño (HU-305).
  *
- * **Deliberadamente sin `email` ni ningún identificador.** El profesor no
- * necesita escribirle a nadie por fuera de la plataforma.
+ * **Deliberadamente sin `email`.** El profesor no necesita escribirle a nadie
+ * por fuera de la plataforma. `bookingId` sí viaja (HU-403): es lo que
+ * identifica QUÉ reserva marcar al pasar asistencia.
  */
 export interface InscritoAula {
+  bookingId: string;
   firstName: string;
   lastName: string;
   hearingLossLevel: HearingLossLevel | null;
   communicationPreference: CommunicationPreference | null;
   bookingStatus: BookingStatus;
+}
+
+/** Los dos únicos valores que un profesor puede fijar al marcar asistencia (HU-403). */
+export type AttendanceStatus = BookingStatus.ATTENDED | BookingStatus.NO_SHOW;
+
+/** Cuerpo de `POST /classrooms/:id/asistencia` (HU-403). El aula sale de la ruta. */
+export interface MarkAttendanceInput {
+  bookingId: string;
+  status: AttendanceStatus;
+}
+
+/** Respuesta de `POST /classrooms/:id/asistencia`. Devuelve el inscrito ya actualizado. */
+export interface MarkAttendanceResponse {
+  inscrito: InscritoAula;
 }
 
 /** Respuesta de `GET /classrooms/:id/inscritos` (HU-305). Separado por estado, no una lista con filtro. */
@@ -1034,6 +1050,18 @@ export const ApiErrorCode = {
    * ventana para cancelarla.
    */
   CANCELLATION_WINDOW_CLOSED: 'CANCELLATION_WINDOW_CLOSED',
+  /**
+   * Se intentó marcar asistencia antes de que la clase terminara (HU-403,
+   * D33). Es 409: el aula existe, lo que falta es que pase el tiempo.
+   */
+  CLASS_NOT_FINISHED: 'CLASS_NOT_FINISHED',
+  /**
+   * El `bookingId` no existe, no es de esta aula, o su reserva está
+   * `CANCELLED` (HU-403, T4): quien canceló no faltó, así que no es un
+   * destino válido de asistencia. Es 404 en los tres casos: no confirma cuál
+   * de ellos ocurrió.
+   */
+  BOOKING_NOT_IN_CLASSROOM: 'BOOKING_NOT_IN_CLASSROOM',
   /** Se superó el límite de peticiones (rate limiting). */
   TOO_MANY_REQUESTS: 'TOO_MANY_REQUESTS',
   DATABASE_UNAVAILABLE: 'DATABASE_UNAVAILABLE',
