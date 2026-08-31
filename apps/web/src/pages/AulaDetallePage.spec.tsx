@@ -18,6 +18,7 @@ import { getClassroom } from '@/features/aulas/api/get-classroom';
 import { getClassrooms } from '@/features/aulas/api/get-classrooms';
 import { getInscritosAula } from '@/features/aulas/api/get-inscritos-aula';
 import { getMisAulas } from '@/features/aulas/api/get-mis-aulas';
+import { markAttendance } from '@/features/aulas/api/mark-attendance';
 import { ApiClientError } from '@/lib/api-error';
 import { esperarSinFallosDeAccesibilidad } from '@/test/accesibilidad';
 import { renderConProviders, type Tema } from '@/test/render-con-providers';
@@ -29,6 +30,7 @@ vi.mock('@/features/aulas/api/get-mis-aulas', () => ({ getMisAulas: vi.fn() }));
 vi.mock('@/features/aulas/api/get-inscritos-aula', () => ({ getInscritosAula: vi.fn() }));
 vi.mock('@/features/aulas/api/create-booking', () => ({ createBooking: vi.fn() }));
 vi.mock('@/features/aulas/api/cancel-booking', () => ({ cancelBooking: vi.fn() }));
+vi.mock('@/features/aulas/api/mark-attendance', () => ({ markAttendance: vi.fn() }));
 
 const TEMAS: Tema[] = ['light', 'dark', 'hc'];
 const ID = 'aula-42';
@@ -604,6 +606,7 @@ describe('AulaDetallePage — quién viene a la clase (HU-305)', () => {
     vi.mocked(getInscritosAula).mockResolvedValue({
       confirmados: [
         {
+          bookingId: 'reserva-1',
           firstName: 'Ana',
           lastName: 'Estudiante',
           hearingLossLevel: HearingLossLevel.MODERATE,
@@ -640,6 +643,71 @@ describe('AulaDetallePage — quién viene a la clase (HU-305)', () => {
 
     expect(await screen.findByText('No pudimos cargar los inscritos')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /volver a cargar/i })).toBeInTheDocument();
+  });
+});
+
+/** HU-403: el profesor marca asistencia, solo tras terminar la clase. */
+describe('AulaDetallePage — el profesor marca la asistencia (HU-403)', () => {
+  const inscritoConfirmado = {
+    bookingId: 'reserva-1',
+    firstName: 'Ana',
+    lastName: 'Estudiante',
+    hearingLossLevel: HearingLossLevel.MODERATE,
+    communicationPreference: CommunicationPreference.SIGN_LANGUAGE,
+    bookingStatus: BookingStatus.CONFIRMED,
+  };
+
+  it('AC2: mientras la clase no ha terminado, no ofrece el control', async () => {
+    darSesion(UserRole.TEACHER);
+    vi.mocked(getInscritosAula).mockResolvedValue({
+      confirmados: [inscritoConfirmado],
+      cancelados: [],
+    });
+    montarDetalle();
+
+    await screen.findByRole('rowheader', { name: 'Ana Estudiante' });
+
+    expect(screen.getByText('Aún no puedes marcar asistencia')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Asistió' })).not.toBeInTheDocument();
+  });
+
+  it('AC1, AC5: terminada la clase, marca y anuncia el resultado', async () => {
+    darSesion(UserRole.TEACHER);
+    vi.mocked(getClassroom).mockResolvedValue({
+      classroom: aula({ scheduledAt: '2020-01-01T00:00:00.000Z', durationMinutes: 60 }),
+    });
+    vi.mocked(getInscritosAula).mockResolvedValue({
+      confirmados: [inscritoConfirmado],
+      cancelados: [],
+    });
+    vi.mocked(markAttendance).mockResolvedValue({
+      inscrito: { ...inscritoConfirmado, bookingStatus: BookingStatus.ATTENDED },
+    });
+    const { user } = montarDetalle();
+
+    await user.click(await screen.findByRole('button', { name: 'Asistió' }));
+
+    expect(markAttendance).toHaveBeenCalledWith(ID, {
+      bookingId: 'reserva-1',
+      status: BookingStatus.ATTENDED,
+    });
+    expect(await screen.findByText('Ana Estudiante: marcado como asistió.')).toBeInTheDocument();
+  });
+
+  it('AC4: una reserva CANCELLED no ofrece el control', async () => {
+    darSesion(UserRole.TEACHER);
+    vi.mocked(getClassroom).mockResolvedValue({
+      classroom: aula({ scheduledAt: '2020-01-01T00:00:00.000Z', durationMinutes: 60 }),
+    });
+    vi.mocked(getInscritosAula).mockResolvedValue({
+      confirmados: [],
+      cancelados: [{ ...inscritoConfirmado, bookingStatus: BookingStatus.CANCELLED }],
+    });
+    montarDetalle();
+
+    await screen.findByRole('rowheader', { name: 'Ana Estudiante' });
+
+    expect(screen.getByText('No aplica')).toBeInTheDocument();
   });
 });
 

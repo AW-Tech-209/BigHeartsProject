@@ -16,6 +16,7 @@ import {
   type CreateClassroomResponse,
   type InscritosAulaResponse,
   type ListClassroomsResponse,
+  type MarkAttendanceResponse,
   type MisAulasResponse,
   type UpdateClassroomResponse,
   UserRole,
@@ -29,6 +30,7 @@ import { classroomNotFound } from './classrooms.errors';
 import { CreateClassroomDto } from './dto/create-classroom.dto';
 import { ListClassroomsDto } from './dto/list-classrooms.dto';
 import { ListMisAulasDto } from './dto/list-mis-aulas.dto';
+import { MarkAttendanceDto } from './dto/mark-attendance.dto';
 import { UpdateClassroomDto } from './dto/update-classroom.dto';
 
 /**
@@ -157,6 +159,22 @@ export class ClassroomsController {
     @Param('id', idDeAula) classroomId: string,
   ): Promise<InscritosAulaResponse> {
     return this.classroomsService.getInscritos(teacher, classroomId);
+  }
+
+  /**
+   * POST /classrooms/:id/asistencia — el profesor dueño marca quién asistió
+   * (HU-403). Solo tras terminar la clase; otro profesor recibe 404, igual
+   * que `inscritos()`.
+   */
+  @Post(':id/asistencia')
+  @Roles(UserRole.TEACHER)
+  @HttpCode(HttpStatus.OK)
+  async markAttendance(
+    @CurrentUser() teacher: AuthenticatedUser,
+    @Param('id', idDeAula) classroomId: string,
+    @Body() dto: MarkAttendanceDto,
+  ): Promise<MarkAttendanceResponse> {
+    return this.classroomsService.markAttendance(teacher, classroomId, dto);
   }
 
   /**

@@ -58,42 +58,42 @@ que el interesado no puede consultar no es un registro, es un expediente. El mic
 
 ### Contrato — va primero
 
-- [ ] **T1** — En `packages/types`: el cuerpo del marcado y los códigos `CLASS_NOT_FINISHED` y
+- [x] **T1** — En `packages/types`: el cuerpo del marcado y los códigos `CLASS_NOT_FINISHED` y
       `BOOKING_NOT_IN_CLASSROOM`. Luego `npm run build:types`.
 
 ### Backend
 
-- [ ] **T2** — `POST /classrooms/:id/asistencia` con `@Roles('TEACHER')`, **acotado al dueño**: si
+- [x] **T2** — `POST /classrooms/:id/asistencia` con `@Roles('TEACHER')`, **acotado al dueño**: si
       el aula no es suya, `404`.
-- [ ] **T3** — Solo se marca **después** de que la clase termine (`now ≥ scheduledAt +
-    durationMinutes`); antes, `CLASS_NOT_FINISHED`. Solo se tocan reservas de **esa** aula.
-- [ ] **T4** — Una reserva `CANCELLED` **no** se puede marcar: quien canceló no faltó.
+- [x] **T3** — Solo se marca **después** de que la clase termine (`now ≥ scheduledAt +
+  durationMinutes`); antes, `CLASS_NOT_FINISHED`. Solo se tocan reservas de **esa** aula.
+- [x] **T4** — Una reserva `CANCELLED` **no** se puede marcar: quien canceló no faltó.
       `CONFIRMED → ATTENDED | NO_SHOW`, y corregir entre esos dos, son las únicas transiciones.
-- [ ] **T5** — Tests: otro profesor → `404`; un `STUDENT` → `403`; antes de terminar →
+- [x] **T5** — Tests: otro profesor → `404`; un `STUDENT` → `403`; antes de terminar →
       `CLASS_NOT_FINISHED`; una `CANCELLED` no cambia; corregir de `ATTENDED` a `NO_SHOW` funciona;
       y **`currentBookings` no se toca** — marcar asistencia no libera cupos.
 
 ### Frontend
 
-- [ ] **T6** — En la lista de inscritos de HU-305, un control por estudiante para asistió / no
+- [x] **T6** — En la lista de inscritos de HU-305, un control por estudiante para asistió / no
       asistió, **accesible por teclado**, con el estado en color + ícono + texto. Guardado explícito
       con confirmación anunciada por región viva.
-- [ ] **T7** — Mientras la clase no termine, el control **no aparece** y se explica desde cuándo se
+- [x] **T7** — Mientras la clase no termine, el control **no aparece** y se explica desde cuándo se
       podrá marcar. Nunca un botón muerto sin motivo.
 
 ## ✅ Criterios de aceptación
 
-- [ ] **AC1** — Terminada la clase, el profesor dueño marca cada inscrito como `ATTENDED` o
+- [x] **AC1** — Terminada la clase, el profesor dueño marca cada inscrito como `ATTENDED` o
       `NO_SHOW`, y puede corregirse después.
-- [ ] **AC2** — Antes de que la clase termine la API responde `CLASS_NOT_FINISHED` y la interfaz no
+- [x] **AC2** — Antes de que la clase termine la API responde `CLASS_NOT_FINISHED` y la interfaz no
       ofrece la acción.
-- [ ] **AC3** — **Autorización:** otro profesor recibe `404` y un `STUDENT` recibe `403`. Una
+- [x] **AC3** — **Autorización:** otro profesor recibe `404` y un `STUDENT` recibe `403`. Una
       reserva de otra aula no se puede marcar desde esta.
-- [ ] **AC4** — Una reserva `CANCELLED` **no** cambia de estado, y `currentBookings` **no se
+- [x] **AC4** — Una reserva `CANCELLED` **no** cambia de estado, y `currentBookings` **no se
       modifica** en ningún caso.
-- [ ] **AC5** — El estado marcado se comunica con color + ícono + texto, el guardado se anuncia por
+- [x] **AC5** — El estado marcado se comunica con color + ícono + texto, el guardado se anuncia por
       región viva, y todo el control se maneja con teclado.
-- [ ] **AC6** — **Verificación:** `typecheck`, `lint`, `build`, `npm run test` en verde y `axe`
+- [x] **AC6** — **Verificación:** `typecheck`, `lint`, `build`, `npm run test` en verde y `axe`
       limpio.
 
 ## 🚫 Fuera de alcance
@@ -107,4 +107,7 @@ que el interesado no puede consultar no es un registro, es un expediente. El mic
 
 ## Notas de implementación
 
-_Se rellena al cerrar._
+`InscritoAula` ganó `bookingId` (no estaba en el contrato de HU-305) porque el control de
+asistencia necesita identificar qué reserva marcar. `getInscritos` ahora también incluye
+`ATTENDED`/`NO_SHOW` dentro de `confirmados` (son un `CONFIRMED` con asistencia ya decidida, no un
+grupo aparte); solo `CANCELLED` sale de ahí.

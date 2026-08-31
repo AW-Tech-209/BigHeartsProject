@@ -2082,3 +2082,194 @@ describe('ClassroomsService.cancelClassroom', () => {
     });
   });
 });
+
+/** Monta el servicio solo para `markAttendance` (HU-403). */
+function setupAsistencia(
+  options: {
+    aula?: { teacherId: string; scheduledAt: Date; durationMinutes: number } | null;
+    booking?: Record<string, unknown> | null;
+  } = {},
+) {
+  const aula =
+    'aula' in options
+      ? options.aula
+      : {
+          teacherId: PROFESOR_ID,
+          scheduledAt: new Date('2020-01-01T00:00:00.000Z'),
+          durationMinutes: 60,
+        };
+  const bookingPorDefecto = {
+    id: 'reserva-1',
+    classroomId: ID_DEL_AULA,
+    status: 'CONFIRMED',
+    student: {
+      firstName: 'Ana',
+      lastName: 'Estudiante',
+      hearingLossLevel: 'MODERATE',
+      communicationPreference: 'SIGN_LANGUAGE',
+    },
+  };
+  const booking = 'booking' in options ? options.booking : bookingPorDefecto;
+
+  const findUnique = vi.fn().mockResolvedValue(aula);
+  const findUniqueBooking = vi.fn().mockResolvedValue(booking);
+  const update = vi
+    .fn()
+    .mockImplementation(({ data }: { data: { status: string } }) =>
+      Promise.resolve({ ...bookingPorDefecto, ...booking, status: data.status }),
+    );
+  const cipher = new MeetingLinkCipher({ meetingLinkKey: 'a'.repeat(64) } as AppConfigService);
+  const prisma = {
+    classroom: { findUnique },
+    booking: { findUnique: findUniqueBooking, update },
+  } as unknown as PrismaService;
+
+  return {
+    service: new ClassroomsService(prisma, cipher, configuracion(), notificacionesFalsas().service),
+    update,
+  };
+}
+
+describe('ClassroomsService.markAttendance — el profesor marca asistencia (HU-403)', () => {
+  it('marca ATTENDED tras terminar la clase', async () => {
+    const { service, update } = setupAsistencia();
+
+    const respuesta = await service.markAttendance(profesorDelToken, ID_DEL_AULA, {
+      bookingId: 'reserva-1',
+      status: BookingStatus.ATTENDED,
+    });
+
+    expect(respuesta.inscrito.bookingStatus).toBe(BookingStatus.ATTENDED);
+    expect(respuesta.inscrito.bookingId).toBe('reserva-1');
+    expect(update.mock.calls[0]?.[0]).toMatchObject({
+      where: { id: 'reserva-1' },
+      data: { status: BookingStatus.ATTENDED },
+    });
+  });
+
+  it('corregir de ATTENDED a NO_SHOW funciona', async () => {
+    const { service } = setupAsistencia({
+      booking: {
+        id: 'reserva-1',
+        classroomId: ID_DEL_AULA,
+        status: 'ATTENDED',
+        student: {
+          firstName: 'Ana',
+          lastName: 'Estudiante',
+          hearingLossLevel: null,
+          communicationPreference: null,
+        },
+      },
+    });
+
+    const respuesta = await service.markAttendance(profesorDelToken, ID_DEL_AULA, {
+      bookingId: 'reserva-1',
+      status: BookingStatus.NO_SHOW,
+    });
+
+    expect(respuesta.inscrito.bookingStatus).toBe(BookingStatus.NO_SHOW);
+  });
+
+  it('otro profesor recibe CLASSROOM_NOT_FOUND (404)', async () => {
+    const { service } = setupAsistencia({
+      aula: {
+        teacherId: OTRO_PROFESOR_ID,
+        scheduledAt: new Date('2020-01-01T00:00:00.000Z'),
+        durationMinutes: 60,
+      },
+    });
+
+    const codigo = await codigoDe(
+      service.markAttendance(profesorDelToken, ID_DEL_AULA, {
+        bookingId: 'reserva-1',
+        status: BookingStatus.ATTENDED,
+      }),
+    );
+
+    expect(codigo).toBe(ApiErrorCode.CLASSROOM_NOT_FOUND);
+  });
+
+  it('antes de que la clase termine responde CLASS_NOT_FINISHED', async () => {
+    const { service, update } = setupAsistencia({
+      aula: {
+        teacherId: PROFESOR_ID,
+        scheduledAt: new Date('2099-01-01T00:00:00.000Z'),
+        durationMinutes: 60,
+      },
+    });
+
+    const codigo = await codigoDe(
+      service.markAttendance(profesorDelToken, ID_DEL_AULA, {
+        bookingId: 'reserva-1',
+        status: BookingStatus.ATTENDED,
+      }),
+    );
+
+    expect(codigo).toBe(ApiErrorCode.CLASS_NOT_FINISHED);
+    expect(update).not.toHaveBeenCalled();
+  });
+
+  it('una reserva CANCELLED no cambia de estado', async () => {
+    const { service, update } = setupAsistencia({
+      booking: {
+        id: 'reserva-1',
+        classroomId: ID_DEL_AULA,
+        status: 'CANCELLED',
+        student: {
+          firstName: 'Ana',
+          lastName: 'Estudiante',
+          hearingLossLevel: null,
+          communicationPreference: null,
+        },
+      },
+    });
+
+    const codigo = await codigoDe(
+      service.markAttendance(profesorDelToken, ID_DEL_AULA, {
+        bookingId: 'reserva-1',
+        status: BookingStatus.NO_SHOW,
+      }),
+    );
+
+    expect(codigo).toBe(ApiErrorCode.BOOKING_NOT_IN_CLASSROOM);
+    expect(update).not.toHaveBeenCalled();
+  });
+
+  it('una reserva de otra aula responde BOOKING_NOT_IN_CLASSROOM', async () => {
+    const { service, update } = setupAsistencia({
+      booking: {
+        id: 'reserva-1',
+        classroomId: 'otra-aula',
+        status: 'CONFIRMED',
+        student: {
+          firstName: 'Ana',
+          lastName: 'Estudiante',
+          hearingLossLevel: null,
+          communicationPreference: null,
+        },
+      },
+    });
+
+    const codigo = await codigoDe(
+      service.markAttendance(profesorDelToken, ID_DEL_AULA, {
+        bookingId: 'reserva-1',
+        status: BookingStatus.ATTENDED,
+      }),
+    );
+
+    expect(codigo).toBe(ApiErrorCode.BOOKING_NOT_IN_CLASSROOM);
+    expect(update).not.toHaveBeenCalled();
+  });
+
+  // currentBookings no es un campo que este flujo toque: no aparece en `data`.
+  it('marcar asistencia no toca currentBookings', async () => {
+    const { service, update } = setupAsistencia();
+
+    await service.markAttendance(profesorDelToken, ID_DEL_AULA, {
+      bookingId: 'reserva-1',
+      status: BookingStatus.ATTENDED,
+    });
+
+    expect(update.mock.calls[0]?.[0].data).not.toHaveProperty('currentBookings');
+  });
+});

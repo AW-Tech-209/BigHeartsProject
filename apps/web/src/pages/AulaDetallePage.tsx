@@ -259,7 +259,14 @@ function DetalleDelAula({
             </div>
           </section>
 
-          <InscritosAula classroomId={aula.id} esDueno={esDueno} />
+          <InscritosAula
+            classroomId={aula.id}
+            esDueno={esDueno}
+            claseTerminada={estado === 'finalizada'}
+            finDeClaseISO={new Date(
+              new Date(aula.scheduledAt).getTime() + aula.durationMinutes * 60_000,
+            ).toISOString()}
+          />
         </div>
 
         <aside className="space-y-6" aria-label="Resumen de la clase">

@@ -135,6 +135,7 @@ export type RevelacionesDelDetalle = {
  */
 /** Una fila de `Booking.findMany` con el estudiante incluido, a `InscritoAula` (HU-305). Sin email. */
 export function toInscritoAula(booking: {
+  id: string;
   status: string;
   student: {
     firstName: string;
@@ -144,6 +145,7 @@ export function toInscritoAula(booking: {
   };
 }): InscritoAula {
   return {
+    bookingId: booking.id,
     firstName: booking.student.firstName,
     lastName: booking.student.lastName,
     hearingLossLevel: booking.student.hearingLossLevel as HearingLossLevel | null,
