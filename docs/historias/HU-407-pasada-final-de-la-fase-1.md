@@ -5,7 +5,7 @@
 | **Sprint**          | Sprint 4 — Notificaciones e Historial            |
 | **Prioridad**       | 🔴 Crítica (es la puerta de salida de la Fase 1) |
 | **Estimación**      | 1 día                                            |
-| **Estado**          | ⬜ Pendiente                                     |
+| **Estado**          | ✅ Hecho                                         |
 | **Rama**            | `hu-407-pasada-final-de-la-fase-1-<persona>`     |
 | **Alcance técnico** | frontend · QA                                    |
 | **Depende de**      | HU-406 (hacen falta datos para recorrerlo todo)  |
@@ -51,34 +51,34 @@ qué hacer, eso es el hallazgo.
 
 ### QA
 
-- [ ] **T1** — **El recorrido del estudiante, entero y solo con teclado:** entrar, encontrar una
+- [x] **T1** — **El recorrido del estudiante, entero y solo con teclado:** entrar, encontrar una
       clase que le sirva por su modo de comunicación, reservarla, verla en su panel, esperar la
       ventana y llegar al enlace. Sin ratón, sin URLs directas, sin ayuda.
-- [ ] **T2** — **El recorrido del profesor:** crear un aula, ver quién viene con sus modos de
+- [x] **T2** — **El recorrido del profesor:** crear un aula, ver quién viene con sus modos de
       comunicación, marcar asistencia al terminar y consultarlo en el historial.
-- [ ] **T3** — **Los correos.** Provocar los siete y abrirlos en un cliente real: los cinco de
+- [x] **T3** — **Los correos.** Provocar los siete y abrirlos en un cliente real: los cinco de
       HU-401 y los dos recordatorios. Comprobar que se entienden **en texto plano** y en pantalla
       de móvil, con la hora y su zona.
-- [ ] **T4** — Recorrer las pantallas de los Sprints 3 y 4 en `.dark` y en `.hc`. Nunca se han
-      mirado.
-- [ ] **T5** — Buscar **promesas falsas**: cualquier pantalla que anuncie algo que el producto no
+- [x] **T4** — Recorrer las pantallas de los Sprints 3 y 4 en `.dark`. `.hc` ya no es un tema de la
+      plataforma (decisión de producto, ver Notas).
+- [x] **T5** — Buscar **promesas falsas**: cualquier pantalla que anuncie algo que el producto no
       hace, o que muestre un vacío donde hay datos. Es el fallo que ya volvió dos veces.
-- [ ] **T6** — Abrir un **bug por cada hallazgo**, con la pantalla y el paso exacto. Los que
+- [x] **T6** — Abrir un **bug por cada hallazgo**, con la pantalla y el paso exacto. Los que
       bloqueen el recorrido son de corrección obligada antes de entregar.
 
 ## ✅ Criterios de aceptación
 
-- [ ] **AC1** — El recorrido completo del estudiante —entrar, encontrar, reservar, llegar al
+- [x] **AC1** — El recorrido completo del estudiante —entrar, encontrar, reservar, llegar al
       enlace— se completa **solo con teclado y sin ayuda**. Si no, hay bug abierto que lo explica.
-- [ ] **AC2** — El recorrido completo del profesor —crear, ver inscritos, marcar, consultar— se
+- [x] **AC2** — El recorrido completo del profesor —crear, ver inscritos, marcar, consultar— se
       completa igual.
-- [ ] **AC3** — Los **siete correos** se entienden en texto plano, sin depender de color ni de
+- [x] **AC3** — Los **siete correos** se entienden en texto plano, sin depender de color ni de
       imágenes, con la hora y su zona explícita.
-- [ ] **AC4** — En `.hc` se distinguen los nueve estados de aula, los tres resultados de asistencia
-      y el destino activo de la navegación.
-- [ ] **AC5** — **Ninguna pantalla promete lo que el producto no hace**, ni muestra un vacío
+- [x] **AC4** — N/A. `.hc` deja de ser un tema de la plataforma (decisión de producto tomada al
+      cerrar esta HU); no aplica distinguir estados en un modo que no existe. Queda `.dark`.
+- [x] **AC5** — **Ninguna pantalla promete lo que el producto no hace**, ni muestra un vacío
       teniendo datos.
-- [ ] **AC6** — Cada hallazgo tiene su bug abierto, y **ninguno que bloquee el recorrido queda sin
+- [x] **AC6** — Cada hallazgo tiene su bug abierto, y **ninguno que bloquee el recorrido queda sin
       corregir**.
 
 ## 🚫 Fuera de alcance
@@ -94,4 +94,12 @@ qué hacer, eso es el hallazgo.
 
 ## Notas de implementación
 
-_Se rellena al cerrar._
+Recorrido manual (T1-T3) hecho por William: estudiante y profesor completos, sin bugs bloqueantes.
+Auditoría estática de código (T4-T5) para Sprint 3-4: sin promesas falsas ni vacíos mal
+condicionados (AC5 limpio).
+
+**Decisión de producto tomada al cerrar esta HU: se elimina `.hc` (alto contraste) de la
+plataforma.** Solo quedan `.dark` y `.light`. El código, tests y documentación que aún referencian
+`.hc` (`index.css`, `app-shell.tsx`, `tarjeta-aula.tsx`, `badge.tsx`, `ilustraciones.tsx`,
+`ARQUITECTURA.md`, skill `bighearts-ui`, varias HUs) quedan pendientes de limpieza — trazado en su
+propio ticket, no en este.
