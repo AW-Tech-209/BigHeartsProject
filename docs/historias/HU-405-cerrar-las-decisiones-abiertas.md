@@ -49,30 +49,30 @@ Tres de los cuatro son **confirmar lo que ya se hizo**. El trabajo real es el pr
 
 ### Backend
 
-- [ ] **T1** — Borrar `apps/api/src/sessions/` y quitar `SessionsModule` de `app.module.ts`.
+- [x] **T1** — Borrar `apps/api/src/sessions/` y quitar `SessionsModule` de `app.module.ts`.
       Comprobar que **nada más lo importa**.
-- [ ] **T2** — Comprobar que el formato de paginación es **el mismo** en los cinco endpoints que
+- [x] **T2** — Comprobar que el formato de paginación es **el mismo** en los cinco endpoints que
       paginan. Si alguno se desvió, alinearlo. Si ninguno, decirlo en las notas.
 
 ### Documentación
 
-- [ ] **T3** — Registrar **D35** (se borra `SessionsModule`, con el porqué) y convertir los puntos
+- [x] **T3** — Registrar **D35** (se borra `SessionsModule`, con el porqué) y convertir los puntos
       2, 3 y 4 de §14.6 en decisiones confirmadas, en su sección correspondiente.
-- [ ] **T4** — **Vaciar §14.6**, dejando solo la línea que diga que no queda ninguna decisión
+- [x] **T4** — **Vaciar §14.6**, dejando solo la línea que diga que no queda ninguna decisión
       abierta de la Fase 1. Es lo que hace verificable el cierre.
-- [ ] **T5** — Quitar `sessions` de la tabla de módulos de §6.1 y de la estructura que describe
+- [x] **T5** — Quitar `sessions` de la tabla de módulos de §6.1 y de la estructura que describe
       `CLAUDE.md`.
 
 ## ✅ Criterios de aceptación
 
-- [ ] **AC1** — `apps/api/src/sessions/` **no existe**, `SessionsModule` no aparece en ningún
+- [x] **AC1** — `apps/api/src/sessions/` **no existe**, `SessionsModule` no aparece en ningún
       import, y la aplicación arranca igual.
-- [ ] **AC2** — **§14.6 no tiene ningún punto abierto**: los cuatro están resueltos o convertidos en
+- [x] **AC2** — **§14.6 no tiene ningún punto abierto**: los cuatro están resueltos o convertidos en
       decisión registrada.
-- [ ] **AC3** — Los cinco endpoints paginados devuelven **el mismo formato**, verificado leyéndolos,
+- [x] **AC3** — Los cinco endpoints paginados devuelven **el mismo formato**, verificado leyéndolos,
       no suponiéndolo.
-- [ ] **AC4** — `sessions` no aparece ya ni en §6.1 ni en la estructura de `CLAUDE.md`.
-- [ ] **AC5** — **Verificación:** `typecheck`, `lint`, `build` y `npm run test` en verde.
+- [x] **AC4** — `sessions` no aparece ya ni en §6.1 ni en la estructura de `CLAUDE.md`.
+- [x] **AC5** — **Verificación:** `typecheck`, `lint`, `build` y `npm run test` en verde.
 
 ## 🚫 Fuera de alcance
 
@@ -83,4 +83,6 @@ Tres de los cuatro son **confirmar lo que ya se hizo**. El trabajo real es el pr
 
 ## Notas de implementación
 
-_Se rellena al cerrar._
+Los cinco endpoints paginados (catálogo, «mis aulas», admin, «mis reservas», historial) ya usaban
+`{ items, total, page, pageSize }` idéntico; T2 fue solo verificación, sin cambios de código. D36,
+D37 y D38 se añadieron al registro de decisiones del Sprint 4 junto a D35.

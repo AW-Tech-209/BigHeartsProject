@@ -13,7 +13,6 @@ import { HistorialModule } from './historial/historial.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { RemindersModule } from './reminders/reminders.module';
-import { SessionsModule } from './sessions/sessions.module';
 import { UsersModule } from './users/users.module';
 
 /** Módulo raíz: compone los módulos de dominio de la aplicación. */
@@ -35,7 +34,6 @@ import { UsersModule } from './users/users.module';
     UsersModule,
     ClassroomsModule,
     BookingsModule,
-    SessionsModule,
     NotificationsModule,
     RemindersModule,
     AdminModule,
