@@ -129,6 +129,16 @@ export class AppConfigService {
     return this.config.get('EMAIL_FROM', { infer: true });
   }
 
+  /** URL del frontend, para enlazar a la pantalla del aula en el recordatorio de 30 min. */
+  get frontendUrl(): string {
+    return this.config.get('FRONTEND_URL', { infer: true });
+  }
+
+  /** Cada cuántos segundos barre el cron de recordatorios (§4.6). */
+  get reminderSweepIntervalSeconds(): number {
+    return this.config.get('REMINDER_SWEEP_INTERVAL_SECONDS', { infer: true });
+  }
+
   get isProduction(): boolean {
     return this.nodeEnv === 'production';
   }

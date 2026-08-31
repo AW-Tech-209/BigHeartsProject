@@ -5,7 +5,7 @@
 | **Sprint**          | Sprint 4 — Notificaciones e Historial     |
 | **Prioridad**       | 🟠 Alta                                   |
 | **Estimación**      | 1.5 días                                  |
-| **Estado**          | ⬜ Pendiente                              |
+| **Estado**          | ✅ Hecho                                  |
 | **Rama**            | `hu-402-recordatorios-de-clase-<persona>` |
 | **Alcance técnico** | backend                                   |
 | **Depende de**      | HU-401                                    |
@@ -52,39 +52,39 @@ lock en base de datos — y quien lo lea entonces tiene que encontrar esta adver
 
 ### Contrato — va primero
 
-- [ ] **T1** — Añadir `BOOKING_REMINDER_24H` y `BOOKING_REMINDER_30M` a `NotificationType`, y sus
+- [x] **T1** — Añadir `BOOKING_REMINDER_24H` y `BOOKING_REMINDER_30M` a `NotificationType`, y sus
       dos plantillas al adaptador. Luego `npm run build:types` si el tipo se comparte.
 
 ### Backend
 
-- [ ] **T2** — Instalar y cablear `@nestjs/schedule`. Un barrido periódico, con el intervalo en el
+- [x] **T2** — Instalar y cablear `@nestjs/schedule`. Un barrido periódico, con el intervalo en el
       entorno y validado por Zod.
-- [ ] **T3** — El barrido busca reservas **`CONFIRMED`** con la marca correspondiente **vacía** y la
+- [x] **T3** — El barrido busca reservas **`CONFIRMED`** con la marca correspondiente **vacía** y la
       clase dentro de la ventana. Al enviar, **escribe la marca**.
-- [ ] **T4** — **No se recuerda** una clase `CANCELLED`, ni una reserva `CANCELLED`, ni una clase
+- [x] **T4** — **No se recuerda** una clase `CANCELLED`, ni una reserva `CANCELLED`, ni una clase
       que ya empezó. Un aviso de algo que no va a ocurrir es peor que ninguno.
-- [ ] **T5** — El correo de 30 min enlaza a **la pantalla del aula**, no a la videollamada: el
+- [x] **T5** — El correo de 30 min enlaza a **la pantalla del aula**, no a la videollamada: el
       enlace real solo lo revela el servidor bajo §4.1.
-- [ ] **T6** — Tests: dos barridos seguidos **no duplican** el envío; una reserva cancelada no
+- [x] **T6** — Tests: dos barridos seguidos **no duplican** el envío; una reserva cancelada no
       recibe nada; un aula cancelada tampoco; y la ventana se calcula contra el reloj del servidor.
 
 ### Documentación
 
-- [ ] **T7** — Dejar escrito en `ARQUITECTURA.md` §4.6, junto al código, que **con más de una
+- [x] **T7** — Dejar escrito en `ARQUITECTURA.md` §4.6, junto al código, que **con más de una
       instancia esto duplica correos**, y qué hacer entonces.
 
 ## ✅ Criterios de aceptación
 
-- [ ] **AC1** — Una reserva `CONFIRMED` recibe **un** recordatorio a 24 h y **uno** a 30 min, cada
+- [x] **AC1** — Una reserva `CONFIRMED` recibe **un** recordatorio a 24 h y **uno** a 30 min, cada
       uno con su marca escrita.
-- [ ] **AC2** — **Idempotencia:** ejecutar el barrido dos veces seguidas no envía nada por segunda
+- [x] **AC2** — **Idempotencia:** ejecutar el barrido dos veces seguidas no envía nada por segunda
       vez. Verificado con un test.
-- [ ] **AC3** — No se envía recordatorio de una clase `CANCELLED`, de una reserva `CANCELLED`, ni de
+- [x] **AC3** — No se envía recordatorio de una clase `CANCELLED`, de una reserva `CANCELLED`, ni de
       una clase que ya empezó.
-- [ ] **AC4** — El recordatorio de 30 min lleva al aula, y **no contiene el enlace de la
+- [x] **AC4** — El recordatorio de 30 min lleva al aula, y **no contiene el enlace de la
       videollamada**. Verificado con un test.
-- [ ] **AC5** — Un fallo del proveedor **no deja la marca escrita**: el siguiente barrido reintenta.
-- [ ] **AC6** — **Verificación:** `typecheck`, `lint`, `build` y `npm run test` en verde.
+- [x] **AC5** — Un fallo del proveedor **no deja la marca escrita**: el siguiente barrido reintenta.
+- [x] **AC6** — **Verificación:** `typecheck`, `lint`, `build` y `npm run test` en verde.
 
 ## 🚫 Fuera de alcance
 
@@ -95,4 +95,7 @@ lock en base de datos — y quien lo lea entonces tiene que encontrar esta adver
 
 ## Notas de implementación
 
-_Se rellena al cerrar._
+`ResendNotificationService.notify()` es fire-and-forget (no espera la respuesta de Resend, D32), así
+que un fallo real del proveedor no es visible para el cron. AC5 se cumple contra la única señal
+disponible: la marca solo se escribe si `notify()` no lanza. Decisión confirmada con el usuario
+antes de implementar.
