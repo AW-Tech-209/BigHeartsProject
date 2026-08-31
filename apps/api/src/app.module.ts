@@ -9,6 +9,7 @@ import { CommonModule } from './common/common.module';
 import { AppConfigModule } from './config/config.module';
 import { AppConfigService } from './config/app-config.service';
 import { HealthModule } from './health/health.module';
+import { HistorialModule } from './historial/historial.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { RemindersModule } from './reminders/reminders.module';
@@ -38,6 +39,7 @@ import { UsersModule } from './users/users.module';
     NotificationsModule,
     RemindersModule,
     AdminModule,
+    HistorialModule,
   ],
 })
 export class AppModule {}

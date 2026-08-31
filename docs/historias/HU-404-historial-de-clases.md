@@ -60,41 +60,41 @@ Una sola pantalla, un endpoint por propósito, como manda §4.8:
 
 ### Contrato — va primero
 
-- [ ] **T1** — En `packages/types`: filtros del historial y el tipo de fila para cada rol.
+- [x] **T1** — En `packages/types`: filtros del historial y el tipo de fila para cada rol.
       **Reutiliza los items de listado existentes**; no declares tipos paralelos. Luego
       `npm run build:types`.
 
 ### Backend
 
-- [ ] **T2** — `GET /historial` acotado **al token**, que devuelve reservas pasadas si quien pide es
+- [x] **T2** — `GET /historial` acotado **al token**, que devuelve reservas pasadas si quien pide es
       `STUDENT`, y aulas impartidas si es `TEACHER`. Filtro por resultado y por rango de fechas,
       orden descendente, paginado con el formato de HU-203.
-- [ ] **T3** — El `meetingLink` **no viaja**. Es un listado, y además de clases que ya pasaron.
-- [ ] **T4** — Tests: cada rol ve lo suyo; **nadie ve el historial de otro** por ningún parámetro;
+- [x] **T3** — El `meetingLink` **no viaja**. Es un listado, y además de clases que ya pasaron.
+- [x] **T4** — Tests: cada rol ve lo suyo; **nadie ve el historial de otro** por ningún parámetro;
       un `ADMIN` recibe `403`; `meetingLink` ausente; el orden y los filtros.
 
 ### Frontend
 
-- [ ] **T5** — Pantalla `/historial` en filas, con su entrada en la barra de navegación. Estudiante:
+- [x] **T5** — Pantalla `/historial` en filas, con su entrada en la barra de navegación. Estudiante:
       clase, fecha con zona, profesor y resultado. Profesor: clase, fecha, inscritos y asistentes.
       Los 4 estados.
-- [ ] **T6** — **Quitar los filtros `pasadas` y `canceladas`** de `/mis-clases` y `/mis-aulas`, que
+- [x] **T6** — **Quitar los filtros `pasadas` y `canceladas`** de `/mis-clases` y `/mis-aulas`, que
       pasan a mostrar solo lo próximo, con un enlace al historial (D34).
-- [ ] **T7** — `NO_SHOW` se muestra con **texto neutro** —«No asististe»—, sin ícono de alerta ni
+- [x] **T7** — `NO_SHOW` se muestra con **texto neutro** —«No asististe»—, sin ícono de alerta ni
       color de error. Es un dato, no una reprimenda.
 
 ## ✅ Criterios de aceptación
 
-- [ ] **AC1** — Un estudiante ve sus clases pasadas con su resultado: asistió, no asistió o canceló,
+- [x] **AC1** — Un estudiante ve sus clases pasadas con su resultado: asistió, no asistió o canceló,
       cada uno con color + ícono + texto.
-- [ ] **AC2** — Un profesor ve sus aulas impartidas con inscritos y asistentes.
-- [ ] **AC3** — **Autorización:** el alcance sale del token; ningún parámetro devuelve el historial
+- [x] **AC2** — Un profesor ve sus aulas impartidas con inscritos y asistentes.
+- [x] **AC3** — **Autorización:** el alcance sale del token; ningún parámetro devuelve el historial
       de otro, y un `ADMIN` recibe `403`. Verificado con tests.
-- [ ] **AC4** — **`/mis-clases` y `/mis-aulas` ya no ofrecen `pasadas` ni `canceladas`**, y enlazan
+- [x] **AC4** — **`/mis-clases` y `/mis-aulas` ya no ofrecen `pasadas` ni `canceladas`**, y enlazan
       al historial. Ninguna clase aparece en las dos pantallas a la vez.
-- [ ] **AC5** — Sin historial, la pantalla lo explica sin sonar a error. El `meetingLink` no aparece
+- [x] **AC5** — Sin historial, la pantalla lo explica sin sonar a error. El `meetingLink` no aparece
       en la respuesta, verificado con un test.
-- [ ] **AC6** — **Verificación:** `typecheck`, `lint`, `build`, `npm run test` en verde y `axe`
+- [x] **AC6** — **Verificación:** `typecheck`, `lint`, `build`, `npm run test` en verde y `axe`
       limpio.
 
 ## 🚫 Fuera de alcance
@@ -106,4 +106,8 @@ Una sola pantalla, un endpoint por propósito, como manda §4.8:
 
 ## Notas de implementación
 
-_Se rellena al cerrar._
+`GET /historial` vive en un módulo propio (`historial/`), no dentro de `classrooms/` ni `bookings/`:
+es un endpoint con su propio propósito y forma de respuesta por rol, según §4.8. `AulaImpartida`
+extiende `Classroom` con `totalInscritos`/`totalAsistieron`, calculados con `booking.groupBy`. Una
+reserva `CONFIRMED` de una clase ya pasada pero sin asistencia marcada (D33: sin límite de tiempo)
+se muestra en el frontend como «Sin marcar», caso no cubierto explícitamente por los AC.

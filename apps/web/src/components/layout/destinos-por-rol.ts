@@ -1,5 +1,12 @@
 import { UserRole } from '@academia/types';
-import { BookOpen, CalendarCheck, LayoutDashboard, UserRound, type LucideIcon } from 'lucide-react';
+import {
+  BookOpen,
+  CalendarCheck,
+  History,
+  LayoutDashboard,
+  UserRound,
+  type LucideIcon,
+} from 'lucide-react';
 
 export type Destino = {
   to: string;
@@ -19,17 +26,20 @@ export type Destino = {
  * es quien lo aplica en el cliente.
  */
 const AULAS: Destino = { to: '/aulas', label: 'Aulas', icon: BookOpen };
+const HISTORIAL: Destino = { to: '/historial', label: 'Historial', icon: History };
 const PERFIL: Destino = { to: '/perfil', label: 'Perfil', icon: UserRound };
 
 export const destinosPorRol: Record<UserRole, Destino[]> = {
   [UserRole.STUDENT]: [
     AULAS,
     { to: '/mis-clases', label: 'Mis clases', icon: CalendarCheck },
+    HISTORIAL,
     PERFIL,
   ],
   [UserRole.TEACHER]: [
     AULAS,
     { to: '/mis-aulas', label: 'Mis aulas', icon: CalendarCheck },
+    HISTORIAL,
     PERFIL,
   ],
   [UserRole.ADMIN]: [AULAS, { to: '/panel', label: 'Panel', icon: LayoutDashboard }, PERFIL],

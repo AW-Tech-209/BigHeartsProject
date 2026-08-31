@@ -8,6 +8,7 @@ import { AulasPage } from '@/pages/AulasPage';
 import { CompletarAccesibilidadPage } from '@/pages/CompletarAccesibilidadPage';
 import { CrearAulaPage } from '@/pages/CrearAulaPage';
 import { EditarAulaPage } from '@/pages/EditarAulaPage';
+import { HistorialPage } from '@/pages/HistorialPage';
 import { HomePage } from '@/pages/HomePage';
 import { LoginPage } from '@/pages/LoginPage';
 import { MisAulasPage } from '@/pages/MisAulasPage';
@@ -136,6 +137,19 @@ export function AppRoutes() {
         element={
           <RequireAuth roles={[UserRole.TEACHER]}>
             <MisAulasPage />
+          </RequireAuth>
+        }
+      />
+
+      {/*
+        El historial de clases ya pasadas (HU-404, D34). El `ADMIN` queda
+        fuera: su supervisión (`/admin/aulas`) ya le da todas las aulas.
+      */}
+      <Route
+        path="/historial"
+        element={
+          <RequireAuth roles={[UserRole.STUDENT, UserRole.TEACHER]}>
+            <HistorialPage />
           </RequireAuth>
         }
       />

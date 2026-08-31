@@ -7,12 +7,14 @@ import { getPendingTeachers } from '@/features/admin/api/get-pending-teachers';
 import { getClassrooms } from '@/features/aulas/api/get-classrooms';
 import { getMisAulas } from '@/features/aulas/api/get-mis-aulas';
 import { getMisReservas } from '@/features/aulas/api/get-mis-reservas';
+import { getHistorial } from '@/features/historial/api/get-historial';
 import { getProfile } from '@/features/profile/api/get-profile';
 import { httpClient } from '@/lib/http-client';
 import { esperarSinFallosDeAccesibilidad } from '@/test/accesibilidad';
 import { renderConProviders, type Tema } from '@/test/render-con-providers';
 import { darSesion, usuarioDePrueba } from '@/test/sesion';
 import { AulasPage } from './AulasPage';
+import { HistorialPage } from './HistorialPage';
 import { HomePage } from './HomePage';
 import { LoginPage } from './LoginPage';
 import { MisAulasPage } from './MisAulasPage';
@@ -38,6 +40,7 @@ vi.mock('@/features/admin/api/get-pending-teachers', () => ({ getPendingTeachers
 vi.mock('@/features/aulas/api/get-classrooms', () => ({ getClassrooms: vi.fn() }));
 vi.mock('@/features/aulas/api/get-mis-aulas', () => ({ getMisAulas: vi.fn() }));
 vi.mock('@/features/aulas/api/get-mis-reservas', () => ({ getMisReservas: vi.fn() }));
+vi.mock('@/features/historial/api/get-historial', () => ({ getHistorial: vi.fn() }));
 
 const TEMAS: Tema[] = ['light', 'dark', 'hc'];
 
@@ -100,6 +103,7 @@ const PAGINAS: CasoDePagina[] = [
     rol: UserRole.STUDENT,
   },
   { nombre: 'MisAulasPage', elemento: <MisAulasPage />, h1: 'Mis aulas', rol: UserRole.TEACHER },
+  { nombre: 'HistorialPage', elemento: <HistorialPage />, h1: 'Historial', rol: UserRole.STUDENT },
 ];
 
 beforeEach(() => {
@@ -115,6 +119,8 @@ beforeEach(() => {
   vi.mocked(getMisAulas).mockResolvedValue({ items: [], total: 0, page: 1, pageSize: 20 });
   // Y para «Mis clases», que se prueba entera en `MisClasesPage.spec.tsx`.
   vi.mocked(getMisReservas).mockResolvedValue({ items: [], total: 0, page: 1, pageSize: 20 });
+  // Y para «Historial», que se prueba entera en `HistorialPage.spec.tsx`.
+  vi.mocked(getHistorial).mockResolvedValue({ items: [], total: 0, page: 1, pageSize: 20 });
 });
 
 describe.each(PAGINAS)('$nombre', ({ elemento, h1, rol }) => {
