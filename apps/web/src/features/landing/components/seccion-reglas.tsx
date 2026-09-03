@@ -2,6 +2,7 @@ import { BookmarkCheck, CalendarX, Lock, RotateCcw, type LucideIcon } from 'luci
 
 import { cn } from '@/lib/utils';
 import { RotuloSeccion, SeccionLanding } from './primitivos-landing';
+import { Revelar } from './revelar';
 
 const REGLAS: {
   icon: LucideIcon;
@@ -45,18 +46,18 @@ const REGLAS: {
 export function SeccionReglas() {
   return (
     <SeccionLanding id="reglas" fondo="muted">
-      <div className="max-w-[38ch]">
+      <Revelar className="max-w-[38ch]">
         <RotuloSeccion>Cuatro reglas</RotuloSeccion>
         <h2 className="mt-5 text-3xl font-medium tracking-tight text-balance">
           Lo que hace distinta a la plataforma.
         </h2>
-      </div>
+      </Revelar>
 
-      <div className="mt-11 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <Revelar retraso={80} className="mt-11 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {REGLAS.map(({ icon: Icono, riel, colorIcono, titulo, cuerpo }) => (
           <article
             key={titulo}
-            className="relative overflow-hidden rounded-xl border border-border bg-card p-6 pl-7"
+            className="relative overflow-hidden rounded-xl border border-border bg-card p-6 pl-7 transition-transform duration-200 ease-suave hover:-translate-y-0.5"
           >
             <span aria-hidden="true" className={cn('absolute inset-y-0 left-0 w-1', riel)} />
             <Icono aria-hidden="true" strokeWidth={2} className={cn('size-6', colorIcono)} />
@@ -64,7 +65,7 @@ export function SeccionReglas() {
             <p className="mt-2 text-base text-muted-foreground">{cuerpo}</p>
           </article>
         ))}
-      </div>
+      </Revelar>
     </SeccionLanding>
   );
 }

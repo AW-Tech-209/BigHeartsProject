@@ -2,6 +2,7 @@ import { Clock, Keyboard, Layers, VolumeX, type LucideIcon } from 'lucide-react'
 
 import { Contenedor } from '@/components/layout/contenedor';
 import { RotuloSeccion } from './primitivos-landing';
+import { Revelar } from './revelar';
 
 const PUNTOS: { icon: LucideIcon; titulo: string; cuerpo: string }[] = [
   {
@@ -31,18 +32,22 @@ const PUNTOS: { icon: LucideIcon; titulo: string; cuerpo: string }[] = [
 
 export function SeccionAccesibilidad() {
   return (
-    <section id="accesibilidad" className="border-b border-border bg-foreground text-background">
+    <section
+      id="accesibilidad"
+      className="scroll-mt-20 border-b border-border bg-foreground text-background"
+    >
       <Contenedor className="py-16 sm:py-24">
-        <div className="max-w-[46ch]">
+        <Revelar className="max-w-[46ch]">
           <RotuloSeccion color="attention" className="text-background/70">
             Accesibilidad
           </RotuloSeccion>
           <h2 className="mt-5 text-3xl font-medium tracking-tight text-balance">
-            Construido para no oír, no <em className="font-normal italic">adaptado después.</em>
+            Construido para no oír, no{' '}
+            <em className="font-serif text-[1.06em] font-normal italic">adaptado después.</em>
           </h2>
-        </div>
+        </Revelar>
 
-        <div className="mt-12 grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
+        <Revelar retraso={80} className="mt-12 grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
           {PUNTOS.map(({ icon: Icono, titulo, cuerpo }) => (
             <div key={titulo}>
               <Icono aria-hidden="true" strokeWidth={2} className="size-6 text-attention" />
@@ -50,7 +55,7 @@ export function SeccionAccesibilidad() {
               <p className="mt-2 text-base leading-relaxed text-background/80">{cuerpo}</p>
             </div>
           ))}
-        </div>
+        </Revelar>
       </Contenedor>
     </section>
   );

@@ -61,6 +61,10 @@ Ancho máximo de párrafo `max-w-[65ch]`. Jerarquía por peso y tamaño, nunca p
 componente `<Ingles>` con `lang="en"` — es una academia de inglés, el contenido enseñado necesita
 esa marca semántica para lectores de pantalla y correctores.
 
+**Excepción — landing pública (`features/landing/`):** usa `font-serif` (Instrument Serif, token
+`--font-serif`) para acentos de display en titulares y citas. Es tipográfico, no color, y vive solo
+en la landing; el resto del producto sigue en Geist.
+
 ## Espaciado y forma
 
 Escala de 4/8. Radios `rounded-lg` (controles), `rounded-xl` (tarjetas), `rounded-full` (chips/avatares).
