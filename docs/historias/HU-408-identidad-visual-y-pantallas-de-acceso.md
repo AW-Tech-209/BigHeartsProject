@@ -60,7 +60,7 @@ estructura y migra a ella las tres pantallas sin sesión, **sin tocar su lógica
       `≥ lg`; formulario a la izquierda dentro de un contenedor de ancho de lectura, `<PanelDeMarca>`
       a la derecha. Debajo de `lg` el panel colapsa a una cabecera compacta con solo el logo y el
       formulario ocupa todo el ancho. `<SkipLink>` sigue siendo el primer enfocable; `<main
-  id="contenido" tabIndex={-1}>` sigue siendo el destino del salto.
+id="contenido" tabIndex={-1}>` sigue siendo el destino del salto.
 - [x] **T4** — `<PanelDeMarca>`: logo, titular, tres propuestas de valor (ícono Lucide + texto,
       triple codificación) y el sello «Entorno de pruebas · Fase 1» al pie. `SelectorTema` reubicado
       al extremo superior derecho del área del formulario, operable por teclado y con el cambio
@@ -75,7 +75,7 @@ estructura y migra a ella las tres pantallas sin sesión, **sin tocar su lógica
 
 - [x] **T7** — `ARQUITECTURA.md` §9 (estructura de las pantallas de acceso) + fila de decisión en §2.
       `layout-y-composicion.md` del skill (sección nueva: pantallas sin sesión). `docs/historias/
-  README.md` (estado y nota de que HU-407 cerró funcionalidad y este bloque cierra identidad).
+README.md` (estado y nota de que HU-407 cerró funcionalidad y este bloque cierra identidad).
       Tests con el patrón de HU-205.
 
 ## ✅ Criterios de aceptación
@@ -119,7 +119,7 @@ estructura y migra a ella las tres pantallas sin sesión, **sin tocar su lógica
 
 ## Notas de implementación
 
-`--brand` en `.hc` se queda en ~9:1 (AAA), no sube a 21:1: la marca es identidad, no estado (D39).
+`--brand` es azul marino, igual en los tres modos (identidad, no estado, D39); blanco encima ~16:1.
 `MarcaBigHearts` usa `currentColor` en vez de una prop de tono. Un solo `SelectorTema` (barra de
 marca en móvil solo muestra el logo). `bookings-index.integration.spec.ts` ya fallaba sin BD local
 antes de esta HU (backend intacto).

@@ -34,8 +34,8 @@
   --primary-soft-foreground: oklch(0.372 0.138 259);
 
   /* Superficie de identidad del panel de acceso (HU-408). NO cambia entre modos:
-     no es un estado. Blanco sobre este azul da ~9:1 (AAA). */
-  --brand: oklch(0.445 0.168 259);
+     no es un estado. Azul marino; blanco encima da ~16:1 (AAA). */
+  --brand: oklch(0.23 0.05 264);
   --brand-foreground: oklch(1 0 0);
 
   /* Secundario (superficie neutra interactiva) */

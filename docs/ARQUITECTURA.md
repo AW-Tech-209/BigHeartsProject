@@ -1137,9 +1137,9 @@ Correcciones aplicadas a las HUs del Sprint 4 al convertirlas, sin necesidad de 
 HU-407 cerró la funcionalidad; este bloque (HU-408 – HU-411) cierra la identidad visual de las
 pantallas de acceso y añade la recuperación de contraseña que el diseño de la Fase 1 incorpora.
 
-| #   | Decisión                                                                                           | Dónde  | Por qué se tomó                                                                                                                                                                                                   |
-| --- | -------------------------------------------------------------------------------------------------- | ------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| D39 | Las pantallas sin sesión usan `<LayoutAutenticacion>` (dos columnas) con un token `--brand` propio | HU-408 | El skill prohíbe `--primary` como superficie decorativa y `--primary` se invierte en `.dark`. `--brand` es identidad, no estado: mismo azul en los cuatro modos. En `.hc` se queda en ~9:1 (AAA), no sube a 21:1. |
+| #   | Decisión                                                                                           | Dónde  | Por qué se tomó                                                                                                                                                                                          |
+| --- | -------------------------------------------------------------------------------------------------- | ------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| D39 | Las pantallas sin sesión usan `<LayoutAutenticacion>` (dos columnas) con un token `--brand` propio | HU-408 | El skill prohíbe `--primary` como superficie decorativa y `--primary` se invierte en `.dark`. `--brand` es identidad, no estado: mismo azul marino en los cuatro modos, con blanco encima a ~16:1 (AAA). |
 
 _Pendiente en este bloque:_ recuperación de contraseña por token de un solo uso con hash en BD
 (HU-410) — se registrará aquí al implementarla.
