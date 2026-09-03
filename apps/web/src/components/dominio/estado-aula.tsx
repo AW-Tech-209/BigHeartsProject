@@ -1,7 +1,7 @@
 import type { EstadoAula as EstadoAulaTipo } from '@academia/types';
 
 import { Badge } from '@/components/ui/badge';
-import { pluralizarCupos } from '@/features/aulas/lib/cupos';
+import { describirCuposRestantes } from '@/features/aulas/lib/cupos';
 import { varianteEstadoAula } from './estado-aula-variantes';
 
 /**
@@ -17,7 +17,7 @@ export function textoEstadoAula(estado: EstadoAulaTipo, cuposRestantes?: number)
     case 'disponible':
       return 'Hay cupo';
     case 'ultimos-cupos':
-      return `Quedan ${pluralizarCupos(cuposRestantes ?? 0)}`;
+      return describirCuposRestantes(cuposRestantes ?? 0);
     case 'llena':
       return 'Sin cupos';
     case 'reservada':

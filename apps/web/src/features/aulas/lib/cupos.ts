@@ -1,4 +1,4 @@
-/** `1` → «1 cupo`; cualquier otro → «N cupos». */
-export function pluralizarCupos(n: number): string {
-  return `${n} ${n === 1 ? 'cupo' : 'cupos'}`;
+/** Concuerda verbo y sustantivo: «Queda 1 cupo» / «Quedan N cupos». */
+export function describirCuposRestantes(n: number): string {
+  return n === 1 ? 'Queda 1 cupo' : `Quedan ${n} cupos`;
 }

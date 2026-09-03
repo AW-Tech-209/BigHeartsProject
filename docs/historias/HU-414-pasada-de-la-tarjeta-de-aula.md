@@ -21,7 +21,7 @@ Pieza compartida del lote 2: `<TarjetaAula>` se pinta en el catálogo, en el pan
 el detalle y en el historial, así que se pule **una vez**. Lo que el mockup y una lectura rápida
 del código dejan ver:
 
-- **Microcopy:** «Quedan **1 cupos**» (debe ser «1 cupo»); el chip «Modo sin indicar»; revisar
+- **Microcopy:** «Quedan **1 cupos**» (debe ser «Queda 1 cupo»); el chip «Modo sin indicar»; revisar
   los nueve textos de `<EstadoAula>` contra `voz-microcopy.md`.
 - **Fechas:** se parten feo — «(hora estándar de Colombia)» cae sola en una segunda línea. Fijar
   el formato completo del skill (`Martes 12 de agosto, 6:00 p.m. (hora de Colombia)`) sin huérfanas.
@@ -66,8 +66,9 @@ del código dejan ver:
 
 ## ✅ Criterios de aceptación
 
-- [x] **AC1** — Con 1 cupo libre el texto es «Quedan 1 cupo» (singular); con 2+ es «Quedan {n}
-      cupos». Verificado con la función pura y su `*.spec.ts`, y en `<EstadoAula>` / `<IndicadorCupo>`.
+- [x] **AC1** — Con 1 cupo libre el texto es «Queda 1 cupo» (verbo y sustantivo en singular); con
+      2+ es «Quedan {n} cupos». Verificado con la función pura y su `*.spec.ts`, y en `<EstadoAula>` /
+      `<IndicadorCupo>`.
 - [x] **AC2** — La fecha se pinta completa y con zona explícita, y la zona **no** queda sola en una
       línea a los anchos de 1 / 2 / 3 columnas. Verificado con la función de formato (test con zona
       fija) y a ojo.
@@ -90,14 +91,14 @@ del código dejan ver:
 
 ## Recorrido de acceptance criteria
 
-| AC  | Veredicto | Cómo se comprobó                                                                                                                                                                                                 |
-| --- | --------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| AC1 | Cumple    | `features/aulas/lib/cupos.ts` (`pluralizarCupos`) con `cupos.spec.ts`. `estado-aula.spec.tsx` cubre «Quedan 1 cupo» / «Quedan 3 cupos»; `indicador-cupo.spec.tsx` el «· Quedan N cupos».                         |
-| AC2 | Cumple    | `describirHorarioPartes()` en `horario.ts` con test (`cuando` sin `(`, `zona` no vacía, rearmadas == `describirHorario`). La tarjeta pinta la zona en un `<span whitespace-nowrap>` sobre `text-pretty`.         |
-| AC3 | Cumple    | `estado-aula.spec.tsx` recorre los nueve estados (texto exacto) y `estado-aula-variantes.spec.tsx` la regla del sólido y los tonos. Copy revisado contra `voz-microcopy.md`: sin cambios salvo la pluralización. |
-| AC4 | Cumple    | `<TarjetaAula>` ahora es `flex h-full flex-col` y `<RejillaAulas>` pasa a `items-stretch`: las tarjetas de una fila igualan altura. El riel de 4px usa el token pleno (≥3:1, visible en `.hc`).                  |
-| AC5 | Cumple    | `tarjeta-aula.spec.tsx` corre `axe` en los tres temas; el orden `<h1>`→`<h3>` intacto. `grep -rE "#[0-9a-fA-F]{3,6}" src --include=*.tsx` sin resultados en lo tocado.                                           |
-| AC6 | Cumple    | `typecheck`, `lint` (0 errores), `build` y `npm run test` de `web` (46 archivos / 739 tests) + `types` en verde. `api` sin cambios.                                                                              |
+| AC  | Veredicto | Cómo se comprobó                                                                                                                                                                                                              |
+| --- | --------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| AC1 | Cumple    | `features/aulas/lib/cupos.ts` (`describirCuposRestantes`, concuerda verbo + sustantivo) con `cupos.spec.ts`. `estado-aula.spec.tsx` cubre «Queda 1 cupo» / «Quedan 3 cupos»; `indicador-cupo.spec.tsx` el «· Quedan N cupos». |
+| AC2 | Cumple    | `describirHorarioPartes()` en `horario.ts` con test (`cuando` sin `(`, `zona` no vacía, rearmadas == `describirHorario`). La tarjeta pinta la zona en un `<span whitespace-nowrap>` sobre `text-pretty`.                      |
+| AC3 | Cumple    | `estado-aula.spec.tsx` recorre los nueve estados (texto exacto) y `estado-aula-variantes.spec.tsx` la regla del sólido y los tonos. Copy revisado contra `voz-microcopy.md`: sin cambios salvo la pluralización.              |
+| AC4 | Cumple    | `<TarjetaAula>` ahora es `flex h-full flex-col` y `<RejillaAulas>` pasa a `items-stretch`: las tarjetas de una fila igualan altura. El riel de 4px usa el token pleno (≥3:1, visible en `.hc`).                               |
+| AC5 | Cumple    | `tarjeta-aula.spec.tsx` corre `axe` en los tres temas; el orden `<h1>`→`<h3>` intacto. `grep -rE "#[0-9a-fA-F]{3,6}" src --include=*.tsx` sin resultados en lo tocado.                                                        |
+| AC6 | Cumple    | `typecheck`, `lint` (0 errores), `build` y `npm run test` de `web` (46 archivos / 739 tests) + `types` en verde. `api` sin cambios.                                                                                           |
 
 ## Notas de implementación
 

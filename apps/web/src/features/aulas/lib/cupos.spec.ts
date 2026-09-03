@@ -1,15 +1,15 @@
 import { describe, expect, it } from 'vitest';
 
-import { pluralizarCupos } from './cupos';
+import { describirCuposRestantes } from './cupos';
 
-describe('pluralizarCupos', () => {
-  it('usa el singular con 1', () => {
-    expect(pluralizarCupos(1)).toBe('1 cupo');
+describe('describirCuposRestantes', () => {
+  it('concuerda en singular con 1', () => {
+    expect(describirCuposRestantes(1)).toBe('Queda 1 cupo');
   });
 
-  it('usa el plural con 0 y con más de 1', () => {
-    expect(pluralizarCupos(0)).toBe('0 cupos');
-    expect(pluralizarCupos(2)).toBe('2 cupos');
-    expect(pluralizarCupos(11)).toBe('11 cupos');
+  it('concuerda en plural con 0 y con más de 1', () => {
+    expect(describirCuposRestantes(0)).toBe('Quedan 0 cupos');
+    expect(describirCuposRestantes(2)).toBe('Quedan 2 cupos');
+    expect(describirCuposRestantes(11)).toBe('Quedan 11 cupos');
   });
 });
