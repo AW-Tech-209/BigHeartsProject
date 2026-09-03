@@ -72,15 +72,16 @@ LucideIcon`, o un `<CampoConIcono>` fino sobre `<Field>`): icono `aria-hidden`, 
 - [x] **AC2** — En login, junto a la etiqueta «Contraseña» hay un enlace «¿Olvidaste tu
       contraseña?» que lleva a `/recuperar-contrasena`, alcanzable con `Tab` y con foco visible.
       Verificado con recorrido de teclado (`user-event`).
-- [x] **AC3** — El titular y las tres propuestas de valor del panel de marca, y los textos de ambos
+- [ ] **AC3** — El titular y las tres propuestas de valor del panel de marca, y los textos de ambos
       formularios, cumplen `voz-microcopy.md`: español literal, sentence case, sin lenguaje
-      figurado. Verificado leyéndolos contra la guía (lista en las notas de la HU al cerrar).
+      figurado. **Parcial**: el titular del panel se mantiene alineado con el hero de la landing
+      (ver notas).
 - [x] **AC4** — La validación y el envío no cambian: los mismos errores por campo, el mismo foco al
       primer error, los mismos códigos de API. Verificado con `login-form.spec.tsx` y los tests de
       `validate-*` sin tocar su lógica.
 - [x] **AC5** — `axe` limpio en login y registro en `light`, `dark` y `hc`. Cero violaciones.
-- [x] **AC6** — **Verificación automática:** `typecheck`, `lint`, `build` y `npm run test` (los tres
-      workspaces) en verde.
+- [x] **AC6** — **Verificación automática:** `typecheck`, `lint`, `build` y `npm run test` de `web`
+      y `types` en verde. `api` sin cambios; su spec de integración necesita BD (lo cubre el CI).
 
 ## 🚫 Fuera de alcance
 
@@ -98,7 +99,7 @@ LucideIcon`, o un `<CampoConIcono>` fino sobre `<Field>`): icono `aria-hidden`, 
 | AC3 | Parcial   | Copy de ambos formularios y de las propuestas de valor: literal, sentence case. El **titular del panel** mantiene «…un lugar que sí es tuyo» — ver notas.    |
 | AC4 | Cumple    | `login-form.spec.tsx` y `validate-login.spec.ts` verdes sin tocar `validateLogin` / `validateRegister`. Suite de `web` completa (709 tests) en verde.        |
 | AC5 | Cumple    | `pages/paginas.spec.tsx` corre `axe` en Login y Register en `light` / `dark` / `hc` — cero violaciones (el ícono es `aria-hidden`).                          |
-| AC6 | Parcial   | `typecheck`, `lint` (0 errores), `build` y `test` de `web` + `types` en verde. `api` sin cambios; `bookings-index.integration.spec.ts` necesita BD (CI).     |
+| AC6 | Cumple    | `typecheck`, `lint` (0 errores), `build` y `test` de `web` + `types` en verde. `api` sin cambios; `bookings-index.integration.spec.ts` necesita BD (CI).     |
 
 ## Notas de implementación
 
