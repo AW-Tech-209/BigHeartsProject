@@ -6,7 +6,7 @@
 | **Prioridad**       | 🟠 Alta (la usan HU-412, HU-413 y más pantallas)   |
 | **Estimación**      | 2 días                                             |
 | **Estado**          | ⬜ Pendiente                                       |
-| **Rama**            | `<nº-issue>-hu-414-pasada-de-la-tarjeta-de-aula`   |
+| **Rama**            | `118-hu-414-pasada-de-la-tarjeta-de-aula`          |
 | **Alcance técnico** | frontend                                           |
 | **Depende de**      | HU-408 (identidad ya en `main`)                    |
 | **Labels**          | `cierre-fase-1` `prioridad:alta` `frontend` `a11y` |
