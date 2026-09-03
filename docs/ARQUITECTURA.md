@@ -725,9 +725,10 @@ apps/web/src/
 │   ├── layout/         El shell y la composición de página (HU-206): AppShell,
 │   │                   PaginaCabecera, Contenedor, RejillaAulas, destinosPorRol.
 │   │                   Pantallas sin sesión (HU-408): LayoutAutenticacion,
-│   │                   MarcaBigHearts, PanelDeMarca.
+│   │                   PanelDeMarca.
 │   └── dominio/        Componentes del dominio BigHearts: EstadoVacio, las tres
-│                       ilustraciones y el diccionario visual de estados de aula.
+│                       ilustraciones, el diccionario visual de estados de aula y
+│                       MarcaBigHearts (el logotipo, compartido con la landing).
 ├── hooks/              useAnnounce (región viva), usePageTitle (foco al <h1>),
 │                       useEsMovil (corte de 640px del shell).
 ├── lib/                http-client, api-error, refresh-session, query-client, cn().

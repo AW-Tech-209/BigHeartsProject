@@ -1,6 +1,6 @@
 import { Bookmark, DoorOpen, FlaskConical, VolumeX } from 'lucide-react';
 
-import { LogoBigHearts, MarcaBigHearts } from './marca-bighearts';
+import { MarcaBigHearts } from '@/components/dominio/marca-bighearts';
 
 const PROPUESTAS = [
   { icono: Bookmark, texto: 'Reservas tu cupo y sabes que es tuyo.' },
@@ -16,14 +16,19 @@ const PROPUESTAS = [
 export function PanelDeMarca() {
   return (
     <>
-      <LogoBigHearts className="pointer-events-none absolute -right-20 -bottom-24 z-0 h-96 w-96 text-brand-foreground/[0.06]" />
+      <span aria-hidden="true" className="pointer-events-none absolute -right-20 -bottom-24 z-0">
+        <MarcaBigHearts className="size-96 text-brand-foreground/[0.06]" />
+      </span>
 
       <div className="relative z-10 flex flex-1 flex-col justify-between gap-12">
-        <MarcaBigHearts />
+        <span className="flex items-center gap-2.5 text-lg font-medium">
+          <MarcaBigHearts className="size-6 text-brand-foreground" />
+          BigHearts
+        </span>
 
         <div className="space-y-8">
-          <p className="max-w-[15ch] text-4xl font-bold tracking-tight text-balance">
-            Tu clase de inglés, en un lugar que sí es tuyo.
+          <p className="max-w-[15ch] text-4xl font-medium tracking-tight text-balance">
+            Tu clase de inglés, en un lugar que <em className="font-normal italic">sí es tuyo.</em>
           </p>
           <ul className="space-y-5">
             {PROPUESTAS.map(({ icono: Icono, texto }) => (
@@ -35,7 +40,7 @@ export function PanelDeMarca() {
           </ul>
         </div>
 
-        <p className="flex items-center gap-2 border-t border-brand-foreground/20 pt-6 font-mono text-xs tracking-wide text-brand-foreground/85">
+        <p className="flex items-center gap-2 border-t border-brand-foreground/20 pt-6 font-mono text-[13px] tracking-wide text-brand-foreground/85">
           <FlaskConical aria-hidden="true" strokeWidth={2} className="size-4 shrink-0" />
           Entorno de pruebas · Fase 1
         </p>

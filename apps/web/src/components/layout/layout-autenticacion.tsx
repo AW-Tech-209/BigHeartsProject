@@ -1,8 +1,8 @@
 import type { ReactNode } from 'react';
 
+import { MarcaBigHearts } from '@/components/dominio/marca-bighearts';
 import { SkipLink } from '@/components/skip-link';
 import { SelectorTema } from './selector-tema';
-import { MarcaBigHearts } from './marca-bighearts';
 import { PanelDeMarca } from './panel-de-marca';
 
 /**
@@ -22,8 +22,9 @@ export function LayoutAutenticacion({ children }: { children: ReactNode }) {
       <div className="lg:grid lg:min-h-dvh lg:grid-cols-[minmax(0,1fr)_minmax(22rem,38%)]">
         <div className="flex min-h-dvh flex-col">
           <header>
-            <div className="flex items-center justify-center bg-brand px-4 py-3 text-brand-foreground lg:hidden">
-              <MarcaBigHearts />
+            <div className="flex items-center justify-center gap-2.5 bg-brand px-4 py-3 text-lg font-medium text-brand-foreground lg:hidden">
+              <MarcaBigHearts className="size-6 text-brand-foreground" />
+              BigHearts
             </div>
             <div className="flex justify-end px-4 pt-4 sm:px-6 lg:px-8">
               <SelectorTema />

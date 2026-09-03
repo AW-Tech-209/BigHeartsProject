@@ -120,6 +120,7 @@ README.md` (estado y nota de que HU-407 cerró funcionalidad y este bloque cierr
 ## Notas de implementación
 
 `--brand` es azul marino, igual en los tres modos (identidad, no estado, D39); blanco encima ~16:1.
-`MarcaBigHearts` usa `currentColor` en vez de una prop de tono. Un solo `SelectorTema` (barra de
-marca en móvil solo muestra el logo). `bookings-index.integration.spec.ts` ya fallaba sin BD local
-antes de esta HU (backend intacto).
+Tras mergear `main` (landing, PR #109) el logotipo se consolidó en `components/dominio/marca-bighearts`
+—compartido con la landing— y la tipografía de marca y titular se alineó a la de la landing
+(`text-lg font-medium` / `text-4xl font-medium`). `bookings-index.integration.spec.ts` ya fallaba sin
+BD local antes de esta HU (backend intacto).
