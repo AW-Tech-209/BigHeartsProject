@@ -106,6 +106,8 @@ del código dejan ver:
 igualar alturas); afecta a todas sus rejillas, que es el objetivo. Microcopy de los nueve estados y
 de «Modo sin indicar»: ya cumplía `voz-microcopy.md`, solo cambió la pluralización de cupos.
 El mismo arreglo de fecha aplica a la tarjeta del `panel-estudiante` (HU-413).
-Toque de pulido: la tarjeta gana estado `hover` (borde a `--input`, tinte `bg-muted/50`,
-`shadow-md` breve y 2px de subida con `motion-safe`), que además cubría un hueco —toda la tarjeta
-es un enlace y no daba señal al puntero—.
+Pulido visual (a petición): estado `hover` (borde a `--input`, tinte `bg-muted/50`, `shadow-md`
+breve y 2px de subida con `motion-safe`) que además cubría un hueco —la tarjeta entera es un
+enlace y no daba señal al puntero—; más aire (`p-5 pl-6`); y la cabecera (fecha + título +
+subtítulo) agrupada apretada con ritmo uniforme (`gap-2.5`) hasta las filas de badges,
+en vez del `space-y-1.5` + `mt-1` apilados.
