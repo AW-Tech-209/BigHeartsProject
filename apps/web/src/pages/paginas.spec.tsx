@@ -67,7 +67,12 @@ type CasoDePagina = {
  * que además tienen cada uno su propio `<h1>`.
  */
 const PAGINAS: CasoDePagina[] = [
-  { nombre: 'HomePage', elemento: <HomePage />, h1: 'Academia', rol: null },
+  {
+    nombre: 'HomePage',
+    elemento: <HomePage />,
+    h1: 'Tu clase de inglés, en un lugar que sí es tuyo.',
+    rol: null,
+  },
   { nombre: 'LoginPage', elemento: <LoginPage />, h1: 'Inicia sesión', rol: null },
   { nombre: 'RegisterPage', elemento: <RegisterPage />, h1: 'Crea tu cuenta', rol: null },
   {

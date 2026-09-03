@@ -27,3 +27,7 @@ Thumbs.db
 .idea/
 .vscode/*
 !.vscode/extensions.json
+
+
+#Specific docs
+docs/BigHearts-Marca-y-Producto.html
