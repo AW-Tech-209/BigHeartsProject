@@ -467,8 +467,11 @@ Ocho bloques, en este orden. El copy está redactado para usarse tal cual.
 > Reservas tu cupo, sabes que es tuyo, y entras a la clase cuando llega la hora — sin buscar el
 > enlace en un chat.
 >
-> **Acción principal:** Ver las clases disponibles
-> **Acción secundaria:** Soy profesor
+> **Acción principal:** Crear una cuenta (`/registro`)
+> **Acción secundaria:** Iniciar sesión (`/login`)
+
+El registro de la academia ya está abierto, así que la landing enlaza directamente a él. Mientras
+solo estuvo en pruebas, la acción fue «dejar un correo»; ese momento ya pasó.
 
 Sin imagen de fondo con texto encima: **está prohibido**. La ilustración, si la hay, es geométrica y
 construida con los mismos rectángulos y rieles del producto.
@@ -551,7 +554,7 @@ registrarse, no después.
 
 > **Titular:** Aprender inglés no debería ser más difícil por no poder oír.
 >
-> **Acción:** Ver las clases disponibles
+> **Acción:** Crear una cuenta (`/registro`) · Iniciar sesión (`/login`)
 
 ## Lo que la landing no puede decir
 
@@ -567,9 +570,11 @@ registrarse, no después.
 
 ## Nota sobre el momento de publicar
 
-> La plataforma está hoy en un **entorno de pruebas**. Mientras el corte a producción no ocurra, los
-> botones de la landing no pueden llevar a un registro que la academia no puede atender. Si la
-> landing sale antes, su acción debe ser **dejar un correo de contacto** — nunca «Crear mi cuenta».
+> La plataforma sigue en un **entorno de pruebas** y el corte a producción es un paso posterior,
+> pero el registro ya está implementado y abierto en la app. Por eso los botones de la landing
+> enlazan a `/registro` y `/login`, y el pie mantiene visible «Fase 1 · entorno de pruebas» para no
+> prometer una operación que todavía no está en producción. La opción anterior —«dejar un correo de
+> contacto»— queda descartada.
 
 ---
 
