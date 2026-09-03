@@ -1,7 +1,7 @@
 import { CircleCheck, Clock } from 'lucide-react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 
-import { AppShell } from '@/components/layout/app-shell';
+import { LayoutAutenticacion } from '@/components/layout/layout-autenticacion';
 import { PaginaCabecera } from '@/components/layout/pagina-cabecera';
 import { Callout } from '@/components/ui/callout';
 import { Card } from '@/components/ui/card';
@@ -25,8 +25,7 @@ export function LoginPage() {
   const endReason = useAuthStore((state) => state.endReason);
 
   return (
-    // Sin navegación: todavía no hay sesión, así que no hay destinos que ofrecer.
-    <AppShell conNavegacion={false}>
+    <LayoutAutenticacion>
       <div className="mx-auto w-full max-w-lg space-y-8">
         <PaginaCabecera
           titulo="Inicia sesión"
@@ -63,6 +62,6 @@ export function LoginPage() {
           </Link>
         </p>
       </div>
-    </AppShell>
+    </LayoutAutenticacion>
   );
 }

@@ -63,6 +63,11 @@
   --primary-soft: oklch(0.972 0.011 250);
   --primary-soft-foreground: oklch(0.372 0.138 259);
 
+  /* MARCA: superficie de identidad (panel de acceso). NO cambia entre modos, a
+     propósito — no es un estado. Azul marino; blanco encima da ~16:1 (AAA). */
+  --brand: oklch(0.23 0.05 264);
+  --brand-foreground: oklch(1 0 0);
+
   --secondary: oklch(0.963 0.012 250);
   --secondary-foreground: oklch(0.372 0.138 259);
 
@@ -242,6 +247,9 @@
   --color-primary-hover: var(--primary-hover);
   --color-primary-soft: var(--primary-soft);
   --color-primary-soft-foreground: var(--primary-soft-foreground);
+
+  --color-brand: var(--brand);
+  --color-brand-foreground: var(--brand-foreground);
 
   --color-secondary: var(--secondary);
   --color-secondary-foreground: var(--secondary-foreground);
