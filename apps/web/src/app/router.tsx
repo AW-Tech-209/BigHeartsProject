@@ -14,6 +14,8 @@ import { LoginPage } from '@/pages/LoginPage';
 import { MisAulasPage } from '@/pages/MisAulasPage';
 import { MisClasesPage } from '@/pages/MisClasesPage';
 import { NotFoundPage } from '@/pages/NotFoundPage';
+import { NuevaContrasenaPage } from '@/pages/NuevaContrasenaPage';
+import { SolicitarRecuperacionPage } from '@/pages/SolicitarRecuperacionPage';
 import { PanelPage } from '@/pages/PanelPage';
 import { PerfilPage } from '@/pages/PerfilPage';
 import { RegisterPage } from '@/pages/RegisterPage';
@@ -53,6 +55,28 @@ export function AppRoutes() {
         element={
           <RedirectIfAuthenticated>
             <LoginPage />
+          </RedirectIfAuthenticated>
+        }
+      />
+      {/*
+        Recuperación de contraseña (HU-411). Públicas y bajo
+        `<RedirectIfAuthenticated>` como el login: con la sesión abierta no
+        tienen sentido. `/nueva-contrasena` lee el token de la query del enlace
+        del correo.
+      */}
+      <Route
+        path="/recuperar-contrasena"
+        element={
+          <RedirectIfAuthenticated>
+            <SolicitarRecuperacionPage />
+          </RedirectIfAuthenticated>
+        }
+      />
+      <Route
+        path="/nueva-contrasena"
+        element={
+          <RedirectIfAuthenticated>
+            <NuevaContrasenaPage />
           </RedirectIfAuthenticated>
         }
       />

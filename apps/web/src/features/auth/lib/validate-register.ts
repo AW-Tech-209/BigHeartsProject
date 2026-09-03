@@ -1,5 +1,7 @@
 import type { CommunicationPreference, HearingLossLevel, RegisterableRole } from '@academia/types';
 
+import { validatePassword } from './validate-password';
+
 /** Estado del formulario de registro. Los enums usan '' = "sin indicar". */
 export type RegisterFormValues = {
   email: string;
@@ -30,12 +32,9 @@ export function validateRegister(values: RegisterFormValues): FieldErrors {
     errors.email = 'El email no tiene un formato válido.';
   }
 
-  if (!values.password) {
-    errors.password = 'La contraseña es obligatoria.';
-  } else if (values.password.length < 8) {
-    errors.password = 'La contraseña debe tener al menos 8 caracteres.';
-  } else if (!/(?=.*[A-Za-z])(?=.*\d)/.test(values.password)) {
-    errors.password = 'La contraseña debe incluir al menos una letra y un número.';
+  const passwordError = validatePassword(values.password);
+  if (passwordError) {
+    errors.password = passwordError;
   }
 
   if (!values.firstName.trim()) {

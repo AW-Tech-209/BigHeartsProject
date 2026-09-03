@@ -82,3 +82,6 @@
 - **Campos (HU-409):** email y contraseña llevan un **ícono guía** a la izquierda del control
   (`<Input iconoInicio={...}>`, `aria-hidden`, no sustituye a la etiqueta). En login, «¿Olvidaste tu
   contraseña?» va como enlace a la derecha de la etiqueta «Contraseña» (`<Field labelAside={...}>`).
+- **Recuperación (HU-411):** `/recuperar-contrasena` lleva un enlace «Volver a iniciar sesión»
+  arriba de la cabecera; su éxito es un `<Callout success>` que **no revela** si el email existe.
+  `/nueva-contrasena` lee `?token=`; sin token, un `<Callout destructive>` enlaza a pedir otro.

@@ -59,6 +59,14 @@ Los tokens viven en `password_reset_tokens`: espejo de `refresh_tokens`, en BD
 solo el hash SHA-256, un solo uso, caducidad `PASSWORD_RESET_EXPIRY_MINUTES`
 (30 min por defecto). Ni el token ni el enlace se escriben en logs.
 
+**Lado cliente (HU-411).** Dos pantallas públicas sobre `<LayoutAutenticacion>`:
+`/recuperar-contrasena` (pide el email → `forgot-password`; la confirmación no
+revela si la cuenta existe) y `/nueva-contrasena` (lee `?token=` del enlace del
+correo → `reset-password`; sin token muestra un aviso que enlaza a pedir otro).
+`PASSWORD_RESET_TOKEN_INVALID` / `_EXPIRED` se traducen a un mensaje que ofrece
+volver a `/recuperar-contrasena`. Al terminar, la pantalla manda a `/login`
+(sin auto-login).
+
 ## Renovación silenciosa (lo que hace Dev B)
 
 1. El frontend guarda `accessToken` + `user` en memoria (Zustand) tras el login.
