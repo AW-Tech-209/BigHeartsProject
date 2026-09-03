@@ -5,7 +5,7 @@
 | **Sprint**          | Post-Fase 1 · Pulido                                              |
 | **Prioridad**       | 🔴 Crítica (la primera pantalla pública tarda 10 s en ser usable) |
 | **Estimación**      | 1 día                                                             |
-| **Estado**          | ⬜ Pendiente                                                      |
+| **Estado**          | ✅ Terminada                                                      |
 | **Rama**            | `hu-501-la-sesion-no-hace-esperar-<persona>`                      |
 | **Alcance técnico** | frontend                                                          |
 | **Depende de**      | ninguna                                                           |
@@ -62,39 +62,39 @@ cambiarlo medio segundo después es peor que esperar—, y esa intención se con
 
 ### Frontend
 
-- [ ] **T1** — Marca de **sesión previa** en `localStorage`: se escribe al iniciar sesión y cuando
+- [x] **T1** — Marca de **sesión previa** en `localStorage`: se escribe al iniciar sesión y cuando
       un refresh sale bien; se borra al cerrar sesión y cuando el refresh falla. **No es un token
       ni un dato sensible**: solo dice «aquí hubo sesión alguna vez».
-- [ ] **T2** — El bootstrap **no pide nada si no hay marca**: el store pasa a `anonymous` de
+- [x] **T2** — El bootstrap **no pide nada si no hay marca**: el store pasa a `anonymous` de
       inmediato. Un visitante nuevo deja de esperar por completo, y la API deja de recibir una
       petición que no podía servir.
-- [ ] **T3** — Con marca, el refresh lleva **tiempo límite** (por defecto 3 s, configurable). Si
+- [x] **T3** — Con marca, el refresh lleva **tiempo límite** (por defecto 3 s, configurable). Si
       expira, el store pasa a `anonymous` y la landing se vuelve usable; si la respuesta llega
       después y es válida, la sesión se rehidrata igual.
-- [ ] **T4** — `CtaAcceso` **reserva su espacio** mientras comprueba, en vez de `return null`: un
+- [x] **T4** — `CtaAcceso` **reserva su espacio** mientras comprueba, en vez de `return null`: un
       hueco de la altura de los botones para que nada salte al aparecer. Se conserva la decisión de
       no enseñar el par equivocado.
-- [ ] **T5** — En `app-shell.tsx`, la marca lleva a **`/panel` si hay sesión** y a `/` si no.
-- [ ] **T6** — Tests: sin marca no se llama a `/auth/refresh` y el estado es `anonymous` al primer
+- [x] **T5** — En `app-shell.tsx`, la marca lleva a **`/panel` si hay sesión** y a `/` si no.
+- [x] **T6** — Tests: sin marca no se llama a `/auth/refresh` y el estado es `anonymous` al primer
       render; con marca y respuesta lenta, se cae a `anonymous` al vencer el plazo; la marca de la
       cabecera apunta a `/panel` con sesión y a `/` sin ella; `axe` limpio.
 
 ### Documentación
 
-- [ ] **T7** — Anotar el comportamiento en `AUTH_FLOW.md`, y en `DEPLOYMENT.md` que el plan
+- [x] **T7** — Anotar el comportamiento en `AUTH_FLOW.md`, y en `DEPLOYMENT.md` que el plan
       gratuito de Render duerme el servicio — que es de dónde salen los 10 segundos.
 
 ## ✅ Criterios de aceptación
 
-- [ ] **AC1** — Un visitante **sin sesión previa** ve «Crear una cuenta» e «Iniciar sesión» en el
+- [x] **AC1** — Un visitante **sin sesión previa** ve «Crear una cuenta» e «Iniciar sesión» en el
       primer render, y **no se dispara ninguna petición** a `/auth/refresh`. Verificado con un test.
-- [ ] **AC2** — Con sesión previa y la API dormida, los botones aparecen **como mucho al vencer el
+- [x] **AC2** — Con sesión previa y la API dormida, los botones aparecen **como mucho al vencer el
       plazo**, nunca a los diez segundos.
-- [ ] **AC3** — Quien sí tenía sesión válida sigue entrando rehidratado: esta HU **no rompe** el
+- [x] **AC3** — Quien sí tenía sesión válida sigue entrando rehidratado: esta HU **no rompe** el
       recordar sesión.
-- [ ] **AC4** — La zona de los botones **no salta** al aparecer: el espacio estaba reservado.
-- [ ] **AC5** — Pulsar «BigHearts» en la cabecera lleva a `/panel` con sesión y a `/` sin ella.
-- [ ] **AC6** — **Accesibilidad y verificación:** checklist del skill `bighearts-ui`, `axe` limpio,
+- [x] **AC4** — La zona de los botones **no salta** al aparecer: el espacio estaba reservado.
+- [x] **AC5** — Pulsar «BigHearts» en la cabecera lleva a `/panel` con sesión y a `/` sin ella.
+- [x] **AC6** — **Accesibilidad y verificación:** checklist del skill `bighearts-ui`, `axe` limpio,
       y `typecheck`, `lint`, `build` y `npm run test` en verde.
 
 ## 🚫 Fuera de alcance
@@ -106,6 +106,17 @@ cambiarlo medio segundo después es peor que esperar—, y esa intención se con
 - Cambiar la rotación de refresh tokens ni nada de `AUTH_FLOW.md`.
 - La marca de la cabecera **de la landing**, que apunta a su propia ancla y está bien así.
 
+## Recorrido de AC
+
+| AC  | Veredicto | Cómo se comprobó                                                                                                        |
+| --- | --------- | ----------------------------------------------------------------------------------------------------------------------- |
+| AC1 | ✅        | `use-session-bootstrap.spec`: sin marca, `refreshSession` no se llama y el store queda `anonymous` al primer render.    |
+| AC2 | ✅        | `use-session-bootstrap.spec`: con marca y promesa que no resuelve, al vencer el plazo (3 s) el store cae a `anonymous`. |
+| AC3 | ✅        | `setSession` sigue rehidratando aunque el plazo haya vencido; suite de auth completa en verde (login + refresh).        |
+| AC4 | ✅        | `cta-acceso.spec`: en `checking` no hay enlaces pero el hueco conserva `h-12` y la clase de margen.                     |
+| AC5 | ✅        | `app-shell.spec`: la marca apunta a `/panel` con sesión y a `/` sin ella.                                               |
+| AC6 | ✅        | `axe` limpio en `cta-acceso.spec`; `typecheck` + `lint` + `build` + `test` (1310 tests) en verde.                       |
+
 ## Notas de implementación
 
-_Se rellena al cerrar._
+Sin desviaciones. Plazo configurable con `VITE_SESSION_REFRESH_TIMEOUT_MS` (3 s por defecto).

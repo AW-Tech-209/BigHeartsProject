@@ -151,6 +151,22 @@ describe('AppShell — sin estado oculto', () => {
   });
 });
 
+describe('AppShell — la marca', () => {
+  it('con sesión lleva al panel, no a la landing pública', () => {
+    darSesion(UserRole.STUDENT);
+    renderConProviders(<AppShell>Contenido</AppShell>);
+
+    expect(screen.getByRole('link', { name: 'BigHearts' })).toHaveAttribute('href', '/panel');
+  });
+
+  it('sin sesión lleva a la landing', () => {
+    darSesion(null);
+    renderConProviders(<AppShell>Contenido</AppShell>);
+
+    expect(screen.getByRole('link', { name: 'BigHearts' })).toHaveAttribute('href', '/');
+  });
+});
+
 describe('AppShell — el destino activo', () => {
   it.each(TEMAS)('se distingue por borde de 2px además del color, en el tema %s', (tema) => {
     darSesion(UserRole.STUDENT);
