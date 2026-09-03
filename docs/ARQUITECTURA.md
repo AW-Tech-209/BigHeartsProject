@@ -724,6 +724,8 @@ apps/web/src/
 │   ├── ui/             Primitivas de shadcn sobre Base UI.
 │   ├── layout/         El shell y la composición de página (HU-206): AppShell,
 │   │                   PaginaCabecera, Contenedor, RejillaAulas, destinosPorRol.
+│   │                   Pantallas sin sesión (HU-408): LayoutAutenticacion,
+│   │                   MarcaBigHearts, PanelDeMarca.
 │   └── dominio/        Componentes del dominio BigHearts: EstadoVacio, las tres
 │                       ilustraciones y el diccionario visual de estados de aula.
 ├── hooks/              useAnnounce (región viva), usePageTitle (foco al <h1>),
@@ -738,6 +740,13 @@ fija en móvil, y un `<main>` al que apunta el `<SkipLink>`. `<PaginaCabecera>` 
 de la pantalla y es quien llama a `usePageTitle`, así que ninguna página puede olvidarse de mover el
 foco al cambiar de ruta. La especificación visual completa —anatomía, rejilla de 1/2/3 columnas,
 regla del sólido, estilo de ilustración— vive en `layout-y-composicion.md` del skill `bighearts-ui`.
+
+**Las pantallas sin sesión (HU-408).** Login, registro y «cuenta creada» **no** usan `<AppShell>`
+—no hay rol que ofrecer— sino `<LayoutAutenticacion>`: dos columnas en escritorio, el formulario a
+la izquierda y `<PanelDeMarca>` (marca + mensaje + sello de entorno) a la derecha sobre la
+superficie `--brand`; debajo de `lg` el panel se reduce a una barra con la marca. Conserva el
+contrato del shell: `<SkipLink>` primero y `<main id="contenido" tabIndex={-1}>` como destino.
+`--brand` es un token de identidad que **no cambia entre modos** (D39), a diferencia de `--primary`.
 
 **Las rutas (actualizado en HU-209).** `<AppRouter>` monta el `<BrowserRouter>` y `<AppRoutes>` la
 tabla; están separados para que un test pueda montar las rutas reales dentro de un `<MemoryRouter>`
@@ -1120,3 +1129,17 @@ Correcciones aplicadas a las HUs del Sprint 4 al convertirlas, sin necesidad de 
   —silenciarlos dejaría a alguien sin saber que su clase se canceló—.
 - **Tres HUs que las historias originales no contemplaban:** cerrar §14.6 (HU-405), sembrar el
   historial (HU-406) y la pasada final de la Fase 1 (HU-407), que es la que verifica §8.1.
+
+---
+
+## 18. Registro de decisiones — Cierre de diseño de la Fase 1 (2026-09-02)
+
+HU-407 cerró la funcionalidad; este bloque (HU-408 – HU-411) cierra la identidad visual de las
+pantallas de acceso y añade la recuperación de contraseña que el diseño de la Fase 1 incorpora.
+
+| #   | Decisión                                                                                           | Dónde  | Por qué se tomó                                                                                                                                                                                                   |
+| --- | -------------------------------------------------------------------------------------------------- | ------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| D39 | Las pantallas sin sesión usan `<LayoutAutenticacion>` (dos columnas) con un token `--brand` propio | HU-408 | El skill prohíbe `--primary` como superficie decorativa y `--primary` se invierte en `.dark`. `--brand` es identidad, no estado: mismo azul en los cuatro modos. En `.hc` se queda en ~9:1 (AAA), no sube a 21:1. |
+
+_Pendiente en este bloque:_ recuperación de contraseña por token de un solo uso con hash en BD
+(HU-410) — se registrará aquí al implementarla.

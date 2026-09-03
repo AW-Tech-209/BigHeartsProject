@@ -33,6 +33,11 @@
   --primary-soft: oklch(0.972 0.011 250); /* #F0F7FD — fondo de chips/estados */
   --primary-soft-foreground: oklch(0.372 0.138 259);
 
+  /* Superficie de identidad del panel de acceso (HU-408). NO cambia entre modos:
+     no es un estado. Blanco sobre este azul da ~9:1 (AAA). */
+  --brand: oklch(0.445 0.168 259);
+  --brand-foreground: oklch(1 0 0);
+
   /* Secundario (superficie neutra interactiva) */
   --secondary: oklch(0.963 0.012 250);
   --secondary-foreground: oklch(0.372 0.138 259);
@@ -220,6 +225,9 @@
   --color-primary-hover: var(--primary-hover);
   --color-primary-soft: var(--primary-soft);
   --color-primary-soft-foreground: var(--primary-soft-foreground);
+
+  --color-brand: var(--brand);
+  --color-brand-foreground: var(--brand-foreground);
 
   --color-secondary: var(--secondary);
   --color-secondary-foreground: var(--secondary-foreground);

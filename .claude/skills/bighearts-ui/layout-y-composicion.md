@@ -62,3 +62,19 @@
 - Más de un tag `<h1>` por página.
 - Espaciados fuera del estándar (16px / 32px).
 - Ilustraciones con información exclusiva no presente en texto.
+
+## 8. Pantallas sin sesión (login, registro, recuperación) — HU-408
+
+- **No usan `<AppShell>`.** No hay rol, así que no hay navegación que ofrecer. Usan
+  `<LayoutAutenticacion>` (`components/layout/`).
+- **Dos columnas en `≥ lg`:** formulario a la izquierda; `<PanelDeMarca>` a la derecha sobre la
+  superficie **`--brand`** (marca + un titular + tres propuestas de valor + sello «Entorno de
+  pruebas · Fase 1»). Debajo de `lg` el panel se reduce a una barra superior con solo la marca.
+- **`--brand` / `--brand-foreground`** es un par de tokens de **identidad**: azul profundo con
+  texto blanco, **el mismo en los tres modos** (no se invierte como `--primary`). Único uso: este
+  panel. No es color de estado ni de acción.
+- **`<MarcaBigHearts>`**: ícono de corazón (SVG inline, `currentColor`) + la palabra «BigHearts».
+  Hereda el color del contenedor. El ícono es `aria-hidden`; la palabra es texto real.
+- Conserva el contrato del shell: `<SkipLink>` primero, `<main id="contenido" tabIndex={-1}>` como
+  destino, y el único `<h1>` lo pone `<PaginaCabecera>`. El `SelectorTema` va arriba a la derecha
+  del área del formulario.
