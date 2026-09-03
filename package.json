@@ -25,6 +25,7 @@
     "db:deploy": "npm run prisma:deploy --workspace @academia/api",
     "db:studio": "npm run prisma:studio --workspace @academia/api",
     "db:seed": "npm run db:seed --workspace @academia/api",
+    "db:seed:demo": "npm run db:seed:demo --workspace @academia/api",
     "docker:up": "docker compose up",
     "docker:up:build": "docker compose up --build",
     "docker:down": "docker compose down",

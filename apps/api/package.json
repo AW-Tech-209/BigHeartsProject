@@ -16,7 +16,8 @@
     "prisma:migrate": "prisma migrate dev",
     "prisma:deploy": "prisma migrate deploy",
     "prisma:studio": "prisma studio",
-    "db:seed": "prisma db seed"
+    "db:seed": "prisma db seed",
+    "db:seed:demo": "ts-node --transpile-only prisma/seed-demo.ts"
   },
   "prisma": {
     "seed": "ts-node --transpile-only prisma/seed.ts"
@@ -46,6 +47,7 @@
     "@types/cookie-parser": "^1.4.10",
     "@types/express": "^5.0.6",
     "@types/node": "^26.1.1",
+    "dotenv": "^17.4.1",
     "prisma": "^6.19.3",
     "source-map-support": "^0.5.21",
     "ts-node": "^10.9.2",
