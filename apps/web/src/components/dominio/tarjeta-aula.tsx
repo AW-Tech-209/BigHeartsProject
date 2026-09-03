@@ -185,6 +185,9 @@ export function TarjetaAula({
         // palabras se pierde en una rejilla de seis, y lo que el usuario
         // necesita saber es qué tarjeta tiene el foco, no qué texto.
         'focus-within:ring-2 focus-within:ring-ring',
+        // Toda la tarjeta es un enlace; el hover lo dice con borde (no sombra,
+        // `bighearts-ui`) y un tinte apenas perceptible.
+        'transition-colors hover:border-input hover:bg-muted/40',
         className,
       )}
     >
