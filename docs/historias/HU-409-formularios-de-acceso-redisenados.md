@@ -6,7 +6,7 @@
 | **Prioridad**       | 🟡 Media                                            |
 | **Estimación**      | 1.5 días                                            |
 | **Estado**          | ⬜ Pendiente                                        |
-| **Rama**            | `hu-409-formularios-de-acceso-redisenados-ana`      |
+| **Rama**            | `105-hu-409-formularios-de-acceso-redisenados`      |
 | **Alcance técnico** | frontend                                            |
 | **Depende de**      | HU-408                                              |
 | **Labels**          | `cierre-fase-1` `prioridad:media` `frontend` `a11y` |
@@ -17,7 +17,7 @@
 
 ## Contexto
 
-Con el armazón de HU-408 en su sitio, esta HU pule los dos formularios de acceso:
+Con la estructura de HU-408 en su sitio, esta HU pule los dos formularios de acceso:
 
 1. Campos de email y contraseña con un **icono guía** dentro del control (sobre `<Input>`, que hoy
    solo soporta un `adornment` a la derecha —el ojo de mostrar/ocultar—).
@@ -43,7 +43,7 @@ La lógica de validación y de envío **no cambia**.
 ### Frontend
 
 - [ ] **T1** — `<Input>` gana un **icono guía opcional** a la izquierda (prop `iconoInicio?:
-    LucideIcon`, o un `<CampoConIcono>` fino sobre `<Field>`): icono `aria-hidden`, **no** sustituye
+  LucideIcon`, o un `<CampoConIcono>` fino sobre `<Field>`): icono `aria-hidden`, **no** sustituye
       a la etiqueta, con padding para no solaparse con el texto. El ojo de contraseña (`adornment`)
       sigue igual.
 - [ ] **T2** — Login: icono de sobre en email, candado en contraseña. Enlace «¿Olvidaste tu
@@ -86,7 +86,7 @@ La lógica de validación y de envío **no cambia**.
 
 - La implementación de la recuperación de contraseña → **HU-410** (backend), **HU-411** (frontend).
   Esta HU solo pone el enlace.
-- Cambios en el armazón / layout partido → **HU-408**.
+- Cambios en la estructura / layout partido → **HU-408**.
 - `HomePage`.
 
 ## Notas de implementación
