@@ -117,6 +117,12 @@ HU-401). El contrato compartido va primero.
   `PASSWORD_RESET_EXPIRY_MINUTES`.
 - Los errores de token son `400 BadRequest` (`PASSWORD_RESET_TOKEN_INVALID` /
   `_EXPIRED`).
+- `EMAIL_FROM` (HU-401) ahora admite también la forma con nombre visible
+  `Nombre <correo@dominio>`, que es la que Resend muestra al destinatario; antes
+  solo aceptaba una dirección a secas y la app no arrancaba con ese valor.
+- Prueba real end-to-end contra Resend (dominio `bigheartsacademy.co` verificado):
+  correo entregado, token de un solo uso, `reset-password` cambia la contraseña,
+  login con la nueva funciona y las sesiones activas quedan revocadas (1 → 0).
 
 ## Recorrido de AC
 
@@ -127,4 +133,5 @@ HU-401). El contrato compartido va primero.
 | AC3 | ✅        | `auth.service.spec` — inexistente/usado → `INVALID`; caducado → `EXPIRED` (sin tocar la contraseña); contraseña floja → `VALIDATION_ERROR` vía `ResetPasswordDto` (misma regla que `RegisterDto`)                               |
 | AC4 | ✅        | En BD solo `tokenHash` SHA-256 (test comprueba `^[0-9a-f]{64}$` ≠ token en claro); enlace/token nunca en logs (revisado el servicio); `auth.controller.spec` — ambos handlers `@Public()` + `AuthThrottlerGuard`                |
 | AC5 | ✅        | `PASSWORD_RESET_EXPIRY_MINUTES` en `env.schema.ts` y `.env.example`; `notification-templates.spec` recorre todos los `NotificationType` (incl. `PASSWORD_RESET`) y sigue en verde                                               |
-| AC6 | ✅        | `npm run typecheck && lint && build && test` — todo en verde (api 519, web 701, types 47)                                                                                                                                       |
+| AC6 | ✅        | `npm run typecheck && lint && build && test` — todo en verde (api 521, web 701, types 47)                                                                                                                                       |
+| —   | ✅        | Prueba real: `forgot-password` → correo entregado por Resend → `reset-password` con el token del correo → `{ reset: true }` → login con la nueva contraseña OK, token reusado → `PASSWORD_RESET_TOKEN_INVALID`, sesiones 1 → 0  |
