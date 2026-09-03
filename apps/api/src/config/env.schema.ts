@@ -188,9 +188,18 @@ const camposEnv = z.object({
 
   /**
    * Dirección remitente de los correos transaccionales. Obligatoria solo si
-   * `RESEND_API_KEY` está configurada (ver `.refine()` más abajo).
+   * `RESEND_API_KEY` está configurada (ver `.refine()` más abajo). Admite una
+   * dirección a secas (`avisos@dominio.com`) o la forma con nombre visible
+   * (`BigHearts <avisos@dominio.com>`), que es la que Resend muestra al
+   * destinatario.
    */
-  EMAIL_FROM: z.string().email('debe ser una dirección de correo válida').optional(),
+  EMAIL_FROM: z
+    .string()
+    .regex(
+      /^(?:[^<>]*<\s*[^\s@<>]+@[^\s@<>]+\.[^\s@<>]+\s*>|[^\s@<>]+@[^\s@<>]+\.[^\s@<>]+)$/,
+      'debe ser una dirección de correo válida, opcionalmente con nombre visible: Nombre <correo@dominio>',
+    )
+    .optional(),
 
   /**
    * URL del frontend desplegado. La usa el recordatorio de 30 min (HU-402,

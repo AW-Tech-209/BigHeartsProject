@@ -143,4 +143,21 @@ describe('validateEnv — adaptador de email (D32)', () => {
     expect(env.RESEND_API_KEY).toBe('un-secreto-de-resend');
     expect(env.EMAIL_FROM).toBe('avisos@academia.local');
   });
+
+  it('acepta EMAIL_FROM con nombre visible (Nombre <correo>)', () => {
+    const env = validateEnv(
+      entornoValido({
+        RESEND_API_KEY: 'un-secreto-de-resend',
+        EMAIL_FROM: 'BigHearts <no-reply@bigheartsacademy.co>',
+      }),
+    );
+
+    expect(env.EMAIL_FROM).toBe('BigHearts <no-reply@bigheartsacademy.co>');
+  });
+
+  it('rechaza un EMAIL_FROM que no es una dirección', () => {
+    expect(() =>
+      validateEnv(entornoValido({ RESEND_API_KEY: 'x', EMAIL_FROM: 'no-es-un-correo' })),
+    ).toThrow(/EMAIL_FROM/);
+  });
 });
