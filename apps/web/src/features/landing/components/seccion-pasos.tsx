@@ -1,6 +1,7 @@
 import { BookmarkCheck, DoorOpen, Search, type LucideIcon } from 'lucide-react';
 
 import { RotuloSeccion, SeccionLanding } from './primitivos-landing';
+import { Revelar } from './revelar';
 
 const PASOS: { n: string; icon: LucideIcon; titulo: string; cuerpo: string }[] = [
   {
@@ -29,28 +30,30 @@ const PASOS: { n: string; icon: LucideIcon; titulo: string; cuerpo: string }[] =
 export function SeccionPasos() {
   return (
     <SeccionLanding id="pasos" fondo="muted">
-      <div className="max-w-[36ch]">
+      <Revelar className="max-w-[36ch]">
         <RotuloSeccion>Cómo funciona</RotuloSeccion>
         <h2 className="mt-5 text-3xl font-medium tracking-tight text-balance">
           Tres pasos, y ninguno depende de nadie más.
         </h2>
-      </div>
+      </Revelar>
 
-      <ol className="mt-12 grid overflow-hidden rounded-xl border border-border bg-card md:grid-cols-3">
-        {PASOS.map(({ n, icon: Icono, titulo, cuerpo }) => (
-          <li
-            key={n}
-            className="border-b border-border p-7 last:border-b-0 md:border-r md:border-b-0 md:last:border-r-0"
-          >
-            <p className="font-mono text-[13px] tracking-widest text-primary">{n}</p>
-            <h3 className="mt-4 flex items-center gap-2.5 text-xl font-medium tracking-tight">
-              <Icono aria-hidden="true" strokeWidth={2} className="size-5 text-primary" />
-              {titulo}
-            </h3>
-            <p className="mt-2.5 text-base text-muted-foreground">{cuerpo}</p>
-          </li>
-        ))}
-      </ol>
+      <Revelar retraso={80} className="mt-12">
+        <ol className="grid overflow-hidden rounded-xl border border-border bg-card md:grid-cols-3">
+          {PASOS.map(({ n, icon: Icono, titulo, cuerpo }) => (
+            <li
+              key={n}
+              className="border-b border-border p-7 last:border-b-0 md:border-r md:border-b-0 md:last:border-r-0"
+            >
+              <p className="font-mono text-[13px] tracking-widest text-primary">{n}</p>
+              <h3 className="mt-4 flex items-center gap-2.5 text-xl font-medium tracking-tight">
+                <Icono aria-hidden="true" strokeWidth={2} className="size-5 text-primary" />
+                {titulo}
+              </h3>
+              <p className="mt-2.5 text-base text-muted-foreground">{cuerpo}</p>
+            </li>
+          ))}
+        </ol>
+      </Revelar>
     </SeccionLanding>
   );
 }

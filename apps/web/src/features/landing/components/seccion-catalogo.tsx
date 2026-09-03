@@ -10,6 +10,7 @@ import { communicationPreferenceLabels } from '@/features/auth/lib/accessibility
 import { nivelesDeIngles } from '@/features/aulas/lib/niveles';
 import { AULAS_DEMO } from '../lib/aulas-demo';
 import { RotuloSeccion, SeccionLanding } from './primitivos-landing';
+import { Revelar } from './revelar';
 import { TarjetaAulaDemo } from './tarjeta-aula-demo';
 
 type FiltroCupo = '' | 'con-cupo';
@@ -46,7 +47,7 @@ export function SeccionCatalogo() {
 
   return (
     <SeccionLanding id="catalogo" fondo="muted">
-      <div className="max-w-[42ch]">
+      <Revelar className="max-w-[42ch]">
         <RotuloSeccion>El catálogo, funcionando</RotuloSeccion>
         <h2 className="mt-5 text-3xl font-medium tracking-tight text-balance">
           Cada clase dice cómo se imparte, antes de entrar.
@@ -54,9 +55,12 @@ export function SeccionCatalogo() {
         <p className="mt-5 text-lg text-muted-foreground text-pretty">
           Prueba los filtros. Son los mismos de la plataforma, con clases de ejemplo.
         </p>
-      </div>
+      </Revelar>
 
-      <div className="mt-8 overflow-hidden rounded-xl border border-border bg-card">
+      <Revelar
+        retraso={80}
+        className="mt-8 overflow-hidden rounded-xl border border-border bg-card"
+      >
         <div className="flex flex-wrap items-end gap-4 border-b border-border p-5">
           <Field id="landing-nivel" label="Nivel" className="w-full sm:w-52">
             <NativeSelect
@@ -128,16 +132,18 @@ export function SeccionCatalogo() {
             }
           />
         )}
-      </div>
+      </Revelar>
 
-      <p className="mt-5 flex max-w-[68ch] items-start gap-2.5 text-sm text-muted-foreground">
-        <Info aria-hidden="true" strokeWidth={2} className="mt-0.5 size-4 shrink-0" />
-        <span>
-          El profesor <strong className="font-semibold text-foreground">declara</strong> cómo se
-          imparte su clase: los modos, si hay intérprete, subtítulos en vivo o materiales visuales.
-          La plataforma no los provee — los muestra, para que sepas a qué entras.
-        </span>
-      </p>
+      <Revelar retraso={40}>
+        <p className="mt-5 flex max-w-[68ch] items-start gap-2.5 text-sm text-muted-foreground">
+          <Info aria-hidden="true" strokeWidth={2} className="mt-0.5 size-4 shrink-0" />
+          <span>
+            El profesor <strong className="font-semibold text-foreground">declara</strong> cómo se
+            imparte su clase: los modos, si hay intérprete, subtítulos en vivo o materiales
+            visuales. La plataforma no los provee — los muestra, para que sepas a qué entras.
+          </span>
+        </p>
+      </Revelar>
     </SeccionLanding>
   );
 }

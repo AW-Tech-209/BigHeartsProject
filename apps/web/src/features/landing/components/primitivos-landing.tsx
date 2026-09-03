@@ -29,7 +29,7 @@ export function SeccionLanding({
   ...props
 }: SeccionLandingProps) {
   return (
-    <section id={id} className={cn('border-b border-border', FONDO[fondo])} {...props}>
+    <section id={id} className={cn('scroll-mt-20 border-b border-border', FONDO[fondo])} {...props}>
       <Contenedor className={cn('py-16 sm:py-24', className)}>{children}</Contenedor>
     </section>
   );
