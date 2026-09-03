@@ -35,7 +35,7 @@ function text(paragraphs: string[]): string {
 }
 
 export function buildEmail(notification: Notification): EmailContent {
-  const { type, recipient, classroom } = notification;
+  const { type, recipient, classroom, resetUrl } = notification;
   const nombre = recipient.firstName;
   const aula = classroom?.title ?? 'tu clase';
   const cuando = classroom ? formatearFechaUTC(classroom.scheduledAt) : 'la hora que reservaste';
@@ -139,5 +139,24 @@ export function buildEmail(notification: Notification): EmailContent {
           'Puedes reservar otra aula disponible cuando quieras.',
         ]),
       };
+
+    case NotificationType.PASSWORD_RESET: {
+      const enlace = resetUrl ?? '';
+      return {
+        subject: 'Recupera tu contraseña',
+        html: html([
+          `Hola ${nombre},`,
+          'Recibimos una solicitud para crear una contraseña nueva en tu cuenta.',
+          `Abre este enlace para hacerlo: <a href="${enlace}">${enlace}</a>.`,
+          'Si no fuiste tú, ignora este correo: tu contraseña no cambia hasta que uses el enlace.',
+        ]),
+        text: text([
+          `Hola ${nombre},`,
+          'Recibimos una solicitud para crear una contraseña nueva en tu cuenta.',
+          `Abre este enlace para hacerlo: ${enlace}`,
+          'Si no fuiste tú, ignora este correo: tu contraseña no cambia hasta que uses el enlace.',
+        ]),
+      };
+    }
   }
 }

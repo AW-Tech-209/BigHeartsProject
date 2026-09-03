@@ -198,6 +198,37 @@ export interface AuthSession {
 /** Respuesta de `POST /auth/login`. */
 export type LoginResponse = AuthSession;
 
+/**
+ * Cuerpo de `POST /auth/forgot-password` (HU-410). Solo el email: el enlace de
+ * recuperación viaja por correo, nunca en esta respuesta.
+ */
+export interface ForgotPasswordInput {
+  email: string;
+}
+
+/**
+ * Respuesta de `POST /auth/forgot-password`. **Es siempre la misma, exista o no
+ * la cuenta** (HU-410, AC1): no revela si el email está registrado.
+ */
+export interface ForgotPasswordResponse {
+  requested: true;
+}
+
+/**
+ * Cuerpo de `POST /auth/reset-password` (HU-410). El token llega en claro desde
+ * el enlace del correo; el servidor solo guarda su hash SHA-256.
+ */
+export interface ResetPasswordInput {
+  token: string;
+  /** Debe cumplir la misma regla que el registro. */
+  password: string;
+}
+
+/** Respuesta de `POST /auth/reset-password`: la contraseña quedó cambiada. */
+export interface ResetPasswordResponse {
+  reset: true;
+}
+
 /** Respuesta de `POST /auth/refresh`. Misma forma que el login. */
 export type RefreshResponse = AuthSession;
 
@@ -973,6 +1004,19 @@ export const ApiErrorCode = {
   INSUFFICIENT_ROLE: 'INSUFFICIENT_ROLE',
   /** El refresh token no existe, expiró, o ya fue revocado/usado. */
   INVALID_REFRESH_TOKEN: 'INVALID_REFRESH_TOKEN',
+  /**
+   * El token de recuperación de contraseña no existe o ya se usó (HU-410, AC3).
+   * Un token inexistente y uno ya consumido devuelven el mismo código: desde
+   * fuera son el mismo hecho y distinguirlos solo ayudaría a sondear.
+   */
+  PASSWORD_RESET_TOKEN_INVALID: 'PASSWORD_RESET_TOKEN_INVALID',
+  /**
+   * El token de recuperación existe y no se ha usado, pero pasó de
+   * `PASSWORD_RESET_EXPIRY_MINUTES` (HU-410, AC3). Es propio y no
+   * `PASSWORD_RESET_TOKEN_INVALID` para que el frontend pueda decir «caducó,
+   * pide otro» en vez de «no es válido».
+   */
+  PASSWORD_RESET_TOKEN_EXPIRED: 'PASSWORD_RESET_TOKEN_EXPIRED',
   /**
    * Intento de leer o editar el perfil de otra persona.
    *

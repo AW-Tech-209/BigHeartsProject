@@ -560,6 +560,13 @@ Convenciones: `id` UUID v4, nombres de tabla en plural, columnas mapeadas a `sna
 **`RefreshToken`** — `id`, `tokenHash` (SHA-256, único), `userId`, `expiresAt`, `revokedAt?`,
 `createdAt`. Solo se guarda el hash: si se filtra la BD, los tokens no son reutilizables.
 
+**`PasswordResetToken`** (HU-410) — `id`, `tokenHash` (SHA-256, único), `userId`
+(`onDelete: Cascade`), `expiresAt` (`timestamptz`), `usedAt?`, `createdAt`. Espejo
+de `RefreshToken`: el token viaja al usuario en claro en el enlace del correo, en
+BD solo el hash. Un solo uso (`usedAt`); caducidad `PASSWORD_RESET_EXPIRY_MINUTES`
+(30 min). `requestPasswordReset` no revela si el email existe; `resetPassword`
+revoca todas las sesiones del usuario en la misma transacción.
+
 **`Classroom`** — implementado en HU-201 con todos los campos de §7.2. Notas de implementación:
 
 - **`meetingLink` guarda texto cifrado**, con formato `v1.<iv>.<tag>.<ciphertext>` en base64
@@ -1108,15 +1115,16 @@ Correcciones aplicadas a las HUs del Sprint 3 al convertirlas, sin necesidad de 
 
 Las cuatro se toman al planificar el sprint que **cierra la Fase 1**.
 
-| #   | Decisión                                                                                      | Dónde  | Por qué se tomó                                                                                                                                                                                                 |
-| --- | --------------------------------------------------------------------------------------------- | ------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| D32 | El proveedor de email es **Resend**                                                           | §4.6   | Cierra el punto 5 de §14.6, abierto desde el Sprint 1. 3.000 envíos/mes gratis y buena entregabilidad. Se enchufa cambiando el `useClass` de `NotificationsModule`: D14 dejó el puerto montado justo para esto. |
-| D33 | La asistencia **se marca desde que la clase termina y se puede corregir sin límite**          | HU-403 | Antes de terminar no significa nada. Y sin ventana de bloqueo porque un profesor que se equivoca no tiene otra vía de arreglarlo: un registro falso congelado es peor que permitir la corrección.               |
-| D34 | El pasado **se muda a `/historial`**: `/mis-clases` y `/mis-aulas` solo muestran lo que viene | HU-404 | Con una pantalla de historial propia, dejar los filtros `pasadas` donde estaban daría dos pantallas listando lo mismo. **Ajusta D24**: su semántica de grupos disjuntos se conserva, pero vive en el historial. |
-| D35 | **`SessionsModule` se borra**                                                                 | HU-405 | Cierra el punto 1 de §14.6, abierto desde el Sprint 0. `Booking` ya lleva `ATTENDED`/`NO_SHOW` y `Classroom` lleva horario y duración: una entidad `Session` duplicaría ambas sin añadir nada en Fase 1.        |
-| D36 | El umbral de `ultimos-cupos` se confirma en `maxStudents − currentBookings ≤ 3`               | HU-405 | Cierra el punto 2 de §14.6. Lleva cuatro sprints funcionando sin que nadie haya reportado el número como incorrecto.                                                                                            |
-| D37 | `derivarEstadoAula()` se confirma en `@academia/types`, no en cada app                        | HU-405 | Cierra el punto 3 de §14.6. Ya se materializó en HU-203; moverla ahora reabriría un contrato que back y front ya consumen.                                                                                      |
-| D38 | El formato de paginación se confirma en `{ items, total, page, pageSize }`, `pageSize` 20     | HU-405 | Cierra el punto 6 de §14.6. Es el que ya usan los cinco endpoints paginados (HU-203, HU-207, HU-210, HU-302, HU-404); solo faltaba decirlo.                                                                     |
+| #   | Decisión                                                                                              | Dónde  | Por qué se tomó                                                                                                                                                                                                 |
+| --- | ----------------------------------------------------------------------------------------------------- | ------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| D32 | El proveedor de email es **Resend**                                                                   | §4.6   | Cierra el punto 5 de §14.6, abierto desde el Sprint 1. 3.000 envíos/mes gratis y buena entregabilidad. Se enchufa cambiando el `useClass` de `NotificationsModule`: D14 dejó el puerto montado justo para esto. |
+| D33 | La asistencia **se marca desde que la clase termina y se puede corregir sin límite**                  | HU-403 | Antes de terminar no significa nada. Y sin ventana de bloqueo porque un profesor que se equivoca no tiene otra vía de arreglarlo: un registro falso congelado es peor que permitir la corrección.               |
+| D34 | El pasado **se muda a `/historial`**: `/mis-clases` y `/mis-aulas` solo muestran lo que viene         | HU-404 | Con una pantalla de historial propia, dejar los filtros `pasadas` donde estaban daría dos pantallas listando lo mismo. **Ajusta D24**: su semántica de grupos disjuntos se conserva, pero vive en el historial. |
+| D35 | **`SessionsModule` se borra**                                                                         | HU-405 | Cierra el punto 1 de §14.6, abierto desde el Sprint 0. `Booking` ya lleva `ATTENDED`/`NO_SHOW` y `Classroom` lleva horario y duración: una entidad `Session` duplicaría ambas sin añadir nada en Fase 1.        |
+| D36 | El umbral de `ultimos-cupos` se confirma en `maxStudents − currentBookings ≤ 3`                       | HU-405 | Cierra el punto 2 de §14.6. Lleva cuatro sprints funcionando sin que nadie haya reportado el número como incorrecto.                                                                                            |
+| D37 | `derivarEstadoAula()` se confirma en `@academia/types`, no en cada app                                | HU-405 | Cierra el punto 3 de §14.6. Ya se materializó en HU-203; moverla ahora reabriría un contrato que back y front ya consumen.                                                                                      |
+| D38 | El formato de paginación se confirma en `{ items, total, page, pageSize }`, `pageSize` 20             | HU-405 | Cierra el punto 6 de §14.6. Es el que ya usan los cinco endpoints paginados (HU-203, HU-207, HU-210, HU-302, HU-404); solo faltaba decirlo.                                                                     |
+| D39 | Recuperación de contraseña por **token de un solo uso con hash SHA-256 en BD** (`PasswordResetToken`) | HU-410 | Espejo de `RefreshToken`, ningún mecanismo nuevo. `forgot-password` no revela si el email existe; `reset-password` revoca todas las sesiones. El enlace del correo usa `FRONTEND_URL`, no una variable nueva.   |
 
 Correcciones aplicadas a las HUs del Sprint 4 al convertirlas, sin necesidad de decisión nueva:
 

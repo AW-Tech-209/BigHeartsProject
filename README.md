@@ -133,6 +133,9 @@ Tienes que definir, como mínimo:
   exactos (`openssl rand -hex 32`).
 - `DATABASE_URL` y `DIRECT_URL` — conexión a PostgreSQL (ver la sección siguiente).
 
+Opcionales con default útil: entre otras, `PASSWORD_RESET_EXPIRY_MINUTES` (30) fija
+la validez del enlace de recuperación de contraseña; su correo apunta a `FRONTEND_URL`.
+
 Si falta cualquier variable obligatoria, o alguna está malformada, la app **se niega a arrancar**
 y te dice cuál. El `.env` real está ignorado por git; el `.env.example` no.
 

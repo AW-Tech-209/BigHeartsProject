@@ -204,6 +204,13 @@ const camposEnv = z.object({
    * pendiente (HU-402, §4.6). Opcional: por defecto 60.
    */
   REMINDER_SWEEP_INTERVAL_SECONDS: z.coerce.number().int().positive().default(60),
+
+  /**
+   * Minutos de validez del enlace de recuperación de contraseña (HU-410).
+   * Corto a propósito: si el correo se filtra, el enlace caduca pronto.
+   * Opcional: por defecto 30. El enlace en sí lo arma con `FRONTEND_URL`.
+   */
+  PASSWORD_RESET_EXPIRY_MINUTES: z.coerce.number().int().positive().default(30),
 });
 
 /**
