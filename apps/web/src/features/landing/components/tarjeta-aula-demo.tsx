@@ -30,7 +30,14 @@ function estadoDeCupo(aula: AulaDemo): EstadoAulaTipo {
  * conserva el riel de 4px, la codificación triple del estado y el conteo
  * literal de cupos, pero no navega a ningún sitio (no hay aula real detrás).
  */
-export function TarjetaAulaDemo({ aula }: { aula: AulaDemo }) {
+export function TarjetaAulaDemo({
+  aula,
+  rielAnimado = false,
+}: {
+  aula: AulaDemo;
+  /** Anima el crecimiento del riel al aparecer (solo la tarjeta del hero). */
+  rielAnimado?: boolean;
+}) {
   const estado = estadoDeCupo(aula);
   const libres = Math.max(aula.maxStudents - aula.currentBookings, 0);
   const tituloId = `aula-demo-${aula.id}`;
@@ -43,7 +50,11 @@ export function TarjetaAulaDemo({ aula }: { aula: AulaDemo }) {
     >
       <span
         aria-hidden="true"
-        className={cn('absolute inset-y-0 left-0 w-1', varianteEstadoAula[estado].riel)}
+        className={cn(
+          'absolute inset-y-0 left-0 w-1',
+          rielAnimado && 'riel-entra',
+          varianteEstadoAula[estado].riel,
+        )}
       />
 
       <div className="space-y-1.5">
