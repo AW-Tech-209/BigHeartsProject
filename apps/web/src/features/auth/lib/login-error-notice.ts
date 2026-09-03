@@ -38,7 +38,7 @@ export function toLoginErrorNotice(error: unknown): LoginErrorNotice {
         icon: CircleAlert,
         title: 'No pudimos iniciar tu sesión',
         message:
-          'El email o la contraseña no son correctos. Revísalos e inténtalo otra vez. Si olvidaste tu contraseña, escribe al equipo de soporte.',
+          'El email o la contraseña no son correctos. Revísalos e inténtalo otra vez. Si olvidaste tu contraseña, usa «¿Olvidaste tu contraseña?» para crear una nueva.',
         announcement: 'El email o la contraseña no son correctos.',
       };
 
