@@ -5,7 +5,7 @@ import {
   UserRole,
   type ValidationErrorDetail,
 } from '@academia/types';
-import { Eye, EyeOff, LoaderCircle } from 'lucide-react';
+import { Eye, EyeOff, Lock, LoaderCircle, Mail } from 'lucide-react';
 import { type FormEvent, useState } from 'react';
 
 import { Button } from '@/components/ui/button';
@@ -173,6 +173,7 @@ export function RegisterForm({ onRegistered }: { onRegistered: (user: User) => v
           type="email"
           name="email"
           autoComplete="email"
+          iconoInicio={Mail}
           placeholder="tucorreo@ejemplo.com"
           value={values.email}
           onChange={(event) => updateField('email', event.target.value)}
@@ -205,6 +206,7 @@ export function RegisterForm({ onRegistered }: { onRegistered: (user: User) => v
           type={showPassword ? 'text' : 'password'}
           name="password"
           autoComplete="new-password"
+          iconoInicio={Lock}
           className="pr-11"
           value={values.password}
           onChange={(event) => updateField('password', event.target.value)}

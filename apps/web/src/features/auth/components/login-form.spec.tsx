@@ -70,6 +70,7 @@ describe('LoginForm — recorrido con teclado', () => {
     expect(screen.getByLabelText(/^Email/)).toHaveFocus();
     await user.keyboard('ana@correo.com');
 
+    await user.tab(); // «¿Olvidaste tu contraseña?»
     await user.tab();
     expect(screen.getByLabelText(/^Contraseña/)).toHaveFocus();
     await user.keyboard('Password123!');
@@ -91,6 +92,7 @@ describe('LoginForm — recorrido con teclado', () => {
     const { user } = renderConProviders(<LoginForm onLoggedIn={onLoggedIn} />);
 
     await user.tab(); // Email
+    await user.tab(); // ¿Olvidaste tu contraseña?
     await user.tab(); // Contraseña
     await user.tab(); // Mostrar contraseña
     await user.tab(); // Iniciar sesión
@@ -101,6 +103,17 @@ describe('LoginForm — recorrido con teclado', () => {
     // Formulario vacío: no se llama a la API, se muestran los errores.
     expect(loginMock).not.toHaveBeenCalled();
     expect(await screen.findByText('El email es obligatorio.')).toBeInTheDocument();
+  });
+
+  it('el enlace «¿Olvidaste tu contraseña?» es alcanzable con Tab y lleva a la recuperación', async () => {
+    const { user } = renderConProviders(<LoginForm onLoggedIn={vi.fn()} />);
+
+    const enlace = screen.getByRole('link', { name: '¿Olvidaste tu contraseña?' });
+    expect(enlace).toHaveAttribute('href', '/recuperar-contrasena');
+
+    await user.tab(); // Email
+    await user.tab(); // enlace
+    expect(enlace).toHaveFocus();
   });
 
   it('el botón de mostrar contraseña se activa con teclado y anuncia su estado', async () => {
