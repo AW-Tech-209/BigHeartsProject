@@ -39,7 +39,7 @@ export function LayoutAutenticacion({ children }: { children: ReactNode }) {
           </main>
         </div>
 
-        <aside className="hidden bg-brand text-brand-foreground lg:flex lg:flex-col lg:justify-between lg:gap-12 lg:p-12">
+        <aside className="relative hidden overflow-hidden bg-brand text-brand-foreground lg:flex lg:flex-col lg:p-12">
           <PanelDeMarca />
         </aside>
       </div>
