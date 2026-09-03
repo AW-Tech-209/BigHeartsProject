@@ -6,7 +6,7 @@
 | **Prioridad**       | 🟡 Media                                            |
 | **Estimación**      | 1.5 días                                            |
 | **Estado**          | ⬜ Pendiente                                        |
-| **Rama**            | `hu-411-recuperacion-de-contrasena-pantallas-ana`   |
+| **Rama**            | `107-hu-411-recuperacion-de-contrasena-pantallas`   |
 | **Alcance técnico** | frontend                                            |
 | **Depende de**      | HU-408, HU-410                                      |
 | **Labels**          | `cierre-fase-1` `prioridad:media` `frontend` `a11y` |
@@ -17,7 +17,7 @@
 
 ## Contexto
 
-Con el backend de HU-410 y el armazón de HU-408, esta HU añade las dos pantallas del diseño:
+Con el backend de HU-410 y la estructura de HU-408, esta HU añade las dos pantallas del diseño:
 
 1. **«Recupera tu contraseña»** — pide el email, botón «Enviar enlace», enlace «← Volver a iniciar
    sesión».
