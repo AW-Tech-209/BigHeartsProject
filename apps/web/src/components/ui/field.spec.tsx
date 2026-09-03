@@ -1,4 +1,5 @@
 import { screen } from '@testing-library/react';
+import { Mail } from 'lucide-react';
 import { describe, expect, it } from 'vitest';
 
 import { Input } from '@/components/ui/input';
@@ -80,5 +81,16 @@ describe('Field — contrato accesible', () => {
     const input = screen.getByLabelText('Email (obligatorio)');
 
     expect(input.getAttribute('aria-describedby')).toBe('email-description email-error');
+  });
+
+  it('con un ícono guía en el control mantiene la etiqueta asociada y axe limpio', async () => {
+    const { container } = renderConProviders(
+      <Field id="email" label="Email" required>
+        <Input type="email" name="email" iconoInicio={Mail} />
+      </Field>,
+    );
+
+    expect(screen.getByLabelText('Email (obligatorio)')).toHaveAttribute('type', 'email');
+    await esperarSinFallosDeAccesibilidad(container);
   });
 });

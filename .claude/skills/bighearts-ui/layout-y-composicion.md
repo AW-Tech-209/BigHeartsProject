@@ -63,7 +63,7 @@
 - Espaciados fuera del estándar (16px / 32px).
 - Ilustraciones con información exclusiva no presente en texto.
 
-## 8. Pantallas sin sesión (login, registro, recuperación) — HU-408
+## 8. Pantallas sin sesión (login, registro, recuperación) — HU-408 / HU-409
 
 - **No usan `<AppShell>`.** No hay rol, así que no hay navegación que ofrecer. Usan
   `<LayoutAutenticacion>` (`components/layout/`).
@@ -79,3 +79,6 @@
 - Conserva el contrato del shell: `<SkipLink>` primero, `<main id="contenido" tabIndex={-1}>` como
   destino, y el único `<h1>` lo pone `<PaginaCabecera>`. El `SelectorTema` va arriba a la derecha
   del área del formulario.
+- **Campos (HU-409):** email y contraseña llevan un **ícono guía** a la izquierda del control
+  (`<Input iconoInicio={...}>`, `aria-hidden`, no sustituye a la etiqueta). En login, «¿Olvidaste tu
+  contraseña?» va como enlace a la derecha de la etiqueta «Contraseña» (`<Field labelAside={...}>`).

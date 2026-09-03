@@ -16,6 +16,8 @@ type FieldProps = {
   className?: string;
   /** Elemento superpuesto al control (p. ej. botón mostrar/ocultar contraseña). */
   adornment?: ReactNode;
+  /** Elemento a la derecha de la etiqueta (p. ej. «¿Olvidaste tu contraseña?»). */
+  labelAside?: ReactNode;
 };
 
 /**
@@ -36,6 +38,7 @@ export function Field({
   required,
   className,
   adornment,
+  labelAside,
 }: FieldProps) {
   const descriptionId = description ? `${id}-description` : undefined;
   const errorId = error ? `${id}-error` : undefined;
@@ -50,10 +53,13 @@ export function Field({
 
   return (
     <div className={cn('grid gap-2', className)}>
-      <Label htmlFor={id}>
-        {label}
-        {required && <span className="font-normal text-muted-foreground"> (obligatorio)</span>}
-      </Label>
+      <div className="flex items-center justify-between gap-3">
+        <Label htmlFor={id}>
+          {label}
+          {required && <span className="font-normal text-muted-foreground"> (obligatorio)</span>}
+        </Label>
+        {labelAside}
+      </div>
 
       {description && (
         <p id={descriptionId} className="max-w-[65ch] text-sm text-muted-foreground">

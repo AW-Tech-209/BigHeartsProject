@@ -1,6 +1,7 @@
 import { ApiErrorCode, type AuthSession, type ValidationErrorDetail } from '@academia/types';
-import { Eye, EyeOff, LoaderCircle, LogIn } from 'lucide-react';
+import { Eye, EyeOff, Lock, LoaderCircle, LogIn, Mail } from 'lucide-react';
 import { type FormEvent, useState } from 'react';
+import { Link } from 'react-router-dom';
 
 import { Button } from '@/components/ui/button';
 import { Callout } from '@/components/ui/callout';
@@ -116,6 +117,7 @@ export function LoginForm({ onLoggedIn }: { onLoggedIn: (session: AuthSession) =
           type="email"
           name="email"
           autoComplete="email"
+          iconoInicio={Mail}
           placeholder="tucorreo@ejemplo.com"
           value={values.email}
           onChange={(event) => updateField('email', event.target.value)}
@@ -127,6 +129,14 @@ export function LoginForm({ onLoggedIn }: { onLoggedIn: (session: AuthSession) =
         label="Contraseña"
         required
         error={errors.password}
+        labelAside={
+          <Link
+            to="/recuperar-contrasena"
+            className="text-sm font-medium text-primary underline-offset-4 hover:underline"
+          >
+            ¿Olvidaste tu contraseña?
+          </Link>
+        }
         adornment={
           <button
             type="button"
@@ -147,6 +157,7 @@ export function LoginForm({ onLoggedIn }: { onLoggedIn: (session: AuthSession) =
           type={showPassword ? 'text' : 'password'}
           name="password"
           autoComplete="current-password"
+          iconoInicio={Lock}
           className="pr-11"
           value={values.password}
           onChange={(event) => updateField('password', event.target.value)}
