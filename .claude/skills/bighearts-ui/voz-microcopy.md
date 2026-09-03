@@ -5,6 +5,9 @@ El texto es la interfaz. Se escribe con la misma disciplina que el espaciado.
 - **Español neutro, sin regionalismos.** Frases cortas: máximo ~15 palabras.
 - **Literal, nunca figurado.** Muchos usuarios tienen la lengua de señas como primer idioma y el
   español escrito como segundo. Nada de "¡Ups!", "se nos fue el avión", "en un abrir y cerrar de ojos".
+  - **Única excepción:** el titular de marca `Tu clase de inglés, en un lugar que sí es tuyo.`,
+    compartido por el hero de la landing (`seccion-hero.tsx`) y el `<PanelDeMarca>` de las pantallas
+    de acceso. Es voz de marca, no microcopy de interfaz, y va idéntico en los dos sitios.
 - **Voz activa y el mismo verbo en todo el flujo.** El botón dice `Reservar mi cupo` → el toast dice
   `Cupo reservado`. Nunca `Enviar`, nunca `Aceptar` a secas.
 - **Los errores no se disculpan, explican.**

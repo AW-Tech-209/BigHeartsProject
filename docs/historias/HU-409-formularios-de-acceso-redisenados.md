@@ -72,10 +72,10 @@ LucideIcon`, o un `<CampoConIcono>` fino sobre `<Field>`): icono `aria-hidden`, 
 - [x] **AC2** — En login, junto a la etiqueta «Contraseña» hay un enlace «¿Olvidaste tu
       contraseña?» que lleva a `/recuperar-contrasena`, alcanzable con `Tab` y con foco visible.
       Verificado con recorrido de teclado (`user-event`).
-- [ ] **AC3** — El titular y las tres propuestas de valor del panel de marca, y los textos de ambos
+- [x] **AC3** — El titular y las tres propuestas de valor del panel de marca, y los textos de ambos
       formularios, cumplen `voz-microcopy.md`: español literal, sentence case, sin lenguaje
-      figurado. **Parcial**: el titular del panel se mantiene alineado con el hero de la landing
-      (ver notas).
+      figurado. El titular de marca queda como **única excepción** documentada en `voz-microcopy.md`
+      (voz de marca, idéntico al hero de la landing).
 - [x] **AC4** — La validación y el envío no cambian: los mismos errores por campo, el mismo foco al
       primer error, los mismos códigos de API. Verificado con `login-form.spec.tsx` y los tests de
       `validate-*` sin tocar su lógica.
@@ -92,19 +92,19 @@ LucideIcon`, o un `<CampoConIcono>` fino sobre `<Field>`): icono `aria-hidden`, 
 
 ## Recorrido de acceptance criteria
 
-| AC  | Veredicto | Cómo se comprobó                                                                                                                                             |
-| --- | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| AC1 | Cumple    | `field.spec.tsx`: `<Input iconoInicio>` conserva la etiqueta asociada y `axe` limpio. Navegador: sobre en email, candado en contraseña, ambos `aria-hidden`. |
-| AC2 | Cumple    | `login-form.spec.tsx`: el enlace tiene `href="/recuperar-contrasena"`, se alcanza con Tab (Email → enlace) y recibe foco visible.                            |
-| AC3 | Parcial   | Copy de ambos formularios y de las propuestas de valor: literal, sentence case. El **titular del panel** mantiene «…un lugar que sí es tuyo» — ver notas.    |
-| AC4 | Cumple    | `login-form.spec.tsx` y `validate-login.spec.ts` verdes sin tocar `validateLogin` / `validateRegister`. Suite de `web` completa (709 tests) en verde.        |
-| AC5 | Cumple    | `pages/paginas.spec.tsx` corre `axe` en Login y Register en `light` / `dark` / `hc` — cero violaciones (el ícono es `aria-hidden`).                          |
-| AC6 | Cumple    | `typecheck`, `lint` (0 errores), `build` y `test` de `web` + `types` en verde. `api` sin cambios; `bookings-index.integration.spec.ts` necesita BD (CI).     |
+| AC  | Veredicto | Cómo se comprobó                                                                                                                                                         |
+| --- | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| AC1 | Cumple    | `field.spec.tsx`: `<Input iconoInicio>` conserva la etiqueta asociada y `axe` limpio. Navegador: sobre en email, candado en contraseña, ambos `aria-hidden`.             |
+| AC2 | Cumple    | `login-form.spec.tsx`: el enlace tiene `href="/recuperar-contrasena"`, se alcanza con Tab (Email → enlace) y recibe foco visible.                                        |
+| AC3 | Cumple    | Copy de formularios y propuestas de valor: literal, sentence case. El titular de marca se alinea con el hero de la landing y queda como excepción en `voz-microcopy.md`. |
+| AC4 | Cumple    | `login-form.spec.tsx` y `validate-login.spec.ts` verdes sin tocar `validateLogin` / `validateRegister`. Suite de `web` completa (709 tests) en verde.                    |
+| AC5 | Cumple    | `pages/paginas.spec.tsx` corre `axe` en Login y Register en `light` / `dark` / `hc` — cero violaciones (el ícono es `aria-hidden`).                                      |
+| AC6 | Cumple    | `typecheck`, `lint` (0 errores), `build` y `test` de `web` + `types` en verde. `api` sin cambios; `bookings-index.integration.spec.ts` necesita BD (CI).                 |
 
 ## Notas de implementación
 
-El titular del `<PanelDeMarca>` conserva «…un lugar que sí es tuyo» para no divergir del hero de la
-landing (`seccion-hero.tsx`, dirección «alinear acceso → landing»); por eso AC3 queda parcial en
-ese punto — el resto del copy sí es literal. `<Input iconoInicio>` y `<Field labelAside>` son props
-nuevas mínimas. `npm install` para traer `@fontsource/instrument-serif` (dep del merge de la
-landing que faltaba en el node_modules local; no la introdujo esta HU).
+El titular del `<PanelDeMarca>` se mantiene idéntico al hero de la landing por decisión del usuario
+(«alinear acceso → landing»); se documenta como única excepción a «sin lenguaje figurado» en
+`voz-microcopy.md`. `<Input iconoInicio>` y `<Field labelAside>` son props nuevas mínimas.
+`npm install` para traer `@fontsource/instrument-serif` (dep del merge de la landing que faltaba en
+el node_modules local; no la introdujo esta HU).
