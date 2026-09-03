@@ -97,7 +97,7 @@ del código dejan ver:
 | AC3 | Cumple    | `estado-aula.spec.tsx` recorre los nueve estados (texto exacto) y `estado-aula-variantes.spec.tsx` la regla del sólido y los tonos. Copy revisado contra `voz-microcopy.md`: sin cambios salvo la pluralización. |
 | AC4 | Cumple    | `<TarjetaAula>` ahora es `flex h-full flex-col` y `<RejillaAulas>` pasa a `items-stretch`: las tarjetas de una fila igualan altura. El riel de 4px usa el token pleno (≥3:1, visible en `.hc`).                  |
 | AC5 | Cumple    | `tarjeta-aula.spec.tsx` corre `axe` en los tres temas; el orden `<h1>`→`<h3>` intacto. `grep -rE "#[0-9a-fA-F]{3,6}" src --include=*.tsx` sin resultados en lo tocado.                                           |
-| AC6 | Cumple    | `typecheck`, `lint` (0 errores) y `build` en verde; `npm run test` de `web` + `types` en verde.                                                                                                                  |
+| AC6 | Cumple    | `typecheck`, `lint` (0 errores), `build` y `npm run test` de `web` (46 archivos / 739 tests) + `types` en verde. `api` sin cambios.                                                                              |
 
 ## Notas de implementación
 
