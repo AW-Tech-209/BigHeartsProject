@@ -43,6 +43,7 @@ apps/api/src/     config · prisma · common · health · auth ✅ · users ✅ 
                   classrooms ✅ (crear, catálogo, «mis aulas», detalle, editar y cancelar)
                   bookings
 apps/web/src/     app/ (providers, router) · pages/ · features/<dominio>/{api,components,hooks,lib}
+                  features/landing/ ✅ (la landing pública de «/», con chrome propio)
                   components/ui/ (shadcn+Base UI) · components/layout/ (shell, cabecera, rejilla)
                   components/dominio/ (EstadoVacio, ilustraciones) · hooks/ · lib/ · stores/
                   index.css  ← tema Tailwind v4 y tokens. NO existe src/styles/globals.css
