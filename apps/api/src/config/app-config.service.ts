@@ -139,6 +139,11 @@ export class AppConfigService {
     return this.config.get('REMINDER_SWEEP_INTERVAL_SECONDS', { infer: true });
   }
 
+  /** Minutos de validez del enlace de recuperación de contraseña (HU-410). */
+  get passwordResetExpiryMinutes(): number {
+    return this.config.get('PASSWORD_RESET_EXPIRY_MINUTES', { infer: true });
+  }
+
   get isProduction(): boolean {
     return this.nodeEnv === 'production';
   }

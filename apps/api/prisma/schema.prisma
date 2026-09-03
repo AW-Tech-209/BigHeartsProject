@@ -139,6 +139,9 @@ model User {
   /// se borran en cascada.
   refreshTokens RefreshToken[]
 
+  /// Tokens de recuperación de contraseña emitidos para este usuario (HU-410).
+  passwordResetTokens PasswordResetToken[]
+
   /// Aulas que imparte, si es profesor. Ver la nota de borrado en `Classroom`.
   classrooms Classroom[]
 
@@ -172,6 +175,28 @@ model RefreshToken {
 
   @@index([userId])
   @@map("refresh_tokens")
+}
+
+/// Token de un solo uso para recuperar la contraseña (HU-410).
+///
+/// Espejo de `RefreshToken`: el token viaja al usuario en claro (en el enlace
+/// del correo) y aquí solo se guarda su HASH (SHA-256). Un solo uso —`usedAt`
+/// lo marca— y caducidad corta (`PASSWORD_RESET_EXPIRY_MINUTES`). Al borrar el
+/// usuario se borran en cascada: no son historial, a diferencia de las reservas.
+model PasswordResetToken {
+  id        String    @id @default(uuid()) @db.Uuid
+  /// Hash SHA-256 del token en claro. Único: identifica la solicitud.
+  tokenHash String    @unique @map("token_hash")
+  userId    String    @map("user_id") @db.Uuid
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  /// Cuándo caduca (ahora + PASSWORD_RESET_EXPIRY_MINUTES al emitirlo).
+  expiresAt DateTime  @map("expires_at") @db.Timestamptz(3)
+  /// Momento en que se usó o se invalidó por una solicitud posterior. `null` = vigente.
+  usedAt    DateTime? @map("used_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+
+  @@index([userId])
+  @@map("password_reset_tokens")
 }
 
 /// Aula virtual: una clase con horario, cupo y sala de videollamada (HU-201).

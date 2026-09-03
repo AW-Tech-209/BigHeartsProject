@@ -110,7 +110,7 @@ cuerpo del issue.
 | [HU-407](./HU-407-pasada-final-de-la-fase-1.md)            | Pasada final de la Fase 1                             | ⬜ Pendiente                          |
 | [HU-408](./HU-408-identidad-y-armazon-de-autenticacion.md) | Identidad visual y armazón de las pantallas de acceso | ⬜ Pendiente                          |
 | [HU-409](./HU-409-formularios-de-acceso-redisenados.md)    | Formularios de login y registro rediseñados           | ⬜ Pendiente                          |
-| [HU-410](./HU-410-recuperacion-de-contrasena-backend.md)   | Recuperación de contraseña (backend)                  | ⬜ Pendiente                          |
+| [HU-410](./HU-410-recuperacion-de-contrasena-backend.md)   | Recuperación de contraseña (backend)                  | ✅ Completada                         |
 | [HU-411](./HU-411-recuperacion-de-contrasena-pantallas.md) | Recuperación de contraseña (pantallas)                | ⬜ Pendiente                          |
 
 **Sprint 2 — cerrado (2026-08-25).** Las quince HUs de gestión de aulas, incluidas HU-214 y HU-215,

@@ -27,14 +27,37 @@ referencia común; el contrato de tipos vive en `@academia/types`.
 Todas las respuestas usan el envelope global `ApiResponse` (`{ success, data }`
 o `{ success, error }`).
 
-| Método | Ruta             | Cuerpo entrada    | `data` de salida                                   | Cookie                    |
-| ------ | ---------------- | ----------------- | -------------------------------------------------- | ------------------------- |
-| POST   | `/auth/register` | `RegisterInput`   | `{ user }`                                         | —                         |
-| POST   | `/auth/login`    | `LoginInput`      | `AuthSession` = `{ user, accessToken, expiresIn }` | **set** `refresh_token`   |
-| POST   | `/auth/refresh`  | — (usa la cookie) | `AuthSession`                                      | **rota** `refresh_token`  |
-| POST   | `/auth/logout`   | — (usa la cookie) | `{ loggedOut: true }`                              | **borra** `refresh_token` |
+| Método | Ruta                    | Cuerpo entrada        | `data` de salida                                   | Cookie                    |
+| ------ | ----------------------- | --------------------- | -------------------------------------------------- | ------------------------- |
+| POST   | `/auth/register`        | `RegisterInput`       | `{ user }`                                         | —                         |
+| POST   | `/auth/login`           | `LoginInput`          | `AuthSession` = `{ user, accessToken, expiresIn }` | **set** `refresh_token`   |
+| POST   | `/auth/refresh`         | — (usa la cookie)     | `AuthSession`                                      | **rota** `refresh_token`  |
+| POST   | `/auth/logout`          | — (usa la cookie)     | `{ loggedOut: true }`                              | **borra** `refresh_token` |
+| POST   | `/auth/forgot-password` | `ForgotPasswordInput` | `{ requested: true }`                              | —                         |
+| POST   | `/auth/reset-password`  | `ResetPasswordInput`  | `{ reset: true }`                                  | —                         |
 
 `expiresIn` son **segundos** de validez del access token (p. ej. `900`).
+
+## Recuperación de contraseña (HU-410)
+
+Dos endpoints públicos, ambos bajo `AuthThrottlerGuard`:
+
+- **`POST /auth/forgot-password`** — si el email pertenece a una cuenta `ACTIVE`,
+  se invalidan (`usedAt`) sus tokens de reset vigentes, se crea uno nuevo y se
+  envía el correo `PASSWORD_RESET` con el enlace
+  `FRONTEND_URL/nueva-contrasena?token=<token en claro>`. **La respuesta es
+  siempre `{ requested: true }`**, exista o no la cuenta: no revela si el email
+  está registrado (mismo principio que el hash señuelo del login).
+- **`POST /auth/reset-password`** — en una transacción: busca el token por su
+  hash SHA-256, valida que no esté usado (`PASSWORD_RESET_TOKEN_INVALID`) ni
+  caducado (`PASSWORD_RESET_TOKEN_EXPIRED`), reescribe la contraseña con bcrypt
+  coste 12, marca el token `usedAt` y **revoca todas las sesiones (`RefreshToken`)
+  del usuario**, como un cambio de contraseña. La contraseña nueva cumple la
+  misma regla que el registro (`VALIDATION_ERROR` si no).
+
+Los tokens viven en `password_reset_tokens`: espejo de `refresh_tokens`, en BD
+solo el hash SHA-256, un solo uso, caducidad `PASSWORD_RESET_EXPIRY_MINUTES`
+(30 min por defecto). Ni el token ni el enlace se escriben en logs.
 
 ## Renovación silenciosa (lo que hace Dev B)
 
@@ -111,7 +134,8 @@ expulsaría a login a usuarios que sí la tienen.
   del `JwtAuthGuard` y solo actúa donde hay `@Roles(...)`. Sin ese decorador un
   endpoint únicamente exige sesión. Rol insuficiente → `INSUFFICIENT_ROLE` (403),
   distinto de `UNAUTHENTICATED`: volver a entrar no lo arregla.
-- **Rate limiting**: `AuthThrottlerGuard` en `login` y `register`
+- **Rate limiting**: `AuthThrottlerGuard` en `login`, `register`,
+  `forgot-password` y `reset-password`
   (`AUTH_THROTTLE_LIMIT` intentos por IP cada `AUTH_THROTTLE_TTL` s;
   por defecto 5/60). Excedido → `TOO_MANY_REQUESTS` (429).
 
@@ -119,8 +143,9 @@ expulsaría a login a usuarios que sí la tienen.
 
 `INVALID_CREDENTIALS`, `ACCOUNT_SUSPENDED`, `ACCOUNT_PENDING`, `ACCOUNT_REJECTED`,
 `UNAUTHENTICATED`, `INSUFFICIENT_ROLE`, `INVALID_REFRESH_TOKEN`,
-`TOO_MANY_REQUESTS`. El frontend decide el mensaje según el `code` (no según el
-texto).
+`TOO_MANY_REQUESTS`, `PASSWORD_RESET_TOKEN_INVALID`,
+`PASSWORD_RESET_TOKEN_EXPIRED`. El frontend decide el mensaje según el `code`
+(no según el texto).
 
 ## Cookies según entorno
 
@@ -154,3 +179,6 @@ acceso le haría creer que su sesión falló.
 Ver `apps/api/.env.example`. Nuevas en esta HU (todas opcionales, con defaults):
 `JWT_ACCESS_EXPIRES_IN` (15m), `REFRESH_TOKEN_TTL_DAYS` (30),
 `AUTH_THROTTLE_TTL` (60), `AUTH_THROTTLE_LIMIT` (5).
+
+HU-410 añade `PASSWORD_RESET_EXPIRY_MINUTES` (30, opcional); el enlace del correo
+usa `FRONTEND_URL`.

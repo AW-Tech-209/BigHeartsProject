@@ -63,10 +63,33 @@ function setup(
     ...data,
   }));
 
-  const prisma = { user: { findUnique, create } } as unknown as PrismaService;
+  const userUpdate = vi.fn().mockResolvedValue(undefined);
+  const resetToken = {
+    findUnique: vi.fn().mockResolvedValue(null),
+    create: vi.fn().mockResolvedValue({ id: 'prt-id' }),
+    update: vi.fn().mockResolvedValue(undefined),
+    updateMany: vi.fn().mockResolvedValue({ count: 0 }),
+  };
+  const refreshTokenModel = { updateMany: vi.fn().mockResolvedValue({ count: 0 }) };
+  const prisma = {
+    user: { findUnique, create, update: userUpdate },
+    passwordResetToken: resetToken,
+    refreshToken: refreshTokenModel,
+  } as unknown as PrismaService;
+  (prisma as unknown as { $transaction: unknown }).$transaction = vi.fn(async (arg: unknown) =>
+    Array.isArray(arg) ? Promise.all(arg) : (arg as (tx: unknown) => unknown)(prisma),
+  );
+
   const config = {
     teacherApprovalRequired: options.teacherApprovalRequired ?? true,
+    passwordResetExpiryMinutes: 30,
+    frontendUrl: 'https://academia-web.vercel.app',
   } as AppConfigService;
+
+  const notify = vi.fn().mockResolvedValue({ delivered: true, channel: 'email' });
+  const notifications = {
+    notify,
+  } as unknown as import('../notifications/notification.service').NotificationService;
 
   const tokens = {
     issueAccessToken: vi.fn(() => ({ token: 'access-jwt', expiresIn: 900 })),
@@ -83,9 +106,13 @@ function setup(
   } as unknown as TokenService;
 
   return {
-    service: new AuthService(prisma, config, tokens),
+    service: new AuthService(prisma, config, tokens, notifications),
     findUnique,
     create,
+    userUpdate,
+    resetToken,
+    refreshTokenModel,
+    notify,
     tokens: tokens as unknown as Record<string, ReturnType<typeof vi.fn>>,
   };
 }
@@ -304,5 +331,114 @@ describe('AuthService.logout', () => {
     await service.logout('raw-token');
 
     expect(tokens.revokeRefreshToken).toHaveBeenCalledWith('raw-token');
+  });
+});
+
+describe('AuthService.requestPasswordReset', () => {
+  it('con email registrado y ACTIVE: invalida los tokens previos, crea uno y notifica una vez (AC1)', async () => {
+    const { service, resetToken, notify } = setup({ foundUser: dbUser() });
+
+    await service.requestPasswordReset({ email: 'user@academia.local' });
+
+    expect(resetToken.updateMany).toHaveBeenCalledWith({
+      where: { userId: 'user-id', usedAt: null },
+      data: { usedAt: expect.any(Date) },
+    });
+    expect(resetToken.create).toHaveBeenCalledOnce();
+    expect(notify).toHaveBeenCalledOnce();
+  });
+
+  it('en BD solo guarda el hash SHA-256 del token, nunca el token en claro (AC4)', async () => {
+    const { service, resetToken, notify } = setup({ foundUser: dbUser() });
+
+    await service.requestPasswordReset({ email: 'user@academia.local' });
+
+    const tokenHash = resetToken.create.mock.calls[0]![0].data.tokenHash as string;
+    const enlace = notify.mock.calls[0]![0].resetUrl as string;
+    const rawToken = new URL(enlace).searchParams.get('token')!;
+
+    expect(tokenHash).toMatch(/^[0-9a-f]{64}$/);
+    expect(tokenHash).not.toBe(rawToken);
+    expect(enlace).not.toContain(tokenHash);
+  });
+
+  it('con email inexistente no crea token ni notifica, y no lanza (AC1)', async () => {
+    const { service, resetToken, notify } = setup({ foundUser: null });
+
+    await expect(
+      service.requestPasswordReset({ email: 'nadie@academia.local' }),
+    ).resolves.toBeUndefined();
+    expect(resetToken.create).not.toHaveBeenCalled();
+    expect(notify).not.toHaveBeenCalled();
+  });
+
+  it('con una cuenta que no está ACTIVE tampoco crea token ni notifica', async () => {
+    const { service, resetToken, notify } = setup({
+      foundUser: dbUser({ status: UserStatus.SUSPENDED }),
+    });
+
+    await service.requestPasswordReset({ email: 'user@academia.local' });
+
+    expect(resetToken.create).not.toHaveBeenCalled();
+    expect(notify).not.toHaveBeenCalled();
+  });
+});
+
+describe('AuthService.resetPassword', () => {
+  const validRecord = () => ({
+    id: 'prt-id',
+    userId: 'user-id',
+    usedAt: null,
+    expiresAt: new Date(Date.now() + 60_000),
+  });
+
+  it('cambia el hash, marca el token usado y revoca todas las sesiones (AC2)', async () => {
+    const { service, resetToken, userUpdate, refreshTokenModel } = setup();
+    resetToken.findUnique.mockResolvedValue(validRecord());
+
+    await service.resetPassword({ token: 'raw-reset-token', password: 'NuevaPass123' });
+
+    expect(userUpdate).toHaveBeenCalledWith({
+      where: { id: 'user-id' },
+      data: { password: 'hashed:NuevaPass123' },
+    });
+    expect(resetToken.update).toHaveBeenCalledWith({
+      where: { id: 'prt-id' },
+      data: { usedAt: expect.any(Date) },
+    });
+    expect(refreshTokenModel.updateMany).toHaveBeenCalledWith({
+      where: { userId: 'user-id', revokedAt: null },
+      data: { revokedAt: expect.any(Date) },
+    });
+  });
+
+  it('token inexistente → PASSWORD_RESET_TOKEN_INVALID (AC3)', async () => {
+    const { service } = setup();
+
+    await expect(
+      service.resetPassword({ token: 'x', password: 'NuevaPass123' }),
+    ).rejects.toMatchObject({ response: { code: ApiErrorCode.PASSWORD_RESET_TOKEN_INVALID } });
+  });
+
+  it('token ya usado → PASSWORD_RESET_TOKEN_INVALID (AC3)', async () => {
+    const { service, resetToken } = setup();
+    resetToken.findUnique.mockResolvedValue({ ...validRecord(), usedAt: new Date() });
+
+    await expect(
+      service.resetPassword({ token: 'x', password: 'NuevaPass123' }),
+    ).rejects.toMatchObject({ response: { code: ApiErrorCode.PASSWORD_RESET_TOKEN_INVALID } });
+  });
+
+  it('token caducado → PASSWORD_RESET_TOKEN_EXPIRED (AC3)', async () => {
+    const { service, resetToken, userUpdate } = setup();
+    resetToken.findUnique.mockResolvedValue({
+      ...validRecord(),
+      expiresAt: new Date(Date.now() - 60_000),
+    });
+
+    await expect(
+      service.resetPassword({ token: 'x', password: 'NuevaPass123' }),
+    ).rejects.toMatchObject({ response: { code: ApiErrorCode.PASSWORD_RESET_TOKEN_EXPIRED } });
+    expect(userUpdate).not.toHaveBeenCalled();
   });
 });

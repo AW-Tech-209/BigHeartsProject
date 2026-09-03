@@ -1,5 +1,11 @@
 import { Body, Controller, HttpCode, HttpStatus, Post, Req, Res, UseGuards } from '@nestjs/common';
-import type { LoginResponse, RefreshResponse, RegisterResponse } from '@academia/types';
+import type {
+  ForgotPasswordResponse,
+  LoginResponse,
+  RefreshResponse,
+  RegisterResponse,
+  ResetPasswordResponse,
+} from '@academia/types';
 import type { Request, Response } from 'express';
 
 import { AppConfigService } from '../config/app-config.service';
@@ -7,7 +13,9 @@ import { REFRESH_COOKIE_NAME } from './auth.constants';
 import { AuthService } from './auth.service';
 import type { IssuedSession } from './auth.types';
 import { Public } from './decorators/public.decorator';
+import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { LoginDto } from './dto/login.dto';
+import { ResetPasswordDto } from './dto/reset-password.dto';
 import { RegisterDto } from './dto/register.dto';
 import { AuthThrottlerGuard } from './guards/auth-throttler.guard';
 import { clearRefreshCookie, setRefreshCookie } from './refresh-cookie';
@@ -92,6 +100,36 @@ export class AuthController {
     }
     clearRefreshCookie(res, this.config);
     return { loggedOut: true };
+  }
+
+  /**
+   * POST /auth/forgot-password
+   *
+   * Pide un enlace de recuperación. Público y con rate limiting. La respuesta es
+   * siempre la misma, exista o no la cuenta (HU-410, AC1).
+   */
+  @Public()
+  @UseGuards(AuthThrottlerGuard)
+  @Post('forgot-password')
+  @HttpCode(HttpStatus.OK)
+  async forgotPassword(@Body() dto: ForgotPasswordDto): Promise<ForgotPasswordResponse> {
+    await this.authService.requestPasswordReset(dto);
+    return { requested: true };
+  }
+
+  /**
+   * POST /auth/reset-password
+   *
+   * Cambia la contraseña con un token de un solo uso y revoca todas las
+   * sesiones del usuario. Público y con rate limiting.
+   */
+  @Public()
+  @UseGuards(AuthThrottlerGuard)
+  @Post('reset-password')
+  @HttpCode(HttpStatus.OK)
+  async resetPassword(@Body() dto: ResetPasswordDto): Promise<ResetPasswordResponse> {
+    await this.authService.resetPassword(dto);
+    return { reset: true };
   }
 
   private plantCookie(res: Response, issued: IssuedSession): void {

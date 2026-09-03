@@ -48,7 +48,8 @@ mensaje mostrar a partir del código, **nunca** parseando `message`.
 
 Códigos ya existentes: `VALIDATION_ERROR`, `EMAIL_ALREADY_EXISTS`, `INVALID_CREDENTIALS`,
 `ACCOUNT_SUSPENDED`, `ACCOUNT_PENDING`, `ACCOUNT_REJECTED`, `UNAUTHENTICATED`,
-`INSUFFICIENT_ROLE`, `INVALID_REFRESH_TOKEN`, `PROFILE_FORBIDDEN`, `USER_NOT_FOUND`,
+`INSUFFICIENT_ROLE`, `INVALID_REFRESH_TOKEN`, `PASSWORD_RESET_TOKEN_INVALID`,
+`PASSWORD_RESET_TOKEN_EXPIRED`, `PROFILE_FORBIDDEN`, `USER_NOT_FOUND`,
 `CLASSROOM_NOT_FOUND`, `CLASSROOM_FORBIDDEN`, `TEACHER_SCHEDULE_CONFLICT`,
 `CLASSROOM_DURATION_INVALID`, `CLASSROOM_LEAD_TIME_WARNING`, `INVALID_STATUS_TRANSITION`,
 `TOO_MANY_REQUESTS`, `DATABASE_UNAVAILABLE`, `INTERNAL_ERROR`. Los del dominio de reservas están en
@@ -105,15 +106,26 @@ parcial de `bookings`) van en SQL dentro de la migración, con un comentario que
 
 ## 6. Endpoints existentes
 
-| Método | Ruta             | Entrada              | `data`                         | Cookie                    |
-| ------ | ---------------- | -------------------- | ------------------------------ | ------------------------- |
-| POST   | `/auth/register` | `RegisterInput`      | `{ user }`                     | —                         |
-| POST   | `/auth/login`    | `LoginInput`         | `AuthSession`                  | **set** `refresh_token`   |
-| POST   | `/auth/refresh`  | — (cookie)           | `AuthSession`                  | **rota** `refresh_token`  |
-| POST   | `/auth/logout`   | — (cookie)           | `{ loggedOut: true }`          | **borra** `refresh_token` |
-| GET    | `/users/me`      | — (token)            | `{ user }`                     | —                         |
-| PATCH  | `/users/me`      | `UpdateProfileInput` | `{ user }`                     | —                         |
-| GET    | `/health`        | —                    | `{ status, uptime, database }` | —                         |
+| Método | Ruta                    | Entrada               | `data`                | Cookie                    |
+| ------ | ----------------------- | --------------------- | --------------------- | ------------------------- |
+| POST   | `/auth/register`        | `RegisterInput`       | `{ user }`            | —                         |
+| POST   | `/auth/login`           | `LoginInput`          | `AuthSession`         | **set** `refresh_token`   |
+| POST   | `/auth/refresh`         | — (cookie)            | `AuthSession`         | **rota** `refresh_token`  |
+| POST   | `/auth/logout`          | — (cookie)            | `{ loggedOut: true }` | **borra** `refresh_token` |
+| POST   | `/auth/forgot-password` | `ForgotPasswordInput` | `{ requested: true }` | —                         |
+| POST   | `/auth/reset-password`  | `ResetPasswordInput`  | `{ reset: true }`     | —                         |
+
+**`/auth/forgot-password` responde igual exista o no la cuenta** (HU-410): mismo
+status, mismo cuerpo `{ requested: true }` — no enumera emails. Solo si la cuenta
+está `ACTIVE` se emite un `PasswordResetToken` (hash SHA-256 en BD, un solo uso,
+`PASSWORD_RESET_EXPIRY_MINUTES`) y sale el correo `PASSWORD_RESET` con el enlace
+`FRONTEND_URL/nueva-contrasena?token=…`. **`/auth/reset-password`** valida el
+token en una transacción (`PASSWORD_RESET_TOKEN_INVALID` / `_EXPIRED`), reescribe
+la contraseña (regla del registro, `VALIDATION_ERROR` si no) y **revoca todas las
+sesiones del usuario**. Ambos bajo `AuthThrottlerGuard`.
+| GET | `/users/me` | — (token) | `{ user }` | — |
+| PATCH | `/users/me` | `UpdateProfileInput` | `{ user }` | — |
+| GET | `/health` | — | `{ status, uptime, database }` | — |
 
 Back-office, todos con `@Roles(UserRole.ADMIN)` en la clase del controlador (HU-104):
 
@@ -217,7 +229,8 @@ arranca sin ellas.
 
 Ya definidas: `NODE_ENV`, `PORT`, `JWT_SECRET`, `JWT_ACCESS_EXPIRES_IN`, `REFRESH_TOKEN_TTL_DAYS`,
 `AUTH_THROTTLE_TTL`, `AUTH_THROTTLE_LIMIT`, `DATABASE_URL`, `DIRECT_URL`, `CORS_ORIGIN`,
-`TEACHER_APPROVAL_REQUIRED`, **`MEETING_LINK_KEY`** (obligatoria, HU-201).
+`TEACHER_APPROVAL_REQUIRED`, **`MEETING_LINK_KEY`** (obligatoria, HU-201),
+`PASSWORD_RESET_EXPIRY_MINUTES` (30, HU-410).
 
 `MEETING_LINK_KEY` se valida como **64 caracteres hexadecimales = 32 bytes exactos**, no como "una
 cadena larga": AES-256 necesita esa longitud, y aceptar cualquier otra obligaría a derivar o rellenar

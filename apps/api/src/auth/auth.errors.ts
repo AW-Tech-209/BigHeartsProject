@@ -1,4 +1,4 @@
-import { ForbiddenException, UnauthorizedException } from '@nestjs/common';
+import { BadRequestException, ForbiddenException, UnauthorizedException } from '@nestjs/common';
 import { ApiErrorCode } from '@academia/types';
 
 /**
@@ -24,6 +24,20 @@ export const invalidRefreshToken = (): UnauthorizedException =>
   new UnauthorizedException({
     code: ApiErrorCode.INVALID_REFRESH_TOKEN,
     message: 'Tu sesión no es válida o ha caducado. Inicia sesión de nuevo.',
+  });
+
+/** El token de recuperación no existe o ya se usó. Mismo código para ambos casos. */
+export const passwordResetTokenInvalid = (): BadRequestException =>
+  new BadRequestException({
+    code: ApiErrorCode.PASSWORD_RESET_TOKEN_INVALID,
+    message: 'El enlace de recuperación no es válido o ya se usó. Solicita uno nuevo.',
+  });
+
+/** El token de recuperación caducó (`PASSWORD_RESET_EXPIRY_MINUTES`). */
+export const passwordResetTokenExpired = (): BadRequestException =>
+  new BadRequestException({
+    code: ApiErrorCode.PASSWORD_RESET_TOKEN_EXPIRED,
+    message: 'El enlace de recuperación caducó. Solicita uno nuevo.',
   });
 
 /** Falta el access token o es inválido en una ruta protegida. */

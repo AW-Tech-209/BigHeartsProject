@@ -20,6 +20,8 @@ export const NotificationType = {
   BOOKING_REMINDER_24H: 'BOOKING_REMINDER_24H',
   /** Recordatorio 30 min antes: mismo instante que la apertura del enlace (§4.1, §4.6). */
   BOOKING_REMINDER_30M: 'BOOKING_REMINDER_30M',
+  /** Alguien pidió recuperar su contraseña: lleva el enlace de un solo uso (HU-410). */
+  PASSWORD_RESET: 'PASSWORD_RESET',
 } as const;
 
 export type NotificationType = (typeof NotificationType)[keyof typeof NotificationType];
@@ -45,6 +47,8 @@ export interface Notification {
   recipient: NotificationRecipient;
   /** Ausente en TEACHER_APPROVED/TEACHER_REJECTED: no hay aula involucrada. */
   classroom?: NotificationClassroom;
+  /** Enlace de un solo uso de PASSWORD_RESET. Ausente en el resto de tipos. */
+  resetUrl?: string;
 }
 
 /** Qué pasó al intentar entregarlo. */

@@ -5,7 +5,7 @@
 | **Sprint**          | Cierre de Fase 1 · autenticación                    |
 | **Prioridad**       | 🟠 Alta (bloquea HU-411)                            |
 | **Estimación**      | 2 días                                              |
-| **Estado**          | ⬜ Pendiente                                        |
+| **Estado**          | ✅ Completada                                       |
 | **Rama**            | `hu-410-recuperacion-de-contrasena-backend-ana`     |
 | **Alcance técnico** | fullstack (contrato + backend)                      |
 | **Depende de**      | ninguna (usa el puerto de notificaciones de HU-401) |
@@ -50,57 +50,57 @@ HU-401). El contrato compartido va primero.
 
 ### Contrato — va primero
 
-- [ ] **T1** — En `packages/types`: tipos/DTO de `POST /auth/forgot-password` y
+- [x] **T1** — En `packages/types`: tipos/DTO de `POST /auth/forgot-password` y
       `POST /auth/reset-password`, y códigos nuevos en `ApiErrorCode`:
       `PASSWORD_RESET_TOKEN_INVALID`, `PASSWORD_RESET_TOKEN_EXPIRED`. `npm run build:types`.
 
 ### Backend
 
-- [ ] **T2** — Modelo `PasswordResetToken` en Prisma (`id`, `userId`, `tokenHash @unique`,
+- [x] **T2** — Modelo `PasswordResetToken` en Prisma (`id`, `userId`, `tokenHash @unique`,
       `expiresAt`, `usedAt?`, `createdAt`; relación con `User`, `onDelete: Cascade`). Migración
       generada y aplicada. `PASSWORD_RESET_EXPIRY_MINUTES` (y `APP_URL` si no existe) en
       `config/env.schema.ts` **y** `.env.example`.
-- [ ] **T3** — Notificación: `NotificationType.PASSWORD_RESET` + plantilla en
+- [x] **T3** — Notificación: `NotificationType.PASSWORD_RESET` + plantilla en
       `notification-templates.ts` (asunto y cuerpo en español, enlace
       `{APP_URL}/nueva-contrasena?token=…`).
-- [ ] **T4** — `AuthService.requestPasswordReset(email)`: si el usuario existe y está activo,
+- [x] **T4** — `AuthService.requestPasswordReset(email)`: si el usuario existe y está activo,
       invalida sus tokens de reset no usados, crea uno nuevo y envía el correo. Termina **siempre**
       sin señal de existencia.
-- [ ] **T5** — `AuthService.resetPassword(token, newPassword)` en **una transacción**: hashea el
+- [x] **T5** — `AuthService.resetPassword(token, newPassword)` en **una transacción**: hashea el
       token, busca por `tokenHash`, valida no usado y no caducado (`TOKEN_INVALID` / `TOKEN_EXPIRED`),
       valida la contraseña con la regla del registro, actualiza el hash, marca `usedAt`, revoca
       todas las sesiones del usuario.
-- [ ] **T6** — `AuthController`: `@Public()` + `@Post('forgot-password')` y `@Post('reset-password')`
+- [x] **T6** — `AuthController`: `@Public()` + `@Post('forgot-password')` y `@Post('reset-password')`
       bajo el guard de throttler. Cero lógica en el controller.
 
 ### Documentación
 
-- [ ] **T7** — `AUTH_FLOW.md` (flujo nuevo, lado servidor). `ARQUITECTURA.md` §2 (decisión: reset
+- [x] **T7** — `AUTH_FLOW.md` (flujo nuevo, lado servidor). `ARQUITECTURA.md` §2 (decisión: reset
       por token de un solo uso con hash en BD) + modelo de datos. `bighearts-backend`
       `contrato-api.md` (endpoints y códigos). `README.md` (variable de entorno nueva).
       `docs/historias/README.md`. Tests en `src/auth/*.spec.ts`.
 
 ## ✅ Criterios de aceptación
 
-- [ ] **AC1** — `POST /auth/forgot-password` con un email registrado y con uno inexistente devuelven
+- [x] **AC1** — `POST /auth/forgot-password` con un email registrado y con uno inexistente devuelven
       **la misma respuesta** (mismo status, mismo cuerpo). Con email registrado y activo se crea una
       fila en `password_reset_tokens` y se llama a `NotificationService` una vez; con email
       inexistente, ninguna de las dos. Verificado con dos tests.
-- [ ] **AC2** — `POST /auth/reset-password` con un token válido y no caducado cambia el hash de
+- [x] **AC2** — `POST /auth/reset-password` con un token válido y no caducado cambia el hash de
       contraseña (login con la anterior falla, con la nueva funciona) y deja `revokedAt` no nulo en
       **todas** las sesiones del usuario. El token queda `usedAt`; un segundo intento con él devuelve
       `PASSWORD_RESET_TOKEN_INVALID`.
-- [ ] **AC3** — **Errores:** token inexistente o ya usado → `PASSWORD_RESET_TOKEN_INVALID`; token
+- [x] **AC3** — **Errores:** token inexistente o ya usado → `PASSWORD_RESET_TOKEN_INVALID`; token
       con más de `PASSWORD_RESET_EXPIRY_MINUTES` → `PASSWORD_RESET_TOKEN_EXPIRED`; contraseña nueva
       que no cumple la regla del registro → `VALIDATION_ERROR` con el detalle del campo. Un test por
       caso.
-- [ ] **AC4** — **Seguridad:** en BD solo se guarda el hash SHA-256 del token; ni el token ni el
+- [x] **AC4** — **Seguridad:** en BD solo se guarda el hash SHA-256 del token; ni el token ni el
       enlace aparecen en logs; ambos endpoints están bajo rate limiting. Verificado leyendo el
       servicio y con el test del throttler.
-- [ ] **AC5** — `PASSWORD_RESET_EXPIRY_MINUTES` (y `APP_URL` si es nueva) están en
+- [x] **AC5** — `PASSWORD_RESET_EXPIRY_MINUTES` (y `APP_URL` si es nueva) están en
       `config/env.schema.ts` **y** en `.env.example`; el test de `notification-templates` que recorre
       todos los `NotificationType` sigue en verde con el tipo nuevo.
-- [ ] **AC6** — **Verificación automática:** `typecheck`, `lint`, `build` y `npm run test` (los tres
+- [x] **AC6** — **Verificación automática:** `typecheck`, `lint`, `build` y `npm run test` (los tres
       workspaces, incluido `@academia/api`) en verde.
 
 ## 🚫 Fuera de alcance
@@ -112,4 +112,19 @@ HU-401). El contrato compartido va primero.
 
 ## Notas de implementación
 
-Sin desviaciones previstas.
+- `APP_URL` no se creó: ya existe `FRONTEND_URL` con ese mismo papel (URL del
+  frontend desplegado). El enlace del correo la reutiliza. Única variable nueva:
+  `PASSWORD_RESET_EXPIRY_MINUTES`.
+- Los errores de token son `400 BadRequest` (`PASSWORD_RESET_TOKEN_INVALID` /
+  `_EXPIRED`).
+
+## Recorrido de AC
+
+| AC  | Veredicto | Cómo se comprobó                                                                                                                                                                                                                |
+| --- | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| AC1 | ✅        | `auth.service.spec` — email `ACTIVE` crea fila + notifica 1 vez; inexistente y no-`ACTIVE` no hacen ninguna; el controller devuelve `{ requested: true }` fijo                                                                  |
+| AC2 | ✅        | `auth.service.spec` — `resetPassword` con token válido: `user.update` del hash, `passwordResetToken.update` `usedAt`, `refreshToken.updateMany` `revokedAt` en toda la familia; token ya usado → `PASSWORD_RESET_TOKEN_INVALID` |
+| AC3 | ✅        | `auth.service.spec` — inexistente/usado → `INVALID`; caducado → `EXPIRED` (sin tocar la contraseña); contraseña floja → `VALIDATION_ERROR` vía `ResetPasswordDto` (misma regla que `RegisterDto`)                               |
+| AC4 | ✅        | En BD solo `tokenHash` SHA-256 (test comprueba `^[0-9a-f]{64}$` ≠ token en claro); enlace/token nunca en logs (revisado el servicio); `auth.controller.spec` — ambos handlers `@Public()` + `AuthThrottlerGuard`                |
+| AC5 | ✅        | `PASSWORD_RESET_EXPIRY_MINUTES` en `env.schema.ts` y `.env.example`; `notification-templates.spec` recorre todos los `NotificationType` (incl. `PASSWORD_RESET`) y sigue en verde                                               |
+| AC6 | ✅        | `npm run typecheck && lint && build && test` — todo en verde (api 519, web 701, types 47)                                                                                                                                       |
