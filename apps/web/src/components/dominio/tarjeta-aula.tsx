@@ -16,7 +16,7 @@ import { AccionEntrarAClase } from '@/features/aulas/components/accion-entrar-a-
 import { AccionesDeAula } from '@/features/aulas/components/acciones-de-aula';
 import { AccionReservarAula } from '@/features/aulas/components/accion-reservar-aula';
 import { APOYOS_AULA } from '@/features/aulas/lib/apoyos-aula';
-import { describirDuracion, describirHorario } from '@/features/aulas/lib/horario';
+import { describirDuracion, describirHorarioPartes } from '@/features/aulas/lib/horario';
 import { MODOS_COMUNICACION_EN_ORDEN } from '@/features/aulas/lib/modos-comunicacion';
 import { nivelesDeIngles } from '@/features/aulas/lib/niveles';
 import { cn } from '@/lib/utils';
@@ -167,6 +167,7 @@ export function TarjetaAula({
     .join(' · ');
 
   const muestraBadge = !esVistaDelProfesor || !ESTADOS_DE_CUPO.includes(estado);
+  const { cuando, zona } = describirHorarioPartes(classroom.scheduledAt);
 
   // HU-208: la marca solo tiene sentido en el catálogo, donde conviven aulas
   // propias y ajenas. En «Mis aulas» TODAS son suyas: marcarlas una por una no
@@ -178,7 +179,7 @@ export function TarjetaAula({
     <article
       aria-labelledby={tituloId}
       className={cn(
-        'relative overflow-hidden rounded-xl border border-border bg-card p-4 pl-5',
+        'relative flex h-full flex-col overflow-hidden rounded-xl border border-border bg-card p-4 pl-5',
         // El anillo va en la TARJETA aunque el foco lo reciba el enlace del
         // título (`patrones-dominio.md`): un anillo de 3px alrededor de tres
         // palabras se pierde en una rejilla de seis, y lo que el usuario
@@ -203,7 +204,9 @@ export function TarjetaAula({
           con zona explícita (B6): el nombre accesible de la tarjeta sigue
           siendo el título, no la fecha (aria-labelledby apunta al h3).
         */}
-        <p className="text-xs text-muted-foreground">{describirHorario(classroom.scheduledAt)}</p>
+        <p className="text-xs text-pretty text-muted-foreground">
+          {cuando} {zona && <span className="whitespace-nowrap">({zona})</span>}
+        </p>
 
         {/*
           **El enlace al detalle es el título, no la tarjeta entera** (HU-204,

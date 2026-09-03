@@ -1,5 +1,6 @@
 import { Users } from 'lucide-react';
 
+import { pluralizarCupos } from '@/features/aulas/lib/cupos';
 import { cn } from '@/lib/utils';
 import { UMBRAL_ULTIMOS_CUPOS } from '@academia/types';
 
@@ -67,7 +68,7 @@ export function IndicadorCupo({
       ? `${currentBookings} de ${maxStudents} inscritos`
       : disponibles === 0
         ? 'Sin cupos disponibles'
-        : `${currentBookings} de ${maxStudents} lugares ocupados · Quedan ${disponibles}`;
+        : `${currentBookings} de ${maxStudents} lugares ocupados · Quedan ${pluralizarCupos(disponibles)}`;
 
   const valueText =
     variante === 'inscritos'

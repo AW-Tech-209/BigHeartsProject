@@ -5,6 +5,7 @@ import {
   aInstanteISO,
   describirDuracion,
   describirHorario,
+  describirHorarioPartes,
   describirRangoHorario,
 } from './horario';
 
@@ -105,6 +106,26 @@ describe('describirHorario', () => {
 
   it('no imprime «Invalid Date» ante una fecha rota', () => {
     expect(describirHorario('no-es-una-fecha')).toBe('Fecha no disponible');
+  });
+});
+
+describe('describirHorarioPartes', () => {
+  const iso = aInstanteISO({ fecha: '2027-08-12', hora: '18:00' })!;
+
+  it('parte la fecha en «cuando» y «zona», y rearmadas dan describirHorario', () => {
+    const { cuando, zona } = describirHorarioPartes(iso);
+
+    expect(cuando).toMatch(/2027/);
+    expect(cuando).not.toContain('(');
+    expect(zona.length).toBeGreaterThan(3);
+    expect(`${cuando} (${zona})`).toBe(describirHorario(iso));
+  });
+
+  it('ante una fecha rota deja «zona» vacía', () => {
+    expect(describirHorarioPartes('no-es-una-fecha')).toEqual({
+      cuando: 'Fecha no disponible',
+      zona: '',
+    });
   });
 });
 

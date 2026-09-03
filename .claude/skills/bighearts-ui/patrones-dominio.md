@@ -7,17 +7,17 @@ como componentes reutilizables en `src/components/dominio/`, no reimplementarse 
 
 Color + Ícono (Lucide) + Texto visible.
 
-| Estado                 | Color Token              | Ícono            | Texto Visible             |
-| ---------------------- | ------------------------ | ---------------- | ------------------------- |
-| `disponible`           | `success-soft`           | `CircleCheck`    | `Hay cupo`                |
-| `ultimos-cupos`        | `attention-soft`         | `TriangleAlert`  | `Quedan {n} cupos`        |
-| `llena`                | `muted`                  | `Users`          | `Sin cupos`               |
-| `reservada`            | `primary-soft`           | `BookmarkCheck`  | `Tienes tu cupo`          |
-| `acceso-abierto`       | **`attention` (sólido)** | `DoorOpen`       | `Ya puedes entrar`        |
-| `en-curso`             | **`success` (sólido)**   | `Video`          | `Clase en curso`          |
-| `finalizada`           | `muted`                  | `CircleCheckBig` | `Clase finalizada`        |
-| `cancelada`            | `destructive-soft`       | `CircleX`        | `Clase cancelada`         |
-| `pendiente-aprobacion` | `attention-soft`         | `Clock`          | `Pendiente de aprobación` |
+| Estado                 | Color Token              | Ícono            | Texto Visible                                              |
+| ---------------------- | ------------------------ | ---------------- | ---------------------------------------------------------- |
+| `disponible`           | `success-soft`           | `CircleCheck`    | `Hay cupo`                                                 |
+| `ultimos-cupos`        | `attention-soft`         | `TriangleAlert`  | `Quedan {n} cupo` / `cupos` (pluraliza: `pluralizarCupos`) |
+| `llena`                | `muted`                  | `Users`          | `Sin cupos`                                                |
+| `reservada`            | `primary-soft`           | `BookmarkCheck`  | `Tienes tu cupo`                                           |
+| `acceso-abierto`       | **`attention` (sólido)** | `DoorOpen`       | `Ya puedes entrar`                                         |
+| `en-curso`             | **`success` (sólido)**   | `Video`          | `Clase en curso`                                           |
+| `finalizada`           | `muted`                  | `CircleCheckBig` | `Clase finalizada`                                         |
+| `cancelada`            | `destructive-soft`       | `CircleX`        | `Clase cancelada`                                          |
+| `pendiente-aprobacion` | `attention-soft`         | `Clock`          | `Pendiente de aprobación`                                  |
 
 ### Riel de Estado (Firma Visual)
 

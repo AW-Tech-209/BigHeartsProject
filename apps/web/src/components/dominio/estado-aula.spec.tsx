@@ -12,6 +12,7 @@ describe('textoEstadoAula — el texto exacto de patrones-dominio.md', () => {
   it.each([
     ['disponible', undefined, 'Hay cupo'],
     ['ultimos-cupos', 3, 'Quedan 3 cupos'],
+    ['ultimos-cupos', 1, 'Quedan 1 cupo'],
     ['llena', undefined, 'Sin cupos'],
     ['reservada', undefined, 'Tienes tu cupo'],
     ['acceso-abierto', undefined, 'Ya puedes entrar'],
