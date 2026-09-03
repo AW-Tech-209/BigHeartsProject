@@ -2,7 +2,7 @@ import type { User } from '@academia/types';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 
-import { AppShell } from '@/components/layout/app-shell';
+import { LayoutAutenticacion } from '@/components/layout/layout-autenticacion';
 import { PaginaCabecera } from '@/components/layout/pagina-cabecera';
 import { Card } from '@/components/ui/card';
 import { RegisterForm } from '@/features/auth/components/register-form';
@@ -15,8 +15,7 @@ export function RegisterPage() {
   const [registeredUser, setRegisteredUser] = useState<User | null>(null);
 
   return (
-    // Sin navegación: todavía no hay sesión, así que no hay destinos que ofrecer.
-    <AppShell conNavegacion={false}>
+    <LayoutAutenticacion>
       <div className="mx-auto w-full max-w-2xl space-y-8">
         {/*
           Un solo `<h1>` en las dos mitades de la pantalla. El título cambia al
@@ -53,6 +52,6 @@ export function RegisterPage() {
           </>
         )}
       </div>
-    </AppShell>
+    </LayoutAutenticacion>
   );
 }

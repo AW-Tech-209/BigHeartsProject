@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 
 import { Button } from '@/components/ui/button';
 import { RotuloSeccion, SeccionLanding } from './primitivos-landing';
+import { Revelar } from './revelar';
 
 const INSCRITOS: { iniciales: string; nombre: string; modo: string; icon: LucideIcon }[] = [
   { iniciales: 'MR', nombre: 'Mariana R.', modo: 'Lengua de signos', icon: Hand },
@@ -14,7 +15,7 @@ export function SeccionProfesores() {
   return (
     <SeccionLanding id="profesores">
       <div className="grid gap-14 lg:grid-cols-2 lg:items-start">
-        <div>
+        <Revelar>
           <RotuloSeccion>Para profesores</RotuloSeccion>
           <h2 className="mt-5 text-3xl font-medium tracking-tight text-balance">
             Sabes quién viene y cómo se comunica.
@@ -38,9 +39,9 @@ export function SeccionProfesores() {
               Las cuentas de profesor las aprueba la academia antes de poder publicar clases.
             </span>
           </p>
-        </div>
+        </Revelar>
 
-        <div className="overflow-hidden rounded-xl border border-border bg-card">
+        <Revelar retraso={120} className="overflow-hidden rounded-xl border border-border bg-card">
           <p className="border-b border-border px-5 py-3.5 text-sm font-medium">
             Inscritos · Conversación: pedir indicaciones
           </p>
@@ -71,7 +72,7 @@ export function SeccionProfesores() {
             La lista no muestra el correo del estudiante. El profesor no lo necesita para preparar
             su clase.
           </p>
-        </div>
+        </Revelar>
       </div>
     </SeccionLanding>
   );

@@ -18,7 +18,7 @@ const ANCLAS = [
  */
 export function CabeceraLanding() {
   return (
-    <header className="sticky top-0 z-40 border-b border-border bg-card">
+    <header className="sticky top-0 z-40 border-b border-border bg-card/80 backdrop-blur-md">
       <Contenedor className="flex h-16 items-center justify-between gap-4">
         <a
           href="#inicio"

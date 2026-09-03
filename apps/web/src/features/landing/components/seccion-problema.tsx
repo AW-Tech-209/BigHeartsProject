@@ -3,6 +3,7 @@ import { CircleCheck, CircleX, MessageSquare } from 'lucide-react';
 import { MarcaBigHearts } from '@/components/dominio/marca-bighearts';
 import { cn } from '@/lib/utils';
 import { RotuloSeccion, SeccionLanding } from './primitivos-landing';
+import { Revelar } from './revelar';
 
 const CON_WHATSAPP = [
   'El enlace circula libre; entra quien lo tenga.',
@@ -23,7 +24,7 @@ const CON_BIGHEARTS = [
 export function SeccionProblema() {
   return (
     <SeccionLanding id="problema">
-      <div className="max-w-[40ch]">
+      <Revelar className="max-w-[40ch]">
         <RotuloSeccion color="neutral">Por qué existe</RotuloSeccion>
         <h2 className="mt-5 text-3xl font-medium tracking-tight text-balance">
           Hoy la academia no es un lugar. Es un grupo de chat.
@@ -31,9 +32,9 @@ export function SeccionProblema() {
         <p className="mt-5 text-lg text-muted-foreground text-pretty">
           El profesor crea la reunión y reparte el enlace. Todo lo demás queda sin resolver.
         </p>
-      </div>
+      </Revelar>
 
-      <div className="mt-12 grid gap-5 md:grid-cols-2">
+      <Revelar retraso={80} className="mt-12 grid gap-5 md:grid-cols-2">
         <Columna
           titulo="Hoy, con WhatsApp"
           icono={MessageSquare}
@@ -48,17 +49,19 @@ export function SeccionProblema() {
           iconoItem={CircleCheck}
           tono="bien"
         />
-      </div>
+      </Revelar>
 
-      <blockquote className="mt-12 max-w-[60ch] border-l-4 border-attention pl-7">
-        <p className="text-xl font-medium text-pretty sm:text-2xl">
-          El estudiante no solo enfrenta la dificultad de aprender inglés: enfrenta además la
-          fricción de usar herramientas que no fueron pensadas para él.
-        </p>
-        <p className="mt-4 text-base text-muted-foreground">
-          BigHearts existe para eliminar esa segunda barrera.
-        </p>
-      </blockquote>
+      <Revelar retraso={120}>
+        <blockquote className="mt-12 max-w-[60ch] border-l-4 border-attention pl-7">
+          <p className="font-serif text-2xl leading-snug text-pretty sm:text-3xl">
+            El estudiante no solo enfrenta la dificultad de aprender inglés: enfrenta además la
+            fricción de usar herramientas que no fueron pensadas para él.
+          </p>
+          <p className="mt-4 text-base text-muted-foreground">
+            BigHearts existe para eliminar esa segunda barrera.
+          </p>
+        </blockquote>
+      </Revelar>
     </SeccionLanding>
   );
 }

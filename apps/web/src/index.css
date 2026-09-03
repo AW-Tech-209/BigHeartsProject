@@ -2,6 +2,10 @@
 @import 'tw-animate-css';
 @import 'shadcn/tailwind.css';
 @import '@fontsource-variable/geist';
+/* Serif de display SOLO para los acentos de la landing (hero, cierre, citas).
+   El resto del producto es Geist; ver `bighearts-ui`. */
+@import '@fontsource/instrument-serif/400.css';
+@import '@fontsource/instrument-serif/400-italic.css';
 
 @custom-variant dark (&:is(.dark *));
 /* Modo alto contraste elegible por el usuario en su perfil de accesibilidad */
@@ -13,6 +17,7 @@
 @theme {
   --font-sans: 'Geist Variable', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
   --font-mono: ui-monospace, 'SFMono-Regular', 'Liberation Mono', monospace;
+  --font-serif: 'Instrument Serif', Georgia, 'Times New Roman', serif;
 
   --text-xs: 0.8125rem;
   --text-xs--line-height: 1.5; /* 13px — solo metadatos */
@@ -57,6 +62,11 @@
   --primary-hover: oklch(0.372 0.138 259);
   --primary-soft: oklch(0.972 0.011 250);
   --primary-soft-foreground: oklch(0.372 0.138 259);
+
+  /* MARCA: superficie de identidad (panel de acceso). NO cambia entre modos, a
+     propósito — no es un estado. Azul marino; blanco encima da ~16:1 (AAA). */
+  --brand: oklch(0.23 0.05 264);
+  --brand-foreground: oklch(1 0 0);
 
   --secondary: oklch(0.963 0.012 250);
   --secondary-foreground: oklch(0.372 0.138 259);
@@ -238,6 +248,9 @@
   --color-primary-soft: var(--primary-soft);
   --color-primary-soft-foreground: var(--primary-soft-foreground);
 
+  --color-brand: var(--brand);
+  --color-brand-foreground: var(--brand-foreground);
+
   --color-secondary: var(--secondary);
   --color-secondary-foreground: var(--secondary-foreground);
   --color-accent: var(--accent);
@@ -303,6 +316,9 @@
   }
   html {
     @apply font-sans;
+    /* Desplazamiento suave al saltar a un ancla (nav de la landing, skip-link).
+       El bloque de `prefers-reduced-motion` de más abajo lo devuelve a `auto`. */
+    scroll-behavior: smooth;
   }
   /* Foco visible: anillo de 3px con 2px de offset. Nunca outline:none sin esto. */
   :focus-visible {
@@ -331,7 +347,51 @@
   animation: alerta-visual 900ms var(--ease-suave) 2;
 }
 
+/* Textura geométrica del hero de la landing: rejilla del color de borde con un
+   desvanecido radial. Decorativa; el nodo que la lleva va `aria-hidden`. */
+.rejilla-hero {
+  background-image:
+    linear-gradient(to right, var(--border) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--border) 1px, transparent 1px);
+  background-size: 48px 48px;
+  -webkit-mask-image: radial-gradient(ellipse 80% 60% at 70% 15%, #000 15%, transparent 75%);
+  mask-image: radial-gradient(ellipse 80% 60% at 70% 15%, #000 15%, transparent 75%);
+}
+
+/* La franja de estado que crece desde arriba al aparecer una tarjeta (landing). */
+@keyframes riel-entra {
+  from {
+    transform: scaleY(0);
+  }
+  to {
+    transform: scaleY(1);
+  }
+}
+.riel-entra {
+  transform-origin: top;
+  animation: riel-entra 700ms var(--ease-suave) both;
+}
+
+/* Aparición suave de un bloque al entrar en el viewport (landing). Parte visible:
+   si el JS no corre, el contenido sigue ahí — la animación solo se resta. */
+.revelar {
+  opacity: 0;
+  transform: translateY(16px);
+  transition:
+    opacity 700ms var(--ease-suave),
+    transform 700ms var(--ease-suave);
+}
+.revelar[data-visible='true'] {
+  opacity: 1;
+  transform: none;
+}
+
 @media (prefers-reduced-motion: reduce) {
+  .revelar {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
   *,
   *::before,
   *::after {
