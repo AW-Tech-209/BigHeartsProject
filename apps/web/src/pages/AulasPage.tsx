@@ -216,7 +216,7 @@ export function AulasPage() {
           */}
           <h2 className="sr-only">Aulas publicadas</h2>
 
-          <RejillaAulas>
+          <RejillaAulas className="subir-suave">
             {data.items.map((item) => (
               <TarjetaAula
                 key={item.id}
@@ -234,7 +234,7 @@ export function AulasPage() {
           {totalPaginas > 1 && (
             <nav
               aria-label="Paginación de aulas"
-              className="flex items-center justify-center gap-4"
+              className="flex items-center justify-center gap-4 border-t border-border pt-6"
             >
               <Button
                 variant="outline"

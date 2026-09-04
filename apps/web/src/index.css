@@ -358,6 +358,22 @@
   mask-image: radial-gradient(ellipse 80% 60% at 70% 15%, #000 15%, transparent 75%);
 }
 
+/* Entrada suave de un bloque al montar (rejillas, listas). Una sola vez; si la
+   animación no corre, el contenido ya queda en su sitio por el `both`. */
+@keyframes subir-suave {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.subir-suave {
+  animation: subir-suave 500ms var(--ease-suave) both;
+}
+
 /* La franja de estado que crece desde arriba al aparecer una tarjeta (landing). */
 @keyframes riel-entra {
   from {

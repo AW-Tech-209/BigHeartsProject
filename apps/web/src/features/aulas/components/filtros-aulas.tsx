@@ -47,7 +47,7 @@ export function FiltrosAulas({ value, onChange, ofreceSoloMisClases = false }: F
   }
 
   return (
-    <div className="flex flex-wrap items-end gap-4 border-b border-border pb-6">
+    <div className="flex flex-wrap items-end gap-4 rounded-xl border border-border bg-card p-4 sm:p-5">
       <Field id="filtro-nivel" label="Nivel" className="w-56">
         <NativeSelect
           value={value.level ?? ''}
