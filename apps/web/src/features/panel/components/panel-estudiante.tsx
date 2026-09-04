@@ -4,6 +4,7 @@ import { CalendarCheck, RotateCw } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 import { EstadoAula } from '@/components/dominio/estado-aula';
+import { varianteEstadoAula } from '@/components/dominio/estado-aula-variantes';
 import { EstadoVacio } from '@/components/dominio/estado-vacio';
 import { ModoComunicacionBadge } from '@/components/dominio/modo-comunicacion-badge';
 import { RejillaAulas } from '@/components/layout/rejilla-aulas';
@@ -12,8 +13,9 @@ import { Callout } from '@/components/ui/callout';
 import { Skeleton } from '@/components/ui/skeleton';
 import { AccionEntrarAClase } from '@/features/aulas/components/accion-entrar-a-clase';
 import { useMisReservas } from '@/features/aulas/hooks/use-mis-reservas';
-import { describirHorario } from '@/features/aulas/lib/horario';
+import { describirHorarioPartes } from '@/features/aulas/lib/horario';
 import { MODOS_COMUNICACION_EN_ORDEN } from '@/features/aulas/lib/modos-comunicacion';
+import { cn } from '@/lib/utils';
 
 /** Cuántas clases próximas caben en el inicio (AC3): no duplica «Mis clases». */
 const PROXIMAS_VISIBLES = 3;
@@ -102,7 +104,7 @@ export function PanelEstudiante() {
       )}
 
       {!isPending && !isError && proximas.length > 0 && (
-        <RejillaAulas>
+        <RejillaAulas className="subir-suave">
           {proximas.map((aula) => (
             <TarjetaClaseProxima key={aula.id} aula={aula} />
           ))}
@@ -128,29 +130,39 @@ function TarjetaClaseProxima({ aula }: { aula: ClassroomListItem }) {
   const modos = MODOS_COMUNICACION_EN_ORDEN.filter((modo) =>
     aula.communicationModes.includes(modo),
   );
+  const { cuando, zona } = describirHorarioPartes(aula.scheduledAt);
 
   return (
     <article
       aria-labelledby={tituloId}
-      className="rounded-xl border border-border bg-card p-4 pl-5"
+      className="relative flex h-full flex-col overflow-hidden rounded-xl border border-border bg-card p-4 pl-5 shadow-xs transition-[border-color,box-shadow] duration-150 ease-suave focus-within:ring-2 focus-within:ring-ring hover:border-input hover:shadow-sm"
     >
-      <div className="space-y-1.5">
-        <p className="text-xs text-muted-foreground">{describirHorario(aula.scheduledAt)}</p>
+      <span
+        aria-hidden="true"
+        className={cn('absolute inset-y-0 left-0 w-1', varianteEstadoAula[estado].riel)}
+      />
 
-        <h3 id={tituloId} className="text-base font-medium text-foreground">
-          <Link
-            to={`/aulas/${aula.id}`}
-            className="rounded-sm underline-offset-4 outline-none hover:underline"
-          >
-            {aula.title}
-          </Link>
-        </h3>
+      <div className="flex flex-1 flex-col gap-2.5">
+        <div className="flex flex-col gap-1">
+          <p className="text-xs text-pretty text-muted-foreground">
+            {cuando} {zona && <span className="whitespace-nowrap">({zona})</span>}
+          </p>
 
-        <div className="mt-1 flex flex-wrap items-center gap-1.5">
+          <h3 id={tituloId} className="text-base font-medium text-foreground">
+            <Link
+              to={`/aulas/${aula.id}`}
+              className="rounded-sm underline-offset-4 outline-none hover:underline"
+            >
+              {aula.title}
+            </Link>
+          </h3>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-1.5">
           <EstadoAula estado={estado} cuposRestantes={cuposRestantes} />
         </div>
 
-        <div className="mt-1 flex flex-wrap items-center gap-1" aria-label="Formas de comunicación">
+        <div className="flex flex-wrap items-center gap-1" aria-label="Formas de comunicación">
           {modos.length === 0 ? (
             <ModoComunicacionBadge modo={null} className="px-2 py-0.5 text-xs" />
           ) : (

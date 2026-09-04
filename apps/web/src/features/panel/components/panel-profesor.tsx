@@ -105,7 +105,7 @@ export function PanelProfesor() {
 
       {/* Estado 4 — la lista. */}
       {!isPending && !isError && proximas.length > 0 && (
-        <RejillaAulas>
+        <RejillaAulas className="subir-suave">
           {proximas.map((aula) => (
             // Misma perspectiva que «Mis aulas»: es el profesor mirando sus
             // propias clases, así que la tarjeta responde su pregunta —cuánta
