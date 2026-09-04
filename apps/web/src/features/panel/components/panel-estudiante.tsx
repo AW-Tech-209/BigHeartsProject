@@ -42,9 +42,11 @@ export function PanelEstudiante() {
       <div className="flex flex-wrap items-center justify-between gap-4">
         <h2
           id="panel-estudiante"
-          className="flex items-center gap-2 text-xl font-medium text-foreground"
+          className="flex items-center gap-3 text-xl font-medium text-foreground"
         >
-          <CalendarCheck aria-hidden="true" strokeWidth={2} className="size-5 shrink-0" />
+          <span className="rounded-lg bg-primary-soft p-2 text-primary">
+            <CalendarCheck aria-hidden="true" strokeWidth={2} className="size-5" />
+          </span>
           Tus clases
         </h2>
 

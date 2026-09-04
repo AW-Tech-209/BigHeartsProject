@@ -50,7 +50,7 @@ export function EstadoVacio({
       )}
     >
       <Ilustracion className="mb-1" />
-      <p className="text-xl font-medium text-balance text-foreground">{titular}</p>
+      <p className="font-serif text-2xl font-normal text-balance text-foreground">{titular}</p>
       <p className="max-w-[38ch] text-base text-muted-foreground">{ayuda}</p>
       {accion && <div className="pt-1">{accion}</div>}
     </div>
