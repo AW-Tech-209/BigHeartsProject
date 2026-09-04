@@ -99,6 +99,14 @@
   --info-soft: oklch(0.936 0.032 250);
   --info-soft-foreground: oklch(0.3 0.103 260);
 
+  /* Categórico decorativo: SOLO para distinguir etiquetas de campos que no
+     tienen estado (p. ej. cada filtro del catálogo). A propósito lejos de
+     verde/ámbar/rojo — esos ya significan éxito/tiempo/error, y reusarlos
+     aquí le mentiría al mismo usuario que lee el resto de la app por color. */
+  --accent-indigo: oklch(0.46 0.16 285);
+  --accent-teal: oklch(0.42 0.09 195);
+  --accent-rose: oklch(0.48 0.18 340);
+
   --border: oklch(0.9 0.016 250);
   --input: oklch(0.63 0.03 252);
   --ring: oklch(0.52 0.18 258);
@@ -165,6 +173,10 @@
   --info-foreground: oklch(0.19 0.045 258);
   --info-soft: oklch(0.32 0.07 258);
   --info-soft-foreground: oklch(0.87 0.058 252);
+
+  --accent-indigo: oklch(0.75 0.13 285);
+  --accent-teal: oklch(0.72 0.08 195);
+  --accent-rose: oklch(0.78 0.11 340);
 
   --border: oklch(0.37 0.03 258);
   --input: oklch(0.548 0.035 256);
@@ -278,6 +290,10 @@
   --color-info-foreground: var(--info-foreground);
   --color-info-soft: var(--info-soft);
   --color-info-soft-foreground: var(--info-soft-foreground);
+
+  --color-accent-indigo: var(--accent-indigo);
+  --color-accent-teal: var(--accent-teal);
+  --color-accent-rose: var(--accent-rose);
 
   --color-border: var(--border);
   --color-input: var(--input);

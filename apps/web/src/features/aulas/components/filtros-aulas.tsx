@@ -53,8 +53,9 @@ export function FiltrosAulas({ value, onChange, ofreceSoloMisClases = false }: F
   return (
     <div className="rounded-xl border border-border bg-card p-4 sm:p-5">
       <div className="flex flex-wrap items-end gap-4">
-        <Field id="filtro-nivel" label="Nivel" className="w-56">
+        <Field id="filtro-nivel" label="Nivel" labelClassName="text-accent-indigo" className="w-56">
           <NativeSelect
+            iconClassName="text-accent-indigo"
             value={value.level ?? ''}
             onChange={(event) =>
               actualizar({ level: (event.target.value || undefined) as EnglishLevel | undefined })
@@ -70,8 +71,14 @@ export function FiltrosAulas({ value, onChange, ofreceSoloMisClases = false }: F
         </Field>
 
         {/* AC5: no viene puesto por defecto — «Todos los modos» es el valor inicial. */}
-        <Field id="filtro-modo" label="Modo de comunicación" className="w-56">
+        <Field
+          id="filtro-modo"
+          label="Modo de comunicación"
+          labelClassName="text-accent-teal"
+          className="w-56"
+        >
           <NativeSelect
+            iconClassName="text-accent-teal"
             value={value.communicationMode ?? ''}
             onChange={(event) =>
               actualizar({
@@ -89,7 +96,7 @@ export function FiltrosAulas({ value, onChange, ofreceSoloMisClases = false }: F
           </NativeSelect>
         </Field>
 
-        <Field id="filtro-desde" label="Desde">
+        <Field id="filtro-desde" label="Desde" labelClassName="text-primary">
           <Input
             type="date"
             value={value.desde ?? ''}
@@ -97,7 +104,7 @@ export function FiltrosAulas({ value, onChange, ofreceSoloMisClases = false }: F
           />
         </Field>
 
-        <Field id="filtro-hasta" label="Hasta">
+        <Field id="filtro-hasta" label="Hasta" labelClassName="text-accent-rose">
           <Input
             type="date"
             value={value.hasta ?? ''}
