@@ -17,6 +17,7 @@ import { AppRoutes } from '@/app/router';
 import { getPendingTeachers } from '@/features/admin/api/get-pending-teachers';
 import { getMisAulas } from '@/features/aulas/api/get-mis-aulas';
 import { getMisReservas } from '@/features/aulas/api/get-mis-reservas';
+import { getResumenPanel } from '@/features/panel/api/get-resumen-panel';
 import { ApiClientError } from '@/lib/api-error';
 import { esperarSinFallosDeAccesibilidad } from '@/test/accesibilidad';
 import { renderConProviders, type Tema } from '@/test/render-con-providers';
@@ -28,6 +29,9 @@ import { PanelPage } from './PanelPage';
 vi.mock('@/features/admin/api/get-pending-teachers', () => ({ getPendingTeachers: vi.fn() }));
 vi.mock('@/features/aulas/api/get-mis-aulas', () => ({ getMisAulas: vi.fn() }));
 vi.mock('@/features/aulas/api/get-mis-reservas', () => ({ getMisReservas: vi.fn() }));
+// El resumen de HU-502 tiene sus propios tests en `resumen-panel.spec.tsx`;
+// aquí solo importa que no salga a la red y que su fallo no tape el panel.
+vi.mock('@/features/panel/api/get-resumen-panel', () => ({ getResumenPanel: vi.fn() }));
 
 /** El id que `usuarioDePrueba` le da al profesor de la sesión. */
 const PROFESOR_DE_LA_SESION = 'user-teacher';
@@ -102,6 +106,13 @@ beforeEach(() => {
   vi.mocked(getPendingTeachers).mockResolvedValue({ teachers: [] });
   vi.mocked(getMisAulas).mockResolvedValue(respuesta([]));
   vi.mocked(getMisReservas).mockResolvedValue(respuesta([]));
+  vi.mocked(getResumenPanel).mockResolvedValue({
+    rol: UserRole.STUDENT,
+    proximaClase: null,
+    reservasActivas: 0,
+    clasesQueCoinciden: 0,
+    sinPreferencia: true,
+  });
 });
 
 describe('PanelPage — cada rol ve su panel, y solo el suyo (AC2, AC3, AC4)', () => {

@@ -1,6 +1,15 @@
 import { useEffect } from 'react';
 
 import { refreshSession } from '@/lib/auth/refresh-session';
+import { hasSessionHint } from '@/lib/auth/session-hint';
+import { useAuthStore } from '@/stores/auth-store';
+
+const TIMEOUT_POR_DEFECTO_MS = 3_000;
+
+function plazoDeRefresh(): number {
+  const configurado = Number(import.meta.env.VITE_SESSION_REFRESH_TIMEOUT_MS);
+  return Number.isFinite(configurado) && configurado > 0 ? configurado : TIMEOUT_POR_DEFECTO_MS;
+}
 
 /**
  * Se intenta la rehidratación UNA sola vez por carga de página.
@@ -27,8 +36,24 @@ export function useSessionBootstrap(): void {
     if (bootstrapStarted) return;
     bootstrapStarted = true;
 
-    // El fallo es un resultado esperado ("no había sesión"), no una excepción:
-    // `refreshSession` ya deja el store en `anonymous` por su cuenta.
-    void refreshSession().catch(() => undefined);
+    // Sin marca de sesión previa no hay cookie de refresh que valga: la landing
+    // es pública y el visitante nuevo pasa a `anonymous` sin salir a la red.
+    if (!hasSessionHint()) {
+      useAuthStore.getState().clearSession();
+      return;
+    }
+
+    // Con marca, se intenta el refresh pero no se espera indefinidamente: al
+    // vencer el plazo la landing se vuelve usable; si la respuesta llega después
+    // y es válida, `setSession` rehidrata igual.
+    const plazo = setTimeout(() => {
+      if (useAuthStore.getState().status === 'checking') {
+        useAuthStore.getState().clearSession();
+      }
+    }, plazoDeRefresh());
+
+    void refreshSession()
+      .catch(() => undefined)
+      .finally(() => clearTimeout(plazo));
   }, []);
 }

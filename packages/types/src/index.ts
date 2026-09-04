@@ -959,6 +959,61 @@ export interface HistorialProfesorResponse {
 }
 
 /**
+ * Recuento de inscritos por modo de comunicación (HU-502, tarjeta «Cómo se
+ * comunica tu grupo»). `sinIndicar` son los inscritos que no declararon
+ * preferencia: no se les inventa un modo, se cuentan aparte.
+ */
+export interface RecuentoComunicacionGrupo {
+  porModo: Partial<Record<CommunicationPreference, number>>;
+  sinIndicar: number;
+  total: number;
+}
+
+/**
+ * `GET /panel/resumen` (HU-502). Un endpoint acotado al token: devuelve la
+ * forma del rol de quien pide y ningún parámetro amplía el alcance. Nunca
+ * incluye `meetingLink` (§4.1, regla 2): `proximaClase` es `ClassroomListItem`,
+ * que no lo copia.
+ */
+export interface ResumenPanelEstudiante {
+  rol: UserRole.STUDENT;
+  /** La reserva `CONFIRMED` más cercana aún por venir, con su acceso ya resuelto. `null` si no tiene. */
+  proximaClase: ClassroomListItem | null;
+  /** Reservas `CONFIRMED` de clases futuras. */
+  reservasActivas: number;
+  /** Aulas publicadas con cupo cuyos modos coinciden con su preferencia. `0` si no la ha declarado. */
+  clasesQueCoinciden: number;
+  /** El estudiante no ha declarado preferencia de comunicación: la tarjeta invita a hacerlo. */
+  sinPreferencia: boolean;
+}
+
+/** `GET /panel/resumen` para un `TEACHER` (HU-502). */
+export interface ResumenPanelProfesor {
+  rol: UserRole.TEACHER;
+  /** Su próxima clase, con `currentBookings`/`maxStudents` para el conteo literal. `null` si no tiene. */
+  proximaClase: ClassroomListItem | null;
+  /** Clases suyas ya terminadas con al menos un inscrito sin marcar (deuda temporal, D39). */
+  asistenciaSinMarcar: number;
+  /** Recuento por modo de comunicación de los inscritos en sus clases próximas. */
+  comunicacionDelGrupo: RecuentoComunicacionGrupo;
+}
+
+/** `GET /panel/resumen` para un `ADMIN` (HU-502). Todo en conteo literal, sin porcentajes. */
+export interface ResumenPanelAdmin {
+  rol: UserRole.ADMIN;
+  /** Profesores `PENDING`, esperando aprobación (deuda temporal, D39). */
+  profesoresPendientes: number;
+  clasesHoy: number;
+  clasesEnCurso: number;
+  /** Cupos reservados y ofrecidos en los próximos 7 días. Enteros, nunca un porcentaje. */
+  cuposReservadosSemana: number;
+  cuposOfrecidosSemana: number;
+}
+
+export type ResumenPanelResponse =
+  ResumenPanelEstudiante | ResumenPanelProfesor | ResumenPanelAdmin;
+
+/**
  * Respuesta de `GET /admin/teachers`: todos los profesores de la academia, sin
  * filtrar por estado. Sirve al selector del filtro de supervisión (HU-210) y
  * es un superconjunto de `PendingTeachersResponse`, que solo trae los

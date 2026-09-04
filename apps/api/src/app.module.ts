@@ -11,6 +11,7 @@ import { AppConfigService } from './config/app-config.service';
 import { HealthModule } from './health/health.module';
 import { HistorialModule } from './historial/historial.module';
 import { NotificationsModule } from './notifications/notifications.module';
+import { PanelModule } from './panel/panel.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { RemindersModule } from './reminders/reminders.module';
 import { UsersModule } from './users/users.module';
@@ -38,6 +39,7 @@ import { UsersModule } from './users/users.module';
     RemindersModule,
     AdminModule,
     HistorialModule,
+    PanelModule,
   ],
 })
 export class AppModule {}

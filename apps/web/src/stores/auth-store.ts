@@ -1,6 +1,8 @@
 import type { AuthSession, User } from '@academia/types';
 import { create } from 'zustand';
 
+import { clearSessionHint, setSessionHint } from '@/lib/auth/session-hint';
+
 /**
  * Estado de la sesión, en el orden en que ocurre:
  *  - `checking`  → todavía no sabemos si hay sesión; se está llamando a
@@ -65,17 +67,20 @@ export const useAuthStore = create<AuthState>()((set) => ({
   accessToken: null,
   endReason: 'none',
 
-  setSession: (session) =>
+  setSession: (session) => {
+    setSessionHint();
     set({
       status: 'authenticated',
       user: session.user,
       accessToken: session.accessToken,
       endReason: 'none',
-    }),
+    });
+  },
 
   setUser: (user) => set((state) => (state.user === null ? state : { user })),
 
-  clearSession: (reason = 'none') =>
+  clearSession: (reason = 'none') => {
+    clearSessionHint();
     set((state) => ({
       status: 'anonymous',
       user: null,
@@ -85,7 +90,8 @@ export const useAuthStore = create<AuthState>()((set) => ({
       // entró, y decirle "tu sesión terminó" a quien nunca la abrió lo dejaría
       // buscando un problema que no existe.
       endReason: reason === 'expired' && state.status !== 'authenticated' ? 'none' : reason,
-    })),
+    }));
+  },
 }));
 
 /**

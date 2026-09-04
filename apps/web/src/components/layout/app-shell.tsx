@@ -40,7 +40,7 @@ type AppShellProps = {
  *     salir no viven detrás de un menú de avatar.
  */
 export function AppShell({ children, conNavegacion = true }: AppShellProps) {
-  const { user } = useAuth();
+  const { user, isAuthenticated } = useAuth();
   const esMovil = useEsMovil();
 
   // Sin usuario no hay rol, y sin rol no hay destinos: la home pública y el 404
@@ -57,7 +57,7 @@ export function AppShell({ children, conNavegacion = true }: AppShellProps) {
       <header className="sticky top-0 z-40 border-b border-border bg-card">
         <Contenedor className="flex h-[58px] items-center justify-between gap-4">
           <Link
-            to="/"
+            to={isAuthenticated ? '/panel' : '/'}
             className="shrink-0 rounded-lg text-lg font-medium text-primary hover:underline"
           >
             BigHearts
