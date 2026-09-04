@@ -18,7 +18,7 @@ import { cn } from '@/lib/utils';
  */
 export function Table({ className, ...props }: ComponentPropsWithoutRef<'table'>) {
   return (
-    <div className="w-full overflow-x-auto rounded-xl border border-border bg-card">
+    <div className="w-full overflow-x-auto rounded-xl border border-border bg-card shadow-xs">
       <table className={cn('w-full caption-top border-collapse text-base', className)} {...props} />
     </div>
   );
@@ -39,7 +39,7 @@ export function TableCaption({ className, ...props }: ComponentPropsWithoutRef<'
 }
 
 export function TableHeader({ className, ...props }: ComponentPropsWithoutRef<'thead'>) {
-  return <thead className={cn('border-b border-border', className)} {...props} />;
+  return <thead className={cn('border-b border-border bg-muted/40', className)} {...props} />;
 }
 
 export function TableBody({ className, ...props }: ComponentPropsWithoutRef<'tbody'>) {

@@ -150,7 +150,7 @@ export function MisAulasPage() {
           */}
           <h2 className="sr-only">Tus aulas</h2>
 
-          <RejillaAulas>
+          <RejillaAulas className="subir-suave">
             {data.items.map((aula) => (
               // La tarjeta es el punto de decisión del listado: el detalle
               // conserva las mismas acciones para quien ya está dentro.
@@ -161,7 +161,7 @@ export function MisAulasPage() {
           {totalPaginas > 1 && (
             <nav
               aria-label="Paginación de mis aulas"
-              className="flex items-center justify-center gap-4"
+              className="flex items-center justify-center gap-4 border-t border-border pt-6"
             >
               <Button
                 variant="outline"

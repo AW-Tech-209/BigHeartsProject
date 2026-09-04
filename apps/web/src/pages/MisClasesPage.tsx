@@ -132,7 +132,7 @@ export function MisClasesPage() {
         <>
           <h2 className="sr-only">Tus clases</h2>
 
-          <RejillaAulas>
+          <RejillaAulas className="subir-suave">
             {data.items.map((aula) => (
               <TarjetaAula key={aula.id} classroom={aula} perspectiva="catalogo" />
             ))}
@@ -141,7 +141,7 @@ export function MisClasesPage() {
           {totalPaginas > 1 && (
             <nav
               aria-label="Paginación de mis clases"
-              className="flex items-center justify-center gap-4"
+              className="flex items-center justify-center gap-4 border-t border-border pt-6"
             >
               <Button
                 variant="outline"

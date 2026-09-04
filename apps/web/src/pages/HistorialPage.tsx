@@ -132,7 +132,7 @@ export function HistorialPage() {
           {totalPaginas > 1 && (
             <nav
               aria-label="Paginación del historial"
-              className="flex items-center justify-center gap-4"
+              className="flex items-center justify-center gap-4 border-t border-border pt-6"
             >
               <Button
                 variant="outline"
