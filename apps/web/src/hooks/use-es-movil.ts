@@ -1,7 +1,11 @@
 import { useSyncExternalStore } from 'react';
 
-/** Por debajo del corte `sm` de Tailwind (640px). */
-const CONSULTA = '(max-width: 639px)';
+/**
+ * Por debajo del corte `lg` de Tailwind (1024px). La barra superior lleva la
+ * marca, tres o cuatro destinos, la cuenta y el tema: por debajo de `lg` no
+ * caben sin apretarse, así que ahí manda la barra inferior.
+ */
+const CONSULTA = '(max-width: 1023px)';
 
 function suscribir(alCambiar: () => void) {
   const media = window.matchMedia(CONSULTA);
