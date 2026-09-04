@@ -10,6 +10,7 @@ import { RoleGate } from '@/features/auth/components/role-gate';
 import { useAuth } from '@/features/auth/hooks/use-auth';
 import { PanelEstudiante } from '@/features/panel/components/panel-estudiante';
 import { PanelProfesor } from '@/features/panel/components/panel-profesor';
+import { ResumenPanel } from '@/features/panel/components/resumen-panel';
 
 /**
  * La línea que sitúa a cada rol en su propio inicio.
@@ -48,34 +49,38 @@ export function PanelPage() {
         contexto={user ? CONTEXTO_POR_ROL[user.role] : undefined}
       />
 
-      <RoleGate roles={[UserRole.STUDENT]}>
-        <PanelEstudiante />
-      </RoleGate>
+      <div className="space-y-8">
+        <ResumenPanel />
 
-      <RoleGate roles={[UserRole.TEACHER]}>
-        <PanelProfesor />
-      </RoleGate>
+        <RoleGate roles={[UserRole.STUDENT]}>
+          <PanelEstudiante />
+        </RoleGate>
 
-      <RoleGate roles={[UserRole.ADMIN]}>
-        <div className="space-y-8">
-          {/*
-            HU-210: la vía desde el panel de operación hacia la supervisión de
-            aulas. No compite con `AprobacionesPendientes` por la acción
-            primaria de la pantalla — es un enlace secundario a otra vista,
-            no un botón de acción.
-          */}
-          <Button
-            render={<Link to="/admin/aulas" />}
-            variant="outline"
-            className="h-11 gap-2 px-5 text-base"
-          >
-            <Presentation aria-hidden="true" strokeWidth={2} className="size-5" />
-            Ver supervisión de aulas
-          </Button>
+        <RoleGate roles={[UserRole.TEACHER]}>
+          <PanelProfesor />
+        </RoleGate>
 
-          <AprobacionesPendientes />
-        </div>
-      </RoleGate>
+        <RoleGate roles={[UserRole.ADMIN]}>
+          <div id="aprobaciones-pendientes" className="space-y-8">
+            {/*
+              HU-210: la vía desde el panel de operación hacia la supervisión de
+              aulas. No compite con `AprobacionesPendientes` por la acción
+              primaria de la pantalla — es un enlace secundario a otra vista,
+              no un botón de acción.
+            */}
+            <Button
+              render={<Link to="/admin/aulas" />}
+              variant="outline"
+              className="h-11 gap-2 px-5 text-base"
+            >
+              <Presentation aria-hidden="true" strokeWidth={2} className="size-5" />
+              Ver supervisión de aulas
+            </Button>
+
+            <AprobacionesPendientes />
+          </div>
+        </RoleGate>
+      </div>
     </AppShell>
   );
 }

@@ -5,7 +5,7 @@
 | **Sprint**          | Post-Fase 1 · Pulido                              |
 | **Prioridad**       | 🟠 Alta                                           |
 | **Estimación**      | 2.5 días                                          |
-| **Estado**          | ⬜ Pendiente                                      |
+| **Estado**          | ✅ Terminada                                      |
 | **Rama**            | `hu-502-el-panel-dice-como-va-<persona>`          |
 | **Alcance técnico** | fullstack                                         |
 | **Depende de**      | HU-309 (✅), HU-403 (✅), HU-404 (✅)             |
@@ -69,40 +69,40 @@ cambió, la HU se hizo mal.
 
 ### Contrato — va primero
 
-- [ ] **T1** — En `packages/types`: el resumen por rol, reutilizando los tipos de listado que ya
+- [x] **T1** — En `packages/types`: el resumen por rol, reutilizando los tipos de listado que ya
       existen. Luego `npm run build:types`.
 
 ### Backend
 
-- [ ] **T2** — Módulo `panel/` con `GET /panel/resumen`, **acotado al token**. Devuelve solo lo del
+- [x] **T2** — Módulo `panel/` con `GET /panel/resumen`, **acotado al token**. Devuelve solo lo del
       rol de quien pide; ningún parámetro amplía el alcance. **Sin `meetingLink`.**
-- [ ] **T3** — Resumen del **estudiante**: próxima clase, número de reservas próximas, y cuántas
+- [x] **T3** — Resumen del **estudiante**: próxima clase, número de reservas próximas, y cuántas
       aulas con cupo coinciden con su preferencia de comunicación.
-- [ ] **T4** — Resumen del **profesor**: próxima clase con inscritos sobre cupo, clases terminadas
+- [x] **T4** — Resumen del **profesor**: próxima clase con inscritos sobre cupo, clases terminadas
       sin asistencia marcada, y recuento por modo de comunicación de sus inscritos próximos.
-- [ ] **T5** — Resumen del **admin**: profesores `PENDING`, clases de hoy y en curso, y cupos
+- [x] **T5** — Resumen del **admin**: profesores `PENDING`, clases de hoy y en curso, y cupos
       reservados sobre ofrecidos en la semana. Todo como **números enteros**, sin porcentajes.
-- [ ] **T6** — Tests: cada rol recibe lo suyo y **nada de otro rol**; ningún parámetro amplía el
+- [x] **T6** — Tests: cada rol recibe lo suyo y **nada de otro rol**; ningún parámetro amplía el
       alcance; el `meetingLink` no aparece; los recuentos cuadran con los datos del seed.
 
 ### Frontend
 
-- [ ] **T7** — Fila de **tres tarjetas** encima del contenido actual de `/panel`, en rejilla de 1/2/3
+- [x] **T7** — Fila de **tres tarjetas** encima del contenido actual de `/panel`, en rejilla de 1/2/3
       columnas, con sus 4 estados y el vacío de cada una diciendo algo útil. **Lo que ya había se
       mantiene íntegro debajo.**
 
 ## ✅ Criterios de aceptación
 
-- [ ] **AC1** — Cada rol ve **sus tres tarjetas** de la tabla de arriba, y ninguna de otro rol.
-- [ ] **AC2** — **Lo que ya existía en `/panel` sigue ahí, debajo y sin cambios.** Verificado
+- [x] **AC1** — Cada rol ve **sus tres tarjetas** de la tabla de arriba, y ninguna de otro rol.
+- [x] **AC2** — **Lo que ya existía en `/panel` sigue ahí, debajo y sin cambios.** Verificado
       comparando con la pantalla anterior.
-- [ ] **AC3** — **Autorización:** el alcance sale del token; ningún parámetro devuelve el resumen de
+- [x] **AC3** — **Autorización:** el alcance sale del token; ningún parámetro devuelve el resumen de
       otro usuario, y el `meetingLink` no aparece en la respuesta. Verificado con tests.
-- [ ] **AC4** — La ocupación del admin se muestra en **conteo literal** («84 de 120»), sin
+- [x] **AC4** — La ocupación del admin se muestra en **conteo literal** («84 de 120»), sin
       porcentajes ni gráficas circulares. El ámbar solo aparece en las dos tarjetas que D39 permite.
-- [ ] **AC5** — Con la cuenta vacía, **cada tarjeta explica qué significa ese cero** y a dónde ir.
+- [x] **AC5** — Con la cuenta vacía, **cada tarjeta explica qué significa ese cero** y a dónde ir.
       Ninguna se queda en un número suelto.
-- [ ] **AC6** — **Accesibilidad y verificación:** las tarjetas se recorren con teclado, cada dato se
+- [x] **AC6** — **Accesibilidad y verificación:** las tarjetas se recorren con teclado, cada dato se
       entiende sin color, `axe` limpio, y `typecheck`, `lint`, `build` y `npm run test` en verde.
 
 ## 🚫 Fuera de alcance
@@ -118,4 +118,17 @@ cambió, la HU se hizo mal.
 
 ## Notas de implementación
 
-_Se rellena al cerrar._
+Sin desviaciones. Decisiones no fijadas en la HU: «hoy» del admin = día UTC;
+«la semana» = ventana móvil de 7 días desde ahora; «en curso» y «ya terminó» se
+cortan en memoria contra `scheduledAt + duración` (Prisma no filtra dos columnas).
+
+### Recorrido de AC
+
+| AC  | Veredicto | Cómo se comprobó                                                                                                                |
+| --- | --------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| AC1 | ✅        | `panel.service.spec` reparte por rol; `resumen-panel.spec` pinta las 3 tarjetas de cada rol                                     |
+| AC2 | ✅        | `PanelPage.spec` (127 tests) sigue verde: los bloques HU-209/HU-309 quedan íntegros debajo                                      |
+| AC3 | ✅        | `GET /panel/resumen` sin parámetros; `panel.controller.spec` pasa solo el token; `meetingLink` ausente en `proximaClase` (spec) |
+| AC4 | ✅        | admin en conteo literal («84 de 120»), sin `%`; ámbar solo en «Asistencia sin marcar» y «Profesores pendientes» y solo con n>0  |
+| AC5 | ✅        | cada tarjeta tiene rama de vacío con texto + enlace (`resumen-panel.spec`)                                                      |
+| AC6 | ✅        | `axe` limpio con datos; teclado (enlaces/botones nativos); `typecheck`+`lint`+`build`+`test` en verde                           |
