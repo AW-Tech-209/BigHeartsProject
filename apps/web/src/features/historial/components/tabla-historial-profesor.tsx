@@ -17,7 +17,7 @@ export function TablaHistorialProfesor({ items, total }: TablaHistorialProfesorP
         {total === 1 ? '1 aula encontrada.' : `${total} aulas encontradas.`}
       </p>
 
-      <ul aria-label="Historial de aulas impartidas">
+      <ul aria-label="Historial de aulas impartidas" className="subir-suave">
         {items.map((item) => (
           <FilaHistorial
             key={item.id}

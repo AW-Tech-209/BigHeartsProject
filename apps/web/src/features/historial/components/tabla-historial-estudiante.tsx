@@ -17,12 +17,13 @@ export function TablaHistorialEstudiante({ items, total }: TablaHistorialEstudia
         {total === 1 ? '1 clase encontrada.' : `${total} clases encontradas.`}
       </p>
 
-      <ul aria-label="Historial de clases">
+      <ul aria-label="Historial de clases" className="subir-suave">
         {items.map((item) => (
           <FilaHistorial
             key={item.id}
             aulaId={item.id}
             icon={resultadoHistorial(item.myBookingStatus).icon}
+            tono={resultadoHistorial(item.myBookingStatus).tono}
             titulo={item.title}
             subtitulo={`${describirFechaCompacta(item.scheduledAt)} · ${item.teacherFirstName} ${item.teacherLastName}`}
           >
