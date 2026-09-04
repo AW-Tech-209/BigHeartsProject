@@ -5,7 +5,6 @@ import {
   aInstanteISO,
   describirDuracion,
   describirHorario,
-  describirHorarioPartes,
   describirRangoHorario,
   partesHorario,
 } from './horario';
