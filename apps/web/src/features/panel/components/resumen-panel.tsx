@@ -49,7 +49,7 @@ export function ResumenPanel() {
           <span className="sr-only">Cargando el resumen…</span>
           <Rejilla aria-hidden="true">
             {Array.from({ length: 3 }, (_, indice) => (
-              <Skeleton key={indice} className="h-32" />
+              <Skeleton key={indice} className="h-44" />
             ))}
           </Rejilla>
         </div>
@@ -134,6 +134,7 @@ function TarjetasEstudiante({ data }: { data: ResumenPanelEstudiante }) {
       <TarjetaResumen
         titulo="Clases que coinciden contigo"
         icono={MessagesSquare}
+        comoTarjeta
         enlace={
           sinPreferencia
             ? { texto: 'Ir a mi perfil', a: '/perfil' }
@@ -145,20 +146,22 @@ function TarjetasEstudiante({ data }: { data: ResumenPanelEstudiante }) {
             Indica tu preferencia de comunicación y verás qué clases con cupo encajan contigo.
           </p>
         ) : (
-          <>
-            <Numero>{clasesQueCoinciden}</Numero>
-            <p className="text-sm">
-              {clasesQueCoinciden === 1
+          <Numero
+            contexto={
+              clasesQueCoinciden === 1
                 ? 'clase con cupo coincide con tu preferencia'
-                : 'clases con cupo coinciden con tu preferencia'}
-            </p>
-          </>
+                : 'clases con cupo coinciden con tu preferencia'
+            }
+          >
+            {clasesQueCoinciden}
+          </Numero>
         )}
       </TarjetaResumen>
 
       <TarjetaResumen
         titulo="Tus reservas activas"
         icono={BookmarkCheck}
+        comoTarjeta
         enlace={
           reservasActivas > 0
             ? { texto: 'Ver mis clases', a: '/mis-clases' }
@@ -166,12 +169,13 @@ function TarjetasEstudiante({ data }: { data: ResumenPanelEstudiante }) {
         }
       >
         {reservasActivas > 0 ? (
-          <>
-            <Numero>{reservasActivas}</Numero>
-            <p className="text-sm">
-              {reservasActivas === 1 ? 'clase próxima reservada' : 'clases próximas reservadas'}
-            </p>
-          </>
+          <Numero
+            contexto={
+              reservasActivas === 1 ? 'clase próxima reservada' : 'clases próximas reservadas'
+            }
+          >
+            {reservasActivas}
+          </Numero>
         ) : (
           <p className="text-sm">No tienes ninguna clase reservada.</p>
         )}
@@ -188,6 +192,7 @@ function TarjetasProfesor({ data }: { data: ResumenPanelProfesor }) {
       <TarjetaResumen
         titulo="Tu próxima clase"
         icono={CalendarClock}
+        comoTarjeta
         enlace={
           proximaClase
             ? { texto: 'Ver la lista de inscritos', a: `/aulas/${proximaClase.id}` }
@@ -215,17 +220,19 @@ function TarjetasProfesor({ data }: { data: ResumenPanelProfesor }) {
         titulo="Asistencia sin marcar"
         icono={ClipboardList}
         tono={asistenciaSinMarcar > 0 ? 'attention' : 'success'}
+        comoTarjeta
         enlace={asistenciaSinMarcar > 0 ? { texto: 'Ir a mis aulas', a: '/mis-aulas' } : undefined}
       >
         {asistenciaSinMarcar > 0 ? (
-          <>
-            <Numero>{asistenciaSinMarcar}</Numero>
-            <p className="text-sm">
-              {asistenciaSinMarcar === 1
+          <Numero
+            contexto={
+              asistenciaSinMarcar === 1
                 ? 'clase terminada sin asistencia marcada'
-                : 'clases terminadas sin asistencia marcada'}
-            </p>
-          </>
+                : 'clases terminadas sin asistencia marcada'
+            }
+          >
+            {asistenciaSinMarcar}
+          </Numero>
         ) : (
           <p className="text-sm">Nada pendiente de marcar.</p>
         )}
@@ -268,6 +275,7 @@ function TarjetasAdmin({ data }: { data: ResumenPanelAdmin }) {
         titulo="Profesores pendientes de aprobar"
         icono={UserCheck}
         tono={profesoresPendientes > 0 ? 'attention' : 'success'}
+        comoTarjeta
         enlace={
           profesoresPendientes > 0
             ? { texto: 'Revisar solicitudes', a: '#aprobaciones-pendientes' }
@@ -275,35 +283,32 @@ function TarjetasAdmin({ data }: { data: ResumenPanelAdmin }) {
         }
       >
         {profesoresPendientes > 0 ? (
-          <>
-            <Numero>{profesoresPendientes}</Numero>
-            <p className="text-sm">
-              {profesoresPendientes === 1
+          <Numero
+            contexto={
+              profesoresPendientes === 1
                 ? 'profesor espera tu aprobación'
-                : 'profesores esperan tu aprobación'}
-            </p>
-          </>
+                : 'profesores esperan tu aprobación'
+            }
+          >
+            {profesoresPendientes}
+          </Numero>
         ) : (
           <p className="text-sm">No hay solicitudes pendientes.</p>
         )}
       </TarjetaResumen>
 
       <TarjetaResumen titulo="La operación de hoy" icono={Activity}>
-        <p className="text-sm">
-          <span className="text-2xl font-medium tabular-nums">{clasesHoy}</span>{' '}
-          {clasesHoy === 1 ? 'clase programada hoy' : 'clases programadas hoy'}
-        </p>
+        <Numero contexto={clasesHoy === 1 ? 'clase programada hoy' : 'clases programadas hoy'}>
+          {clasesHoy}
+        </Numero>
         <p className="text-sm">{clasesEnCurso} en curso ahora</p>
       </TarjetaResumen>
 
       <TarjetaResumen titulo="Ocupación de la semana" icono={Users}>
         {cuposOfrecidosSemana > 0 ? (
-          <>
-            <Numero>
-              {cuposReservadosSemana} de {cuposOfrecidosSemana}
-            </Numero>
-            <p className="text-sm">cupos reservados en los próximos 7 días</p>
-          </>
+          <Numero contexto="cupos reservados en los próximos 7 días">
+            {cuposReservadosSemana} de {cuposOfrecidosSemana}
+          </Numero>
         ) : (
           <p className="text-sm">No hay clases con cupo esta semana.</p>
         )}
