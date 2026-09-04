@@ -214,17 +214,17 @@ function CuentaDelShell({ user }: { user: User }) {
         variant="outline"
         onClick={cerrarSesion}
         disabled={logout.isPending}
-        className="h-11 gap-2 px-4 text-sm"
+        className="h-11 gap-2 px-3 text-sm sm:px-4"
       >
         {logout.isPending ? (
           <>
             <LoaderCircle aria-hidden="true" strokeWidth={2} className="size-4 animate-spin" />
-            Cerrando tu sesión…
+            <span className="sr-only sm:not-sr-only">Cerrando tu sesión…</span>
           </>
         ) : (
           <>
             <LogOut aria-hidden="true" strokeWidth={2} className="size-4" />
-            Cerrar sesión
+            <span className="sr-only sm:not-sr-only">Cerrar sesión</span>
           </>
         )}
       </Button>
