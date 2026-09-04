@@ -63,10 +63,11 @@ export function AccionesDeAula({ aula, esDueno, compact = false }: AccionesDeAul
     }
 
     return (
-      <div className="relative z-10 grid gap-2 sm:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
+      <div className="relative z-10 flex flex-wrap gap-2">
         <Button
           render={<Link to={`/mis-aulas/${aula.id}/editar`} />}
-          className="h-11 min-w-0 w-full gap-2 px-2 text-base whitespace-nowrap"
+          variant="outline"
+          className="h-11 gap-2 px-3.5"
         >
           <Pencil aria-hidden="true" strokeWidth={2} className="size-4" />
           Editar clase
@@ -148,11 +149,7 @@ function DialogoCancelarAula({ aula, compact }: { aula: AulaGestionable; compact
         render={
           <Button
             variant="destructive"
-            className={
-              compact
-                ? 'h-11 min-w-0 w-full gap-2 px-2 text-base whitespace-nowrap'
-                : 'h-11 gap-2 px-5 text-base'
-            }
+            className={compact ? 'h-11 gap-2 px-3.5' : 'h-11 gap-2 px-5 text-base'}
           />
         }
       >

@@ -16,7 +16,7 @@ import { AccionEntrarAClase } from '@/features/aulas/components/accion-entrar-a-
 import { AccionesDeAula } from '@/features/aulas/components/acciones-de-aula';
 import { AccionReservarAula } from '@/features/aulas/components/accion-reservar-aula';
 import { APOYOS_AULA } from '@/features/aulas/lib/apoyos-aula';
-import { describirDuracion, describirHorario } from '@/features/aulas/lib/horario';
+import { describirDuracion, describirHorarioPartes } from '@/features/aulas/lib/horario';
 import { MODOS_COMUNICACION_EN_ORDEN } from '@/features/aulas/lib/modos-comunicacion';
 import { nivelesDeIngles } from '@/features/aulas/lib/niveles';
 import { cn } from '@/lib/utils';
@@ -167,6 +167,7 @@ export function TarjetaAula({
     .join(' · ');
 
   const muestraBadge = !esVistaDelProfesor || !ESTADOS_DE_CUPO.includes(estado);
+  const { cuando, zona } = describirHorarioPartes(classroom.scheduledAt);
 
   // HU-208: la marca solo tiene sentido en el catálogo, donde conviven aulas
   // propias y ajenas. En «Mis aulas» TODAS son suyas: marcarlas una por una no
@@ -178,12 +179,16 @@ export function TarjetaAula({
     <article
       aria-labelledby={tituloId}
       className={cn(
-        'relative overflow-hidden rounded-xl border border-border bg-card p-4 pl-5',
+        'relative flex h-full flex-col overflow-hidden rounded-xl border border-border bg-card p-5 pl-6',
         // El anillo va en la TARJETA aunque el foco lo reciba el enlace del
         // título (`patrones-dominio.md`): un anillo de 3px alrededor de tres
         // palabras se pierde en una rejilla de seis, y lo que el usuario
         // necesita saber es qué tarjeta tiene el foco, no qué texto.
         'focus-within:ring-2 focus-within:ring-ring',
+        // Toda la tarjeta es un enlace: el hover la eleva un punto (borde más
+        // marcado, tinte suave, sombra breve y 2px de subida con `motion-safe`).
+        'transition-[transform,border-color,box-shadow,background-color] duration-150 ease-suave',
+        'hover:border-input hover:bg-muted/50 hover:shadow-md motion-safe:hover:-translate-y-0.5',
         className,
       )}
     >
@@ -195,17 +200,21 @@ export function TarjetaAula({
         )}
       />
 
-      <div className="space-y-1.5">
+      <div className="flex flex-1 flex-col gap-2.5">
         {/*
-          La fecha va ANTES del título en el DOM a propósito: quien navega con
-          lector de pantalla se entera de CUÁNDO es la clase antes de CÓMO se
-          llama, que es el orden en que decide un estudiante. Fecha completa y
-          con zona explícita (B6): el nombre accesible de la tarjeta sigue
-          siendo el título, no la fecha (aria-labelledby apunta al h3).
+          Cabecera de la tarjeta: fecha, título y subtítulo van juntos y
+          apretados (`gap-1`), leen como un bloque. La fecha va ANTES del título
+          en el DOM a propósito: quien navega con lector de pantalla se entera de
+          CUÁNDO es la clase antes de CÓMO se llama. Fecha completa y con zona
+          explícita (B6); el nombre accesible de la tarjeta es el título
+          (aria-labelledby apunta al h3), no la fecha.
         */}
-        <p className="text-xs text-muted-foreground">{describirHorario(classroom.scheduledAt)}</p>
+        <div className="flex flex-col gap-1">
+          <p className="text-xs text-pretty text-muted-foreground">
+            {cuando} {zona && <span className="whitespace-nowrap">({zona})</span>}
+          </p>
 
-        {/*
+          {/*
           **El enlace al detalle es el título, no la tarjeta entera** (HU-204,
           B6). El `<article>` ya toma su nombre accesible del `<h3>` por
           `aria-labelledby`: envolverlo todo en un `<a>` haría que un lector de
@@ -216,16 +225,17 @@ export function TarjetaAula({
           Tab, el Enter, «abrir en otra pestaña» y el menú contextual sin que
           haya que reimplementar ninguno.
         */}
-        <h3 id={tituloId} className="relative z-10 text-base font-medium text-foreground">
-          <Link
-            to={`/aulas/${classroom.id}`}
-            className="after:absolute after:inset-0 after:z-0 after:rounded-xl after:content-[''] rounded-sm underline-offset-4 outline-none hover:underline"
-          >
-            {classroom.title}
-          </Link>
-        </h3>
+          <h3 id={tituloId} className="relative z-10 text-base font-medium text-foreground">
+            <Link
+              to={`/aulas/${classroom.id}`}
+              className="after:absolute after:inset-0 after:z-0 after:rounded-xl after:content-[''] rounded-sm underline-offset-4 outline-none hover:underline"
+            >
+              {classroom.title}
+            </Link>
+          </h3>
 
-        <p className="text-[13px] text-muted-foreground">{lineaSecundaria}</p>
+          <p className="text-[13px] text-muted-foreground">{lineaSecundaria}</p>
+        </div>
 
         {/*
           AC2: el distintivo va **junto** al estado, nunca en su lugar. Una
@@ -241,7 +251,7 @@ export function TarjetaAula({
           el color apagado y en alto contraste.
         */}
         {(muestraBadge || marcaDePropiedad || miReservaCancelada) && (
-          <div className="mt-1 flex flex-wrap items-center gap-1.5">
+          <div className="flex flex-wrap items-center gap-1.5">
             {miReservaCancelada ? (
               <Badge tono="destructive" icon={Ban}>
                 Reserva cancelada
@@ -262,7 +272,7 @@ export function TarjetaAula({
           perspectivas. T12: la marca de coincidencia solo aparece del lado
           del estudiante, y solo cuando SÍ coincide (AC4, nunca marca negativa).
         */}
-        <div className="mt-1 flex flex-wrap items-center gap-1" aria-label="Formas de comunicación">
+        <div className="flex flex-wrap items-center gap-1" aria-label="Formas de comunicación">
           {classroom.communicationModes.length === 0 ? (
             <ModoComunicacionBadge modo={null} className="px-2 py-0.5 text-xs" />
           ) : (
@@ -294,7 +304,7 @@ export function TarjetaAula({
             variante="inscritos"
             maxStudents={classroom.maxStudents}
             currentBookings={classroom.currentBookings}
-            className="mt-1 flex"
+            className="flex"
           />
         )}
 
@@ -308,7 +318,7 @@ export function TarjetaAula({
         {marcaDePropiedad && (
           <Link
             to={`/aulas/${classroom.id}`}
-            className="relative z-10 mt-1 inline-block text-sm font-medium text-primary underline underline-offset-4 hover:no-underline"
+            className="relative z-10 inline-block text-sm font-medium text-primary underline underline-offset-4 hover:no-underline"
           >
             Gestionar mi clase
           </Link>
@@ -357,7 +367,7 @@ export function TarjetaAula({
         {esVistaDelProfesor && sinModosDeclarados && (
           <Link
             to={`/mis-aulas/${classroom.id}/accesibilidad`}
-            className="relative z-10 mt-1 inline-block text-sm font-medium text-primary underline underline-offset-4 hover:no-underline"
+            className="relative z-10 inline-block text-sm font-medium text-primary underline underline-offset-4 hover:no-underline"
           >
             Completar accesibilidad
           </Link>

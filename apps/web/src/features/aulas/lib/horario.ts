@@ -78,10 +78,21 @@ export function aFechaYHora(instanteISO: string): FechaYHora {
  * justo para lo que está.
  */
 export function describirHorario(instanteISO: string): string {
+  const { cuando, zona } = describirHorarioPartes(instanteISO);
+  return zona ? `${cuando} (${zona})` : cuando;
+}
+
+/**
+ * Lo mismo que {@link describirHorario} pero partido: `cuando` es el día y la
+ * hora; `zona` es el nombre largo de la zona, para que la pantalla la pueda
+ * mantener sin cortar (p. ej. `whitespace-nowrap`) y no dejarla huérfana en su
+ * propia línea. Ante una fecha rota, `zona` es `''`.
+ */
+export function describirHorarioPartes(instanteISO: string): { cuando: string; zona: string } {
   const instante = new Date(instanteISO);
 
   if (Number.isNaN(instante.getTime())) {
-    return 'Fecha no disponible';
+    return { cuando: 'Fecha no disponible', zona: '' };
   }
 
   const fecha = new Intl.DateTimeFormat('es', {
@@ -91,7 +102,10 @@ export function describirHorario(instanteISO: string): string {
     year: 'numeric',
   }).format(instante);
 
-  return `${enMayuscula(fecha)}, ${formatearHora(instante)} (${nombreDeZona(instante)})`;
+  return {
+    cuando: `${enMayuscula(fecha)}, ${formatearHora(instante)}`,
+    zona: nombreDeZona(instante),
+  };
 }
 
 /**
