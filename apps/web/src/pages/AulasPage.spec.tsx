@@ -283,25 +283,25 @@ describe('AulasPage — la acción de reservar, por rol (T3, AC4, HU-301)', () =
 
 describe('AulasPage — el filtro «Solo mis clases» (T4, AC5, AC6)', () => {
   // AC5: se pinta para el profesor…
-  it('el profesor ve la casilla', async () => {
+  it('el profesor ve el interruptor', async () => {
     darSesion(UserRole.TEACHER);
     vi.mocked(getClassrooms).mockResolvedValue(respuesta([aula()]));
 
     renderConProviders(<AulasPage />);
     await screen.findByRole('article');
 
-    expect(screen.getByLabelText('Solo mis clases')).toBeInTheDocument();
+    expect(screen.getByRole('switch', { name: 'Solo mis clases' })).toBeInTheDocument();
   });
 
-  // …y para nadie más. No deshabilitada: ausente.
-  it.each([UserRole.STUDENT, UserRole.ADMIN])('un %s no ve la casilla', async (role) => {
+  // …y para nadie más. No deshabilitado: ausente.
+  it.each([UserRole.STUDENT, UserRole.ADMIN])('un %s no ve el interruptor', async (role) => {
     darSesion(role);
     vi.mocked(getClassrooms).mockResolvedValue(respuesta([aula()]));
 
     renderConProviders(<AulasPage />);
     await screen.findByRole('article');
 
-    expect(screen.queryByLabelText('Solo mis clases')).not.toBeInTheDocument();
+    expect(screen.queryByRole('switch', { name: 'Solo mis clases' })).not.toBeInTheDocument();
   });
 
   // El filtro se resuelve en el SERVIDOR: si se filtrara la página ya recibida,
@@ -313,22 +313,22 @@ describe('AulasPage — el filtro «Solo mis clases» (T4, AC5, AC6)', () => {
     const { user } = renderConProviders(<AulasPage />);
     await screen.findByRole('article');
 
-    await user.click(screen.getByLabelText('Solo mis clases'));
+    await user.click(screen.getByRole('switch', { name: 'Solo mis clases' }));
 
     await waitFor(() =>
       expect(vi.mocked(getClassrooms).mock.calls.at(-1)?.[0]).toEqual({ mias: true }),
     );
   });
 
-  // AC6: copiar el enlace y abrirlo reproduce la vista, casilla incluida.
-  it('una URL con `mias=true` abre con la casilla marcada y pide ese filtro', async () => {
+  // AC6: copiar el enlace y abrirlo reproduce la vista, interruptor incluido.
+  it('una URL con `mias=true` abre con el interruptor marcado y pide ese filtro', async () => {
     darSesion(UserRole.TEACHER);
     vi.mocked(getClassrooms).mockResolvedValue(respuesta([aula()]));
 
     renderConProviders(<AulasPage />, { ruta: '/aulas?mias=true' });
     await screen.findByRole('article');
 
-    expect(screen.getByLabelText('Solo mis clases')).toBeChecked();
+    expect(screen.getByRole('switch', { name: 'Solo mis clases' })).toBeChecked();
     expect(vi.mocked(getClassrooms).mock.calls[0]?.[0]).toEqual({ mias: true });
   });
 
@@ -338,7 +338,7 @@ describe('AulasPage — el filtro «Solo mis clases» (T4, AC5, AC6)', () => {
     const { user } = renderConProviders(<AulasPage />, { ruta: '/aulas?mias=true' });
     await screen.findByRole('article');
 
-    await user.click(screen.getByLabelText('Solo mis clases'));
+    await user.click(screen.getByRole('switch', { name: 'Solo mis clases' }));
 
     await waitFor(() => expect(vi.mocked(getClassrooms).mock.calls.at(-1)?.[0]).toEqual({}));
   });
