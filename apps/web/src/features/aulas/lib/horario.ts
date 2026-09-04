@@ -109,6 +109,31 @@ export function describirHorarioPartes(instanteISO: string): { cuando: string; z
 }
 
 /**
+ * Las dos mitades de {@link describirHorario} —el día arriba, la hora con su
+ * zona abajo— para pintarlas en renglones separados donde el ancho de columna
+ * es escaso (la tabla de supervisión). Mismo contenido, menos ancho.
+ */
+export function partesHorario(instanteISO: string): { dia: string; horaConZona: string } {
+  const instante = new Date(instanteISO);
+
+  if (Number.isNaN(instante.getTime())) {
+    return { dia: 'Fecha no disponible', horaConZona: '' };
+  }
+
+  const fecha = new Intl.DateTimeFormat('es', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  }).format(instante);
+
+  return {
+    dia: enMayuscula(fecha),
+    horaConZona: `${formatearHora(instante)} (${nombreDeZona(instante)})`,
+  };
+}
+
+/**
  * El intervalo que ocupa una clase, en minúscula y listo para ir **dentro de
  * una frase**: `martes 25 de agosto, de 6:00 p. m. a 7:00 p. m. (hora de
  * Colombia)`.

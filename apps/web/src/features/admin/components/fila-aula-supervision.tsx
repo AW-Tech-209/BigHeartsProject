@@ -4,7 +4,7 @@ import { EstadoAula } from '@/components/dominio/estado-aula';
 import { varianteEstadoAula } from '@/components/dominio/estado-aula-variantes';
 import { IndicadorCupo } from '@/components/dominio/indicador-cupo';
 import { TableCell, TableHead, TableRow } from '@/components/ui/table';
-import { describirHorario } from '@/features/aulas/lib/horario';
+import { partesHorario } from '@/features/aulas/lib/horario';
 
 type FilaAulaSupervisionProps = {
   classroom: ClassroomListItem;
@@ -28,6 +28,7 @@ export function FilaAulaSupervision({ classroom, ahora = new Date() }: FilaAulaS
   const cuposRestantes = Math.max(classroom.maxStudents - classroom.currentBookings, 0);
   // Mismo token que el riel de la tarjeta, en forma de borde: `bg-*` → `border-*`.
   const rielBorde = variante.riel.replace('bg-', 'border-');
+  const { dia, horaConZona } = partesHorario(classroom.scheduledAt);
 
   return (
     <TableRow>
@@ -35,8 +36,11 @@ export function FilaAulaSupervision({ classroom, ahora = new Date() }: FilaAulaS
         {classroom.teacherFirstName} {classroom.teacherLastName}
       </TableHead>
       <TableCell className="text-foreground">{classroom.title}</TableCell>
-      <TableCell className="text-muted-foreground whitespace-nowrap">
-        {describirHorario(classroom.scheduledAt)}
+      <TableCell className="text-muted-foreground">
+        <span className="flex flex-col whitespace-nowrap">
+          <span>{dia}</span>
+          {horaConZona && <span>{horaConZona}</span>}
+        </span>
       </TableCell>
       <TableCell>
         <EstadoAula estado={estado} cuposRestantes={cuposRestantes} />

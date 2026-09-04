@@ -1,3 +1,4 @@
+import { UserRole } from '@academia/types';
 import { ArrowLeft, LoaderCircle, RotateCw } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
@@ -20,7 +21,9 @@ export function PerfilPage() {
   const { data: user, isPending, isError, error, refetch, isRefetching } = useProfile();
 
   const withoutPreferences =
-    user != null && user.hearingLossLevel === null && user.communicationPreference === null;
+    user?.role === UserRole.STUDENT &&
+    user.hearingLossLevel === null &&
+    user.communicationPreference === null;
 
   return (
     <AppShell>
