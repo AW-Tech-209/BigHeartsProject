@@ -216,7 +216,7 @@ function DetalleDelAula({
             className="rounded-xl border border-border bg-card p-6 shadow-xs sm:p-7"
           >
             <div className="space-y-5">
-              <div className="flex items-center gap-3">
+              <div className="flex items-start gap-3">
                 <span className="rounded-lg bg-primary-soft p-2 text-primary">
                   <Users aria-hidden="true" strokeWidth={2} className="size-5" />
                 </span>
@@ -393,7 +393,7 @@ function EnlaceDeLaClase({ url }: { url: string }) {
       aria-labelledby="aula-enlace"
       className="space-y-4 rounded-xl border-2 border-primary bg-primary-soft p-5"
     >
-      <div className="flex items-center gap-3">
+      <div className="flex items-start gap-3">
         <span className="rounded-lg bg-primary p-2 text-primary-foreground">
           <ExternalLink aria-hidden="true" strokeWidth={2} className="size-5" />
         </span>
