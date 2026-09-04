@@ -42,7 +42,7 @@ describe('UsersController', () => {
 
     await controller.updateMe(tokenUser, dto);
 
-    expect(updateProfile).toHaveBeenCalledWith('usuario-del-token', dto);
+    expect(updateProfile).toHaveBeenCalledWith('usuario-del-token', UserRole.STUDENT, dto);
   });
 
   it('un `id` ajeno en el cuerpo no cambia a quién se edita (AC6)', async () => {

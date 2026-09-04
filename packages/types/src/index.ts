@@ -1091,6 +1091,13 @@ export const ApiErrorCode = {
    */
   USER_NOT_FOUND: 'USER_NOT_FOUND',
   /**
+   * `hearingLossLevel` o `communicationPreference` llegaron en un
+   * `PATCH /users/me` de un `TEACHER` o un `ADMIN` (HU-504). Son campos del rol
+   * `STUDENT`: nadie más los usa para nada, así que se rechazan en vez de
+   * guardarse en silencio.
+   */
+  ACCESSIBILITY_FIELDS_NOT_ALLOWED: 'ACCESSIBILITY_FIELDS_NOT_ALLOWED',
+  /**
    * No hay ningún aula con ese identificador (HU-204).
    *
    * Lo emite también un `id` con forma inválida: desde fuera, «ese uuid no

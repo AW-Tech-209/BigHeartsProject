@@ -1,5 +1,6 @@
 import {
   ApiErrorCode,
+  UserRole,
   type UpdateProfileInput,
   type User,
   type ValidationErrorDetail,
@@ -48,6 +49,7 @@ function toFormValues(user: User): ProfileFormValues {
 }
 
 export function ProfileForm({ user }: { user: User }) {
+  const isStudent = user.role === UserRole.STUDENT;
   const [values, setValues] = useState<ProfileFormValues>(() => toFormValues(user));
   const [errors, setErrors] = useState<ProfileFieldErrors>({});
   const [formError, setFormError] = useState<string | null>(null);
@@ -123,12 +125,15 @@ export function ProfileForm({ user }: { user: User }) {
 
     // `null` y no `undefined` en las preferencias: es cómo el contrato expresa
     // "retira la que tenía". Con `undefined` el backend las dejaría intactas y
-    // el usuario no podría volver a "Prefiero no indicarlo".
+    // el usuario no podría volver a "Prefiero no indicarlo". Solo se mandan
+    // para un estudiante: son suyas (HU-504).
     const input: UpdateProfileInput = {
       firstName: values.firstName.trim(),
       lastName: values.lastName.trim(),
-      hearingLossLevel: values.hearingLossLevel || null,
-      communicationPreference: values.communicationPreference || null,
+      ...(isStudent && {
+        hearingLossLevel: values.hearingLossLevel || null,
+        communicationPreference: values.communicationPreference || null,
+      }),
     };
 
     mutation.mutate(input, {
@@ -178,63 +183,65 @@ export function ProfileForm({ user }: { user: User }) {
         </Field>
       </div>
 
-      <section
-        className="space-y-5 rounded-xl border border-border bg-muted/40 p-5"
-        aria-labelledby="a11y-heading"
-      >
-        <div className="space-y-1">
-          <h2 id="a11y-heading" className="text-lg font-semibold text-foreground">
-            Preferencias de accesibilidad
-          </h2>
-          <p className="max-w-[65ch] text-sm text-muted-foreground">
-            Con estos datos adaptamos la plataforma a ti. Puedes cambiarlos cuando quieras.
-          </p>
-        </div>
-
-        <Field id="hearingLossLevel" label="Nivel de hipoacusia" error={errors.hearingLossLevel}>
-          <NativeSelect
-            name="hearingLossLevel"
-            value={values.hearingLossLevel}
-            onChange={(event) =>
-              updateField(
-                'hearingLossLevel',
-                event.target.value as ProfileFormValues['hearingLossLevel'],
-              )
-            }
-          >
-            <option value="">Prefiero no indicarlo</option>
-            {Object.entries(hearingLossLevelLabels).map(([value, label]) => (
-              <option key={value} value={value}>
-                {label}
-              </option>
-            ))}
-          </NativeSelect>
-        </Field>
-
-        <Field
-          id="communicationPreference"
-          label="Preferencia de comunicación"
-          error={errors.communicationPreference}
+      {isStudent && (
+        <section
+          className="space-y-5 rounded-xl border border-border bg-muted/40 p-5"
+          aria-labelledby="a11y-heading"
         >
-          <NativeSelect
-            name="communicationPreference"
-            value={values.communicationPreference}
-            onChange={(event) =>
-              updateField(
-                'communicationPreference',
-                event.target.value as ProfileFormValues['communicationPreference'],
-              )
-            }
+          <div className="space-y-1">
+            <h2 id="a11y-heading" className="text-lg font-semibold text-foreground">
+              Preferencias de accesibilidad
+            </h2>
+            <p className="max-w-[65ch] text-sm text-muted-foreground">
+              Con estos datos adaptamos la plataforma a ti. Puedes cambiarlos cuando quieras.
+            </p>
+          </div>
+
+          <Field id="hearingLossLevel" label="Nivel de hipoacusia" error={errors.hearingLossLevel}>
+            <NativeSelect
+              name="hearingLossLevel"
+              value={values.hearingLossLevel}
+              onChange={(event) =>
+                updateField(
+                  'hearingLossLevel',
+                  event.target.value as ProfileFormValues['hearingLossLevel'],
+                )
+              }
+            >
+              <option value="">Prefiero no indicarlo</option>
+              {Object.entries(hearingLossLevelLabels).map(([value, label]) => (
+                <option key={value} value={value}>
+                  {label}
+                </option>
+              ))}
+            </NativeSelect>
+          </Field>
+
+          <Field
+            id="communicationPreference"
+            label="Preferencia de comunicación"
+            error={errors.communicationPreference}
           >
-            <option value="">Prefiero no indicarlo</option>
-            {Object.entries(communicationPreferenceLabels).map(([value, label]) => (
-              <option key={value} value={value}>
-                {label}
-              </option>
-            ))}
-          </NativeSelect>
-        </Field>
-      </section>
+            <NativeSelect
+              name="communicationPreference"
+              value={values.communicationPreference}
+              onChange={(event) =>
+                updateField(
+                  'communicationPreference',
+                  event.target.value as ProfileFormValues['communicationPreference'],
+                )
+              }
+            >
+              <option value="">Prefiero no indicarlo</option>
+              {Object.entries(communicationPreferenceLabels).map(([value, label]) => (
+                <option key={value} value={value}>
+                  {label}
+                </option>
+              ))}
+            </NativeSelect>
+          </Field>
+        </section>
+      )}
 
       <Button
         type="submit"

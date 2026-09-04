@@ -59,45 +59,45 @@ cumple lo que pediste y deja la regla incumplida. Por eso el arreglo es de las d
 
 ### Contrato — va primero
 
-- [ ] **T1** — En `packages/types`: el código de error para «este campo no aplica a tu rol». Luego
+- [x] **T1** — En `packages/types`: el código de error para «este campo no aplica a tu rol». Luego
       `npm run build:types`.
 
 ### Backend
 
-- [ ] **T2** — En la actualización de perfil, **rechazar** `hearingLossLevel` y
+- [x] **T2** — En la actualización de perfil, **rechazar** `hearingLossLevel` y
       `communicationPreference` si quien pide no es `STUDENT`. Se responde con el código nuevo, no
       se ignora en silencio: ignorar un campo enviado deja a quien llama creyendo que se guardó.
-- [ ] **T3** — Tests: un `TEACHER` y un `ADMIN` que envían cualquiera de los dos campos reciben el
+- [x] **T3** — Tests: un `TEACHER` y un `ADMIN` que envían cualquiera de los dos campos reciben el
       error; **los mismos usuarios siguen editando nombre y apellido con normalidad**; un `STUDENT`
       los guarda como hasta ahora.
 
 ### Frontend
 
-- [ ] **T4** — `profile-form.tsx` **solo pinta los dos selects si el usuario es `STUDENT`**. Para
+- [x] **T4** — `profile-form.tsx` **solo pinta los dos selects si el usuario es `STUDENT`**. Para
       los otros roles el formulario queda con nombre y apellido, sin hueco ni encabezado huérfano.
-- [ ] **T5** — El aviso de **«Todavía no indicaste tus preferencias»** solo se muestra al estudiante.
+- [x] **T5** — El aviso de **«Todavía no indicaste tus preferencias»** solo se muestra al estudiante.
       Mismo criterio que ya usa `AulasPage`.
-- [ ] **T6** — Tests: un profesor y un administrador **no ven** el aviso ni ninguno de los dos
+- [x] **T6** — Tests: un profesor y un administrador **no ven** el aviso ni ninguno de los dos
       campos; un estudiante los ve y los guarda igual que antes; `axe` limpio en los tres casos.
 
 ### Documentación
 
-- [ ] **T7** — Anotar en `ARQUITECTURA.md` §4.9 que **estos dos campos son del rol `STUDENT`**, y
+- [x] **T7** — Anotar en `ARQUITECTURA.md` §4.9 que **estos dos campos son del rol `STUDENT`**, y
       que el servidor lo hace cumplir. Hoy el documento explica para qué sirven pero no de quién son.
 
 ## ✅ Criterios de aceptación
 
-- [ ] **AC1** — Un `TEACHER` y un `ADMIN` **no ven** el aviso de preferencias ni los dos selects en
+- [x] **AC1** — Un `TEACHER` y un `ADMIN` **no ven** el aviso de preferencias ni los dos selects en
       su perfil, y el resto de la pantalla queda intacta y sin huecos.
-- [ ] **AC2** — Un `STUDENT` ve y edita los dos campos **exactamente igual que hoy**.
-- [ ] **AC3** — **Autorización en el servidor:** una petición de actualización con cualquiera de los
+- [x] **AC2** — Un `STUDENT` ve y edita los dos campos **exactamente igual que hoy**.
+- [x] **AC3** — **Autorización en el servidor:** una petición de actualización con cualquiera de los
       dos campos desde un `TEACHER` o un `ADMIN` **se rechaza** con el código nuevo. Verificado con
       tests de backend, no ocultando la interfaz.
-- [ ] **AC4** — Un `TEACHER` y un `ADMIN` **siguen pudiendo editar nombre y apellido** sin
+- [x] **AC4** — Un `TEACHER` y un `ADMIN` **siguen pudiendo editar nombre y apellido** sin
       tropezarse con el rechazo.
-- [ ] **AC5** — Un usuario no estudiante que ya tuviera valores guardados **no rompe nada**: su
+- [x] **AC5** — Un usuario no estudiante que ya tuviera valores guardados **no rompe nada**: su
       perfil carga y se edita con normalidad.
-- [ ] **AC6** — **Accesibilidad y verificación:** checklist del skill `bighearts-ui`, `axe` limpio,
+- [x] **AC6** — **Accesibilidad y verificación:** checklist del skill `bighearts-ui`, `axe` limpio,
       y `typecheck`, `lint`, `build` y `npm run test` en verde.
 
 ## 🚫 Fuera de alcance
@@ -112,4 +112,4 @@ cumple lo que pediste y deja la regla incumplida. Por eso el arreglo es de las d
 
 ## Notas de implementación
 
-_Se rellena al cerrar._
+Sin desviaciones.

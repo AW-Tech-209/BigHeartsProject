@@ -50,7 +50,7 @@ export class UsersController {
     @CurrentUser() current: AuthenticatedUser,
     @Body() dto: UpdateProfileDto,
   ): Promise<ProfileResponse> {
-    const user = await this.usersService.updateProfile(current.id, dto);
+    const user = await this.usersService.updateProfile(current.id, current.role, dto);
     return { user };
   }
 }
