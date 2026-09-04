@@ -35,7 +35,11 @@ import { InscritosAula } from '@/features/aulas/components/inscritos-aula';
 import { useAccesoAlEnlace } from '@/features/aulas/hooks/use-acceso-al-enlace';
 import { esAulaNoEncontrada, useClassroom } from '@/features/aulas/hooks/use-classroom';
 import { APOYOS_AULA } from '@/features/aulas/lib/apoyos-aula';
-import { describirDuracion, describirHorario } from '@/features/aulas/lib/horario';
+import {
+  describirDuracion,
+  describirHorario,
+  describirHorarioPartes,
+} from '@/features/aulas/lib/horario';
 import { nivelesDeIngles } from '@/features/aulas/lib/niveles';
 import { etiquetaPlataformaReunion } from '@/features/aulas/lib/plataforma-reunion';
 import { puedeReservar } from '@/features/aulas/lib/puede-reservar';
@@ -182,13 +186,15 @@ function DetalleDelAula({
   // HU-304, T7: el paso de «aún no» a «abierto» ocurre en vivo, sin recargar.
   const accesoAlEnlace = useAccesoAlEnlace(aula.accessState, aula.accessOpensAt);
 
+  const horario = describirHorarioPartes(aula.scheduledAt);
+
   return (
-    <div className="space-y-8">
+    <div className="subir-suave space-y-8">
       <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1.35fr)_minmax(18rem,0.65fr)]">
         <div className="space-y-6">
           <section
             aria-labelledby="aula-descripcion"
-            className="rounded-xl border border-border bg-card p-6 sm:p-7"
+            className="rounded-xl border border-border bg-card p-6 shadow-xs sm:p-7"
           >
             <div className="space-y-4">
               <div className="flex items-center gap-3">
@@ -207,7 +213,7 @@ function DetalleDelAula({
 
           <section
             aria-labelledby="aula-accesibilidad"
-            className="rounded-xl border border-border bg-card p-6 sm:p-7"
+            className="rounded-xl border border-border bg-card p-6 shadow-xs sm:p-7"
           >
             <div className="space-y-5">
               <div className="flex items-center gap-3">
@@ -270,7 +276,7 @@ function DetalleDelAula({
         </div>
 
         <aside className="space-y-6" aria-label="Resumen de la clase">
-          <section className="relative overflow-hidden rounded-xl border border-border bg-card p-6 pl-7">
+          <section className="relative overflow-hidden rounded-xl border border-border bg-card p-6 pl-7 shadow-xs">
             <span
               aria-hidden="true"
               className={cn('absolute inset-y-0 left-0 w-1', varianteEstadoAula[estado].riel)}
@@ -283,7 +289,8 @@ function DetalleDelAula({
 
               <dl className="divide-y divide-border">
                 <Dato termino="Fecha y hora" icon={CalendarClock}>
-                  {describirHorario(aula.scheduledAt)}
+                  {horario.cuando}{' '}
+                  {horario.zona && <span className="whitespace-nowrap">({horario.zona})</span>}
                 </Dato>
                 <Dato termino="Duración">{describirDuracion(aula.durationMinutes)}</Dato>
                 <Dato termino="Cupo" className="pt-4">
@@ -356,7 +363,7 @@ function AperturaDelEnlace({ instanteISO }: { instanteISO: string }) {
   return (
     <section
       aria-labelledby="aula-apertura-enlace"
-      className="space-y-2 rounded-xl border border-border bg-card p-5"
+      className="space-y-2 rounded-xl border border-border bg-card p-5 shadow-xs"
     >
       <div className="flex items-center gap-3">
         <span className="rounded-lg bg-muted p-2 text-muted-foreground">
