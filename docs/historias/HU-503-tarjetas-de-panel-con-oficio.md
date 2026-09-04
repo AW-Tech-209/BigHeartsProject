@@ -5,7 +5,7 @@
 | **Sprint**          | Post-Fase 1 · Pulido                               |
 | **Prioridad**       | 🟠 Alta (es la primera pantalla que ve el cliente) |
 | **Estimación**      | 1.5 días                                           |
-| **Estado**          | ⬜ Pendiente                                       |
+| **Estado**          | ✅ Terminada                                       |
 | **Rama**            | `hu-503-tarjetas-de-panel-con-oficio-<persona>`    |
 | **Alcance técnico** | frontend                                           |
 | **Depende de**      | HU-502 (✅)                                        |
@@ -66,43 +66,43 @@ la regla original.
 
 ### Frontend
 
-- [ ] **T1** — **Anatomía en tres zonas** dentro de `<TarjetaResumen>`: cabecera (ícono + etiqueta),
+- [x] **T1** — **Anatomía en tres zonas** dentro de `<TarjetaResumen>`: cabecera (ícono + etiqueta),
       cuerpo (la cifra) y pie (la acción, separada por un filete `border-t`). Hoy es un
       `flex-col gap-2` sin estructura. Más aire: de `p-4` a `p-5`/`p-6`.
-- [ ] **T2** — **La cifra manda.** Escala grande (44–52 px), peso 600, `tabular-nums` y
+- [x] **T2** — **La cifra manda.** Escala grande (44–52 px), peso 600, `tabular-nums` y
       `tracking-tight`, con la unidad o el contexto en `muted-foreground` **a su lado**, no debajo.
       Ese contraste de escala es la mayor parte del efecto.
-- [ ] **T3** — **El ícono en contenedor**: cuadrado de ~40 px con `rounded-lg` y fondo del tono
+- [x] **T3** — **El ícono en contenedor**: cuadrado de ~40 px con `rounded-lg` y fondo del tono
       suave que corresponda, en vez de un ícono suelto junto al título.
-- [ ] **T4** — **El riel de estado sube al panel**: franja de 4 px a la izquierda con el color del
+- [x] **T4** — **El riel de estado sube al panel**: franja de 4 px a la izquierda con el color del
       tono, como en las tarjetas de aula. Es la firma visual del producto y hoy el panel no la usa.
-- [ ] **T5** — **Altura uniforme** en la fila: las tres tarjetas se alinean aunque una tenga una
+- [x] **T5** — **Altura uniforme** en la fila: las tres tarjetas se alinean aunque una tenga una
       línea más. El pie queda pegado abajo en todas.
-- [ ] **T6** — **Interacción:** donde la tarjeta lleva a un solo destino, es **clicable entera** —no
+- [x] **T6** — **Interacción:** donde la tarjeta lleva a un solo destino, es **clicable entera** —no
       solo el enlace del pie—, con hover que la eleva y foco visible sobre toda ella. Entrada
       escalonada suave, anulada bajo `prefers-reduced-motion`.
-- [ ] **T7** — Tests de lo que no se puede romper (tono correcto por tarjeta, la tarjeta enlazable
+- [x] **T7** — Tests de lo que no se puede romper (tono correcto por tarjeta, la tarjeta enlazable
       es un solo destino accesible, `axe` limpio).
 
 ### Documentación
 
-- [ ] **T8** — Escribir **D40 y D41** en `bighearts-ui` → `SKILL.md`, **dejando claro que solo
+- [x] **T8** — Escribir **D40 y D41** en `bighearts-ui` → `SKILL.md`, **dejando claro que solo
       aplican a las tarjetas de resumen del panel**, y registrarlas en el registro de decisiones.
       Sin esto, el skill sigue prohibiendo lo que el código acaba de hacer.
 
 ## ✅ Criterios de aceptación
 
-- [ ] **AC1** — La cifra es **al menos 2,5 veces** el tamaño de la etiqueta, va en `tabular-nums` y
+- [x] **AC1** — La cifra es **al menos 2,5 veces** el tamaño de la etiqueta, va en `tabular-nums` y
       no baila al cambiar de valor.
-- [ ] **AC2** — Las tres tarjetas de cada panel tienen **la misma altura** y sus pies quedan
+- [x] **AC2** — Las tres tarjetas de cada panel tienen **la misma altura** y sus pies quedan
       alineados, sea cual sea el contenido.
-- [ ] **AC3** — Una tarjeta con destino único se activa **haciendo clic en cualquier punto** y con
+- [x] **AC3** — Una tarjeta con destino único se activa **haciendo clic en cualquier punto** y con
       teclado, con un solo elemento enfocable y el foco visible rodeando la tarjeta entera.
-- [ ] **AC4** — **El color sigue significando lo mismo:** no aparece ningún tono fuera del
+- [x] **AC4** — **El color sigue significando lo mismo:** no aparece ningún tono fuera del
       diccionario, y el ámbar solo en las dos tarjetas que D39 permite.
-- [ ] **AC5** — Con `prefers-reduced-motion` **no hay movimiento**, y todo texto mantiene contraste
+- [x] **AC5** — Con `prefers-reduced-motion` **no hay movimiento**, y todo texto mantiene contraste
       ≥ 4,5:1 —incluido el que quede sobre el velo de color, si se aprueba D41—.
-- [ ] **AC6** — **Ni un dato cambió** respecto a HU-502, `axe` limpio, y `typecheck`, `lint`,
+- [x] **AC6** — **Ni un dato cambió** respecto a HU-502, `axe` limpio, y `typecheck`, `lint`,
       `build` y `npm run test` en verde.
 
 ## 🚫 Fuera de alcance
@@ -117,4 +117,20 @@ la regla original.
 
 ## Notas de implementación
 
-_Se rellena al cerrar._
+Sin desviaciones. El velo D41 se implementó como un `<span>` difuminado (`blur-2xl`) con el token
+`*-soft` del tono, no como degradado CSS, para no depender de valores arbitrarios en el nombre de
+clase. El registro de decisiones de diseño (D39–D41) se creó en `bighearts-ui/SKILL.md`, que no lo
+tenía.
+
+## Recorrido de AC
+
+| AC  | Veredicto | Cómo se comprobó                                                                                                                                |
+| --- | --------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| AC1 | ✅        | `Numero` → cifra `text-5xl` (48px) `font-semibold` `tabular-nums` `tracking-tight`; etiqueta `text-sm` (14px) → 3,4×.                           |
+| AC2 | ✅        | `article` con `h-full flex flex-col`, cuerpo `flex-1`, pie tras él; rejilla con `align-items: stretch`.                                         |
+| AC3 | ✅        | `comoTarjeta` → enlace único con `after:absolute after:inset-0`, `focus-within:ring` en la tarjeta. Test: un solo `link` por tarjeta enlazable. |
+| AC4 | ✅        | Tonos del diccionario (`attention`/`success`/`neutral`); test: `.bg-attention` aparece exactamente en la tarjeta que D39 permite, 0 sin deuda.  |
+| AC5 | ✅        | Animación `resumen-entra` anulada en `@media (prefers-reduced-motion: reduce)`; texto sobre `bg-card` plano, velo difuminado sin texto encima.  |
+| AC6 | ✅        | Datos intactos (mismos textos/cifras en el spec existente); `axe` limpio; `typecheck`+`lint`+`build`+`test` (754 web) en verde.                 |
+
+Pendiente: nada.

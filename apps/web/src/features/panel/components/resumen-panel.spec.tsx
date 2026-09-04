@@ -8,7 +8,7 @@ import {
   type ResumenPanelResponse,
   UserRole,
 } from '@academia/types';
-import { screen } from '@testing-library/react';
+import { screen, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { esperarSinFallosDeAccesibilidad } from '@/test/accesibilidad';
@@ -163,5 +163,62 @@ describe('ResumenPanel — admin (AC4)', () => {
     const { container } = renderConProviders(<ResumenPanel />);
     await screen.findByRole('heading', { name: 'Profesores pendientes de aprobar' });
     await esperarSinFallosDeAccesibilidad(container);
+  });
+});
+
+describe('ResumenPanel — presentación (HU-503, AC3, AC4)', () => {
+  it('el ámbar aparece solo en la tarjeta que D39 permite', async () => {
+    dar({
+      rol: UserRole.ADMIN,
+      profesoresPendientes: 3,
+      clasesHoy: 5,
+      clasesEnCurso: 1,
+      cuposReservadosSemana: 84,
+      cuposOfrecidosSemana: 120,
+    });
+
+    const { container } = renderConProviders(<ResumenPanel />);
+    await screen.findByRole('heading', { name: 'Profesores pendientes de aprobar' });
+
+    expect(container.querySelectorAll('.bg-attention')).toHaveLength(1);
+  });
+
+  it('cuando no hay nada pendiente, ningún tono de urgencia', async () => {
+    dar({
+      rol: UserRole.ADMIN,
+      profesoresPendientes: 0,
+      clasesHoy: 5,
+      clasesEnCurso: 1,
+      cuposReservadosSemana: 84,
+      cuposOfrecidosSemana: 120,
+    });
+
+    const { container } = renderConProviders(<ResumenPanel />);
+    await screen.findByRole('heading', { name: 'Profesores pendientes de aprobar' });
+
+    expect(container.querySelectorAll('.bg-attention')).toHaveLength(0);
+    expect(container.querySelectorAll('.bg-success')).not.toHaveLength(0);
+  });
+
+  it('una tarjeta con destino único es un solo enlace accesible', async () => {
+    dar({
+      rol: UserRole.ADMIN,
+      profesoresPendientes: 3,
+      clasesHoy: 5,
+      clasesEnCurso: 1,
+      cuposReservadosSemana: 84,
+      cuposOfrecidosSemana: 120,
+    });
+
+    renderConProviders(<ResumenPanel />);
+    const titulo = await screen.findByRole('heading', {
+      name: 'Profesores pendientes de aprobar',
+    });
+    const tarjeta = titulo.closest('article') as HTMLElement;
+
+    const enlaces = within(tarjeta).getAllByRole('link');
+    expect(enlaces).toHaveLength(1);
+    expect(enlaces[0]).toHaveAttribute('href', '#aprobaciones-pendientes');
+    expect(enlaces[0]).toHaveAccessibleName('Revisar solicitudes');
   });
 });
