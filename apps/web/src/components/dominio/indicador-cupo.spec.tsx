@@ -11,7 +11,7 @@ describe('<IndicadorCupo /> — conteo literal, nunca porcentaje (AC7)', () => {
   it('muestra el conteo literal cuando hay cupos', () => {
     renderConProviders(<IndicadorCupo maxStudents={20} currentBookings={14} />);
 
-    expect(screen.getByText('14 de 20 lugares ocupados · Quedan 6')).toBeInTheDocument();
+    expect(screen.getByText('14 de 20 lugares ocupados · Quedan 6 cupos')).toBeInTheDocument();
     // Nunca un símbolo de porcentaje ni una fracción decimal.
     expect(screen.queryByText(/%/)).not.toBeInTheDocument();
   });

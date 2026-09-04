@@ -6,7 +6,7 @@
 | **Prioridad**       | 🟠 Alta (la usan HU-412, HU-413 y más pantallas)   |
 | **Estimación**      | 2 días                                             |
 | **Estado**          | ⬜ Pendiente                                       |
-| **Rama**            | `<nº-issue>-hu-414-pasada-de-la-tarjeta-de-aula`   |
+| **Rama**            | `118-hu-414-pasada-de-la-tarjeta-de-aula`          |
 | **Alcance técnico** | frontend                                           |
 | **Depende de**      | HU-408 (identidad ya en `main`)                    |
 | **Labels**          | `cierre-fase-1` `prioridad:alta` `frontend` `a11y` |
@@ -21,7 +21,7 @@ Pieza compartida del lote 2: `<TarjetaAula>` se pinta en el catálogo, en el pan
 el detalle y en el historial, así que se pule **una vez**. Lo que el mockup y una lectura rápida
 del código dejan ver:
 
-- **Microcopy:** «Quedan **1 cupos**» (debe ser «1 cupo»); el chip «Modo sin indicar»; revisar
+- **Microcopy:** «Quedan **1 cupos**» (debe ser «Queda 1 cupo»); el chip «Modo sin indicar»; revisar
   los nueve textos de `<EstadoAula>` contra `voz-microcopy.md`.
 - **Fechas:** se parten feo — «(hora estándar de Colombia)» cae sola en una segunda línea. Fijar
   el formato completo del skill (`Martes 12 de agosto, 6:00 p.m. (hora de Colombia)`) sin huérfanas.
@@ -45,40 +45,41 @@ del código dejan ver:
 
 ### Frontend
 
-- [ ] **T1** — Pluralización de cupos: `Quedan {n} cupo` / `Quedan {n} cupos` en `<EstadoAula>` y
+- [x] **T1** — Pluralización de cupos: `Quedan {n} cupo` / `Quedan {n} cupos` en `<EstadoAula>` y
       en `<IndicadorCupo>`. Función pura en `features/aulas/lib/` con su `*.spec.ts`.
-- [ ] **T2** — Formato de fecha/hora: una función pura que devuelva la fecha completa del skill sin
+- [x] **T2** — Formato de fecha/hora: una función pura que devuelva la fecha completa del skill sin
       que la zona quede huérfana en su línea (`text-balance` / `text-pretty` o el corte controlado).
       Con su `*.spec.ts` (zona fija en el test).
-- [ ] **T3** — Pasada de microcopy a los nueve textos de `<EstadoAula>` y al chip «Modo sin
+- [x] **T3** — Pasada de microcopy a los nueve textos de `<EstadoAula>` y al chip «Modo sin
       indicar» contra `voz-microcopy.md`. Ajustar los que no cumplan.
-- [ ] **T4** — Chips de modo de comunicación (`modo-comunicacion-badge`): disposición y envoltura
+- [x] **T4** — Chips de modo de comunicación (`modo-comunicacion-badge`): disposición y envoltura
       coherentes; contribución a la altura de la tarjeta acotada.
-- [ ] **T5** — Jerarquía visual de la tarjeta: riel de 4px + badge de estado + badge `Tu clase` +
+- [x] **T5** — Jerarquía visual de la tarjeta: riel de 4px + badge de estado + badge `Tu clase` +
       acción, según `patrones-dominio.md` §4; orden DOM del skill (fecha → `<h3>` → subtítulo →
       estado) intacto.
 
 ### Documentación
 
-- [ ] **T6** — `bighearts-ui` → `patrones-dominio.md` (fila `ultimos-cupos`: texto con
+- [x] **T6** — `bighearts-ui` → `patrones-dominio.md` (fila `ultimos-cupos`: texto con
       pluralización) y `voz-microcopy.md` si se fija regla de formato de fecha. Tests:
       `estado-aula-variantes.spec.tsx`, `tarjeta-aula.spec.tsx`, `indicador-cupo.spec.tsx` en verde.
 
 ## ✅ Criterios de aceptación
 
-- [ ] **AC1** — Con 1 cupo libre el texto es «Quedan 1 cupo» (singular); con 2+ es «Quedan {n}
-      cupos». Verificado con la función pura y su `*.spec.ts`, y en `<EstadoAula>` / `<IndicadorCupo>`.
-- [ ] **AC2** — La fecha se pinta completa y con zona explícita, y la zona **no** queda sola en una
+- [x] **AC1** — Con 1 cupo libre el texto es «Queda 1 cupo» (verbo y sustantivo en singular); con
+      2+ es «Quedan {n} cupos». Verificado con la función pura y su `*.spec.ts`, y en `<EstadoAula>` /
+      `<IndicadorCupo>`.
+- [x] **AC2** — La fecha se pinta completa y con zona explícita, y la zona **no** queda sola en una
       línea a los anchos de 1 / 2 / 3 columnas. Verificado con la función de formato (test con zona
       fija) y a ojo.
-- [ ] **AC3** — Los nueve estados de `<EstadoAula>` conservan **color + ícono + texto** (triple
+- [x] **AC3** — Los nueve estados de `<EstadoAula>` conservan **color + ícono + texto** (triple
       codificación) y la regla del sólido (solo `acceso-abierto` y `en-curso` en color pleno); el
       copy cumple `voz-microcopy.md`. Verificado con `estado-aula-variantes.spec.tsx`.
-- [ ] **AC4** — En una fila, dos tarjetas con distinto número de chips de modo tienen la misma
+- [x] **AC4** — En una fila, dos tarjetas con distinto número de chips de modo tienen la misma
       altura. El riel de 4px sigue mostrando el estado en `.hc`.
-- [ ] **AC5** — `axe` limpio en `tarjeta-aula.spec.tsx` en los tres temas; el orden de encabezados
+- [x] **AC5** — `axe` limpio en `tarjeta-aula.spec.tsx` en los tres temas; el orden de encabezados
       (`<h1>` de página → `<h3>` de tarjeta) no rompe `heading-order`. Cero colores literales en `.tsx`.
-- [ ] **AC6** — **Verificación automática:** `typecheck`, `lint`, `build` y `npm run test` (los tres
+- [x] **AC6** — **Verificación automática:** `typecheck`, `lint`, `build` y `npm run test` (los tres
       workspaces) en verde.
 
 ## 🚫 Fuera de alcance
@@ -88,6 +89,26 @@ del código dejan ver:
 - `<VentanaDeAcceso>` y el detalle del aula (HU-204) más allá de que la tarjeta siga encajando.
 - Cambios en el contrato (`ClassroomListItem`, `derivarEstadoAula`) o en la API.
 
+## Recorrido de acceptance criteria
+
+| AC  | Veredicto | Cómo se comprobó                                                                                                                                                                                                              |
+| --- | --------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| AC1 | Cumple    | `features/aulas/lib/cupos.ts` (`describirCuposRestantes`, concuerda verbo + sustantivo) con `cupos.spec.ts`. `estado-aula.spec.tsx` cubre «Queda 1 cupo» / «Quedan 3 cupos»; `indicador-cupo.spec.tsx` el «· Quedan N cupos». |
+| AC2 | Cumple    | `describirHorarioPartes()` en `horario.ts` con test (`cuando` sin `(`, `zona` no vacía, rearmadas == `describirHorario`). La tarjeta pinta la zona en un `<span whitespace-nowrap>` sobre `text-pretty`.                      |
+| AC3 | Cumple    | `estado-aula.spec.tsx` recorre los nueve estados (texto exacto) y `estado-aula-variantes.spec.tsx` la regla del sólido y los tonos. Copy revisado contra `voz-microcopy.md`: sin cambios salvo la pluralización.              |
+| AC4 | Cumple    | `<TarjetaAula>` ahora es `flex h-full flex-col` y `<RejillaAulas>` pasa a `items-stretch`: las tarjetas de una fila igualan altura. El riel de 4px usa el token pleno (≥3:1, visible en `.hc`).                               |
+| AC5 | Cumple    | `tarjeta-aula.spec.tsx` corre `axe` en los tres temas; el orden `<h1>`→`<h3>` intacto. `grep -rE "#[0-9a-fA-F]{3,6}" src --include=*.tsx` sin resultados en lo tocado.                                                        |
+| AC6 | Cumple    | `typecheck`, `lint` (0 errores), `build` y `npm run test` de `web` (46 archivos / 739 tests) + `types` en verde. `api` sin cambios.                                                                                           |
+
 ## Notas de implementación
 
-Sin desviaciones previstas.
+`describirHorario` se conserva (mismo string) para sus ~10 consumidores; solo la tarjeta pasa a
+`describirHorarioPartes`. `<RejillaAulas>` cambia `items-start` → `items-stretch` (era lo que impedía
+igualar alturas); afecta a todas sus rejillas, que es el objetivo. Microcopy de los nueve estados y
+de «Modo sin indicar»: ya cumplía `voz-microcopy.md`, solo cambió la pluralización de cupos.
+El mismo arreglo de fecha aplica a la tarjeta del `panel-estudiante` (HU-413).
+Pulido visual (a petición): estado `hover` (borde a `--input`, tinte `bg-muted/50`, `shadow-md`
+breve y 2px de subida con `motion-safe`) que además cubría un hueco —la tarjeta entera es un
+enlace y no daba señal al puntero—; más aire (`p-5 pl-6`); y la cabecera (fecha + título +
+subtítulo) agrupada apretada con ritmo uniforme (`gap-2.5`) hasta las filas de badges,
+en vez del `space-y-1.5` + `mt-1` apilados.
