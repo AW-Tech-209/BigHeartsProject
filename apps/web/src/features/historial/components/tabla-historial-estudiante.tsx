@@ -9,7 +9,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { describirHorario } from '@/features/aulas/lib/horario';
+import { describirFechaCompacta } from '@/features/aulas/lib/horario';
 import { BadgeResultadoHistorial } from './badge-resultado-historial';
 
 type TablaHistorialEstudianteProps = {
@@ -37,13 +37,13 @@ export function TablaHistorialEstudiante({ items, total }: TablaHistorialEstudia
       <TableBody>
         {items.map((item) => (
           <TableRow key={item.id}>
-            <TableHead scope="row" className="font-normal text-foreground">
+            <TableHead scope="row" className="font-medium text-foreground">
               {item.title}
             </TableHead>
             <TableCell className="whitespace-nowrap text-muted-foreground">
-              {describirHorario(item.scheduledAt)}
+              {describirFechaCompacta(item.scheduledAt)}
             </TableCell>
-            <TableCell className="text-foreground">
+            <TableCell className="whitespace-nowrap text-foreground">
               {item.teacherFirstName} {item.teacherLastName}
             </TableCell>
             <TableCell>

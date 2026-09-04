@@ -4,6 +4,7 @@ import {
   aFechaYHora,
   aInstanteISO,
   describirDuracion,
+  describirFechaCompacta,
   describirHorario,
   describirHorarioPartes,
   describirRangoHorario,
@@ -106,6 +107,27 @@ describe('describirHorario', () => {
 
   it('no imprime «Invalid Date» ante una fecha rota', () => {
     expect(describirHorario('no-es-una-fecha')).toBe('Fecha no disponible');
+  });
+});
+
+describe('describirFechaCompacta', () => {
+  const texto = describirFechaCompacta(aInstanteISO({ fecha: '2027-08-12', hora: '18:00' })!);
+
+  it('trae día, mes y año, y la hora en 12 horas', () => {
+    expect(texto).toContain('12');
+    expect(texto).toMatch(/ago/i);
+    expect(texto).toContain('2027');
+    expect(texto).toMatch(/6:00/);
+    expect(texto).toMatch(/p\.?\s?m\.?/i);
+  });
+
+  it('no lleva día de la semana ni zona horaria entre paréntesis', () => {
+    expect(texto).not.toMatch(/lunes|martes|miércoles|jueves|viernes|sábado|domingo/i);
+    expect(texto).not.toMatch(/\(.+\)/);
+  });
+
+  it('ante una fecha rota devuelve «Fecha no disponible»', () => {
+    expect(describirFechaCompacta('no-es-una-fecha')).toBe('Fecha no disponible');
   });
 });
 

@@ -83,6 +83,28 @@ export function describirHorario(instanteISO: string): string {
 }
 
 /**
+ * Fecha compacta para celdas de tabla y listas densas: `4 sept. 2026 · 8:03 p. m.`
+ * Sin día de la semana ni zona horaria — en un historial de clases pasadas basta
+ * para ubicarlas; la fecha completa con zona vive donde de verdad importa llegar
+ * a tiempo (detalle del aula, reserva).
+ */
+export function describirFechaCompacta(instanteISO: string): string {
+  const instante = new Date(instanteISO);
+
+  if (Number.isNaN(instante.getTime())) {
+    return 'Fecha no disponible';
+  }
+
+  const fecha = new Intl.DateTimeFormat('es', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+  }).format(instante);
+
+  return `${fecha} · ${formatearHora(instante)}`;
+}
+
+/**
  * Lo mismo que {@link describirHorario} pero partido: `cuando` es el día y la
  * hora; `zona` es el nombre largo de la zona, para que la pantalla la pueda
  * mantener sin cortar (p. ej. `whitespace-nowrap`) y no dejarla huérfana en su

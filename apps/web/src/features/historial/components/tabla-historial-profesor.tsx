@@ -9,7 +9,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { describirHorario } from '@/features/aulas/lib/horario';
+import { describirFechaCompacta } from '@/features/aulas/lib/horario';
 
 type TablaHistorialProfesorProps = {
   items: AulaImpartida[];
@@ -28,22 +28,26 @@ export function TablaHistorialProfesor({ items, total }: TablaHistorialProfesorP
         <TableRow>
           <TableHead>Clase</TableHead>
           <TableHead>Fecha</TableHead>
-          <TableHead>Inscritos</TableHead>
-          <TableHead>Asistieron</TableHead>
+          <TableHead className="text-right">Inscritos</TableHead>
+          <TableHead className="text-right">Asistieron</TableHead>
         </TableRow>
       </TableHeader>
 
       <TableBody>
         {items.map((item) => (
           <TableRow key={item.id}>
-            <TableHead scope="row" className="font-normal text-foreground">
+            <TableHead scope="row" className="font-medium text-foreground">
               {item.title}
             </TableHead>
             <TableCell className="whitespace-nowrap text-muted-foreground">
-              {describirHorario(item.scheduledAt)}
+              {describirFechaCompacta(item.scheduledAt)}
             </TableCell>
-            <TableCell className="text-foreground">{item.totalInscritos}</TableCell>
-            <TableCell className="text-foreground">{item.totalAsistieron}</TableCell>
+            <TableCell className="text-right text-foreground tabular-nums">
+              {item.totalInscritos}
+            </TableCell>
+            <TableCell className="text-right text-foreground tabular-nums">
+              {item.totalAsistieron}
+            </TableCell>
           </TableRow>
         ))}
       </TableBody>
