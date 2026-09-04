@@ -160,9 +160,10 @@ describe('AppShell — el destino activo', () => {
 
     // La señal semántica, la que oye quien navega con lector de pantalla.
     expect(activo).toHaveAttribute('aria-current', 'page');
-    // La señal no cromática, la que sobrevive al alto contraste.
+    // La señal no cromática, la que sobrevive al alto contraste: 2px de borde
+    // en blanco sobre la barra de marca.
     expect(activo.className).toContain('border-b-2');
-    expect(activo.className).toContain('border-primary');
+    expect(activo.className).toContain('border-brand-foreground');
 
     const inactivo = screen.getByRole('link', { name: 'Perfil' });
     expect(inactivo).not.toHaveAttribute('aria-current');
@@ -178,7 +179,7 @@ describe('AppShell — el destino activo', () => {
 
     expect(activo).toHaveAttribute('aria-current', 'page');
     expect(activo.className).toContain('border-t-2');
-    expect(activo.className).toContain('border-primary');
+    expect(activo.className).toContain('border-brand-foreground');
   });
 });
 

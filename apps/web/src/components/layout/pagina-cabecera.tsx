@@ -56,7 +56,7 @@ export function PaginaCabecera({
         <h1
           ref={headingRef}
           tabIndex={-1}
-          className="text-2xl font-medium tracking-tight text-balance outline-none sm:text-3xl"
+          className="font-serif text-3xl leading-[1.1] font-normal tracking-tight text-balance outline-none sm:text-4xl"
         >
           {titulo}
         </h1>
