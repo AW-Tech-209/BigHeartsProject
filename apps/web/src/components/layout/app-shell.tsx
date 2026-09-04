@@ -3,6 +3,7 @@ import { LoaderCircle, LogOut } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { Link, NavLink, useNavigate } from 'react-router-dom';
 
+import { MarcaBigHearts } from '@/components/dominio/marca-bighearts';
 import { SkipLink } from '@/components/skip-link';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/features/auth/hooks/use-auth';
@@ -54,12 +55,15 @@ export function AppShell({ children, conNavegacion = true }: AppShellProps) {
       {/* Primer elemento enfocable del documento, antes que nada más. */}
       <SkipLink />
 
-      <header className="sticky top-0 z-40 border-b border-border bg-card">
+      <header className="sticky top-0 z-40 border-b border-border bg-card/80 backdrop-blur-md">
         <Contenedor className="flex h-[58px] items-center justify-between gap-4">
           <Link
             to="/"
-            className="shrink-0 rounded-lg text-lg font-medium text-primary hover:underline"
+            className="flex shrink-0 items-center gap-2.5 rounded-lg text-lg font-medium text-primary hover:underline"
           >
+            <span aria-hidden="true">
+              <MarcaBigHearts className="size-6" />
+            </span>
             BigHearts
           </Link>
 
