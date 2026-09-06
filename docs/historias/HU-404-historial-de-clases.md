@@ -114,3 +114,15 @@ es un endpoint con su propio propósito y forma de respuesta por rol, según §4
 extiende `Classroom` con `totalInscritos`/`totalAsistieron`, calculados con `booking.groupBy`. Una
 reserva `CONFIRMED` de una clase ya pasada pero sin asistencia marcada (D33: sin límite de tiempo)
 se muestra en el frontend como «Sin marcar», caso no cubierto explícitamente por los AC.
+
+_(Ajuste posterior, 2026-09-06)_ Como el historial es el único sitio donde el profesor ve sus
+clases pasadas, es también desde donde marca la asistencia que le falta:
+
+- `AulaImpartida` gana `asistenciaPendiente` (reservas `CONFIRMED` sin marcar), del mismo
+  `groupBy`.
+- El historial del profesor deja de ser `<table>` y adopta el patrón «Fila» como el del
+  estudiante (lo que HU-415 T5 solo hizo para el estudiante): cada fila enlaza a `/aulas/:id` —donde
+  vive el control de asistencia de HU-403— y lleva un badge «Falta marcar asistencia» (ámbar) /
+  «Asistencia marcada» (`success`) / «Sin inscritos».
+- La tarjeta «Asistencia sin marcar» del panel del profesor (HU-502) enlaza ahora a `/historial`,
+  no a `/mis-aulas` (donde ya no hay aulas terminadas, D34).

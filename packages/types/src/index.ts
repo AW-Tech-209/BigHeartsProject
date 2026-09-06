@@ -953,6 +953,8 @@ export interface AulaImpartida extends Classroom {
   totalInscritos: number;
   /** Cuántas de esas se marcaron `ATTENDED`. */
   totalAsistieron: number;
+  /** Reservas `CONFIRMED` todavía sin marcar `ATTENDED`/`NO_SHOW` (D33: sin límite para hacerlo). */
+  asistenciaPendiente: number;
 }
 
 /** Respuesta de `GET /historial` para un `TEACHER`: sus aulas ya impartidas. */

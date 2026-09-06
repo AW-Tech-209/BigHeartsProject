@@ -231,7 +231,9 @@ function TarjetasProfesor({ data }: { data: ResumenPanelProfesor }) {
         icono={ClipboardList}
         tono={asistenciaSinMarcar > 0 ? 'attention' : 'success'}
         comoTarjeta
-        enlace={asistenciaSinMarcar > 0 ? { texto: 'Ir a mis aulas', a: '/mis-aulas' } : undefined}
+        enlace={
+          asistenciaSinMarcar > 0 ? { texto: 'Marcar la asistencia', a: '/historial' } : undefined
+        }
       >
         {asistenciaSinMarcar > 0 ? (
           <Numero

@@ -119,4 +119,5 @@ verde/ámbar/rojo, porque en este producto esos significan éxito/tiempo/error y
 - `useEsMovil` → `(max-width: 1023px)`: la barra inferior gobierna hasta `lg`; entre 640 y 1024 la
   superior se solapaba con marca + destinos + cuenta.
 - El historial adopta el patrón «Fila» que `layout-y-composicion.md` §4 ya prescribía para listas
-  largas — la versión `<table>` de HU-404 fue una lectura; esta es la del skill.
+  largas — la versión `<table>` de HU-404 fue una lectura; esta es la del skill. _(El historial del
+  profesor quedó en `<table>` en esta HU; se pasó a «Fila» en el ajuste posterior de HU-404.)_

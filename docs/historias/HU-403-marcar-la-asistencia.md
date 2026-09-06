@@ -66,7 +66,7 @@ que el interesado no puede consultar no es un registro, es un expediente. El mic
 - [x] **T2** — `POST /classrooms/:id/asistencia` con `@Roles('TEACHER')`, **acotado al dueño**: si
       el aula no es suya, `404`.
 - [x] **T3** — Solo se marca **después** de que la clase termine (`now ≥ scheduledAt +
-  durationMinutes`); antes, `CLASS_NOT_FINISHED`. Solo se tocan reservas de **esa** aula.
+durationMinutes`); antes, `CLASS_NOT_FINISHED`. Solo se tocan reservas de **esa** aula.
 - [x] **T4** — Una reserva `CANCELLED` **no** se puede marcar: quien canceló no faltó.
       `CONFIRMED → ATTENDED | NO_SHOW`, y corregir entre esos dos, son las únicas transiciones.
 - [x] **T5** — Tests: otro profesor → `404`; un `STUDENT` → `403`; antes de terminar →
@@ -111,3 +111,8 @@ que el interesado no puede consultar no es un registro, es un expediente. El mic
 asistencia necesita identificar qué reserva marcar. `getInscritos` ahora también incluye
 `ATTENDED`/`NO_SHOW` dentro de `confirmados` (son un `CONFIRMED` con asistencia ya decidida, no un
 grupo aparte); solo `CANCELLED` sale de ahí.
+
+_(Ajuste posterior, 2026-09-06)_ El control de asistencia sigue viviendo en el detalle del aula
+(`/aulas/:id`), pero como al terminar la clase esta sale de «Mis aulas» (D34), el único camino
+hasta ahí es el historial. El historial del profesor (HU-404) se rehízo para enlazar a cada aula
+pasada y avisar en la fila si falta marcar. Sin cambios en este endpoint.
