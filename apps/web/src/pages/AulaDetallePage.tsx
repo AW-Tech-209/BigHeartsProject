@@ -276,6 +276,14 @@ function DetalleDelAula({
         </div>
 
         <aside className="space-y-6" aria-label="Resumen de la clase">
+          {/* HU-304, T6. `sin-acceso` no pinta nada: ni cuenta atrás ni botón. */}
+          {accesoAlEnlace === 'abierto' && aula.meetingLink && (
+            <EnlaceDeLaClase url={aula.meetingLink} />
+          )}
+          {accesoAlEnlace === 'aun-no' && aula.accessOpensAt && (
+            <AperturaDelEnlace instanteISO={aula.accessOpensAt} />
+          )}
+
           <section className="relative overflow-hidden rounded-xl border border-border bg-card p-6 pl-7 shadow-xs">
             <span
               aria-hidden="true"
@@ -304,14 +312,6 @@ function DetalleDelAula({
               </dl>
             </div>
           </section>
-
-          {/* HU-304, T6. `sin-acceso` no pinta nada: ni cuenta atrás ni botón. */}
-          {accesoAlEnlace === 'abierto' && aula.meetingLink && (
-            <EnlaceDeLaClase url={aula.meetingLink} />
-          )}
-          {accesoAlEnlace === 'aun-no' && aula.accessOpensAt && (
-            <AperturaDelEnlace instanteISO={aula.accessOpensAt} />
-          )}
 
           {/* HU-301, T7. El único punto de la pantalla que ofrece reservar. */}
           <AccionReservarAula aula={aula} puedeReservar={puedeReservarla} estado={estado} />
