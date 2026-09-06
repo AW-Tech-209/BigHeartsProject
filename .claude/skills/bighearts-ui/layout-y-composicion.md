@@ -6,11 +6,14 @@
   marino, HU-415) con marca, navegación, cuenta y `SelectorTema` en `brand-foreground`; la barra
   inferior de móvil, igual. Es la superficie de identidad, la misma en los tres modos.
 - **Elementos:** Lockup marca (glifo `<MarcaBigHearts>` + palabra, `text-brand-foreground`) a la
-  izq, Avatar 30px + cuenta + `Cerrar sesión` a la der.
+  izq, ficha de cuenta + `Cerrar sesión` a la der.
+- **Ficha de cuenta = enlace al perfil:** el avatar de 30px + nombre + rol es un `<NavLink to="/perfil">`
+  con `hover` y `aria-current` propios (`sr-only` «Tu perfil» lo nombra). El perfil **no** es un
+  destino de la navegación: la ficha ya se lee como «lo tuyo».
 - **Destinos por rol (`text-sm`):**
-  - `STUDENT`: Aulas · Mis clases · Historial · Perfil
-  - `TEACHER`: Aulas · Mis aulas · Historial · Perfil
-  - `ADMIN`: Aulas · Panel · Perfil
+  - `STUDENT`: Panel · Aulas · Mis clases · Historial
+  - `TEACHER`: Panel · Aulas · Mis aulas · Historial
+  - `ADMIN`: Panel · Aulas
 - **Estado activo:** Borde de 2px en `border-brand-foreground` (blanco sobre la barra), no solo
   cambio de color.
 - **Escritorio (≥ `lg`):** Todos los enlaces visibles. **PROHIBIDO menú hamburguesa.**
@@ -71,7 +74,10 @@
        `<button aria-expanded aria-controls>` `+N`.
     3. **Cupo** `w-44`: `<IndicadorCupo variante="inscritos">` solo en la perspectiva del
        profesor; en el catálogo el badge de estado ya dice el cupo y la zona va vacía.
-    4. **Qué hago** `w-49`: una acción primaria (reservar / entrar / cancelar / gestionar).
+    4. **Qué hago** `w-49 self-center`: una acción primaria, siempre un `<Button>` de ancho
+       completo (reservar / entrar / cancelar / gestionar / completar accesibilidad — nunca un
+       enlace suelto subrayado). `self-center` la alinea al centro vertical de la fila en vez de
+       colgarla del borde superior cuando la zona «qué» es más alta.
   * **Orden DOM estricto:** cuándo → `<h3>` → subtítulo → fila de badges → cupo → acción →
     banda «También:» → banda de aviso.
   * **Banda «También:»** (`border-t`, `+N` abierto): las etiquetas colapsadas, precedidas de

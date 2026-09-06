@@ -194,7 +194,7 @@ describe('HistorialService.listHistorial — profesor (AC2)', () => {
     expect(and).toContainEqual({ endsAt: { lte: expect.any(Date) } });
   });
 
-  it('cuenta inscritos (CONFIRMED+ATTENDED+NO_SHOW) y asistentes (solo ATTENDED), sin las CANCELLED', async () => {
+  it('cuenta inscritos (CONFIRMED+ATTENDED+NO_SHOW), asistentes (solo ATTENDED) y lo que falta por marcar (CONFIRMED)', async () => {
     const aula = filaDeAula({ id: 'aula-1' });
     const prisma = {
       classroom: {
@@ -205,6 +205,7 @@ describe('HistorialService.listHistorial — profesor (AC2)', () => {
         groupBy: vi.fn().mockResolvedValue([
           { classroomId: 'aula-1', status: BookingStatus.ATTENDED, _count: { _all: 3 } },
           { classroomId: 'aula-1', status: BookingStatus.NO_SHOW, _count: { _all: 1 } },
+          { classroomId: 'aula-1', status: BookingStatus.CONFIRMED, _count: { _all: 2 } },
           { classroomId: 'aula-1', status: BookingStatus.CANCELLED, _count: { _all: 2 } },
         ]),
       },
@@ -213,9 +214,14 @@ describe('HistorialService.listHistorial — profesor (AC2)', () => {
 
     const resultado = await service.listHistorial(profesorDelToken, {});
 
-    const item = resultado.items[0] as { totalInscritos: number; totalAsistieron: number };
-    expect(item.totalInscritos).toBe(4);
+    const item = resultado.items[0] as {
+      totalInscritos: number;
+      totalAsistieron: number;
+      asistenciaPendiente: number;
+    };
+    expect(item.totalInscritos).toBe(6);
     expect(item.totalAsistieron).toBe(3);
+    expect(item.asistenciaPendiente).toBe(2);
   });
 
   it('el meetingLink no viaja en el historial del profesor', async () => {

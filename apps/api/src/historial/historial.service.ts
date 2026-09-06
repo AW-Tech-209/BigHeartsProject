@@ -152,6 +152,9 @@ export class HistorialService {
         totalAsistieron: conteos
           .filter((c) => c.classroomId === row.id && c.status === BookingStatus.ATTENDED)
           .reduce((suma, c) => suma + c._count._all, 0),
+        asistenciaPendiente: conteos
+          .filter((c) => c.classroomId === row.id && c.status === BookingStatus.CONFIRMED)
+          .reduce((suma, c) => suma + c._count._all, 0),
       })),
       total,
       page,

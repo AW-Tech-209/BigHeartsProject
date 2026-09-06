@@ -84,9 +84,9 @@ describe('HistorialPage — estudiante (AC1)', () => {
 describe('HistorialPage — profesor (AC2)', () => {
   beforeEach(() => darSesion(UserRole.TEACHER));
 
-  it('muestra el aula impartida con inscritos y asistentes', async () => {
+  it('muestra el aula impartida con inscritos, asistentes y enlace al detalle', async () => {
     vi.mocked(getHistorial).mockResolvedValue({
-      items: [{ ...filaClasica(), totalInscritos: 4, totalAsistieron: 3 }],
+      items: [{ ...filaClasica(), totalInscritos: 4, totalAsistieron: 3, asistenciaPendiente: 0 }],
       total: 1,
       page: 1,
       pageSize: 20,
@@ -94,9 +94,25 @@ describe('HistorialPage — profesor (AC2)', () => {
 
     montar();
 
-    expect(await screen.findByText('Conversación cotidiana')).toBeInTheDocument();
-    expect(screen.getByText('4')).toBeInTheDocument();
-    expect(screen.getByText('3')).toBeInTheDocument();
+    expect(await screen.findByRole('link', { name: 'Conversación cotidiana' })).toHaveAttribute(
+      'href',
+      '/aulas/aula-1',
+    );
+    expect(screen.getByText('3 de 4 asistieron')).toBeInTheDocument();
+    expect(screen.getByText('Asistencia marcada')).toBeInTheDocument();
+  });
+
+  it('avisa en la fila cuando todavía falta marcar la asistencia', async () => {
+    vi.mocked(getHistorial).mockResolvedValue({
+      items: [{ ...filaClasica(), totalInscritos: 4, totalAsistieron: 0, asistenciaPendiente: 4 }],
+      total: 1,
+      page: 1,
+      pageSize: 20,
+    });
+
+    montar();
+
+    expect(await screen.findByText('Falta marcar asistencia')).toBeInTheDocument();
   });
 });
 
@@ -118,6 +134,21 @@ describe('HistorialPage — accesibilidad (AC6)', () => {
     darSesion(UserRole.STUDENT);
     vi.mocked(getHistorial).mockResolvedValue({
       items: [{ ...filaClasica(), myBookingStatus: BookingStatus.ATTENDED }],
+      total: 1,
+      page: 1,
+      pageSize: 20,
+    });
+
+    const { container } = renderConProviders(<AppRoutes />, { ruta: '/historial', tema });
+
+    await screen.findByText('Conversación cotidiana');
+    await esperarSinFallosDeAccesibilidad(container);
+  });
+
+  it.each(TEMAS)('el historial del profesor sale limpio en el tema %s', async (tema) => {
+    darSesion(UserRole.TEACHER);
+    vi.mocked(getHistorial).mockResolvedValue({
+      items: [{ ...filaClasica(), totalInscritos: 4, totalAsistieron: 2, asistenciaPendiente: 2 }],
       total: 1,
       page: 1,
       pageSize: 20,

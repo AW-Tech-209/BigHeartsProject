@@ -8,13 +8,22 @@ import {
   derivarEstadoAula,
   type EstadoAula as EstadoAulaTipo,
 } from '@academia/types';
-import { Ban, ChevronDown, ChevronUp, Presentation, UserCheck } from 'lucide-react';
+import {
+  Accessibility,
+  Ban,
+  ChevronDown,
+  ChevronUp,
+  Presentation,
+  Settings,
+  UserCheck,
+} from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { useAccionCancelarReserva } from '@/features/aulas/components/accion-cancelar-reserva';
 import { useAccionEntrarAClase } from '@/features/aulas/components/accion-entrar-a-clase';
-import { AccionesDeAula } from '@/features/aulas/components/acciones-de-aula';
+import { useAccionesDeAula } from '@/features/aulas/components/acciones-de-aula';
 import { useAccionReservarAula } from '@/features/aulas/components/accion-reservar-aula';
 import { APOYOS_AULA } from '@/features/aulas/lib/apoyos-aula';
 import { describirDuracion, describirHorarioRenglon } from '@/features/aulas/lib/horario';
@@ -230,8 +239,9 @@ export function TarjetaAula({
       accessOpensAt: classroom.accessOpensAt ?? null,
     },
   });
+  const gestion = useAccionesDeAula({ aula: classroom, esDueno: esVistaDelProfesor });
 
-  const hayAvisos = Boolean(reservar.aviso || cancelar.aviso || entrar.aviso);
+  const hayAvisos = Boolean(reservar.aviso || cancelar.aviso || entrar.aviso || gestion.aviso);
 
   return (
     <article
@@ -288,7 +298,10 @@ export function TarjetaAula({
 
           <p className="truncate text-[13px] text-muted-foreground">{lineaSecundaria}</p>
 
-          <div className="relative z-10 flex flex-wrap items-center gap-1.5">
+          {/* `whitespace-nowrap` es heredable: cada badge queda en una línea y
+              es `flex-wrap` quien lo baja entero al siguiente renglón, nunca su
+              texto el que crece en vertical. */}
+          <div className="relative z-10 flex flex-wrap items-center gap-1.5 whitespace-nowrap">
             {miReservaCancelada && (
               <Badge tono="destructive" icon={Ban}>
                 Reserva cancelada
@@ -341,45 +354,53 @@ export function TarjetaAula({
               variante="inscritos"
               maxStudents={classroom.maxStudents}
               currentBookings={classroom.currentBookings}
-              className="flex"
+              className="flex whitespace-nowrap"
             />
           </div>
         )}
 
-        {/* Zona 4 — qué hago. */}
-        <div className="relative z-10 flex w-49 shrink-0 flex-col gap-2">
+        {/*
+          Zona 4 — qué hago. `self-center`: los botones se centran en el alto de
+          la fila en vez de colgar del borde superior cuando la zona «qué» es más
+          alta por los badges.
+        */}
+        <div className="relative z-10 flex w-49 shrink-0 flex-col gap-2 self-center">
           {reservar.boton}
           {cancelar.boton}
           {entrar.boton}
 
           {/* HU-208, T2/AC3. Sobre la clase propia el catálogo ofrece gestionarla. */}
           {marcaDePropiedad && (
-            <Link
-              to={`/aulas/${classroom.id}`}
-              className="inline-block text-sm font-medium text-primary underline underline-offset-4 hover:no-underline"
+            <Button
+              render={<Link to={`/aulas/${classroom.id}`} />}
+              variant="outline"
+              className="h-11 w-full gap-2 px-3.5"
             >
+              <Settings aria-hidden="true" strokeWidth={2} className="size-4" />
               Gestionar mi clase
-            </Link>
+            </Button>
           )}
 
           {/* T15: la vía para que un aula «sin indicar» deje de estarlo. */}
           {esVistaDelProfesor && sinModosDeclarados && (
-            <Link
-              to={`/mis-aulas/${classroom.id}/accesibilidad`}
-              className="inline-block text-sm font-medium text-primary underline underline-offset-4 hover:no-underline"
+            <Button
+              render={<Link to={`/mis-aulas/${classroom.id}/accesibilidad`} />}
+              variant="outline"
+              className="h-11 w-full gap-2 px-3.5"
             >
+              <Accessibility aria-hidden="true" strokeWidth={2} className="size-4" />
               Completar accesibilidad
-            </Link>
+            </Button>
           )}
 
-          {esVistaDelProfesor && <AccionesDeAula aula={classroom} esDueno compact />}
+          {gestion.boton}
         </div>
       </div>
 
       {abierta && (
         <div
           id={bandaId}
-          className="relative z-10 mt-3 flex flex-wrap items-center gap-1.5 border-t border-border pt-3"
+          className="relative z-10 mt-3 flex flex-wrap items-center gap-1.5 border-t border-border pt-3 whitespace-nowrap"
         >
           <span className="text-xs text-muted-foreground">También:</span>
           {ocultas.map((etiqueta) => etiqueta.node)}
@@ -391,6 +412,7 @@ export function TarjetaAula({
           {reservar.aviso}
           {cancelar.aviso}
           {entrar.aviso}
+          {gestion.aviso}
         </div>
       )}
     </article>

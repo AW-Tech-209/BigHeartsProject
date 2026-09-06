@@ -26,7 +26,6 @@ const ESTADOS_RESERVABLES: readonly EstadoAula[] = ['disponible', 'ultimos-cupos
  */
 const RAZON_NO_RESERVABLE: Partial<Record<EstadoAula, { icon: LucideIcon; texto: string }>> = {
   reservada: { icon: BookmarkCheck, texto: 'Cupo reservado' },
-  'acceso-abierto': { icon: BookmarkCheck, texto: 'Cupo reservado' },
   llena: { icon: Users, texto: 'Sin cupos disponibles' },
 };
 

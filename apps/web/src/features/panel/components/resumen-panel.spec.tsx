@@ -135,14 +135,14 @@ describe('ResumenPanel — profesor (AC4)', () => {
     comunicacionDelGrupo: { porModo: {}, sinIndicar: 0, total: 0 },
   };
 
-  it('«Asistencia sin marcar» con deuda va en ámbar y enlaza a mis aulas', async () => {
+  it('«Asistencia sin marcar» con deuda va en ámbar y enlaza al historial', async () => {
     dar({ ...base, asistenciaSinMarcar: 2 });
     renderConProviders(<ResumenPanel />);
 
     expect(await screen.findByText('clases terminadas sin asistencia marcada')).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Ir a mis aulas' })).toHaveAttribute(
+    expect(screen.getByRole('link', { name: 'Marcar la asistencia' })).toHaveAttribute(
       'href',
-      '/mis-aulas',
+      '/historial',
     );
   });
 

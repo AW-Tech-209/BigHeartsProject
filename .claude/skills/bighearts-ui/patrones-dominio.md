@@ -48,6 +48,10 @@ Sin porcentajes ni gráficos. Usa `role="progressbar"` con `aria-valuemin/max/no
     se **reemplaza** por uno inhabilitado con ícono + texto propio ("Sin cupos
     disponibles" / "Cupo reservado", HU-301) — nunca desaparece sin explicación
     ni queda un botón activo que invite a "re-reservar".
+  - Dentro de la ventana de acceso (`acceso-abierto`): en lugar de "Cupo
+    reservado", un botón **activo** amarillo sólido (`DoorOpen` + "Ingresa a la
+    clase") que lleva al detalle, donde vive el enlace real. Es el único botón
+    de acción en color sólido — la regla del sólido: "algo que hacer ahora".
 - `variante="inscritos"` (Profesor - HU-207):
   - Texto: `{n} de {m} inscritos`. Tono **siempre neutro**.
 
@@ -55,7 +59,7 @@ Sin porcentajes ni gráficos. Usa `role="progressbar"` con `aria-valuemin/max/no
 
 - **Fila única de etiquetas (HU-414):** `<EstadoAula>`, `Tu clase` y `Coincide con tu preferencia` van siempre visibles y no cuentan para el tope. Los modos de comunicación y los apoyos comparten la misma fila y colapsan tras un `<button aria-expanded>` `+N`. El hueco es un techo (`maxEtiquetasVisibles`, prop, default 2) menos cada badge fijo extra que ya ocupe la fila (`Tu clase`, `Coincide…`, `Modo sin indicar`), para que la fila no envuelva; el `+N` despliega el resto en una banda `También:` al pie del renglón. La acción vive en la zona 4 y su mensaje asociado (cuenta atrás de acceso, «ya no se puede cancelar», error de reserva) se reubica en la banda de aviso, también al pie.
 - **`perspectiva="profesor"`:** Usa `variante="inscritos"`. Omite badge `<EstadoAula>` si el estado depende de cupo (`disponible`, `ultimos-cupos`, `llena`). Mantiene badges de ciclo de vida (`cancelada`, `finalizada`, `en-curso`). Riel de 4px conserva siempre el estado.
-- **Badge `Tu clase`:** En catálogo (`perspectiva="catalogo"`), si la clase es propia, muestra badge `primary-soft` (`Presentation` + `Tu clase`) **sumado** al estado. No se muestra en `perspectiva="profesor"`. Acción cambia a "Gestionar mi clase".
+- **Badge `Tu clase`:** En catálogo (`perspectiva="catalogo"`), si la clase es propia, muestra badge `primary-soft` (`Presentation` + `Tu clase`) **sumado** al estado. No se muestra en `perspectiva="profesor"`. La acción de la zona 4 pasa a un botón `outline` (`Settings` + "Gestionar mi clase") que lleva al detalle.
 - **Botón Reservar:** SOLO se renderiza para rol `STUDENT` (`puedeReservar()` en `features/aulas/lib/`). Para otros roles NO debe existir en el DOM.
 
 ## 5. Modales y Confirmaciones (`<AlertDialog>`)
