@@ -1,8 +1,15 @@
 import type { AulaImpartida } from '@academia/types';
-import { CalendarCheck } from 'lucide-react';
 
+import {
+  Table,
+  TableBody,
+  TableCaption,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 import { describirFechaCompacta } from '@/features/aulas/lib/horario';
-import { FilaHistorial } from './fila-historial';
 
 type TablaHistorialProfesorProps = {
   items: AulaImpartida[];
@@ -12,38 +19,38 @@ type TablaHistorialProfesorProps = {
 /** El historial del profesor (HU-404, AC2): clase, fecha, inscritos y asistentes. */
 export function TablaHistorialProfesor({ items, total }: TablaHistorialProfesorProps) {
   return (
-    <div className="rounded-xl border border-border bg-card shadow-xs">
-      <p className="border-b border-border px-4 py-3 text-base text-muted-foreground sm:px-5">
+    <Table>
+      <TableCaption>
         {total === 1 ? '1 aula encontrada.' : `${total} aulas encontradas.`}
-      </p>
+      </TableCaption>
 
-      <ul aria-label="Historial de aulas impartidas" className="subir-suave">
+      <TableHeader>
+        <TableRow>
+          <TableHead>Clase</TableHead>
+          <TableHead>Fecha</TableHead>
+          <TableHead className="text-right">Inscritos</TableHead>
+          <TableHead className="text-right">Asistieron</TableHead>
+        </TableRow>
+      </TableHeader>
+
+      <TableBody>
         {items.map((item) => (
-          <FilaHistorial
-            key={item.id}
-            aulaId={item.id}
-            icon={CalendarCheck}
-            titulo={item.title}
-            subtitulo={describirFechaCompacta(item.scheduledAt)}
-          >
-            <div className="text-right text-sm text-muted-foreground">
-              <p>
-                <span className="font-medium text-foreground tabular-nums">
-                  {item.totalAsistieron}
-                </span>{' '}
-                asistieron
-              </p>
-              <p>
-                de{' '}
-                <span className="font-medium text-foreground tabular-nums">
-                  {item.totalInscritos}
-                </span>{' '}
-                inscritos
-              </p>
-            </div>
-          </FilaHistorial>
+          <TableRow key={item.id}>
+            <TableHead scope="row" className="font-medium text-foreground">
+              {item.title}
+            </TableHead>
+            <TableCell className="whitespace-nowrap text-muted-foreground">
+              {describirFechaCompacta(item.scheduledAt)}
+            </TableCell>
+            <TableCell className="text-right text-foreground tabular-nums">
+              {item.totalInscritos}
+            </TableCell>
+            <TableCell className="text-right text-foreground tabular-nums">
+              {item.totalAsistieron}
+            </TableCell>
+          </TableRow>
         ))}
-      </ul>
-    </div>
+      </TableBody>
+    </Table>
   );
 }
