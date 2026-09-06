@@ -756,8 +756,13 @@ export interface CancelClassroomResponse {
  *
  *  - `canceladas` — `status = CANCELLED`, **sea cual sea su fecha**. Una clase
  *    cancelada la semana que viene no es una próxima: no hay nada que preparar.
- *  - `pasadas` — no cancelada y con el horario ya cumplido.
- *  - `proximas` — no cancelada y con el horario por venir.
+ *  - `pasadas` — no cancelada y **ya terminada** (`now ≥ scheduledAt +
+ *    durationMinutes`). El corte es el FIN de la clase, no su inicio.
+ *  - `proximas` — no cancelada y **sin terminar**: futuras y también las que
+ *    están en curso ahora mismo. Una clase que empezó hace diez minutos sigue
+ *    aquí —el estudiante tiene que entrar a ella, el profesor gestionarla—, no
+ *    se muda al historial hasta que acaba. (El catálogo público sí corta en el
+ *    inicio: una clase que empieza deja de ofrecerse.)
  *
  * Los valores van en minúscula y en español porque viajan **en la URL** y el
  * profesor los ve al copiar el enlace (`?estado=canceladas`). El resto de enums

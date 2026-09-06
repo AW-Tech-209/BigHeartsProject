@@ -1,5 +1,10 @@
 # HU-214 — Datos de demostración en el seed
 
+> **Nota posterior (2026-09-06):** el seed se dividió en dos. `seed.ts` solo crea el Admin y
+> corre siempre; los datos de demostración de esta HU (y de HU-307/HU-406) viven ahora en
+> `apps/api/prisma/seed-demo.ts`, que se ejecuta a mano con `npm run db:seed:demo`. `seed-data.ts`
+> se eliminó; sus arrays e invariantes están en `seed-demo.ts` / `seed-demo.spec.ts`.
+
 | Campo               | Valor                                    |
 | ------------------- | ---------------------------------------- |
 | **Sprint**          | Sprint 2 — Gestión de Aulas              |

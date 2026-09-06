@@ -1,5 +1,10 @@
 # HU-406 — El seed siembra historial y asistencia
 
+> **Nota posterior (2026-09-06):** el historial de demostración se movió a
+> `apps/api/prisma/seed-demo.ts` (manual, `npm run db:seed:demo`); `RESERVAS_DE_DEMOSTRACION` pasó
+> a llamarse `RESERVAS` y `contarReservasConCupoPorAula` → `contarReservasConCupo`. `seed.ts` ya
+> solo crea el Admin.
+
 | Campo               | Valor                                         |
 | ------------------- | --------------------------------------------- |
 | **Sprint**          | Sprint 4 — Notificaciones e Historial         |

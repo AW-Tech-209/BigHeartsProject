@@ -31,7 +31,9 @@ Todos desde la **raíz** del repo.
 | `npm run db:migrate` / `db:deploy` / `db:studio` / `db:seed` | Prisma.                                                      |
 
 Health: `curl http://localhost:3000/health` → `{"success":true,...,"database":"up"}`.
-Seed: un usuario por rol, contraseña `Password123!` (ver `README.md`).
+Seed: `db:seed` (siempre, deploy + Docker) solo crea el Admin del entorno. `db:seed:demo`
+(manual) monta usuarios, aulas y reservas de todos los casos, contraseña `Password123!` (ver
+`README.md`).
 
 ---
 

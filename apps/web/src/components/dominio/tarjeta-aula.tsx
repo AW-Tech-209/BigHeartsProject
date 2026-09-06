@@ -65,8 +65,13 @@ export type AulaDeTarjeta = Classroom &
  */
 export type PerspectivaTarjeta = 'catalogo' | 'profesor';
 
-/** Cuántas etiquetas de modo/apoyo se ven antes de colapsar tras «+N». */
-const MAX_ETIQUETAS_VISIBLES_POR_DEFECTO = 3;
+/**
+ * Cuántas etiquetas de modo/apoyo se ven antes de colapsar tras «+N». Es un
+ * TECHO: si en la fila ya hay badges siempre visibles (`Tu clase`, `Coincide…`,
+ * `Modo sin indicar`), el hueco real baja para que la fila no envuelva y el
+ * renglón no crezca de alto.
+ */
+const MAX_ETIQUETAS_VISIBLES_POR_DEFECTO = 2;
 
 type TarjetaAulaProps = {
   classroom: AulaDeTarjeta;
@@ -190,8 +195,16 @@ export function TarjetaAula({
       }),
     ),
   ];
-  const visibles = colapsables.slice(0, Math.max(maxEtiquetasVisibles, 0));
-  const ocultas = colapsables.slice(Math.max(maxEtiquetasVisibles, 0));
+  // Cada badge siempre visible que no sea el estado se come un hueco de la fila:
+  // se descuenta del techo para que «Tu clase» + «Coincide…» no empujen tres
+  // etiquetas más a una segunda línea.
+  const badgesFijosExtra =
+    (marcaDePropiedad ? 1 : 0) +
+    (!esVistaDelProfesor && coincideConLaMia ? 1 : 0) +
+    (sinModosDeclarados ? 1 : 0);
+  const cupoColapsables = Math.max(Math.max(maxEtiquetasVisibles, 0) - badgesFijosExtra, 0);
+  const visibles = colapsables.slice(0, cupoColapsables);
+  const ocultas = colapsables.slice(cupoColapsables);
   const abierta = etiquetasAbiertas && ocultas.length > 0;
 
   const reservar = useAccionReservarAula({

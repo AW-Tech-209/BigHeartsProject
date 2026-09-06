@@ -64,33 +64,42 @@ curl http://localhost:3000/health
 # {"success":true,"data":{"status":"ok","uptime":1,"database":"up"},"timestamp":"..."}
 ```
 
-### Credenciales de prueba (seed)
+### Seed de la base de datos
 
-El seed crea usuarios y, en entornos no productivos, aulas de ejemplo. Todos los usuarios comparten
-la misma contraseña:
+Hay **dos** seeds, y hacen cosas distintas:
 
-| Rol     | Email                                | Estado  | Contraseña     |
-| ------- | ------------------------------------ | ------- | -------------- |
-| ADMIN   | `admin@academia.local`               | ACTIVE  | `Password123!` |
-| TEACHER | `profe@academia.local`               | ACTIVE  | `Password123!` |
-| TEACHER | `profe2@academia.local`              | ACTIVE  | `Password123!` |
-| TEACHER | `profe.pendiente@academia.local`     | PENDING | `Password123!` |
-| STUDENT | `alumno@academia.local`              | ACTIVE  | `Password123!` |
-| STUDENT | `alumno2@academia.local`             | ACTIVE  | `Password123!` |
-| STUDENT | `alumno3` a `alumno6@academia.local` | ACTIVE  | `Password123!` |
+**1. Seed inicial (`npm run db:seed`).** Se ejecuta SIEMPRE —cada deploy y cada `docker compose
+up`— y solo garantiza que existe el usuario **Admin**, con credenciales del entorno
+(`ADMIN_EMAIL` / `ADMIN_PASSWORD`; en dev, `admin@academia.local` / `Password123!`). Idempotente:
+nunca pisa un admin existente. No siembra nada más.
 
-Además, once aulas repartidas entre los dos profesores `ACTIVE`, con fechas relativas al momento de
-sembrar, y reservas reales sobre ellas: `alumno@academia.local` ve en «Mis reservas» una clase
-próxima y una a punto de empezar (con el enlace ya visible), y en «Historial» las tres salidas
-posibles — asistió, no asistió y canceló. Dos de esas aulas pasadas ya tienen la asistencia
-marcada por su profesor (una por profesor, mezclando `ATTENDED` y `NO_SHOW`), y una más queda
-pasada y sin marcar, el caso real más frecuente. `alumno3`–`alumno6` son relleno, solo para que
-`currentBookings` de cada aula cuadre con las reservas que ocupan cupo de verdad — incluida una con
-el último cupo libre y otra llena.
+**2. Seed de datos de prueba (`npm run db:seed:demo`).** Manual, lo lanzas tú cuando quieras
+poblar la BD para trastear o para enseñar la app. Monta el escenario completo: usuarios, aulas y
+reservas que cubren **todos los casos** que la interfaz puede mostrar. Fechas relativas a
+`Date.now()` en el momento de correrlo, así que los estados temporales (`en curso`,
+`acceso abierto`, `finalizada`…) son ciertos justo después. Idempotente (ids fijos en rango
+`d0c0…`); reejecutarlo solo refresca las fechas.
 
-El seed es idempotente (usuarios por `upsert` de email, aulas y reservas por un id fijo): se puede
-re-ejecutar sin duplicar. Para lanzarlo a mano: `npm run db:seed` (o dentro del contenedor, ya
-corre solo al arrancar).
+Todas las cuentas de prueba comparten la contraseña `Password123!` (o `SEED_DEMO_PASSWORD`):
+
+| Rol     | Email                                             | Estado    | Para probar…                                                                                            |
+| ------- | ------------------------------------------------- | --------- | ------------------------------------------------------------------------------------------------------- |
+| TEACHER | `demo.profe@bighearts.local`                      | ACTIVE    | «Mis aulas», crear/editar/cancelar                                                                      |
+| TEACHER | `demo.profe2@bighearts.local`                     | ACTIVE    | segundo profesor, su propio historial                                                                   |
+| TEACHER | `demo.profe.pendiente@bighearts.local`            | PENDING   | la cola de aprobación del admin                                                                         |
+| TEACHER | `demo.profe.rechazado@bighearts.local`            | REJECTED  | login que responde «solicitud denegada»                                                                 |
+| STUDENT | `demo.alumno@bighearts.local`                     | ACTIVE    | dueño de las reservas; «Mis clases» e «Historial» con las tres salidas (asistió / no asistió / canceló) |
+| STUDENT | `demo.alumno2@bighearts.local`                    | ACTIVE    | «Mis reservas» de otra cuenta                                                                           |
+| STUDENT | `demo.alumno.suspendido@bighearts.local`          | SUSPENDED | login que responde «cuenta deshabilitada»                                                               |
+| STUDENT | `demo.relleno1` … `demo.relleno5@bighearts.local` | ACTIVE    | ocupan cupo (1–3 con preferencia declarada, para el resumen de modos del profesor)                      |
+
+Aulas: doce escenarios repartidos entre los dos profesores `ACTIVE` — disponible, últimos cupos,
+llena, reservada, acceso abierto, en curso, «llegué tarde», dos finalizadas de historial (una por
+profesor, mezclando `ATTENDED` y `NO_SHOW`), cancelada, sin modos declarados y con todos los
+apoyos de accesibilidad.
+
+Las invariantes de negocio de estos datos (cupo ≤ `maxStudents`, sin solapes de reservas
+`CONFIRMED`, etc.) se verifican en CI: `apps/api/prisma/seed-demo.spec.ts`.
 
 ### Hot-reload
 
@@ -226,25 +235,26 @@ curl http://localhost:3000/health
 
 ## Scripts de la raíz
 
-| Comando                   | Qué hace                                                        |
-| ------------------------- | --------------------------------------------------------------- |
-| `npm run dev:api`         | Levanta el backend en modo watch.                               |
-| `npm run dev:web`         | Levanta el frontend en modo watch.                              |
-| `npm run build`           | Compila los tres workspaces (`types` primero, por dependencia). |
-| `npm run build:types`     | Compila solo el paquete de tipos compartidos.                   |
-| `npm run lint`            | Pasa ESLint a todo el repo.                                     |
-| `npm run lint:fix`        | Igual, arreglando lo que se pueda automáticamente.              |
-| `npm run format`          | Formatea todo el repo con Prettier.                             |
-| `npm run format:check`    | Comprueba el formato sin escribir nada (útil en CI).            |
-| `npm run typecheck`       | Comprueba los tipos de los tres workspaces.                     |
-| `npm run test`            | Vitest en los tres workspaces (compila los tipos antes).        |
-| `npm run db:migrate`      | Crea y aplica migraciones de Prisma en desarrollo.              |
-| `npm run db:deploy`       | Aplica migraciones existentes (CI / producción).                |
-| `npm run db:studio`       | Abre Prisma Studio.                                             |
-| `npm run db:seed`         | Siembra los usuarios de prueba (idempotente).                   |
-| `npm run docker:up`       | Levanta el stack completo en Docker.                            |
-| `npm run docker:up:build` | Igual, reconstruyendo las imágenes.                             |
-| `npm run docker:down`     | Para el stack (conserva los datos).                             |
+| Comando                   | Qué hace                                                                               |
+| ------------------------- | -------------------------------------------------------------------------------------- |
+| `npm run dev:api`         | Levanta el backend en modo watch.                                                      |
+| `npm run dev:web`         | Levanta el frontend en modo watch.                                                     |
+| `npm run build`           | Compila los tres workspaces (`types` primero, por dependencia).                        |
+| `npm run build:types`     | Compila solo el paquete de tipos compartidos.                                          |
+| `npm run lint`            | Pasa ESLint a todo el repo.                                                            |
+| `npm run lint:fix`        | Igual, arreglando lo que se pueda automáticamente.                                     |
+| `npm run format`          | Formatea todo el repo con Prettier.                                                    |
+| `npm run format:check`    | Comprueba el formato sin escribir nada (útil en CI).                                   |
+| `npm run typecheck`       | Comprueba los tipos de los tres workspaces.                                            |
+| `npm run test`            | Vitest en los tres workspaces (compila los tipos antes).                               |
+| `npm run db:migrate`      | Crea y aplica migraciones de Prisma en desarrollo.                                     |
+| `npm run db:deploy`       | Aplica migraciones existentes (CI / producción).                                       |
+| `npm run db:studio`       | Abre Prisma Studio.                                                                    |
+| `npm run db:seed`         | Seed inicial: solo el Admin (idempotente). Corre en cada deploy y `docker compose up`. |
+| `npm run db:seed:demo`    | Seed de datos de prueba: usuarios, aulas y reservas de todos los casos. Manual.        |
+| `npm run docker:up`       | Levanta el stack completo en Docker.                                                   |
+| `npm run docker:up:build` | Igual, reconstruyendo las imágenes.                                                    |
+| `npm run docker:down`     | Para el stack (conserva los datos).                                                    |
 
 ## Estructura de carpetas
 

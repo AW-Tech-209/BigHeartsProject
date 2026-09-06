@@ -83,8 +83,9 @@ services:
       # montan (se quedan los de la imagen), por eso solo montamos src y prisma.
       - ./apps/api/src:/app/apps/api/src
       - ./apps/api/prisma:/app/apps/api/prisma
-    # Al arrancar: aplica migraciones, siembra datos de prueba (idempotente) y
-    # levanta el backend en modo watch. Todo automático, sin pasos manuales.
+    # Al arrancar: aplica migraciones, corre el seed inicial (solo el Admin,
+    # idempotente) y levanta el backend en modo watch. Para poblar la BD con
+    # datos de prueba: `npm run db:seed:demo` a mano.
     # Se usan los scripts del workspace para que el cwd sea apps/api y Prisma
     # encuentre prisma/schema.prisma.
     command: >

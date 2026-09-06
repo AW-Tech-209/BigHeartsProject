@@ -155,13 +155,10 @@ describe('PanelService.resumen — reparto por rol (AC1, AC3)', () => {
     const prisma = prismaMock({
       classroom: {
         findFirst: vi.fn().mockResolvedValue(filaDeAula()),
-        findMany: vi.fn().mockResolvedValue([
-          // terminada: empezó hace 3h, duró 60 min
-          { scheduledAt: new Date('2026-09-03T09:00:00.000Z'), durationMinutes: 60 },
-          // aún en curso: empezó hace 10 min, dura 60 min
-          { scheduledAt: new Date('2026-09-03T11:50:00.000Z'), durationMinutes: 60 },
-        ]),
-        count: vi.fn(),
+        findMany: vi.fn(),
+        // La deuda de asistencia ya es un `count` con `endsAt <= ahora`: solo la
+        // clase terminada, no la que sigue en curso.
+        count: vi.fn().mockResolvedValue(1),
         aggregate: vi.fn(),
       },
       booking: {
@@ -198,11 +195,9 @@ describe('PanelService.resumen — reparto por rol (AC1, AC3)', () => {
       user: { findUnique: vi.fn(), count: vi.fn().mockResolvedValue(4) },
       classroom: {
         findFirst: vi.fn(),
-        count: vi.fn().mockResolvedValue(6),
-        findMany: vi.fn().mockResolvedValue([
-          { scheduledAt: new Date('2026-09-03T11:50:00.000Z'), durationMinutes: 60 },
-          { scheduledAt: new Date('2026-09-03T09:00:00.000Z'), durationMinutes: 60 },
-        ]),
+        // Dos `count` en orden: clases de hoy, luego clases en curso.
+        count: vi.fn().mockResolvedValueOnce(6).mockResolvedValueOnce(1),
+        findMany: vi.fn(),
         aggregate: vi.fn().mockResolvedValue({ _sum: { currentBookings: 84, maxStudents: 120 } }),
       },
     });

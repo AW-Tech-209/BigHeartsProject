@@ -119,8 +119,11 @@ cambió, la HU se hizo mal.
 ## Notas de implementación
 
 Sin desviaciones. Decisiones no fijadas en la HU: «hoy» del admin = día UTC;
-«la semana» = ventana móvil de 7 días desde ahora; «en curso» y «ya terminó» se
-cortan en memoria contra `scheduledAt + duración` (Prisma no filtra dos columnas).
+«la semana» = ventana móvil de 7 días desde ahora.
+
+_(Actualizado el 2026-09-06, **D40**: «en curso» y «ya terminó» ya no se cortan
+en memoria — `Classroom.endsAt` está persistida con un `CHECK`, así que son un
+`WHERE` normal. También «tu próxima clase» incluye ahora la clase en curso.)_
 
 ### Recorrido de AC
 

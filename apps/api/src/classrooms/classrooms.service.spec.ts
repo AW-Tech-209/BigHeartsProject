@@ -312,6 +312,19 @@ describe('ClassroomsService.createClassroom', () => {
     expect(classroom.scheduledAt).toBe('2027-08-12T23:00:00.000Z');
   });
 
+  // `endsAt` la escribe la app (= scheduledAt + durationMinutes); el CHECK de la
+  // BD la vigila. Es lo que hace que «¿ya terminó?» sea un `WHERE`.
+  it('escribe endsAt = scheduledAt + durationMinutes', async () => {
+    const { service, create } = setup();
+
+    await service.createClassroom(
+      profesorDelToken,
+      entrada({ scheduledAt: '2027-08-12T23:00:00.000Z', durationMinutes: 90 }),
+    );
+
+    expect(datosEscritos(create).endsAt).toEqual(new Date('2027-08-13T00:30:00.000Z'));
+  });
+
   describe('autorización por estado de la cuenta (AC5)', () => {
     /**
      * El estado se lee de la BD, no del token. Estos tres casos son
@@ -1053,7 +1066,7 @@ function setupMisAulas(
   type Where = {
     teacherId?: string;
     status?: unknown;
-    scheduledAt?: { gt?: Date; lte?: Date };
+    endsAt?: { gt?: Date; lte?: Date };
     OR?: unknown[];
   };
 
@@ -1061,7 +1074,7 @@ function setupMisAulas(
     // El `OR` solo lo usa el historial del filtro `todas`.
     if (where.OR) return [...canceladas, ...pasadas];
     if (where.status === ClassroomStatus.CANCELLED) return canceladas;
-    return where.scheduledAt?.gt ? proximas : pasadas;
+    return where.endsAt?.gt ? proximas : pasadas;
   }
 
   const findMany = vi.fn(
@@ -1929,7 +1942,7 @@ describe('ClassroomsService.editClassroom', () => {
       expect(update).not.toHaveBeenCalled();
     });
 
-    it('sin reservas vivas, el horario se sigue editando (AC2)', async () => {
+    it('sin reservas vivas, el horario se sigue editando (AC2) y recalcula endsAt', async () => {
       const { service, update } = setupEditar({ teacherId: PROFESOR_ID, currentBookings: 0 });
 
       await service.editClassroom(
@@ -1939,6 +1952,10 @@ describe('ClassroomsService.editClassroom', () => {
       );
 
       expect(update).toHaveBeenCalledOnce();
+      // Cambió `scheduledAt`, así que `endsAt` (= + 60 min de duración) se
+      // recalcula aunque no lo tocara el DTO — el CHECK de la BD lo exige.
+      const data = update.mock.calls[0]?.[0].data as Record<string, unknown>;
+      expect(data.endsAt).toEqual(new Date('2027-08-13T00:00:00.000Z'));
     });
 
     it('editar el título con reservas vivas responde 200: solo fecha y duración se bloquean', async () => {

@@ -63,9 +63,12 @@
        desbordaría sobre la zona «qué»).
     2. **Qué** `min-w-0 flex-1`: `<h3>` con el `<Link>` al detalle (único enlace, con el
        `after:absolute after:inset-0` de overlay), subtítulo, y **una sola fila** de badges:
-       `<EstadoAula>` + `Tu clase` + `Coincide con tu preferencia` (siempre visibles, no
-       cuentan) seguidos de los modos de comunicación y apoyos hasta `maxEtiquetasVisibles`
-       (default 3); el resto colapsa tras un `<button aria-expanded aria-controls>` `+N`.
+       `<EstadoAula>` + `Tu clase` + `Coincide con tu preferencia` (siempre visibles) seguidos
+       de los modos de comunicación y apoyos. El hueco para estos últimos es un techo
+       (`maxEtiquetasVisibles`, default **2**) del que se **descuenta** cada badge fijo extra
+       que ya ocupe la fila (`Tu clase`, `Coincide…`, `Modo sin indicar`), para que la fila
+       nunca envuelva y el renglón no crezca de alto; el resto colapsa tras un
+       `<button aria-expanded aria-controls>` `+N`.
     3. **Cupo** `w-44`: `<IndicadorCupo variante="inscritos">` solo en la perspectiva del
        profesor; en el catálogo el badge de estado ya dice el cupo y la zona va vacía.
     4. **Qué hago** `w-49`: una acción primaria (reservar / entrar / cancelar / gestionar).

@@ -106,6 +106,9 @@ Una sola pantalla, un endpoint por propósito, como manda §4.8:
 
 ## Notas de implementación
 
+_(Actualizado el 2026-09-06, **D40**: «pasada» para el historial es una clase **terminada**
+(`endsAt <= now`), no empezada. Una clase en curso no aparece en el historial hasta que acaba.)_
+
 `GET /historial` vive en un módulo propio (`historial/`), no dentro de `classrooms/` ni `bookings/`:
 es un endpoint con su propio propósito y forma de respuesta por rol, según §4.8. `AulaImpartida`
 extiende `Classroom` con `totalInscritos`/`totalAsistieron`, calculados con `booking.groupBy`. Una

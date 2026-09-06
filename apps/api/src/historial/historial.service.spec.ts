@@ -109,6 +109,20 @@ describe('HistorialService.listHistorial — estudiante (AC1)', () => {
     expect(Object.keys(item)).not.toContain('meetingLink');
   });
 
+  it('historial = terminada o cancelada: el corte es endsAt, no scheduledAt', async () => {
+    const findMany = vi.fn().mockResolvedValue([]);
+    const prisma = {
+      booking: { findMany, count: vi.fn().mockResolvedValue(0) },
+    } as unknown as PrismaService;
+
+    await new HistorialService(prisma).listHistorial(estudianteDelToken, {});
+
+    const or = findMany.mock.calls[0]?.[0].where.OR as Record<string, unknown>[];
+    // Una clase en curso (endsAt en el futuro) NO cae aquí.
+    expect(or).toContainEqual({ classroom: { endsAt: { lte: expect.any(Date) } } });
+    expect(JSON.stringify(or)).not.toContain('scheduledAt');
+  });
+
   it('filtra por resultado cuando se pide', async () => {
     const findMany = vi.fn().mockResolvedValue([]);
     const prisma = {
@@ -165,6 +179,19 @@ describe('HistorialService.listHistorial — profesor (AC2)', () => {
 
     expect(findMany.mock.calls[0]?.[0].where.teacherId).toBe(PROFESOR_ID);
     expect(count.mock.calls[0]?.[0].where.teacherId).toBe(PROFESOR_ID);
+  });
+
+  it('«ya impartida» corta en endsAt: una clase en curso todavía no es historial', async () => {
+    const findMany = vi.fn().mockResolvedValue([]);
+    const prisma = {
+      classroom: { findMany, count: vi.fn().mockResolvedValue(0) },
+      booking: { groupBy: vi.fn().mockResolvedValue([]) },
+    } as unknown as PrismaService;
+
+    await new HistorialService(prisma).listHistorial(profesorDelToken, {});
+
+    const and = findMany.mock.calls[0]?.[0].where.AND as Record<string, unknown>[];
+    expect(and).toContainEqual({ endsAt: { lte: expect.any(Date) } });
   });
 
   it('cuenta inscritos (CONFIRMED+ATTENDED+NO_SHOW) y asistentes (solo ATTENDED), sin las CANCELLED', async () => {
