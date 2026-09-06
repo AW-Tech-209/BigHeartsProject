@@ -97,8 +97,9 @@ rompa por desconocimiento.
 
 **UI y accesibilidad** → skill `bighearts-ui` (léelo antes de tocar cualquier componente)
 
-8. Nada de color decorativo · todo estado se comunica con **color + ícono + texto** · **cero
-   dependencia del audio**.
+8. Ningún **estado** se comunica solo con color: siempre **color + ícono + texto** · **cero
+   dependencia del audio**. El color no semántico se limita a lo que el skill autoriza como tal
+   (`--brand` de identidad, `--accent-*` categórico de HU-415) — nunca reusa verde/ámbar/rojo.
 9. Cuerpo **17px**. Cero colores literales en `.tsx` (usa tokens: `bg-primary`, nunca `#054DAE`).
 10. **Sin mutaciones optimistas en reservas**: el cupo tiene concurrencia real, no se muestra
     "reservado" antes de que el servidor confirme.

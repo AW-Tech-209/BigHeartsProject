@@ -53,6 +53,16 @@ Cero colores literales en `.tsx` (`bg-primary`, nunca `#054DAE` ni `blue-600`).
 Reglas de contraste: texto ≥ 7:1 (AAA) cuando sea posible, mínimo 4.5:1. Bordes/gráficos con
 significado ≥ 3:1.
 
+**`--brand` (azul marino) — identidad, no estado (HU-415).** Es la superficie de la marca: la
+barra superior y la inferior de móvil de `<AppShell>`, y el panel de las pantallas de acceso.
+Igual en los tres modos (no se invierte). No lo uses como fondo de contenido ni como acción.
+
+**`--accent-indigo` · `--accent-teal` · `--accent-rose` — categórico decorativo (HU-415).** Solo
+para distinguir etiquetas de campos que **no** tienen estado (cada filtro del catálogo). A
+propósito lejos de verde/ámbar/rojo: esos ya significan éxito/tiempo/error, y reusar esos tonos
+como adorno le mentiría al usuario que lee el resto de la app por color. No entran en un badge de
+estado ni sustituyen a `primary`.
+
 ## Tipografía
 
 Cuerpo base **17px** (no 16 — se lee español como puente al inglés). `text-justify` prohibido.
@@ -61,15 +71,22 @@ Ancho máximo de párrafo `max-w-[65ch]`. Jerarquía por peso y tamaño, nunca p
 componente `<Ingles>` con `lang="en"` — es una academia de inglés, el contenido enseñado necesita
 esa marca semántica para lectores de pantalla y correctores.
 
-**Excepción — landing pública (`features/landing/`):** usa `font-serif` (Instrument Serif, token
-`--font-serif`) para acentos de display en titulares y citas. Es tipográfico, no color, y vive solo
-en la landing; el resto del producto sigue en Geist.
+**`font-serif` (Instrument Serif, token `--font-serif`) — display, en dos sitios:**
+
+- **Landing pública (`features/landing/`):** acentos de display en titulares y citas.
+- **El `<h1>` de cada pantalla (HU-415):** `<PaginaCabecera>` lo pinta en `font-serif font-normal`;
+  también el titular de `<EstadoVacio>` y de `<AlertDialogTitle>`. Son los momentos de «enunciado».
+
+Todo lo demás —cuerpo, labels, `<h2>` de sección, botones— sigue en Geist. El serif es tipográfico,
+no color; la jerarquía la siguen marcando el peso y el tamaño.
 
 ## Espaciado y forma
 
 Escala de 4/8. Radios `rounded-lg` (controles), `rounded-xl` (tarjetas), `rounded-full` (chips/avatares).
-Elevación por **borde antes que sombra** (`border border-border`); sombra solo en capas flotantes.
-Objetivos táctiles ≥ 44px, 48px en acciones primarias y en móvil.
+Elevación **por borde primero** (`border border-border`); `<Card>`, `<Table>` y el botón sólido
+llevan además una `shadow-xs` de reposo mínima que las despega del lienzo sin volverlas capa
+flotante (HU-415). La sombra de verdad (`shadow-lg`) sigue reservada a lo que flota: modales,
+popovers. Objetivos táctiles ≥ 44px, 48px en acciones primarias y en móvil.
 
 ## Accesibilidad — no negociable en cada componente
 
