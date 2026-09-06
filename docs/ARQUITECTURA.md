@@ -734,7 +734,8 @@ apps/web/src/
 ├── components/
 │   ├── ui/             Primitivas de shadcn sobre Base UI.
 │   ├── layout/         El shell y la composición de página (HU-206): AppShell,
-│   │                   PaginaCabecera, Contenedor, RejillaAulas, destinosPorRol.
+│   │                   PaginaCabecera, Contenedor, ListaAulas (renglones de aula),
+│   │                   RejillaAulas (tableros del panel), destinosPorRol.
 │   │                   Pantallas sin sesión (HU-408): LayoutAutenticacion,
 │   │                   PanelDeMarca.
 │   └── dominio/        Componentes del dominio BigHearts: EstadoVacio, las tres

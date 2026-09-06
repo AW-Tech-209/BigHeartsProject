@@ -4,7 +4,7 @@ import {
   type ClassroomListItem,
 } from '@academia/types';
 import { Ban, LoaderCircle } from 'lucide-react';
-import { useRef, useState } from 'react';
+import { type ReactNode, useRef, useState } from 'react';
 
 import {
   AlertDialog,
@@ -51,6 +51,43 @@ function horaLimite(scheduledAt: string): string {
  * **Sin optimismo** (CLAUDE.md, regla 10): el estado solo cambia cuando
  * `useCancelBooking` resuelve.
  */
+/**
+ * La lógica de `Cancelar reserva` (HU-303), partida en `boton` y `aviso` para
+ * que el renglón de aula ponga el botón en su columna de acción y el «ya no se
+ * puede» en la banda al pie. `<AccionCancelarReserva>` los recompone para el
+ * detalle y «Mis reservas».
+ */
+export function useAccionCancelarReserva({
+  aula,
+  compact = false,
+}: {
+  aula: AulaConReserva;
+  compact?: boolean;
+}): { boton: ReactNode | null; aviso: ReactNode | null } {
+  if (aula.myBookingStatus !== BookingStatus.CONFIRMED || !aula.myBookingId) {
+    return { boton: null, aviso: null };
+  }
+
+  if (!aula.myBookingCancelable) {
+    return {
+      boton: null,
+      aviso: (
+        <Callout variant="attention" title="Ya no se puede cancelar">
+          <p>
+            Se podía cancelar hasta {horaLimite(aula.scheduledAt)}. Pasado ese momento, la reserva
+            queda firme.
+          </p>
+        </Callout>
+      ),
+    };
+  }
+
+  return {
+    boton: <DialogoCancelarReserva aula={aula} bookingId={aula.myBookingId} compact={compact} />,
+    aviso: null,
+  };
+}
+
 export function AccionCancelarReserva({
   aula,
   compact = false,
@@ -58,22 +95,9 @@ export function AccionCancelarReserva({
   aula: AulaConReserva;
   compact?: boolean;
 }) {
-  if (aula.myBookingStatus !== BookingStatus.CONFIRMED || !aula.myBookingId) {
-    return null;
-  }
+  const { boton, aviso } = useAccionCancelarReserva({ aula, compact });
 
-  if (!aula.myBookingCancelable) {
-    return (
-      <Callout variant="attention" title="Ya no se puede cancelar">
-        <p>
-          Se podía cancelar hasta {horaLimite(aula.scheduledAt)}. Pasado ese momento, la reserva
-          queda firme.
-        </p>
-      </Callout>
-    );
-  }
-
-  return <DialogoCancelarReserva aula={aula} bookingId={aula.myBookingId} compact={compact} />;
+  return boton ?? aviso ?? null;
 }
 
 function DialogoCancelarReserva({

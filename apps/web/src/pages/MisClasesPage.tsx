@@ -7,7 +7,7 @@ import { EstadoVacio } from '@/components/dominio/estado-vacio';
 import { TarjetaAula } from '@/components/dominio/tarjeta-aula';
 import { AppShell } from '@/components/layout/app-shell';
 import { PaginaCabecera } from '@/components/layout/pagina-cabecera';
-import { RejillaAulas } from '@/components/layout/rejilla-aulas';
+import { ALTURA_RENGLON_AULA, ListaAulas } from '@/components/layout/lista-aulas';
 import { Button } from '@/components/ui/button';
 import { Callout } from '@/components/ui/callout';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -18,8 +18,8 @@ import {
 } from '@/features/aulas/lib/filtros-mis-aulas';
 import { useAnnounce } from '@/hooks/use-announce';
 
-/** Cuántas tarjetas fantasma se pintan mientras carga (una fila completa en escritorio). */
-const TARJETAS_FANTASMA = 6;
+/** Cuántos renglones fantasma se pintan mientras carga. */
+const TARJETAS_FANTASMA = 4;
 
 /**
  * Las clases que el estudiante tiene reservadas y todavía no pasaron
@@ -88,11 +88,11 @@ export function MisClasesPage() {
       {isPending && (
         <div role="status">
           <span className="sr-only">Cargando tus clases…</span>
-          <RejillaAulas aria-hidden="true">
+          <ListaAulas aria-hidden="true">
             {Array.from({ length: TARJETAS_FANTASMA }, (_, indice) => (
-              <Skeleton key={indice} className="h-32" />
+              <Skeleton key={indice} className={ALTURA_RENGLON_AULA} />
             ))}
-          </RejillaAulas>
+          </ListaAulas>
         </div>
       )}
 
@@ -132,11 +132,11 @@ export function MisClasesPage() {
         <>
           <h2 className="sr-only">Tus clases</h2>
 
-          <RejillaAulas className="subir-suave">
+          <ListaAulas className="subir-suave">
             {data.items.map((aula) => (
               <TarjetaAula key={aula.id} classroom={aula} perspectiva="catalogo" />
             ))}
-          </RejillaAulas>
+          </ListaAulas>
 
           {totalPaginas > 1 && (
             <nav

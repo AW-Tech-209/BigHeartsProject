@@ -1,3 +1,4 @@
+import { type ReactNode } from 'react';
 import { type Classroom, type EstadoAula } from '@academia/types';
 import { BookmarkCheck, BookmarkPlus, LoaderCircle, type LucideIcon, Users } from 'lucide-react';
 
@@ -38,37 +39,41 @@ type AccionReservarAulaProps = {
 };
 
 /**
- * `Reservar mi cupo` (HU-301). Vive en el catálogo (HU-208 la preparó ahí,
- * `<TarjetaAula>`) y en el detalle del aula (T7): es el mismo botón, la misma
- * mutación y los mismos cuatro estados en los dos sitios, así que se escribe
- * una sola vez.
+ * La lógica de `Reservar mi cupo` (HU-301), partida en `boton` y `aviso` para
+ * que el renglón de aula (`<TarjetaAula>`) coloque el botón en su columna de
+ * acción y el error en la banda al pie. `<AccionReservarAula>` los recompone en
+ * el mismo bloque que siempre para el detalle del aula.
  *
  * **Sin optimismo** (CLAUDE.md, regla 10): no hay nada que pintar como
  * "reservado" hasta que `useCreateBooking` resuelve. Mientras tanto el botón
  * solo se deshabilita.
  */
-export function AccionReservarAula({ aula, puedeReservar, estado }: AccionReservarAulaProps) {
+export function useAccionReservarAula({ aula, puedeReservar, estado }: AccionReservarAulaProps): {
+  boton: ReactNode | null;
+  aviso: ReactNode | null;
+} {
   const mutation = useCreateBooking(aula.id);
   const announce = useAnnounce();
 
   if (!puedeReservar) {
-    return null;
+    return { boton: null, aviso: null };
   }
 
   const razon = RAZON_NO_RESERVABLE[estado];
   if (razon) {
-    return (
-      <div className="relative z-10">
+    return {
+      boton: (
         <Button disabled variant="outline" className="h-11 w-full gap-2 px-5 text-base">
           <razon.icon aria-hidden="true" strokeWidth={2} className="size-4" />
           {razon.texto}
         </Button>
-      </div>
-    );
+      ),
+      aviso: null,
+    };
   }
 
   if (!ESTADOS_RESERVABLES.includes(estado)) {
-    return null;
+    return { boton: null, aviso: null };
   }
 
   function reservar() {
@@ -77,14 +82,8 @@ export function AccionReservarAula({ aula, puedeReservar, estado }: AccionReserv
     });
   }
 
-  return (
-    <div className="relative z-10 space-y-3">
-      {mutation.isError && (
-        <Callout variant="destructive" live="assertive" title="No pudimos reservar tu cupo">
-          <p>{mensajeErrorReserva(mutation.error)}</p>
-        </Callout>
-      )}
-
+  return {
+    boton: (
       <Button
         onClick={reservar}
         disabled={mutation.isPending}
@@ -102,6 +101,31 @@ export function AccionReservarAula({ aula, puedeReservar, estado }: AccionReserv
           </>
         )}
       </Button>
+    ),
+    aviso: mutation.isError ? (
+      <Callout variant="destructive" live="assertive" title="No pudimos reservar tu cupo">
+        <p>{mensajeErrorReserva(mutation.error)}</p>
+      </Callout>
+    ) : null,
+  };
+}
+
+/**
+ * `Reservar mi cupo` (HU-301) para el detalle del aula (T7): el botón y su
+ * error en un solo bloque. El renglón del catálogo usa `useAccionReservarAula`
+ * directamente para repartirlos.
+ */
+export function AccionReservarAula(props: AccionReservarAulaProps) {
+  const { boton, aviso } = useAccionReservarAula(props);
+
+  if (!boton && !aviso) {
+    return null;
+  }
+
+  return (
+    <div className="relative z-10 space-y-3">
+      {aviso}
+      {boton}
     </div>
   );
 }

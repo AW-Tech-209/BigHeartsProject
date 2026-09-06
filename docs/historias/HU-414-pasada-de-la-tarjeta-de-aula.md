@@ -107,6 +107,16 @@ del código dejan ver:
 igualar alturas); afecta a todas sus rejillas, que es el objetivo. Microcopy de los nueve estados y
 de «Modo sin indicar»: ya cumplía `voz-microcopy.md`, solo cambió la pluralización de cupos.
 El mismo arreglo de fecha aplica a la tarjeta del `panel-estudiante` (HU-413).
+
+**Posterior (cambio de forma):** a partir de un mockup de Claude Design, `<TarjetaAula>` dejó
+de ser una tarjeta de rejilla y pasó a ser un **renglón horizontal a todo el ancho** de alto
+modular (4 zonas: cuándo · qué · cupo · qué hago), apilado en `<ListaAulas>` (una columna).
+Se añadió el contador `+N` que colapsa los modos/apoyos que superan `maxEtiquetasVisibles`
+(default 3) tras un `<button aria-expanded>`, con banda `También:` al pie; y una banda de
+aviso al pie que solo reubica los mensajes de acción que ya existían. No se añadieron
+estados ni badges. Los componentes de acción (`accion-reservar-aula`, `accion-entrar-a-clase`,
+`accion-cancelar-reserva`) exponen ahora un hook `useAccionX()` que devuelve `{ boton, aviso }`.
+Skill actualizado: `layout-y-composicion.md` §2 y §4, `patrones-dominio.md` (riel y §4).
 Pulido visual (a petición): estado `hover` (borde a `--input`, tinte `bg-muted/50`, `shadow-md`
 breve y 2px de subida con `motion-safe`) que además cubría un hueco —la tarjeta entera es un
 enlace y no daba señal al puntero—; más aire (`p-5 pl-6`); y la cabecera (fecha + título +

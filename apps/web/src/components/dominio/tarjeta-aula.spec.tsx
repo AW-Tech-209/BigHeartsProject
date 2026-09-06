@@ -58,9 +58,9 @@ describe('<TarjetaAula /> — anatomía (layout-y-composicion.md)', () => {
     const { container } = renderConProviders(<TarjetaAula classroom={aula()} ahora={AHORA} />);
 
     const textos = Array.from(container.querySelectorAll('p, h3')).map((el) => el.textContent);
-    // El año siempre aparece en `describirHorario()`; es un texto que solo
-    // puede ser la línea de fecha, sin depender de la zona horaria del runner.
-    const indiceFecha = textos.findIndex((t) => t?.includes('2026'));
+    // El mes abreviado de la zona 1 (`ago`) solo puede ser la línea de fecha, y
+    // no cambia con la zona horaria del runner como sí lo haría la hora.
+    const indiceFecha = textos.findIndex((t) => /\bago\b/i.test(t ?? ''));
     const indiceTitulo = textos.indexOf('Conversación cotidiana');
 
     expect(indiceFecha).toBeGreaterThanOrEqual(0);
@@ -265,10 +265,12 @@ describe('<TarjetaAula /> — accesibilidad declarada del aula (T10, T12, T15)',
   });
 
   // El orden CANÓNICO decide, no el de inserción: todas las etiquetas deben
-  // aparecer y conservar la misma secuencia en cada tarjeta.
+  // aparecer y conservar la misma secuencia en cada tarjeta. `maxEtiquetasVisibles`
+  // sube al número de modos: aquí se valida el orden, no el colapso tras «+N».
   it('muestra todos los modos en orden canónico sin importar el orden de llegada', () => {
     const { rerender } = renderConProviders(
       <TarjetaAula
+        maxEtiquetasVisibles={4}
         classroom={aula({
           communicationModes: [
             CommunicationPreference.SPOKEN_AUDIO,
@@ -300,6 +302,7 @@ describe('<TarjetaAula /> — accesibilidad declarada del aula (T10, T12, T15)',
 
     rerender(
       <TarjetaAula
+        maxEtiquetasVisibles={4}
         classroom={aula({
           communicationModes: [
             CommunicationPreference.SIGN_LANGUAGE,
@@ -399,6 +402,109 @@ describe('<TarjetaAula /> — accesibilidad declarada del aula (T10, T12, T15)',
     renderConProviders(<TarjetaAula classroom={aula({ communicationModes: [] })} ahora={AHORA} />);
 
     expect(screen.queryByRole('link', { name: 'Completar accesibilidad' })).not.toBeInTheDocument();
+  });
+});
+
+/**
+ * El renglón horizontal: una sola fila de etiquetas que colapsa tras «+N», y la
+ * banda al pie que reubica los avisos que la acción ya pintaba.
+ */
+describe('<TarjetaAula /> — la fila de etiquetas y su «+N»', () => {
+  const CUATRO_MODOS = aula({
+    communicationModes: [
+      CommunicationPreference.SIGN_LANGUAGE,
+      CommunicationPreference.LIP_READING,
+      CommunicationPreference.WRITTEN_TEXT,
+      CommunicationPreference.SPOKEN_AUDIO,
+    ],
+  });
+
+  it('con más etiquetas que el tope, las de más quedan fuera del DOM tras un «+N»', () => {
+    renderConProviders(
+      <TarjetaAula classroom={CUATRO_MODOS} maxEtiquetasVisibles={2} ahora={AHORA} />,
+    );
+
+    expect(screen.getByText('Lengua de signos')).toBeInTheDocument();
+    expect(screen.getByText('Lectura labial')).toBeInTheDocument();
+    expect(screen.queryByText('Texto escrito')).not.toBeInTheDocument();
+    expect(screen.queryByText('Audio con apoyo')).not.toBeInTheDocument();
+
+    expect(screen.getByRole('button', { name: /2 etiquetas más/i })).toHaveAttribute(
+      'aria-expanded',
+      'false',
+    );
+  });
+
+  it('el «+N» despliega las etiquetas ocultas en una banda al pie', async () => {
+    const { user } = renderConProviders(
+      <TarjetaAula classroom={CUATRO_MODOS} maxEtiquetasVisibles={2} ahora={AHORA} />,
+    );
+
+    await user.click(screen.getByRole('button', { name: /2 etiquetas más/i }));
+
+    expect(screen.getByRole('button', { name: /ver menos/i })).toHaveAttribute(
+      'aria-expanded',
+      'true',
+    );
+    expect(screen.getByText('También:')).toBeInTheDocument();
+    expect(screen.getByText('Texto escrito')).toBeInTheDocument();
+    expect(screen.getByText('Audio con apoyo')).toBeInTheDocument();
+  });
+
+  it('el «+N» se alcanza con el teclado y alterna la banda con Enter', async () => {
+    const { user } = renderConProviders(
+      <TarjetaAula classroom={CUATRO_MODOS} maxEtiquetasVisibles={2} ahora={AHORA} />,
+    );
+
+    await user.tab(); // el enlace del título
+    await user.tab(); // el «+N»
+    expect(screen.getByRole('button', { name: /2 etiquetas más/i })).toHaveFocus();
+
+    await user.keyboard('{Enter}');
+    expect(screen.getByText('También:')).toBeInTheDocument();
+  });
+
+  it('con tope 0, el estado y «Tu clase» siguen visibles', () => {
+    renderConProviders(
+      <TarjetaAula classroom={CUATRO_MODOS} maxEtiquetasVisibles={0} esMia ahora={AHORA} />,
+    );
+
+    expect(screen.getByText('Hay cupo')).toBeInTheDocument();
+    expect(screen.getByText('Tu clase')).toBeInTheDocument();
+  });
+});
+
+describe('<TarjetaAula /> — la banda de aviso al pie', () => {
+  it('«ya no se puede cancelar» va en una banda con borde superior, no en la columna de acción', () => {
+    const { container } = renderConProviders(
+      <TarjetaAula
+        classroom={aula({
+          myBookingStatus: BookingStatus.CONFIRMED,
+          myBookingId: 'reserva-1',
+          myBookingCancelable: false,
+        })}
+        ahora={AHORA}
+      />,
+    );
+
+    const aviso = screen.getByText(/Ya no se puede cancelar/);
+    expect(aviso.closest('.border-t')).not.toBeNull();
+    expect(container.querySelector('.border-t')).toContainElement(aviso);
+  });
+
+  it('la cuenta atrás de acceso se pinta después de la zona de acción', () => {
+    renderConProviders(
+      <TarjetaAula
+        classroom={aula({
+          myBookingStatus: BookingStatus.CONFIRMED,
+          accessState: 'aun-no',
+          accessOpensAt: '2099-01-01T00:00:00.000Z',
+        })}
+        ahora={AHORA}
+      />,
+    );
+
+    expect(screen.getByText(/Podrás entrar el/)).toBeInTheDocument();
   });
 });
 

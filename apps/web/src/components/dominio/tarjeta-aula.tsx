@@ -1,3 +1,4 @@
+import { useId, useState, type ReactNode } from 'react';
 import {
   BookingStatus,
   type Classroom,
@@ -7,16 +8,16 @@ import {
   derivarEstadoAula,
   type EstadoAula as EstadoAulaTipo,
 } from '@academia/types';
-import { Ban, Presentation, UserCheck } from 'lucide-react';
+import { Ban, ChevronDown, ChevronUp, Presentation, UserCheck } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 import { Badge } from '@/components/ui/badge';
-import { AccionCancelarReserva } from '@/features/aulas/components/accion-cancelar-reserva';
-import { AccionEntrarAClase } from '@/features/aulas/components/accion-entrar-a-clase';
+import { useAccionCancelarReserva } from '@/features/aulas/components/accion-cancelar-reserva';
+import { useAccionEntrarAClase } from '@/features/aulas/components/accion-entrar-a-clase';
 import { AccionesDeAula } from '@/features/aulas/components/acciones-de-aula';
-import { AccionReservarAula } from '@/features/aulas/components/accion-reservar-aula';
+import { useAccionReservarAula } from '@/features/aulas/components/accion-reservar-aula';
 import { APOYOS_AULA } from '@/features/aulas/lib/apoyos-aula';
-import { describirDuracion, describirHorarioPartes } from '@/features/aulas/lib/horario';
+import { describirDuracion, describirHorarioRenglon } from '@/features/aulas/lib/horario';
 import { MODOS_COMUNICACION_EN_ORDEN } from '@/features/aulas/lib/modos-comunicacion';
 import { nivelesDeIngles } from '@/features/aulas/lib/niveles';
 import { cn } from '@/lib/utils';
@@ -27,7 +28,7 @@ import { ModoComunicacionBadge } from './modo-comunicacion-badge';
 
 /**
  * Los modos declarados, en el orden CANÓNICO del enum — no el de inserción.
- * Así, todas las tarjetas muestran las etiquetas en la misma secuencia aunque
+ * Así, todos los renglones muestran las etiquetas en la misma secuencia aunque
  * el servidor reciba los valores en otro orden.
  */
 function modosEnOrden(modos: CommunicationPreference[]): CommunicationPreference[] {
@@ -35,7 +36,7 @@ function modosEnOrden(modos: CommunicationPreference[]): CommunicationPreference
 }
 
 /**
- * El aula que pinta la tarjeta.
+ * El aula que pinta el renglón.
  *
  * El nombre del profesor es **opcional** porque no siempre viaja: el catálogo
  * (`ClassroomListItem`) lo trae para decir quién da la clase, y «Mis aulas»
@@ -57,12 +58,15 @@ export type AulaDeTarjeta = Classroom &
 
 /**
  * Desde dónde se mira el aula. No es una variante estética: cambia **qué
- * pregunta responde la tarjeta**.
+ * pregunta responde el renglón**.
  *
  * - `catalogo` — la del estudiante: ¿me da tiempo a reservar? → cupo restante.
  * - `profesor` — la de «Mis aulas»: ¿cuánta gente viene? → inscritos sobre cupo.
  */
 export type PerspectivaTarjeta = 'catalogo' | 'profesor';
+
+/** Cuántas etiquetas de modo/apoyo se ven antes de colapsar tras «+N». */
+const MAX_ETIQUETAS_VISIBLES_POR_DEFECTO = 3;
 
 type TarjetaAulaProps = {
   classroom: AulaDeTarjeta;
@@ -71,53 +75,49 @@ type TarjetaAulaProps = {
   ahora?: Date;
   /**
    * La preferencia de comunicación de quien mira (T12). Se pasa como prop y
-   * no se lee con `useAuth()` aquí dentro: mismo criterio que `ahora`, la
-   * tarjeta se mantiene pura y testeable sin montar el store de sesión.
+   * no se lee con `useAuth()` aquí dentro: mismo criterio que `ahora`, el
+   * renglón se mantiene puro y testeable sin montar el store de sesión.
    * `undefined`/`null` (sin preferencia declarada) nunca produce una marca.
    */
   preferenciaEstudiante?: CommunicationPreference | null;
   /**
-   * `true` si el aula la imparte quien está mirando (HU-208, T1).
-   *
-   * Prop y no `useAuth()` aquí dentro, por el mismo motivo que `ahora` y
-   * `preferenciaEstudiante`: la tarjeta se mantiene pura y testeable sin montar
-   * el store de sesión. Quien la monta compara `classroom.teacherId` con el
-   * usuario de la sesión.
-   *
-   * **No es un permiso.** Marca de quién es la clase para que el profesor
-   * distinga lo suyo en un catálogo que sigue siendo único; lo que puede
-   * hacerse con ella lo decide el servidor en `PATCH` y `cancel` (§4.8).
+   * `true` si el aula la imparte quien está mirando (HU-208, T1). Prop y no
+   * `useAuth()` por el mismo motivo que `ahora`. **No es un permiso.**
    */
   esMia?: boolean;
   /**
    * Si a quien mira se le puede ofrecer reservar (HU-208, T3). Llega ya
-   * resuelto por `puedeReservar()`: la tarjeta no conoce roles.
+   * resuelto por `puedeReservar()`: el renglón no conoce roles.
    */
   puedeReservarla?: boolean;
+  /**
+   * Cuántas etiquetas de modo/apoyo se ven antes de colapsar tras «+N». Tope
+   * FIJO, sin medición del DOM. El estado, «Tu clase» y «Coincide con tu
+   * preferencia» no cuentan y nunca colapsan.
+   */
+  maxEtiquetasVisibles?: number;
   className?: string;
 };
 
 /**
  * Los tres estados que **son** una lectura del cupo. En la perspectiva del
  * profesor se omite su badge, porque `<IndicadorCupo variante="inscritos">` ya
- * dice lo mismo con los números que a él le sirven: «Quedan 2 cupos» y «8 de 10
- * inscritos» en la misma tarjeta serían dos formas de contar lo mismo, y el
- * AC8 de HU-207 pide explícitamente la segunda y no la primera.
- *
- * Los estados de ciclo de vida —cancelada, finalizada, en curso— sí conservan
- * su badge: no salen del cupo y no hay nada más que los diga.
+ * dice lo mismo con los números que a él le sirven (AC8 de HU-207). Los estados
+ * de ciclo de vida —cancelada, finalizada, en curso— sí conservan su badge.
  */
 const ESTADOS_DE_CUPO: readonly EstadoAulaTipo[] = ['disponible', 'ultimos-cupos', 'llena'];
 
+type Etiqueta = { key: string; node: ReactNode };
+
 /**
- * La tarjeta de un aula (`layout-y-composicion.md`, anatomía de tarjeta). Lleva
- * el riel de 4px — la firma visual del producto — y es escaneable con visión
- * periférica sin leer una palabra.
+ * El renglón de un aula (`layout-y-composicion.md`, anatomía de tarjeta): una
+ * fila horizontal a todo el ancho de alto modular, con el riel de 4px —la firma
+ * visual del producto— y cuatro zonas de ancho fijo (cuándo · qué · cupo · qué
+ * hago) que no cambian de orden entre estados ni roles.
  *
- * El estado se calcula aquí llamando a `derivarEstadoAula()` de
- * `@academia/types` (B3): esta tarjeta no reimplementa esa lógica, solo la
- * consume y la pinta con `<EstadoAula>`. **El riel siempre lleva el estado
- * derivado**, en las dos perspectivas.
+ * El estado se calcula aquí con `derivarEstadoAula()` de `@academia/types` (B3):
+ * el renglón no reimplementa esa lógica, solo la consume. **El riel siempre
+ * lleva el estado derivado**, en las dos perspectivas.
  */
 export function TarjetaAula({
   classroom,
@@ -126,12 +126,13 @@ export function TarjetaAula({
   preferenciaEstudiante,
   esMia = false,
   puedeReservarla = false,
+  maxEtiquetasVisibles = MAX_ETIQUETAS_VISIBLES_POR_DEFECTO,
   className,
 }: TarjetaAulaProps) {
-  // HU-301, ajuste post-cierre: en el catálogo `classroom.myBookingStatus`
-  // ahora sí viaja para un STUDENT, así que `reservada`/`acceso-abierto` son
-  // alcanzables aquí igual que en el detalle. En «Mis aulas» llega `undefined`
-  // y la comparación da `false` sin más: el profesor nunca tiene reserva propia.
+  const [etiquetasAbiertas, setEtiquetasAbiertas] = useState(false);
+  const bandaId = useId();
+  const tituloId = `aula-${classroom.id}-titulo`;
+
   const estado = derivarEstadoAula({
     classroom,
     ahora,
@@ -139,18 +140,14 @@ export function TarjetaAula({
   });
   const cuposRestantes = Math.max(classroom.maxStudents - classroom.currentBookings, 0);
   const variante = varianteEstadoAula[estado];
-  const tituloId = `aula-${classroom.id}-titulo`;
 
   const esVistaDelProfesor = perspectiva === 'profesor';
-  // `derivarEstadoAula()` no conoce la reserva del estudiante que cancela la
-  // suya sin que el aula se cancele: sin esto, «Mis clases» pintaría el
-  // estado ambiente del aula (`Hay cupo`, `Sin cupos`…) sobre una reserva que
-  // ya no es suya.
   const miReservaCancelada =
     !esVistaDelProfesor && classroom.myBookingStatus === BookingStatus.CANCELLED;
   const sinModosDeclarados = classroom.communicationModes.length === 0;
-  // AC4: solo marca las que coinciden, nunca las que no — sin marca negativa.
   const coincideConLaMia = coincideConLaPreferencia(classroom, preferenciaEstudiante);
+  const marcaDePropiedad = esMia && !esVistaDelProfesor;
+
   const nombreDelProfesor =
     classroom.teacherFirstName && classroom.teacherLastName
       ? `${classroom.teacherFirstName} ${classroom.teacherLastName}`
@@ -166,29 +163,73 @@ export function TarjetaAula({
     .filter(Boolean)
     .join(' · ');
 
-  const muestraBadge = !esVistaDelProfesor || !ESTADOS_DE_CUPO.includes(estado);
-  const { cuando, zona } = describirHorarioPartes(classroom.scheduledAt);
+  // Se omite el badge de estado solo cuando el profesor mira un estado que ya
+  // dice el conteo de inscritos (AC8 de HU-207). Si la reserva del estudiante
+  // está cancelada, el badge propio lo sustituye «Reserva cancelada».
+  const muestraBadgeEstado =
+    !miReservaCancelada && (!esVistaDelProfesor || !ESTADOS_DE_CUPO.includes(estado));
+  const { dia, hora, zona } = describirHorarioRenglon(classroom.scheduledAt);
 
-  // HU-208: la marca solo tiene sentido en el catálogo, donde conviven aulas
-  // propias y ajenas. En «Mis aulas» TODAS son suyas: marcarlas una por una no
-  // distinguiría nada y sería el ruido que la propia pantalla ya evita al no
-  // repetir el nombre del profesor en cada tarjeta.
-  const marcaDePropiedad = esMia && !esVistaDelProfesor;
+  // Modos y apoyos comparten una sola fila y colapsan tras «+N» cuando pasan del
+  // tope. El estado, «Tu clase» y «Coincide…» van aparte y nunca colapsan.
+  const colapsables: Etiqueta[] = [
+    ...(sinModosDeclarados
+      ? []
+      : modosEnOrden(classroom.communicationModes).map((modo) => ({
+          key: `modo-${modo}`,
+          node: <ModoComunicacionBadge key={modo} modo={modo} className="px-2 py-0.5 text-xs" />,
+        }))),
+    ...APOYOS_AULA.filter(({ clave }) => classroom[clave]).map(
+      ({ clave, etiqueta, icon: Icon }) => ({
+        key: `apoyo-${clave}`,
+        node: (
+          <Badge key={clave} tono="neutral" icon={Icon} className="px-2 py-0.5 text-xs">
+            {etiqueta}
+          </Badge>
+        ),
+      }),
+    ),
+  ];
+  const visibles = colapsables.slice(0, Math.max(maxEtiquetasVisibles, 0));
+  const ocultas = colapsables.slice(Math.max(maxEtiquetasVisibles, 0));
+  const abierta = etiquetasAbiertas && ocultas.length > 0;
+
+  const reservar = useAccionReservarAula({
+    aula: classroom,
+    puedeReservar: puedeReservarla && !esMia && !esVistaDelProfesor,
+    estado,
+  });
+  const cancelar = useAccionCancelarReserva({
+    aula: {
+      id: classroom.id,
+      title: classroom.title,
+      scheduledAt: classroom.scheduledAt,
+      myBookingId: classroom.myBookingId ?? null,
+      myBookingStatus: esVistaDelProfesor ? null : (classroom.myBookingStatus ?? null),
+      myBookingCancelable: classroom.myBookingCancelable ?? null,
+    },
+    compact: true,
+  });
+  const entrar = useAccionEntrarAClase({
+    aula: {
+      id: classroom.id,
+      accessState: esVistaDelProfesor ? 'sin-acceso' : (classroom.accessState ?? 'sin-acceso'),
+      accessOpensAt: classroom.accessOpensAt ?? null,
+    },
+  });
+
+  const hayAvisos = Boolean(reservar.aviso || cancelar.aviso || entrar.aviso);
 
   return (
     <article
       aria-labelledby={tituloId}
       className={cn(
-        'relative flex h-full flex-col overflow-hidden rounded-xl border border-border bg-card p-5 pl-6',
-        // El anillo va en la TARJETA aunque el foco lo reciba el enlace del
-        // título (`patrones-dominio.md`): un anillo de 3px alrededor de tres
-        // palabras se pierde en una rejilla de seis, y lo que el usuario
-        // necesita saber es qué tarjeta tiene el foco, no qué texto.
+        'relative flex flex-col overflow-hidden rounded-xl border border-border bg-card p-4 pl-5 shadow-xs',
+        // El anillo va en el renglón aunque el foco lo reciba el enlace del
+        // título: lo que el usuario necesita saber es qué renglón tiene el foco.
         'focus-within:ring-2 focus-within:ring-ring',
-        // Toda la tarjeta es un enlace: el hover la eleva un punto (borde más
-        // marcado, tinte suave, sombra breve y 2px de subida con `motion-safe`).
-        'transition-[transform,border-color,box-shadow,background-color] duration-150 ease-suave',
-        'hover:border-input hover:bg-muted/50 hover:shadow-md motion-safe:hover:-translate-y-0.5',
+        'transition-[border-color,box-shadow,background-color] duration-150 ease-suave',
+        'hover:border-input hover:bg-muted/50',
         className,
       )}
     >
@@ -200,32 +241,28 @@ export function TarjetaAula({
         )}
       />
 
-      <div className="flex flex-1 flex-col gap-2.5">
+      <div className="flex flex-wrap items-start gap-4">
         {/*
-          Cabecera de la tarjeta: fecha, título y subtítulo van juntos y
-          apretados (`gap-1`), leen como un bloque. La fecha va ANTES del título
-          en el DOM a propósito: quien navega con lector de pantalla se entera de
-          CUÁNDO es la clase antes de CÓMO se llama. Fecha completa y con zona
-          explícita (B6); el nombre accesible de la tarjeta es el título
-          (aria-labelledby apunta al h3), no la fecha.
+          Zona 1 — cuándo. Va ANTES del título en el DOM a propósito: quien
+          navega con lector de pantalla se entera de CUÁNDO es la clase antes de
+          CÓMO se llama. La zona se nombra siempre (B6), en su propia línea.
         */}
-        <div className="flex flex-col gap-1">
-          <p className="text-xs text-pretty text-muted-foreground">
-            {cuando} {zona && <span className="whitespace-nowrap">({zona})</span>}
-          </p>
+        <div className="w-29 shrink-0 border-r border-border pr-4">
+          <p className="text-xs text-muted-foreground">{dia}</p>
+          {hora && <p className="text-[17px] font-medium tabular-nums">{hora}</p>}
+          {zona && <p className="text-xs whitespace-nowrap text-muted-foreground">({zona})</p>}
+        </div>
 
+        {/* Zona 2 — qué. */}
+        <div className="min-w-0 flex-1 space-y-1">
           {/*
-          **El enlace al detalle es el título, no la tarjeta entera** (HU-204,
-          B6). El `<article>` ya toma su nombre accesible del `<h3>` por
-          `aria-labelledby`: envolverlo todo en un `<a>` haría que un lector de
-          pantalla anunciara el nombre del aula dos veces y metiera la fecha, el
-          estado y el cupo dentro del texto del enlace.
-
-          Es un `<a>` de navegación, nunca un `<div onClick>`: así funciona el
-          Tab, el Enter, «abrir en otra pestaña» y el menú contextual sin que
-          haya que reimplementar ninguno.
-        */}
-          <h3 id={tituloId} className="relative z-10 text-base font-medium text-foreground">
+            **El enlace al detalle es el título, no el renglón entero** (HU-204,
+            B6). Es un `<a>` de navegación, nunca un `<div onClick>`.
+          */}
+          <h3
+            id={tituloId}
+            className="relative z-10 truncate text-base font-medium text-foreground"
+          >
             <Link
               to={`/aulas/${classroom.id}`}
               className="after:absolute after:inset-0 after:z-0 after:rounded-xl after:content-[''] rounded-sm underline-offset-4 outline-none hover:underline"
@@ -234,147 +271,113 @@ export function TarjetaAula({
             </Link>
           </h3>
 
-          <p className="text-[13px] text-muted-foreground">{lineaSecundaria}</p>
-        </div>
+          <p className="truncate text-[13px] text-muted-foreground">{lineaSecundaria}</p>
 
-        {/*
-          AC2: el distintivo va **junto** al estado, nunca en su lugar. Una
-          clase propia con últimos cupos tiene que decir las dos cosas: de quién
-          es y cómo va de sitio. Por eso comparten fila en vez de competir por
-          el mismo hueco.
-
-          Tono `primary` porque el diccionario de color reserva ese token para
-          «lo tuyo», y `suave` por la regla del sólido: el color pleno es solo
-          de `acceso-abierto` y `en-curso`, los dos estados que piden actuar
-          ahora mismo. Con ícono y texto propios (`Presentation`, `Tu clase`),
-          que es la codificación triple obligatoria — la marca se distingue con
-          el color apagado y en alto contraste.
-        */}
-        {(muestraBadge || marcaDePropiedad || miReservaCancelada) && (
-          <div className="flex flex-wrap items-center gap-1.5">
-            {miReservaCancelada ? (
+          <div className="relative z-10 flex flex-wrap items-center gap-1.5">
+            {miReservaCancelada && (
               <Badge tono="destructive" icon={Ban}>
                 Reserva cancelada
               </Badge>
-            ) : (
-              muestraBadge && <EstadoAula estado={estado} cuposRestantes={cuposRestantes} />
             )}
+            {muestraBadgeEstado && <EstadoAula estado={estado} cuposRestantes={cuposRestantes} />}
             {marcaDePropiedad && (
               <Badge tono="primary" icon={Presentation}>
                 Tu clase
               </Badge>
             )}
-          </div>
-        )}
-
-        {/*
-          T10: todos los modos declarados, siempre visibles en las dos
-          perspectivas. T12: la marca de coincidencia solo aparece del lado
-          del estudiante, y solo cuando SÍ coincide (AC4, nunca marca negativa).
-        */}
-        <div className="flex flex-wrap items-center gap-1" aria-label="Formas de comunicación">
-          {classroom.communicationModes.length === 0 ? (
-            <ModoComunicacionBadge modo={null} className="px-2 py-0.5 text-xs" />
-          ) : (
-            modosEnOrden(classroom.communicationModes).map((modo) => (
-              <ModoComunicacionBadge key={modo} modo={modo} className="px-2 py-0.5 text-xs" />
-            ))
-          )}
-          {!esVistaDelProfesor && coincideConLaMia && (
-            <Badge tono="primary" icon={UserCheck}>
-              Coincide con tu preferencia
-            </Badge>
-          )}
-        </div>
-
-        {APOYOS_AULA.some(({ clave }) => classroom[clave]) && (
-          <div className="flex flex-wrap items-center gap-1.5" aria-label="Apoyos disponibles">
-            {APOYOS_AULA.filter(({ clave }) => classroom[clave]).map(
-              ({ clave, etiqueta, icon: Icon }) => (
-                <Badge key={clave} tono="neutral" icon={Icon} className="px-2 py-0.5 text-xs">
-                  {etiqueta}
-                </Badge>
-              ),
+            {!esVistaDelProfesor && coincideConLaMia && (
+              <Badge tono="primary" icon={UserCheck}>
+                Coincide con tu preferencia
+              </Badge>
+            )}
+            {sinModosDeclarados && (
+              <ModoComunicacionBadge modo={null} className="px-2 py-0.5 text-xs" />
+            )}
+            {visibles.map((etiqueta) => etiqueta.node)}
+            {ocultas.length > 0 && (
+              <button
+                type="button"
+                aria-expanded={abierta}
+                aria-controls={bandaId}
+                aria-label={abierta ? 'Ver menos etiquetas' : `Ver ${ocultas.length} etiquetas más`}
+                onClick={() => setEtiquetasAbiertas((v) => !v)}
+                className="relative z-10 inline-flex items-center gap-1 rounded-full border border-input bg-card px-2.5 py-0.5 text-xs font-medium text-foreground hover:bg-muted"
+              >
+                {abierta ? (
+                  <>
+                    <ChevronUp aria-hidden="true" strokeWidth={2} className="size-3.5" />
+                    Ver menos
+                  </>
+                ) : (
+                  <>
+                    <ChevronDown aria-hidden="true" strokeWidth={2} className="size-3.5" />
+                    {`+${ocultas.length}`}
+                  </>
+                )}
+              </button>
             )}
           </div>
-        )}
+        </div>
 
+        {/* Zona 3 — cupo. Solo el profesor: en el catálogo lo dice el badge. */}
         {esVistaDelProfesor && (
-          <IndicadorCupo
-            variante="inscritos"
-            maxStudents={classroom.maxStudents}
-            currentBookings={classroom.currentBookings}
-            className="flex"
-          />
+          <div className="w-44 shrink-0">
+            <IndicadorCupo
+              variante="inscritos"
+              maxStudents={classroom.maxStudents}
+              currentBookings={classroom.currentBookings}
+              className="flex"
+            />
+          </div>
         )}
 
-        {/*
-            HU-208, T2/AC3. Sobre la clase propia el catálogo ofrece **otra
-            promesa**, no la del estudiante: gestionarla, no reservarla. Mismo
-            destino que el título —`/aulas/:id`— y a propósito: para el dueño ese
-            detalle YA es su vista de gestión (le revela el enlace de la
-            videollamada, HU-204).
-        */}
-        {marcaDePropiedad && (
-          <Link
-            to={`/aulas/${classroom.id}`}
-            className="relative z-10 inline-block text-sm font-medium text-primary underline underline-offset-4 hover:no-underline"
-          >
-            Gestionar mi clase
-          </Link>
-        )}
+        {/* Zona 4 — qué hago. */}
+        <div className="relative z-10 flex w-49 shrink-0 flex-col gap-2">
+          {reservar.boton}
+          {cancelar.boton}
+          {entrar.boton}
 
-        {/*
-          HU-208, T3/AC4 y HU-301. `puedeReservar()` decide el rol fuera; el `&&
-          !esMia` impide ofrecérselo a nadie sobre su propia clase; `estado` ya
-          descarta llena/cancelada/reservada — ver `ESTADOS_RESERVABLES`.
-        */}
-        {!esVistaDelProfesor && (
-          <AccionReservarAula
-            aula={classroom}
-            puedeReservar={puedeReservarla && !esMia}
-            estado={estado}
-          />
-        )}
+          {/* HU-208, T2/AC3. Sobre la clase propia el catálogo ofrece gestionarla. */}
+          {marcaDePropiedad && (
+            <Link
+              to={`/aulas/${classroom.id}`}
+              className="inline-block text-sm font-medium text-primary underline underline-offset-4 hover:no-underline"
+            >
+              Gestionar mi clase
+            </Link>
+          )}
 
-        {/* HU-303. Solo pinta cuando `myBookingId` viaja: «Mis reservas» y el detalle. */}
-        {!esVistaDelProfesor && (
-          <AccionCancelarReserva
-            aula={{
-              id: classroom.id,
-              title: classroom.title,
-              scheduledAt: classroom.scheduledAt,
-              myBookingId: classroom.myBookingId ?? null,
-              myBookingStatus: classroom.myBookingStatus ?? null,
-              myBookingCancelable: classroom.myBookingCancelable ?? null,
-            }}
-            compact
-          />
-        )}
+          {/* T15: la vía para que un aula «sin indicar» deje de estarlo. */}
+          {esVistaDelProfesor && sinModosDeclarados && (
+            <Link
+              to={`/mis-aulas/${classroom.id}/accesibilidad`}
+              className="inline-block text-sm font-medium text-primary underline underline-offset-4 hover:no-underline"
+            >
+              Completar accesibilidad
+            </Link>
+          )}
 
-        {/* HU-304, T6. `accessState` solo llega calculado en «Mis reservas». */}
-        {!esVistaDelProfesor && (
-          <AccionEntrarAClase
-            aula={{
-              id: classroom.id,
-              accessState: classroom.accessState ?? 'sin-acceso',
-              accessOpensAt: classroom.accessOpensAt ?? null,
-            }}
-          />
-        )}
-
-        {/* T15: la vía para que un aula «sin indicar» deje de estarlo. */}
-        {esVistaDelProfesor && sinModosDeclarados && (
-          <Link
-            to={`/mis-aulas/${classroom.id}/accesibilidad`}
-            className="relative z-10 inline-block text-sm font-medium text-primary underline underline-offset-4 hover:no-underline"
-          >
-            Completar accesibilidad
-          </Link>
-        )}
-
-        {esVistaDelProfesor && <AccionesDeAula aula={classroom} esDueno compact />}
+          {esVistaDelProfesor && <AccionesDeAula aula={classroom} esDueno compact />}
+        </div>
       </div>
+
+      {abierta && (
+        <div
+          id={bandaId}
+          className="relative z-10 mt-3 flex flex-wrap items-center gap-1.5 border-t border-border pt-3"
+        >
+          <span className="text-xs text-muted-foreground">También:</span>
+          {ocultas.map((etiqueta) => etiqueta.node)}
+        </div>
+      )}
+
+      {hayAvisos && (
+        <div className="relative z-10 mt-3 space-y-2 border-t border-border pt-3">
+          {reservar.aviso}
+          {cancelar.aviso}
+          {entrar.aviso}
+        </div>
+      )}
     </article>
   );
 }
