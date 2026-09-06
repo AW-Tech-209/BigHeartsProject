@@ -95,6 +95,7 @@ describe('<TarjetaAula /> — anatomía (layout-y-composicion.md)', () => {
     renderConProviders(
       <TarjetaAula
         classroom={aula({ hasInterpreter: true, hasLiveCaptions: true, hasVisualMaterials: true })}
+        maxEtiquetasVisibles={4}
         ahora={AHORA}
       />,
     );
@@ -462,6 +463,27 @@ describe('<TarjetaAula /> — la fila de etiquetas y su «+N»', () => {
 
     await user.keyboard('{Enter}');
     expect(screen.getByText('También:')).toBeInTheDocument();
+  });
+
+  it('los badges fijos (Tu clase, Coincide) reducen el hueco: los modos van al «+N»', () => {
+    renderConProviders(
+      <TarjetaAula
+        classroom={aula({
+          communicationModes: [
+            CommunicationPreference.SIGN_LANGUAGE,
+            CommunicationPreference.LIP_READING,
+          ],
+        })}
+        preferenciaEstudiante={CommunicationPreference.SIGN_LANGUAGE}
+        esMia
+        ahora={AHORA}
+      />,
+    );
+
+    expect(screen.getByText('Tu clase')).toBeInTheDocument();
+    expect(screen.getByText('Coincide con tu preferencia')).toBeInTheDocument();
+    expect(screen.queryByText('Lengua de signos')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /2 etiquetas más/i })).toBeInTheDocument();
   });
 
   it('con tope 0, el estado y «Tu clase» siguen visibles', () => {
