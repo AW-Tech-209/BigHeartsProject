@@ -4,13 +4,13 @@ import { Link } from 'react-router-dom';
 
 import { EstadoVacio } from '@/components/dominio/estado-vacio';
 import { TarjetaAula } from '@/components/dominio/tarjeta-aula';
-import { RejillaAulas } from '@/components/layout/rejilla-aulas';
+import { ALTURA_RENGLON_AULA, ListaAulas } from '@/components/layout/lista-aulas';
 import { Button } from '@/components/ui/button';
 import { Callout } from '@/components/ui/callout';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useMisAulas } from '@/features/aulas/hooks/use-mis-aulas';
 
-/** Cuántas clases próximas caben en el inicio: una fila de la rejilla en escritorio. */
+/** Cuántas clases próximas caben en el inicio del profesor. */
 const PROXIMAS_VISIBLES = 3;
 
 /**
@@ -66,11 +66,11 @@ export function PanelProfesor() {
       {isPending && (
         <div role="status">
           <span className="sr-only">Cargando tus próximas clases…</span>
-          <RejillaAulas aria-hidden="true">
+          <ListaAulas aria-hidden="true">
             {Array.from({ length: PROXIMAS_VISIBLES }, (_, indice) => (
-              <Skeleton key={indice} className="h-32" />
+              <Skeleton key={indice} className={ALTURA_RENGLON_AULA} />
             ))}
-          </RejillaAulas>
+          </ListaAulas>
         </div>
       )}
 
@@ -107,14 +107,14 @@ export function PanelProfesor() {
 
       {/* Estado 4 — la lista. */}
       {!isPending && !isError && proximas.length > 0 && (
-        <RejillaAulas className="subir-suave">
+        <ListaAulas className="subir-suave">
           {proximas.map((aula) => (
             // Misma perspectiva que «Mis aulas»: es el profesor mirando sus
-            // propias clases, así que la tarjeta responde su pregunta —cuánta
+            // propias clases, así que el renglón responde su pregunta —cuánta
             // gente viene— y no la del estudiante —cuánto queda—.
             <TarjetaAula key={aula.id} classroom={aula} perspectiva="profesor" />
           ))}
-        </RejillaAulas>
+        </ListaAulas>
       )}
     </section>
   );

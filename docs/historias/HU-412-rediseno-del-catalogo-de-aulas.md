@@ -87,3 +87,9 @@ contenedor y los filtros.
 ## Notas de implementación
 
 Sin desviaciones previstas.
+
+**Posterior (cambio de forma de `<TarjetaAula>`):** la anatomía de la tarjeta se rehízo a un
+**renglón horizontal a todo el ancho** y las listas de aulas pasaron de `<RejillaAulas>` a
+`<ListaAulas>` (una sola columna). Lo relativo a «alturas coherentes entre tarjetas de la
+misma fila» (T3 / AC4) queda superado para estas pantallas: ya no hay filas de varias
+tarjetas. La barra de filtros contenida sigue en pie tal cual.

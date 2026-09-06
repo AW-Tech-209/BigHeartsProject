@@ -21,7 +21,7 @@ Color + Ícono (Lucide) + Texto visible.
 
 ### Riel de Estado (Firma Visual)
 
-Franja vertical de 4px (`absolute inset-y-0 left-0 w-1`) en `<TarjetaAula />` con el color del estado derivado (redundante con el badge a propósito).
+Franja vertical de 4px (`absolute inset-y-0 left-0 w-1`) en `<TarjetaAula />` con el color del estado derivado (redundante con el badge a propósito). Desde HU-414 `<TarjetaAula />` es un **renglón horizontal a todo el ancho** (no una tarjeta de rejilla); el riel se conserva en las dos perspectivas, incluso cuando el badge de estado se omite en la del profesor.
 
 ## 2. `<VentanaDeAcceso />`
 
@@ -53,6 +53,7 @@ Sin porcentajes ni gráficos. Usa `role="progressbar"` con `aria-valuemin/max/no
 
 ## 4. Tarjetas por Perspectiva y Rol
 
+- **Fila única de etiquetas (HU-414):** `<EstadoAula>`, `Tu clase` y `Coincide con tu preferencia` van siempre visibles y no cuentan para el tope. Los modos de comunicación y los apoyos comparten la misma fila y colapsan tras un `<button aria-expanded>` `+N` cuando superan `maxEtiquetasVisibles` (prop, default 3); el `+N` despliega el resto en una banda `También:` al pie del renglón. La acción vive en la zona 4 y su mensaje asociado (cuenta atrás de acceso, «ya no se puede cancelar», error de reserva) se reubica en la banda de aviso, también al pie.
 - **`perspectiva="profesor"`:** Usa `variante="inscritos"`. Omite badge `<EstadoAula>` si el estado depende de cupo (`disponible`, `ultimos-cupos`, `llena`). Mantiene badges de ciclo de vida (`cancelada`, `finalizada`, `en-curso`). Riel de 4px conserva siempre el estado.
 - **Badge `Tu clase`:** En catálogo (`perspectiva="catalogo"`), si la clase es propia, muestra badge `primary-soft` (`Presentation` + `Tu clase`) **sumado** al estado. No se muestra en `perspectiva="profesor"`. Acción cambia a "Gestionar mi clase".
 - **Botón Reservar:** SOLO se renderiza para rol `STUDENT` (`puedeReservar()` en `features/aulas/lib/`). Para otros roles NO debe existir en el DOM.

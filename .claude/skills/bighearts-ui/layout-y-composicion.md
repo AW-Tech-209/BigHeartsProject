@@ -19,11 +19,18 @@
   sin apretarse. Lo decide `useEsMovil`.
 - **Accesibilidad:** `<SkipLink>` al inicio del shell apuntando al `<main id="...">`.
 
-## 2. Contenedor y Rejilla
+## 2. Contenedor, Lista y Rejilla
 
 - **Contenedor:** `mx-auto max-w-6xl px-4 sm:px-6` (Max 1152px).
-- **Rejilla:** `grid gap-3` → 1 col (<640px) | 2 cols (≥640px) | 3 cols (≥1024px).
-- **Límite:** MAX 3 columnas (NUNCA 4).
+- **Lista de aulas (`<ListaAulas>`, HU-414):** las pantallas de aulas —catálogo, «Mis
+  clases», «Mis aulas», panel del profesor— apilan un **renglón por aula** en una sola
+  columna a todo el ancho (`flex flex-col gap-2.5`). No usan rejilla: un renglón de alto
+  modular con zonas de ancho fijo se escanea mejor que una tarjeta que cambia de alto según
+  cuántas etiquetas tenga cada clase. La anatomía del renglón está en §4.
+- **Rejilla (`<RejillaAulas>`):** `grid gap-3` → 1 col (<640px) | 2 cols (≥640px) | 3 cols
+  (≥1024px). Queda para **tableros** donde el aula se pinta compacta (las próximas clases
+  del panel del estudiante).
+- **Límite de la rejilla:** MAX 3 columnas (NUNCA 4).
 
 ## 3. Anatomía de Página (Orden vertical estricto)
 
@@ -38,17 +45,35 @@
 
 - **Ritmo Vertical:** 30px aire superior en cabecera; 32px (`space-y-8`) entre bloques principales; 16px dentro de bloques. Sin valores arbitrarios.
 
-## 4. Tarjetas vs. Filas
+## 4. Renglón de aula, Tarjeta y Fila
 
-- **Uso:** Tarjeta para explorar/elegir; Fila para administrar/listas largas (>15 items).
-- **Anatomía Tarjeta:**
-  - `<article className="rounded-xl border border-border bg-card p-4 pl-5 relative overflow-hidden" aria-labelledby="title-id">`
-  - **Riel lateral:** `absolute inset-y-0 left-0 w-1` con color de estado (sin border-radius propio).
-  - **Orden DOM estricto:**
-    1. Fecha (`text-xs text-muted-foreground`) → Va ANTES en DOM para lectores de pantalla.
-    2. Título `<h3>` (`text-base font-medium` id="title-id").
-    3. Subtítulo/Profesor (`text-[13px] text-muted-foreground`).
-    4. `<EstadoAula>`.
+- **Uso:** Renglón de aula (`<TarjetaAula>`) para explorar/elegir una clase; Tarjeta de
+  resumen para el panel; Fila para administrar/listas largas (>15 items).
+- **Anatomía del renglón de aula (`<TarjetaAula>`, HU-414):** una fila horizontal a todo el
+  ancho, de alto modular. `<article aria-labelledby="title-id">` sobre
+  `flex flex-col overflow-hidden rounded-xl border border-border bg-card p-4 pl-5 shadow-xs`
+  - `focus-within:ring-2 focus-within:ring-ring` (el anillo va en el renglón, aunque el foco
+    lo reciba el enlace del título).
+  * **Riel lateral:** `absolute inset-y-0 left-0 w-1` con color de estado (sin border-radius
+    propio), en las dos perspectivas.
+  * **Cuatro zonas** (`flex flex-wrap items-start gap-4`; bajo ~720px se apilan solas):
+    1. **Cuándo** `w-29 border-r`: día abreviado (`describirHorarioRenglon`), hora
+       `tabular-nums`, zona horaria en su propia línea (`text-xs whitespace-nowrap`).
+    2. **Qué** `min-w-0 flex-1`: `<h3>` con el `<Link>` al detalle (único enlace, con el
+       `after:absolute after:inset-0` de overlay), subtítulo, y **una sola fila** de badges:
+       `<EstadoAula>` + `Tu clase` + `Coincide con tu preferencia` (siempre visibles, no
+       cuentan) seguidos de los modos de comunicación y apoyos hasta `maxEtiquetasVisibles`
+       (default 3); el resto colapsa tras un `<button aria-expanded aria-controls>` `+N`.
+    3. **Cupo** `w-44`: `<IndicadorCupo variante="inscritos">` solo en la perspectiva del
+       profesor; en el catálogo el badge de estado ya dice el cupo y la zona va vacía.
+    4. **Qué hago** `w-49`: una acción primaria (reservar / entrar / cancelar / gestionar).
+  * **Orden DOM estricto:** cuándo → `<h3>` → subtítulo → fila de badges → cupo → acción →
+    banda «También:» → banda de aviso.
+  * **Banda «También:»** (`border-t`, `+N` abierto): las etiquetas colapsadas, precedidas de
+    `<span>También:</span>`.
+  * **Banda de aviso** (`border-t`): **solo reubica** mensajes que la acción ya pintaba
+    —cuenta atrás de acceso, «ya no se puede cancelar», error de reserva—. No entra ningún
+    aviso nuevo.
 - **Anatomía Fila:** Chip de ícono a la izq + título (`<Link>` al detalle) + subtítulo + resultado
   o cifras a la derecha; `border-b` entre filas, sin `rounded-xl`. El chip puede tomar el tono
   suave de su resultado (mismo tono que el badge de al lado — refuerzo, no señal nueva).
@@ -69,7 +94,7 @@
 
 - Barra lateral de navegación.
 - Menú hamburguesa en escritorio.
-- Más de 3 columnas en la rejilla.
+- Más de 3 columnas en la rejilla (no aplica a `<ListaAulas>`: es una sola columna).
 - Filtros ocultos dentro de desplegables.
 - Más de 1 acción primaria por pantalla.
 - Estados sólidos distintos de `acceso-abierto` o `en-curso`.

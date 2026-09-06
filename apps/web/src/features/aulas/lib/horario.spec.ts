@@ -5,6 +5,7 @@ import {
   aInstanteISO,
   describirDuracion,
   describirHorario,
+  describirHorarioRenglon,
   describirRangoHorario,
   partesHorario,
 } from './horario';
@@ -163,6 +164,35 @@ describe('describirRangoHorario', () => {
 
   it('no imprime «Invalid Date» ante una fecha rota', () => {
     expect(describirRangoHorario('no-es-una-fecha', 60)).toBe('Fecha no disponible');
+  });
+});
+
+describe('describirHorarioRenglon', () => {
+  const { dia, hora, zona } = describirHorarioRenglon(
+    aInstanteISO({ fecha: '2027-08-12', hora: '18:00' })!,
+  );
+
+  it('el día va compacto: día de la semana y mes abreviados, sin año', () => {
+    expect(dia).toContain('12');
+    expect(dia).toMatch(/ago/i);
+    expect(dia).not.toContain('2027');
+  });
+
+  it('la hora va en formato de 12 horas, aparte del día', () => {
+    expect(hora).toMatch(/6:00/);
+    expect(hora).toMatch(/p\.?\s?m\.?/i);
+  });
+
+  it('devuelve la zona nombrada, para pintarla en su propia línea', () => {
+    expect(zona.length).toBeGreaterThan(3);
+  });
+
+  it('ante una fecha rota deja el día con el aviso y lo demás vacío', () => {
+    expect(describirHorarioRenglon('no-es-una-fecha')).toEqual({
+      dia: 'Fecha no disponible',
+      hora: '',
+      zona: '',
+    });
   });
 });
 

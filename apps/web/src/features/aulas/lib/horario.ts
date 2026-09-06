@@ -156,6 +156,34 @@ export function partesHorario(instanteISO: string): { dia: string; horaConZona: 
 }
 
 /**
+ * Fecha telegráfica para el renglón de aula: `{ dia: 'mar 12 ago', hora: '6:00
+ * p. m.', zona: 'hora de Colombia' }`. El día sin año ni palabra completa —la
+ * columna es estrecha—; la zona aparte para pintarla en su propia línea sin
+ * cortar (B6: se nombra siempre). Ante una fecha rota, `hora` y `zona` vacías.
+ */
+export function describirHorarioRenglon(instanteISO: string): {
+  dia: string;
+  hora: string;
+  zona: string;
+} {
+  const instante = new Date(instanteISO);
+
+  if (Number.isNaN(instante.getTime())) {
+    return { dia: 'Fecha no disponible', hora: '', zona: '' };
+  }
+
+  const dia = new Intl.DateTimeFormat('es', {
+    weekday: 'short',
+    day: 'numeric',
+    month: 'short',
+  })
+    .format(instante)
+    .replace(/,/g, '');
+
+  return { dia, hora: formatearHora(instante), zona: nombreDeZona(instante) };
+}
+
+/**
  * El intervalo que ocupa una clase, en minúscula y listo para ir **dentro de
  * una frase**: `martes 25 de agosto, de 6:00 p. m. a 7:00 p. m. (hora de
  * Colombia)`.
