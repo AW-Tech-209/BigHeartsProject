@@ -1,6 +1,6 @@
 import { ClassroomStatus, type ClassroomDetail } from '@academia/types';
 import { Ban, Copy, LoaderCircle, Pencil } from 'lucide-react';
-import { useRef, useState } from 'react';
+import { type ReactNode, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 
 import {
@@ -28,41 +28,39 @@ type AccionesDeAulaProps = {
   aula: AulaGestionable;
   /** `true` si quien mira es el profesor dueño del aula. */
   esDueno: boolean;
-  /** Reduce el ancho de los controles cuando viven dentro de una tarjeta. */
-  compact?: boolean;
 };
 
+/** El aviso «esta clase ya comenzó», compartido por las dos formas. */
+const AVISO_YA_COMENZO = (
+  <Callout variant="attention" title="Esta clase ya comenzó">
+    <p>Ya no se puede editar ni cancelar.</p>
+  </Callout>
+);
+
 /**
- * Las acciones de gestión del aula: `Editar clase`, `Cancelar clase` (HU-202)
- * y `Duplicar clase` (HU-213). Solo para el dueño. Editar y cancelar exigen
- * que el aula siga siendo editable — sobre una ya cancelada no queda nada que
- * gestionar (AC4), y una que ya empezó explica por qué no se puede tocar
- * (T11). Duplicar no tiene esa restricción: la clase de la semana pasada, ya
- * finalizada o cancelada, es justo la que el profesor quiere volver a usar.
+ * Las acciones de gestión del aula (`Editar clase`, `Cancelar clase`, HU-202),
+ * partidas en `boton` y `aviso`. El renglón del listado (`<TarjetaAula>`) usa
+ * esto en vez de `<AccionesDeAula>`: pone `boton` en su columna estrecha y
+ * `aviso` («ya comenzó») en la banda al pie —donde cabe sin estirar la fila—.
  *
- * `compact` (la tarjeta del listado) nunca ofrece Duplicar: multiplicarla por
- * cada tarjeta rompería la regla de una acción primaria por pantalla.
+ * Editar y cancelar exigen que el aula siga siendo editable: sobre una ya
+ * cancelada no queda nada que gestionar (AC4), y una que ya empezó explica por
+ * qué no se puede tocar (T11).
  */
-export function AccionesDeAula({ aula, esDueno, compact = false }: AccionesDeAulaProps) {
-  if (!esDueno) {
-    return null;
+export function useAccionesDeAula({ aula, esDueno }: AccionesDeAulaProps): {
+  boton: ReactNode | null;
+  aviso: ReactNode | null;
+} {
+  if (!esDueno || aula.status === ClassroomStatus.CANCELLED) {
+    return { boton: null, aviso: null };
   }
 
-  const cancelada = aula.status === ClassroomStatus.CANCELLED;
-  const editable = !cancelada && esAulaEditable(aula);
+  if (!esAulaEditable(aula)) {
+    return { boton: null, aviso: AVISO_YA_COMENZO };
+  }
 
-  if (compact) {
-    if (cancelada) return null;
-
-    if (!editable) {
-      return (
-        <Callout variant="attention" title="Esta clase ya comenzó">
-          <p>Ya no se puede editar ni cancelar.</p>
-        </Callout>
-      );
-    }
-
-    return (
+  return {
+    boton: (
       <div className="relative z-10 flex flex-wrap gap-2">
         <Button
           render={<Link to={`/mis-aulas/${aula.id}/editar`} />}
@@ -75,16 +73,29 @@ export function AccionesDeAula({ aula, esDueno, compact = false }: AccionesDeAul
 
         <DialogoCancelarAula aula={aula} compact />
       </div>
-    );
+    ),
+    aviso: null,
+  };
+}
+
+/**
+ * El bloque completo de gestión para el detalle del aula (`AulaDetallePage`):
+ * `Editar clase`, `Cancelar clase` (HU-202) y `Duplicar clase` (HU-213), con el
+ * aviso «ya comenzó» encima. Solo para el dueño. Duplicar no exige que el aula
+ * sea editable: la clase pasada, finalizada o cancelada es justo la que el
+ * profesor quiere volver a usar.
+ */
+export function AccionesDeAula({ aula, esDueno }: AccionesDeAulaProps) {
+  if (!esDueno) {
+    return null;
   }
+
+  const cancelada = aula.status === ClassroomStatus.CANCELLED;
+  const editable = !cancelada && esAulaEditable(aula);
 
   return (
     <div className="space-y-3">
-      {!cancelada && !editable && (
-        <Callout variant="attention" title="Esta clase ya comenzó">
-          <p>Ya no se puede editar ni cancelar.</p>
-        </Callout>
-      )}
+      {!cancelada && !editable && AVISO_YA_COMENZO}
 
       <div className="flex flex-wrap gap-3">
         {editable && (

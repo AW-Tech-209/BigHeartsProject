@@ -241,6 +241,21 @@ describe('<TarjetaAula perspectiva="profesor" /> — la vista del dueño (AC8)',
     expect(screen.queryByText(/Ana Restrepo/)).not.toBeInTheDocument();
     expect(screen.getByText('Intermedio · 1 hora')).toBeInTheDocument();
   });
+
+  // El aviso «ya comenzó» rompía el renglón cuando caía en la columna de acción
+  // (196px): va a la banda al pie, a todo el ancho.
+  it('una clase ya empezada pone «Esta clase ya comenzó» en la banda al pie', () => {
+    tarjetaDelProfesor({
+      scheduledAt: new Date(AHORA.getTime() - 30 * 60_000).toISOString(),
+      durationMinutes: 60,
+    });
+
+    const aviso = screen.getByText('Esta clase ya comenzó');
+    expect(aviso.closest('.border-t')).not.toBeNull();
+    // No hay botones de gestión: ni Editar ni Cancelar.
+    expect(screen.queryByRole('link', { name: /Editar clase/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Cancelar clase/ })).not.toBeInTheDocument();
+  });
 });
 
 /**
