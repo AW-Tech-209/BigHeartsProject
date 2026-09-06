@@ -756,8 +756,10 @@ apps/web/src/
 ```
 
 **El shell (HU-206).** Todas las pantallas se montan sobre `<AppShell>`: marca, navegación superior
-por rol —tres o cuatro destinos, **nunca lateral y nunca tras una hamburguesa**—, barra inferior
-fija en móvil, y un `<main>` al que apunta el `<SkipLink>`. `<PaginaCabecera>` pone el único `<h1>`
+por rol —dos a cuatro destinos, **nunca lateral y nunca tras una hamburguesa**—, barra inferior
+fija en móvil, y un `<main>` al que apunta el `<SkipLink>`. El perfil no es un destino: se entra por
+la ficha de cuenta (avatar + nombre + rol), que es un `<NavLink to="/perfil">` — un enlace directo,
+no un menú, así que no reintroduce el estado oculto que D20 descartó. `<PaginaCabecera>` pone el único `<h1>`
 de la pantalla y es quien llama a `usePageTitle`, así que ninguna página puede olvidarse de mover el
 foco al cambiar de ruta. La especificación visual completa —anatomía, rejilla de 1/2/3 columnas,
 regla del sólido, estilo de ilustración— vive en `layout-y-composicion.md` del skill `bighearts-ui`.

@@ -1,12 +1,5 @@
 import { UserRole } from '@academia/types';
-import {
-  BookOpen,
-  CalendarCheck,
-  History,
-  LayoutDashboard,
-  UserRound,
-  type LucideIcon,
-} from 'lucide-react';
+import { BookOpen, CalendarCheck, History, LayoutDashboard, type LucideIcon } from 'lucide-react';
 
 export type Destino = {
   to: string;
@@ -24,13 +17,15 @@ export type Destino = {
  * Ocultar un destino aquí es **solo cosmética**: quien escriba la ruta a mano
  * sigue llegando. El permiso lo decide el servidor, y `<RequireAuth roles={…}>`
  * es quien lo aplica en el cliente.
+ *
+ * El perfil no está aquí: se entra por la ficha de cuenta de la barra (avatar +
+ * nombre + rol), que ya es, a la vista, «lo tuyo».
  */
 // El inicio de los tres roles (`/panel`). Va primero y explícito en la barra:
 // llegar al panel por el logo de BigHearts se descubre a medias.
 const PANEL: Destino = { to: '/panel', label: 'Panel', icon: LayoutDashboard };
 const AULAS: Destino = { to: '/aulas', label: 'Aulas', icon: BookOpen };
 const HISTORIAL: Destino = { to: '/historial', label: 'Historial', icon: History };
-const PERFIL: Destino = { to: '/perfil', label: 'Perfil', icon: UserRound };
 
 export const destinosPorRol: Record<UserRole, Destino[]> = {
   [UserRole.STUDENT]: [
@@ -38,14 +33,12 @@ export const destinosPorRol: Record<UserRole, Destino[]> = {
     AULAS,
     { to: '/mis-clases', label: 'Mis clases', icon: CalendarCheck },
     HISTORIAL,
-    PERFIL,
   ],
   [UserRole.TEACHER]: [
     PANEL,
     AULAS,
     { to: '/mis-aulas', label: 'Mis aulas', icon: CalendarCheck },
     HISTORIAL,
-    PERFIL,
   ],
-  [UserRole.ADMIN]: [PANEL, AULAS, PERFIL],
+  [UserRole.ADMIN]: [PANEL, AULAS],
 };

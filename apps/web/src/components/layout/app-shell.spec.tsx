@@ -17,9 +17,9 @@ import { AppShell } from './app-shell';
 const TEMAS: Tema[] = ['light', 'dark', 'hc'];
 
 const DESTINOS_ESPERADOS: Record<UserRole, string[]> = {
-  [UserRole.STUDENT]: ['Panel', 'Aulas', 'Mis clases', 'Historial', 'Perfil'],
-  [UserRole.TEACHER]: ['Panel', 'Aulas', 'Mis aulas', 'Historial', 'Perfil'],
-  [UserRole.ADMIN]: ['Panel', 'Aulas', 'Perfil'],
+  [UserRole.STUDENT]: ['Panel', 'Aulas', 'Mis clases', 'Historial'],
+  [UserRole.TEACHER]: ['Panel', 'Aulas', 'Mis aulas', 'Historial'],
+  [UserRole.ADMIN]: ['Panel', 'Aulas'],
 };
 
 /**
@@ -92,7 +92,7 @@ describe('AppShell — sin estado oculto', () => {
 
     // Sin una sola interacción previa: los enlaces ya están ahí.
     const navegacion = screen.getByRole('navigation', { name: 'Secciones' });
-    expect(within(navegacion).getAllByRole('link')).toHaveLength(5);
+    expect(within(navegacion).getAllByRole('link')).toHaveLength(4);
   });
 
   it('no existe ningún control que despliegue la navegación', () => {
@@ -120,7 +120,7 @@ describe('AppShell — sin estado oculto', () => {
       within(navegacion)
         .getAllByRole('link')
         .map((e) => e.textContent),
-    ).toEqual(['Panel', 'Aulas', 'Mis clases', 'Historial', 'Perfil']);
+    ).toEqual(['Panel', 'Aulas', 'Mis clases', 'Historial']);
     expect(navegacion.className).toContain('fixed');
     expect(navegacion.className).toContain('bottom-0');
     expect(container.querySelector('[aria-expanded]')).toBeNull();
@@ -181,7 +181,7 @@ describe('AppShell — el destino activo', () => {
     expect(activo.className).toContain('border-b-2');
     expect(activo.className).toContain('border-brand-foreground');
 
-    const inactivo = screen.getByRole('link', { name: 'Perfil' });
+    const inactivo = screen.getByRole('link', { name: 'Historial' });
     expect(inactivo).not.toHaveAttribute('aria-current');
     expect(inactivo.className).toContain('border-transparent');
   });
@@ -196,6 +196,35 @@ describe('AppShell — el destino activo', () => {
     expect(activo).toHaveAttribute('aria-current', 'page');
     expect(activo.className).toContain('border-t-2');
     expect(activo.className).toContain('border-brand-foreground');
+  });
+});
+
+describe('AppShell — el perfil se entra por la ficha de cuenta', () => {
+  it('no hay un destino «Perfil» en la navegación', () => {
+    darSesion(UserRole.STUDENT);
+    renderConProviders(<AppShell>Contenido</AppShell>);
+
+    const navegacion = screen.getByRole('navigation', { name: 'Secciones' });
+    expect(within(navegacion).queryByRole('link', { name: 'Perfil' })).toBeNull();
+  });
+
+  it('la ficha con nombre y rol es el enlace al perfil', () => {
+    darSesion(UserRole.STUDENT);
+    renderConProviders(<AppShell>Contenido</AppShell>);
+
+    const ficha = screen.getByRole('link', { name: /tu perfil/i });
+    expect(ficha).toHaveAttribute('href', '/perfil');
+    expect(within(ficha).getByText('Ana García')).toBeInTheDocument();
+  });
+
+  it('en /perfil la ficha queda marcada como página actual', () => {
+    darSesion(UserRole.STUDENT);
+    renderConProviders(<AppShell>Contenido</AppShell>, { ruta: '/perfil' });
+
+    expect(screen.getByRole('link', { name: /tu perfil/i })).toHaveAttribute(
+      'aria-current',
+      'page',
+    );
   });
 });
 

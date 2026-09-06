@@ -172,6 +172,11 @@ function EnlaceInferior({ destino }: { destino: Destino }) {
 /**
  * Quién eres y cómo salir, a la derecha de la barra.
  *
+ * La ficha (avatar + nombre + rol) **es el enlace al perfil**: a la vista ya se
+ * lee como «lo tuyo», así que no necesita un destino aparte en la navegación.
+ * `<NavLink>` le da `aria-current="page"` en `/perfil`, y el `sr-only` «Tu
+ * perfil» lo nombra para el lector de pantalla.
+ *
  * El avatar va `aria-hidden`: son dos iniciales, no información. El nombre y el
  * rol viajan en texto, y bajo 640px siguen en el árbol accesible aunque no se
  * vean (`sr-only sm:not-sr-only`) — ocultarlos con `hidden` los borraría también
@@ -195,20 +200,32 @@ function CuentaDelShell({ user }: { user: User }) {
   }
 
   return (
-    <div className="flex shrink-0 items-center gap-3">
-      <span
-        aria-hidden="true"
-        className="flex size-[30px] shrink-0 items-center justify-center rounded-full bg-brand-foreground/15 text-xs font-medium text-brand-foreground"
+    <div className="flex shrink-0 items-center gap-2 sm:gap-3">
+      <NavLink
+        to="/perfil"
+        className={({ isActive }) =>
+          cn(
+            '-mx-1 flex min-w-0 items-center gap-3 rounded-lg px-1 py-2 outline-none transition-colors sm:px-2',
+            'hover:bg-brand-foreground/10 focus-visible:ring-2 focus-visible:ring-brand-foreground/50',
+            isActive && 'bg-brand-foreground/10',
+          )
+        }
       >
-        {iniciales}
-      </span>
-
-      <p className="sr-only min-w-0 text-sm leading-tight sm:not-sr-only sm:block">
-        <span className="block truncate font-medium text-brand-foreground">
-          {user.firstName} {user.lastName}
+        <span className="sr-only">Tu perfil:</span>
+        <span
+          aria-hidden="true"
+          className="flex size-[30px] shrink-0 items-center justify-center rounded-full bg-brand-foreground/15 text-xs font-medium text-brand-foreground"
+        >
+          {iniciales}
         </span>
-        <span className="block truncate text-brand-foreground/70">{label}</span>
-      </p>
+
+        <p className="sr-only min-w-0 text-sm leading-tight sm:not-sr-only sm:block">
+          <span className="block truncate font-medium text-brand-foreground">
+            {user.firstName} {user.lastName}
+          </span>
+          <span className="block truncate text-brand-foreground/70">{label}</span>
+        </p>
+      </NavLink>
 
       <Button
         variant="ghost"
