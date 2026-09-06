@@ -4,7 +4,6 @@ import {
   aFechaYHora,
   aInstanteISO,
   describirDuracion,
-  describirFechaCompacta,
   describirHorario,
   describirRangoHorario,
   partesHorario,
