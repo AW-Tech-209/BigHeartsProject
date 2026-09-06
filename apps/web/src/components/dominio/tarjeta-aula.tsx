@@ -8,10 +8,19 @@ import {
   derivarEstadoAula,
   type EstadoAula as EstadoAulaTipo,
 } from '@academia/types';
-import { Ban, ChevronDown, ChevronUp, Presentation, UserCheck } from 'lucide-react';
+import {
+  Accessibility,
+  Ban,
+  ChevronDown,
+  ChevronUp,
+  Presentation,
+  Settings,
+  UserCheck,
+} from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { useAccionCancelarReserva } from '@/features/aulas/components/accion-cancelar-reserva';
 import { useAccionEntrarAClase } from '@/features/aulas/components/accion-entrar-a-clase';
 import { useAccionesDeAula } from '@/features/aulas/components/acciones-de-aula';
@@ -350,30 +359,38 @@ export function TarjetaAula({
           </div>
         )}
 
-        {/* Zona 4 — qué hago. */}
-        <div className="relative z-10 flex w-49 shrink-0 flex-col gap-2">
+        {/*
+          Zona 4 — qué hago. `self-center`: los botones se centran en el alto de
+          la fila en vez de colgar del borde superior cuando la zona «qué» es más
+          alta por los badges.
+        */}
+        <div className="relative z-10 flex w-49 shrink-0 flex-col gap-2 self-center">
           {reservar.boton}
           {cancelar.boton}
           {entrar.boton}
 
           {/* HU-208, T2/AC3. Sobre la clase propia el catálogo ofrece gestionarla. */}
           {marcaDePropiedad && (
-            <Link
-              to={`/aulas/${classroom.id}`}
-              className="inline-block text-sm font-medium text-primary underline underline-offset-4 hover:no-underline"
+            <Button
+              render={<Link to={`/aulas/${classroom.id}`} />}
+              variant="outline"
+              className="h-11 w-full gap-2 px-3.5"
             >
+              <Settings aria-hidden="true" strokeWidth={2} className="size-4" />
               Gestionar mi clase
-            </Link>
+            </Button>
           )}
 
           {/* T15: la vía para que un aula «sin indicar» deje de estarlo. */}
           {esVistaDelProfesor && sinModosDeclarados && (
-            <Link
-              to={`/mis-aulas/${classroom.id}/accesibilidad`}
-              className="inline-block text-sm font-medium text-primary underline underline-offset-4 hover:no-underline"
+            <Button
+              render={<Link to={`/mis-aulas/${classroom.id}/accesibilidad`} />}
+              variant="outline"
+              className="h-11 w-full gap-2 px-3.5"
             >
+              <Accessibility aria-hidden="true" strokeWidth={2} className="size-4" />
               Completar accesibilidad
-            </Link>
+            </Button>
           )}
 
           {gestion.boton}

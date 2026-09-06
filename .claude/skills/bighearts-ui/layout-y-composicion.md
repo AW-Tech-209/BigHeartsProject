@@ -71,7 +71,10 @@
        `<button aria-expanded aria-controls>` `+N`.
     3. **Cupo** `w-44`: `<IndicadorCupo variante="inscritos">` solo en la perspectiva del
        profesor; en el catálogo el badge de estado ya dice el cupo y la zona va vacía.
-    4. **Qué hago** `w-49`: una acción primaria (reservar / entrar / cancelar / gestionar).
+    4. **Qué hago** `w-49 self-center`: una acción primaria, siempre un `<Button>` de ancho
+       completo (reservar / entrar / cancelar / gestionar / completar accesibilidad — nunca un
+       enlace suelto subrayado). `self-center` la alinea al centro vertical de la fila en vez de
+       colgarla del borde superior cuando la zona «qué» es más alta.
   * **Orden DOM estricto:** cuándo → `<h3>` → subtítulo → fila de badges → cupo → acción →
     banda «También:» → banda de aviso.
   * **Banda «También:»** (`border-t`, `+N` abierto): las etiquetas colapsadas, precedidas de

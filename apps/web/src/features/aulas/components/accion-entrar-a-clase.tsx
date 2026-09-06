@@ -1,21 +1,24 @@
 import { type ReactNode } from 'react';
 import type { ClassroomListItem } from '@academia/types';
-import { ExternalLink } from 'lucide-react';
+import { DoorOpen } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
+import { Button } from '@/components/ui/button';
 import { useAccesoAlEnlace } from '@/features/aulas/hooks/use-acceso-al-enlace';
 import { describirHorario } from '@/features/aulas/lib/horario';
 
 type AulaConAcceso = Pick<ClassroomListItem, 'id' | 'accessState' | 'accessOpensAt'>;
 
 /**
- * «Cuándo se abrirá» / «Entrar a la clase» (HU-304, T6), partido en `boton` y
- * `aviso` para el renglón de aula: el enlace va en la columna de acción, la
+ * «Cuándo se abrirá» / «Ingresa a la clase» (HU-304, T6), partido en `boton` y
+ * `aviso` para el renglón de aula: el botón va en la columna de acción, la
  * cuenta atrás en la banda al pie.
  *
  * La tarjeta nunca trae el enlace real —solo el detalle lo revela (§4.8, regla
- * 2)—, así que «entrar» aquí navega al detalle, donde está la URL de verdad.
- * `sin-acceso` no pinta nada: sin reserva, ni cuenta atrás ni botón.
+ * 2)—, así que «Ingresa a la clase» aquí navega al detalle, donde está la URL
+ * de verdad. Va en el amarillo sólido del estado `acceso-abierto` (la regla del
+ * sólido: «hay algo que hacer ahora mismo»). `sin-acceso` no pinta nada: sin
+ * reserva, ni cuenta atrás ni botón.
  */
 export function useAccionEntrarAClase({ aula }: { aula: AulaConAcceso }): {
   boton: ReactNode | null;
@@ -40,13 +43,13 @@ export function useAccionEntrarAClase({ aula }: { aula: AulaConAcceso }): {
 
   return {
     boton: (
-      <Link
-        to={`/aulas/${aula.id}`}
-        className="relative z-10 inline-flex items-center gap-1.5 text-sm font-medium text-primary underline underline-offset-4 hover:no-underline"
+      <Button
+        render={<Link to={`/aulas/${aula.id}`} />}
+        className="relative z-10 h-11 w-full gap-2 bg-attention px-4 text-base text-attention-foreground hover:bg-attention/90"
       >
-        <ExternalLink aria-hidden="true" strokeWidth={2} className="size-4" />
-        Entrar a la clase
-      </Link>
+        <DoorOpen aria-hidden="true" strokeWidth={2} className="size-4" />
+        Ingresa a la clase
+      </Button>
     ),
     aviso: null,
   };

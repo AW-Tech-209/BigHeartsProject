@@ -341,7 +341,7 @@ describe('Panel del estudiante — sus reservas (HU-309, AC1-AC5)', () => {
 
     renderConProviders(<PanelPage />);
 
-    expect(await screen.findByRole('link', { name: /entrar a la clase/i })).toBeInTheDocument();
+    expect(await screen.findByRole('link', { name: /ingresa a la clase/i })).toBeInTheDocument();
   });
 
   it('error: explica y ofrece volver a cargar (AC5)', async () => {

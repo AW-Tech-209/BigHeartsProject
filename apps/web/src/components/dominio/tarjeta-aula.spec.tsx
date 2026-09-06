@@ -678,6 +678,29 @@ describe('<TarjetaAula /> — la acción de reservar (T3, AC4, HU-301)', () => {
     expect(screen.getByRole('button', { name: 'Cupo reservado' })).toBeDisabled();
   });
 
+  // Dentro de la ventana de acceso, «Cupo reservado» cede el sitio a un botón
+  // activo «Ingresa a la clase» que lleva al detalle (donde vive el enlace real).
+  it('con el acceso ya abierto ofrece «Ingresa a la clase» y lleva al detalle', () => {
+    renderConProviders(
+      <TarjetaAula
+        classroom={aula({
+          id: 'aula-7',
+          myBookingStatus: BookingStatus.CONFIRMED,
+          accessState: 'abierto',
+          scheduledAt: new Date(AHORA.getTime() + 15 * 60_000).toISOString(),
+        })}
+        puedeReservarla
+        ahora={AHORA}
+      />,
+    );
+
+    expect(screen.getByRole('link', { name: 'Ingresa a la clase' })).toHaveAttribute(
+      'href',
+      '/aulas/aula-7',
+    );
+    expect(screen.queryByRole('button', { name: 'Cupo reservado' })).not.toBeInTheDocument();
+  });
+
   // Bug reportado: una reserva que el estudiante canceló pintaba el estado
   // ambiente del aula (`Hay cupo`) como si siguiera siendo suya.
   it('una reserva cancelada por el estudiante se pinta como «Reserva cancelada», no con el estado del aula', () => {
