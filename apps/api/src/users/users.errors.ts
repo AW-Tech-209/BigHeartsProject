@@ -1,4 +1,4 @@
-import { NotFoundException } from '@nestjs/common';
+import { ForbiddenException, NotFoundException } from '@nestjs/common';
 import { ApiErrorCode } from '@academia/types';
 
 /**
@@ -21,4 +21,11 @@ export const profileNotFound = (): NotFoundException =>
   new NotFoundException({
     code: ApiErrorCode.USER_NOT_FOUND,
     message: 'No encontramos tu perfil. Inicia sesión de nuevo.',
+  });
+
+/** `hearingLossLevel` o `communicationPreference` en el PATCH de un no estudiante. */
+export const accessibilityFieldsNotAllowed = (): ForbiddenException =>
+  new ForbiddenException({
+    code: ApiErrorCode.ACCESSIBILITY_FIELDS_NOT_ALLOWED,
+    message: 'El nivel de hipoacusia y la preferencia de comunicación son solo del estudiante.',
   });

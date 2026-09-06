@@ -113,6 +113,7 @@ describe('UsersService.updateProfile', () => {
 
     const user = await service.updateProfile(
       'user-id',
+      UserRole.STUDENT,
       dto({ firstName: 'Ana', lastName: 'Ruiz' }),
     );
 
@@ -129,6 +130,7 @@ describe('UsersService.updateProfile', () => {
 
     const user = await service.updateProfile(
       'user-id',
+      UserRole.STUDENT,
       dto({
         hearingLossLevel: HearingLossLevel.SEVERE,
         communicationPreference: CommunicationPreference.SIGN_LANGUAGE,
@@ -150,7 +152,7 @@ describe('UsersService.updateProfile', () => {
       }),
     });
 
-    await service.updateProfile('user-id', dto());
+    await service.updateProfile('user-id', UserRole.STUDENT, dto());
 
     const data = update.mock.calls[0]![0].data;
     expect(data).not.toHaveProperty('hearingLossLevel');
@@ -162,7 +164,11 @@ describe('UsersService.updateProfile', () => {
       foundUser: dbUser({ hearingLossLevel: HearingLossLevel.MILD }),
     });
 
-    const user = await service.updateProfile('user-id', dto({ hearingLossLevel: null }));
+    const user = await service.updateProfile(
+      'user-id',
+      UserRole.STUDENT,
+      dto({ hearingLossLevel: null }),
+    );
 
     expect(update.mock.calls[0]![0].data).toMatchObject({ hearingLossLevel: null });
     expect(user.hearingLossLevel).toBeNull();
@@ -175,6 +181,7 @@ describe('UsersService.updateProfile', () => {
     // service: el `data` se arma campo a campo, así que se quedan fuera igual.
     await service.updateProfile(
       'user-id',
+      UserRole.STUDENT,
       dto({
         email: 'ladron@academia.local',
         role: UserRole.ADMIN,
@@ -195,7 +202,7 @@ describe('UsersService.updateProfile', () => {
   it('el perfil editado es siempre el del id recibido, no el del cuerpo (AC6)', async () => {
     const { service, update } = setup();
 
-    await service.updateProfile('usuario-autenticado', dto());
+    await service.updateProfile('usuario-autenticado', UserRole.STUDENT, dto());
 
     expect(update.mock.calls[0]![0].where).toEqual({ id: 'usuario-autenticado' });
   });
@@ -203,7 +210,7 @@ describe('UsersService.updateProfile', () => {
   it('la respuesta de la actualización tampoco lleva la contraseña', async () => {
     const { service } = setup();
 
-    const user = await service.updateProfile('user-id', dto());
+    const user = await service.updateProfile('user-id', UserRole.STUDENT, dto());
 
     expect(user).not.toHaveProperty('password');
   });
@@ -211,7 +218,7 @@ describe('UsersService.updateProfile', () => {
   it('traduce el P2025 de Prisma a 404 USER_NOT_FOUND', async () => {
     const { service } = setup({ foundUser: null });
 
-    await expect(service.updateProfile('user-id', dto())).rejects.toMatchObject({
+    await expect(service.updateProfile('user-id', UserRole.STUDENT, dto())).rejects.toMatchObject({
       response: { code: ApiErrorCode.USER_NOT_FOUND },
     });
   });
@@ -220,6 +227,55 @@ describe('UsersService.updateProfile', () => {
     const { service, update } = setup();
     update.mockRejectedValueOnce(Object.assign(new Error('conexión caída'), { code: 'P1001' }));
 
-    await expect(service.updateProfile('user-id', dto())).rejects.toThrow('conexión caída');
+    await expect(service.updateProfile('user-id', UserRole.STUDENT, dto())).rejects.toThrow(
+      'conexión caída',
+    );
   });
+
+  it.each([UserRole.TEACHER, UserRole.ADMIN])(
+    'rechaza `hearingLossLevel` de un %s con ACCESSIBILITY_FIELDS_NOT_ALLOWED (AC3)',
+    async (role) => {
+      const { service, update } = setup();
+
+      await expect(
+        service.updateProfile('user-id', role, dto({ hearingLossLevel: HearingLossLevel.MILD })),
+      ).rejects.toMatchObject({
+        response: { code: ApiErrorCode.ACCESSIBILITY_FIELDS_NOT_ALLOWED },
+      });
+      expect(update).not.toHaveBeenCalled();
+    },
+  );
+
+  it.each([UserRole.TEACHER, UserRole.ADMIN])(
+    'rechaza `communicationPreference` de un %s con ACCESSIBILITY_FIELDS_NOT_ALLOWED (AC3)',
+    async (role) => {
+      const { service } = setup();
+
+      await expect(
+        service.updateProfile(
+          'user-id',
+          role,
+          dto({ communicationPreference: CommunicationPreference.SIGN_LANGUAGE }),
+        ),
+      ).rejects.toMatchObject({
+        response: { code: ApiErrorCode.ACCESSIBILITY_FIELDS_NOT_ALLOWED },
+      });
+    },
+  );
+
+  it.each([UserRole.TEACHER, UserRole.ADMIN])(
+    'un %s sigue editando nombre y apellido sin tropezar con el rechazo (AC4)',
+    async (role) => {
+      const { service, update } = setup();
+
+      const user = await service.updateProfile(
+        'user-id',
+        role,
+        dto({ firstName: 'Nuevo', lastName: 'Apellido' }),
+      );
+
+      expect(update).toHaveBeenCalled();
+      expect(user.firstName).toBe('Nuevo');
+    },
+  );
 });

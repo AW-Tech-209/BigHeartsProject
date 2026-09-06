@@ -1,11 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import type { Prisma } from '@prisma/client';
-import type { User } from '@academia/types';
+import { UserRole, type User } from '@academia/types';
 
 import { PrismaService } from '../prisma/prisma.service';
 import type { UpdateProfileDto } from './dto/update-profile.dto';
 import { toPublicUser } from './user.mapper';
-import { profileNotFound } from './users.errors';
+import { accessibilityFieldsNotAllowed, profileNotFound } from './users.errors';
 
 @Injectable()
 export class UsersService {
@@ -41,7 +41,13 @@ export class UsersService {
    * significa "no la toques", mandar `null` significa "retira la preferencia".
    * Por eso no se usa `?? null`, que colapsaría los dos casos en uno.
    */
-  async updateProfile(userId: string, dto: UpdateProfileDto): Promise<User> {
+  async updateProfile(userId: string, role: UserRole, dto: UpdateProfileDto): Promise<User> {
+    const sendsAccessibilityField =
+      dto.hearingLossLevel !== undefined || dto.communicationPreference !== undefined;
+    if (role !== UserRole.STUDENT && sendsAccessibilityField) {
+      throw accessibilityFieldsNotAllowed();
+    }
+
     const data: Prisma.UserUpdateInput = {
       firstName: dto.firstName,
       lastName: dto.lastName,

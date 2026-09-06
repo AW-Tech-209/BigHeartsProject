@@ -14,17 +14,19 @@ type CtaAccesoProps = {
 /**
  * El par de acciones de la landing: crear cuenta e iniciar sesión.
  *
- * Consciente de la sesión: mientras se rehidrata no pinta nada —enseñar
- * «Iniciar sesión» y cambiarlo medio segundo después es peor que esperar—, y a
- * quien ya tiene sesión le ofrece su panel en vez de un registro que no
- * necesita.
+ * Consciente de la sesión: mientras se rehidrata reserva el alto de los botones
+ * —enseñar «Iniciar sesión» y cambiarlo medio segundo después es peor que
+ * esperar, pero el hueco evita que nada salte al aparecer—, y a quien ya tiene
+ * sesión le ofrece su panel en vez de un registro que no necesita.
  */
 export function CtaAcceso({ compacto = false, className }: CtaAccesoProps) {
   const { isAuthenticated, isChecking } = useAuth();
 
-  if (isChecking) return null;
-
   const alto = compacto ? 'h-11 px-4 text-sm' : 'h-12 px-6 text-base';
+
+  if (isChecking) {
+    return <div aria-hidden="true" className={cn(compacto ? 'h-11' : 'h-12', className)} />;
+  }
 
   if (isAuthenticated) {
     return (

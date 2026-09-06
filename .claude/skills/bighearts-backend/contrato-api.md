@@ -50,6 +50,7 @@ Códigos ya existentes: `VALIDATION_ERROR`, `EMAIL_ALREADY_EXISTS`, `INVALID_CRE
 `ACCOUNT_SUSPENDED`, `ACCOUNT_PENDING`, `ACCOUNT_REJECTED`, `UNAUTHENTICATED`,
 `INSUFFICIENT_ROLE`, `INVALID_REFRESH_TOKEN`, `PASSWORD_RESET_TOKEN_INVALID`,
 `PASSWORD_RESET_TOKEN_EXPIRED`, `PROFILE_FORBIDDEN`, `USER_NOT_FOUND`,
+`ACCESSIBILITY_FIELDS_NOT_ALLOWED`,
 `CLASSROOM_NOT_FOUND`, `CLASSROOM_FORBIDDEN`, `TEACHER_SCHEDULE_CONFLICT`,
 `CLASSROOM_DURATION_INVALID`, `CLASSROOM_LEAD_TIME_WARNING`, `INVALID_STATUS_TRANSITION`,
 `TOO_MANY_REQUESTS`, `DATABASE_UNAVAILABLE`, `INTERNAL_ERROR`. Los del dominio de reservas están en
@@ -217,6 +218,11 @@ sin forma de nombrar a un tercero, no hay perfil ajeno que proteger. `UpdateProf
 declara los campos editables, así que `email`, `role` e `id` en el cuerpo los rechaza el
 `whitelist` del ValidationPipe con `VALIDATION_ERROR`. Si algún día hace falta editar el perfil de
 otra persona, va en `AdminModule` con su propia autorización de rol, no aflojando esto.
+
+**`hearingLossLevel` y `communicationPreference` son del rol `STUDENT` (HU-504).** Un `TEACHER` o
+un `ADMIN` que los mande en el `PATCH` recibe `ACCESSIBILITY_FIELDS_NOT_ALLOWED` (403); el resto del
+cuerpo (nombre, apellidos) se sigue aceptando igual. Se decide en `UsersService`, con el rol que
+trae el propio token — no hace falta ir a la BD.
 
 Al añadir un endpoint, actualiza `AUTH_FLOW.md` si es de `/auth`, y `docs/ARQUITECTURA.md` si
 introduce una decisión nueva.

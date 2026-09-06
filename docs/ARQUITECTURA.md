@@ -390,6 +390,10 @@ cualquier otro producto.
    «sin indicar» y el profesor las completa. Rellenar la migración con un valor por defecto sería
    mentirle al estudiante sobre algo de lo que depende para seguir la clase.
 4. **La declaración es de buena fe.** La plataforma no audita que el profesor cumpla lo que dice.
+5. **`hearingLossLevel` y `communicationPreference` son del rol `STUDENT`.** Nadie más los lee: el
+   catálogo los usa para destacar clases y el profesor no los ve. Registro y perfil solo los piden
+   al estudiante, y `PATCH /users/me` los rechaza (`ACCESSIBILITY_FIELDS_NOT_ALLOWED`) si vienen de
+   un `TEACHER` o un `ADMIN` (HU-504).
 
 > **Decisión D21 (2026-08-20).** Se reutiliza el enum `CommunicationPreference` para el aula en vez
 > de crear uno paralelo, para que el emparejamiento sea directo:

@@ -6,8 +6,8 @@ import {
   describirDuracion,
   describirFechaCompacta,
   describirHorario,
-  describirHorarioPartes,
   describirRangoHorario,
+  partesHorario,
 } from './horario';
 
 /**
@@ -110,43 +110,20 @@ describe('describirHorario', () => {
   });
 });
 
-describe('describirFechaCompacta', () => {
-  const texto = describirFechaCompacta(aInstanteISO({ fecha: '2027-08-12', hora: '18:00' })!);
+describe('partesHorario', () => {
+  const { dia, horaConZona } = partesHorario(aInstanteISO({ fecha: '2027-08-12', hora: '18:00' })!);
 
-  it('trae día, mes y año, y la hora en 12 horas', () => {
-    expect(texto).toContain('12');
-    expect(texto).toMatch(/ago/i);
-    expect(texto).toContain('2027');
-    expect(texto).toMatch(/6:00/);
-    expect(texto).toMatch(/p\.?\s?m\.?/i);
+  it('reparte el día arriba y la hora con zona abajo, sin perder nada', () => {
+    expect(dia).toMatch(/jueves/i);
+    expect(dia).toContain('2027');
+    expect(horaConZona).toMatch(/6:00/);
+    expect(horaConZona).toMatch(/\(.+\)$/);
   });
 
-  it('no lleva día de la semana ni zona horaria entre paréntesis', () => {
-    expect(texto).not.toMatch(/lunes|martes|miércoles|jueves|viernes|sábado|domingo/i);
-    expect(texto).not.toMatch(/\(.+\)/);
-  });
-
-  it('ante una fecha rota devuelve «Fecha no disponible»', () => {
-    expect(describirFechaCompacta('no-es-una-fecha')).toBe('Fecha no disponible');
-  });
-});
-
-describe('describirHorarioPartes', () => {
-  const iso = aInstanteISO({ fecha: '2027-08-12', hora: '18:00' })!;
-
-  it('parte la fecha en «cuando» y «zona», y rearmadas dan describirHorario', () => {
-    const { cuando, zona } = describirHorarioPartes(iso);
-
-    expect(cuando).toMatch(/2027/);
-    expect(cuando).not.toContain('(');
-    expect(zona.length).toBeGreaterThan(3);
-    expect(`${cuando} (${zona})`).toBe(describirHorario(iso));
-  });
-
-  it('ante una fecha rota deja «zona» vacía', () => {
-    expect(describirHorarioPartes('no-es-una-fecha')).toEqual({
-      cuando: 'Fecha no disponible',
-      zona: '',
+  it('ante una fecha rota deja el día con el aviso y la hora vacía', () => {
+    expect(partesHorario('no-es-una-fecha')).toEqual({
+      dia: 'Fecha no disponible',
+      horaConZona: '',
     });
   });
 });

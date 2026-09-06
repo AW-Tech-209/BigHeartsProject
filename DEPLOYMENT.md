@@ -90,6 +90,10 @@ claro y el deploy falla — es intencional, para no arrancar en staging/prod sin
 
 > **Free tier:** el servicio se **duerme tras ~15 min** sin tráfico y el primer request tarda
 > ~30-60s en despertar. Es normal; el frontend reintenta el health-check.
+>
+> De ahí salen los ~10s que tardaba la landing en ser usable: el visitante nuevo esperaba a un
+> `/auth/refresh` contra un backend dormido. Ya no — el arranque solo pide refresh si hay marca de
+> sesión previa, y con plazo (`VITE_SESSION_REFRESH_TIMEOUT_MS`, 3s). Ver `AUTH_FLOW.md`.
 
 Cuando termine, anota la URL pública: `https://bighearts-backend-staging.onrender.com` (o la que asigne).
 

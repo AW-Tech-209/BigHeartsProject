@@ -51,11 +51,32 @@ jobs:
           node-version: 22
           cache: npm
 
-      # `npm ci` instala TODO el monorepo (workspaces) de forma reproducible
-      # desde el package-lock.json de la raíz. Su postinstall genera el cliente
-      # de Prisma (offline, no necesita base de datos).
+      # `npm ci` borra node_modules y vuelve a enlazar decenas de miles de
+      # archivos: en este monorepo son minutos aunque no descargue nada. Con la
+      # caché, un lockfile sin cambios salta el paso entero.
+      #
+      # La clave incluye `schema.prisma` porque el postinstall genera el cliente
+      # DENTRO de node_modules: si el schema cambia sin tocar el lockfile, un
+      # cliente cacheado quedaría obsoleto y el build compilaría contra tipos
+      # viejos. El sufijo `prisma` separa esta caché de la del job de frontend,
+      # que se genera SIN cliente (ver allí) — compartir clave le daría a este
+      # job un node_modules sin `@prisma/client` y el build fallaría.
+      - name: Cache node_modules
+        id: node-modules
+        uses: actions/cache@v4
+        with:
+          path: |
+            node_modules
+            apps/*/node_modules
+            packages/*/node_modules
+          key: nm-prisma-${{ runner.os }}-node22-${{ hashFiles('package-lock.json', 'apps/api/prisma/schema.prisma') }}
+
+      # Instala TODO el monorepo (workspaces) de forma reproducible desde el
+      # package-lock.json de la raíz. Su postinstall genera el cliente de Prisma
+      # (offline, no necesita base de datos).
       - name: Install
-        run: npm ci
+        if: steps.node-modules.outputs.cache-hit != 'true'
+        run: npm ci --prefer-offline --no-audit --fund=false
 
       # Las apps importan @academia/types compilado; hay que construirlo antes.
       - name: Build shared types
@@ -86,6 +107,13 @@ jobs:
   frontend:
     name: Frontend (lint + build + test)
     runs-on: ubuntu-latest
+    env:
+      # `npm ci` instala el monorepo entero, así que el postinstall de
+      # @academia/api dispararía `prisma generate` —y la descarga de sus motores,
+      # decenas de megas— en un job que no toca Prisma para nada. @academia/types
+      # NO importa de `@prisma/client`: declara sus enums como gemelos del schema,
+      # así que aquí el cliente no hace falta.
+      PRISMA_SKIP_POSTINSTALL_GENERATE: 'true'
     steps:
       - uses: actions/checkout@v4
 
@@ -94,8 +122,21 @@ jobs:
           node-version: 22
           cache: npm
 
+      # Caché propia: este node_modules se instala SIN cliente de Prisma, así que
+      # no puede compartir clave con la del backend (ver el comentario de allí).
+      - name: Cache node_modules
+        id: node-modules
+        uses: actions/cache@v4
+        with:
+          path: |
+            node_modules
+            apps/*/node_modules
+            packages/*/node_modules
+          key: nm-noprisma-${{ runner.os }}-node22-${{ hashFiles('package-lock.json') }}
+
       - name: Install
-        run: npm ci
+        if: steps.node-modules.outputs.cache-hit != 'true'
+        run: npm ci --prefer-offline --no-audit --fund=false
 
       - name: Build shared types
         run: npm run build:types

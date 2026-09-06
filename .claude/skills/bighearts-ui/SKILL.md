@@ -88,6 +88,10 @@ llevan además una `shadow-xs` de reposo mínima que las despega del lienzo sin 
 flotante (HU-415). La sombra de verdad (`shadow-lg`) sigue reservada a lo que flota: modales,
 popovers. Objetivos táctiles ≥ 44px, 48px en acciones primarias y en móvil.
 
+**Excepción D40 — solo las tarjetas de resumen del panel (`features/panel/`, HU-503):** llevan
+borde + `shadow-sm`, y `shadow-md` al pasar el cursor si la tarjeta entera es enlazable. No abre la
+puerta a sombras en el resto: las tarjetas de aula, formularios y listados siguen con borde a secas.
+
 ## Accesibilidad — no negociable en cada componente
 
 - Foco visible siempre: anillo 3px + 2px de offset. **Jamás** `outline: none` sin reemplazo.
@@ -133,6 +137,18 @@ Sonido como señal · video sin subtítulos/autoplay · placeholder como única 
 imagen/gradiente · ámbar decorativo · `text-justify` · modales anidados · deshabilitar sin explicar
 por qué · pesos tipográficos < 400 · mutaciones optimistas en reservas (el cupo tiene concurrencia
 real; no se muestra "reservado" antes de que el servidor confirme).
+
+**Excepción D41 — solo las tarjetas de resumen del panel (`features/panel/`, HU-503):** se permite
+un velo de color muy tenue detrás de la tarjeta, saliendo de la esquina del ícono (token `*-soft`
+del tono, muy difuminado). El texto nunca cae encima —se sitúa sobre la zona plana— y su contraste
+se verifica igual (≥ 4,5:1). No aplica a ninguna otra superficie.
+
+## Registro de decisiones de diseño
+
+- **D39** (HU-502) — El ámbar en las tarjetas de resumen del panel solo en «Asistencia sin marcar»
+  y «Profesores pendientes de aprobar», y solo con la cifra > 0; ese mismo cero va en `success`.
+- **D40** (HU-503) — Borde + sombra sutil en las tarjetas de resumen del panel. Ver «Espaciado y forma».
+- **D41** (HU-503) — Velo de color tenue tras la tarjeta de resumen del panel. Ver «Prohibido siempre».
 
 ## Checklist antes de dar un componente por terminado
 

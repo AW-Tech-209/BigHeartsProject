@@ -80,21 +80,33 @@ volver a `/recuperar-contrasena`. Al terminar, la pantalla manda a `/login`
    cookie sigue válida, devuelve una sesión nueva (así la sesión "sobrevive a
    recargas"); si no, el usuario no tenía sesión.
 
+   El refresh del arranque solo se intenta si hay **marca de sesión previa** en
+   `localStorage` (`bh.session-hint`): se escribe en `setSession` (login y
+   refresh correctos) y se borra en `clearSession` (logout y refresh fallido).
+   No es un token ni un dato sensible, solo dice "aquí hubo sesión alguna vez".
+   Sin marca — un visitante nuevo en la landing pública — el store pasa a
+   `anonymous` de inmediato y no se dispara ninguna petición que no podría
+   servirse (no hay cookie de refresh). Con marca, el refresh lleva un plazo
+   (`VITE_SESSION_REFRESH_TIMEOUT_MS`, 3 s por defecto): si vence, el store pasa
+   a `anonymous` y la pantalla se vuelve usable; si la respuesta llega después y
+   es válida, `setSession` rehidrata igual.
+
 > **Importante para axios**: usar `withCredentials: true` en el cliente (o al
 > menos en las llamadas a `/auth/*`). Sin eso el navegador no envía ni recibe la
 > cookie `httpOnly`.
 
 ## Implementación en el frontend
 
-| Pieza                     | Archivo                                                                        | Qué resuelve                                                                    |
-| ------------------------- | ------------------------------------------------------------------------------ | ------------------------------------------------------------------------------- |
-| Store de sesión           | `apps/web/src/stores/auth-store.ts`                                            | `status` + `user` + `accessToken` **en memoria**. Sin `persist`, a propósito.   |
-| Refresh silencioso        | `apps/web/src/lib/auth/refresh-session.ts`                                     | Llama a `/auth/refresh` con un axios **crudo** y colapsa llamadas concurrentes. |
-| Interceptor               | `apps/web/src/lib/http-client.ts`                                              | Adjunta el Bearer; ante un 401 renueva y **reintenta** la petición original.    |
-| Rehidratación al arrancar | `apps/web/src/features/auth/hooks/use-session-bootstrap.ts`                    | Un único `/auth/refresh` por carga de página.                                   |
-| Pantalla de login         | `apps/web/src/pages/LoginPage.tsx` + `features/auth/components/login-form.tsx` | Formulario accesible y mensajes por código de error.                            |
-| Guard de rutas            | `apps/web/src/features/auth/components/require-auth.tsx`                       | Redirige a `/login` sin sesión; muestra "sin acceso" si el rol no alcanza.      |
-| UI por rol                | `apps/web/src/features/auth/components/role-gate.tsx`                          | Oculta bloques según el rol (comodidad de UI, **no** seguridad).                |
+| Pieza                     | Archivo                                                                        | Qué resuelve                                                                        |
+| ------------------------- | ------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------- |
+| Store de sesión           | `apps/web/src/stores/auth-store.ts`                                            | `status` + `user` + `accessToken` **en memoria**. Sin `persist`, a propósito.       |
+| Refresh silencioso        | `apps/web/src/lib/auth/refresh-session.ts`                                     | Llama a `/auth/refresh` con un axios **crudo** y colapsa llamadas concurrentes.     |
+| Interceptor               | `apps/web/src/lib/http-client.ts`                                              | Adjunta el Bearer; ante un 401 renueva y **reintenta** la petición original.        |
+| Rehidratación al arrancar | `apps/web/src/features/auth/hooks/use-session-bootstrap.ts`                    | Un único `/auth/refresh` por carga, y solo si hay marca de sesión previa.           |
+| Marca de sesión previa    | `apps/web/src/lib/auth/session-hint.ts`                                        | Flag no sensible en `localStorage`: evita que el visitante nuevo espere al refresh. |
+| Pantalla de login         | `apps/web/src/pages/LoginPage.tsx` + `features/auth/components/login-form.tsx` | Formulario accesible y mensajes por código de error.                                |
+| Guard de rutas            | `apps/web/src/features/auth/components/require-auth.tsx`                       | Redirige a `/login` sin sesión; muestra "sin acceso" si el rol no alcanza.          |
+| UI por rol                | `apps/web/src/features/auth/components/role-gate.tsx`                          | Oculta bloques según el rol (comodidad de UI, **no** seguridad).                    |
 
 ### Tres detalles que no son obvios
 
