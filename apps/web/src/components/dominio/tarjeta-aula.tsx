@@ -247,10 +247,12 @@ export function TarjetaAula({
           navega con lector de pantalla se entera de CUÁNDO es la clase antes de
           CÓMO se llama. La zona se nombra siempre (B6), en su propia línea.
         */}
-        <div className="w-29 shrink-0 border-r border-border pr-4">
+        <div className="w-29 shrink-0 overflow-hidden border-r border-border pr-4">
           <p className="text-xs text-muted-foreground">{dia}</p>
           {hora && <p className="text-[17px] font-medium tabular-nums">{hora}</p>}
-          {zona && <p className="text-xs whitespace-nowrap text-muted-foreground">({zona})</p>}
+          {zona && (
+            <p className="text-xs leading-tight text-pretty text-muted-foreground">({zona})</p>
+          )}
         </div>
 
         {/* Zona 2 — qué. */}
