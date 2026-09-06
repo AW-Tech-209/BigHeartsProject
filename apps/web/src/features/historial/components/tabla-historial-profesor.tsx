@@ -35,7 +35,7 @@ export function TablaHistorialProfesor({ items, total }: TablaHistorialProfesorP
             >
               <div className="flex flex-col items-end gap-1.5 text-right">
                 <BadgeAsistenciaAula aula={item} />
-                {item.totalInscritos > 0 && (
+                {asistencia.completa && (
                   <span className="text-sm text-muted-foreground tabular-nums">
                     {item.totalAsistieron} de {item.totalInscritos} asistieron
                   </span>

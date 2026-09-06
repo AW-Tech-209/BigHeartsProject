@@ -126,3 +126,7 @@ clases pasadas, es también desde donde marca la asistencia que le falta:
   «Asistencia marcada» (`success`) / «Sin inscritos».
 - La tarjeta «Asistencia sin marcar» del panel del profesor (HU-502) enlaza ahora a `/historial`,
   no a `/mis-aulas` (donde ya no hay aulas terminadas, D34).
+- El badge exige **señal afirmativa** para decir «Asistencia marcada»: `asistenciaPendiente === 0`
+  real y con inscritos. Con parte marcada muestra «Falta marcar (N de M)»; si el campo no llega
+  (`undefined`), se muestra como pendiente, nunca como hecha. La cifra «X de Y asistieron» solo
+  aparece con la asistencia cerrada, para no sugerir ausencias que en realidad están sin marcar.

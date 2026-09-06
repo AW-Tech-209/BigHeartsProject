@@ -1,4 +1,5 @@
 import {
+  type AulaImpartida,
   BookingStatus,
   ClassroomStatus,
   EnglishLevel,
@@ -102,7 +103,7 @@ describe('HistorialPage — profesor (AC2)', () => {
     expect(screen.getByText('Asistencia marcada')).toBeInTheDocument();
   });
 
-  it('avisa en la fila cuando todavía falta marcar la asistencia', async () => {
+  it('avisa en la fila cuando no hay ninguna asistencia marcada', async () => {
     vi.mocked(getHistorial).mockResolvedValue({
       items: [{ ...filaClasica(), totalInscritos: 4, totalAsistieron: 0, asistenciaPendiente: 4 }],
       total: 1,
@@ -113,6 +114,38 @@ describe('HistorialPage — profesor (AC2)', () => {
     montar();
 
     expect(await screen.findByText('Falta marcar asistencia')).toBeInTheDocument();
+    expect(screen.queryByText('0 de 4 asistieron')).toBeNull();
+  });
+
+  it('muestra el estado parcial cuando falta marcar solo a algunos', async () => {
+    vi.mocked(getHistorial).mockResolvedValue({
+      items: [{ ...filaClasica(), totalInscritos: 5, totalAsistieron: 2, asistenciaPendiente: 2 }],
+      total: 1,
+      page: 1,
+      pageSize: 20,
+    });
+
+    montar();
+
+    expect(await screen.findByText('Falta marcar (2 de 5)')).toBeInTheDocument();
+    expect(screen.queryByText('2 de 5 asistieron')).toBeNull();
+  });
+
+  it('sin el dato de pendientes no afirma que la asistencia esté marcada', async () => {
+    vi.mocked(getHistorial).mockResolvedValue({
+      // Simula una respuesta sin `asistenciaPendiente` (API sin recompilar).
+      items: [
+        { ...filaClasica(), totalInscritos: 3, totalAsistieron: 0 } as unknown as AulaImpartida,
+      ],
+      total: 1,
+      page: 1,
+      pageSize: 20,
+    });
+
+    montar();
+
+    expect(await screen.findByText('Falta marcar asistencia')).toBeInTheDocument();
+    expect(screen.queryByText('Asistencia marcada')).toBeNull();
   });
 });
 
