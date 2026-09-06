@@ -54,10 +54,12 @@ export class PanelService {
 
   private async resumenEstudiante(student: AuthenticatedUser): Promise<ResumenPanelEstudiante> {
     const ahora = new Date();
+    // «Próxima» corta en el FIN de la clase: una clase en curso sigue siendo la
+    // próxima del estudiante —es a la que tiene que entrar ahora—, no una pasada.
     const reservaProxima: Prisma.BookingWhereInput = {
       studentId: student.id,
       status: BookingStatus.CONFIRMED,
-      classroom: { status: { not: ClassroomStatus.CANCELLED }, scheduledAt: { gt: ahora } },
+      classroom: { status: { not: ClassroomStatus.CANCELLED }, endsAt: { gt: ahora } },
     };
 
     const [perfil, proxima, reservasActivas] = await Promise.all([
@@ -127,26 +129,26 @@ export class PanelService {
   private async resumenProfesor(teacher: AuthenticatedUser): Promise<ResumenPanelProfesor> {
     const ahora = new Date();
 
-    const [proximaRow, terminadasConDeuda, inscritos] = await Promise.all([
+    const [proximaRow, asistenciaSinMarcar, inscritos] = await Promise.all([
       this.prisma.classroom.findFirst({
         where: {
           teacherId: teacher.id,
           status: { not: ClassroomStatus.CANCELLED },
-          scheduledAt: { gt: ahora },
+          // Incluye la clase en curso: sigue siendo la «próxima» del profesor.
+          endsAt: { gt: ahora },
         },
         orderBy: { scheduledAt: 'asc' },
         include: CLASSROOM_CON_PROFESOR,
       }),
-      // «Ya terminó» es `scheduledAt + duración < ahora`, expresión sobre dos
-      // columnas: se acota por `scheduledAt` y el fin se comprueba en memoria.
-      this.prisma.classroom.findMany({
+      // Clases suyas ya terminadas (`endsAt <= ahora`) con al menos una reserva
+      // CONFIRMED sin marcar — la deuda de asistencia (D39).
+      this.prisma.classroom.count({
         where: {
           teacherId: teacher.id,
           status: { not: ClassroomStatus.CANCELLED },
-          scheduledAt: { lte: ahora },
+          endsAt: { lte: ahora },
           bookings: { some: { status: BookingStatus.CONFIRMED } },
         },
-        select: { scheduledAt: true, durationMinutes: true },
       }),
       this.prisma.booking.findMany({
         where: {
@@ -154,16 +156,12 @@ export class PanelService {
           classroom: {
             teacherId: teacher.id,
             status: { not: ClassroomStatus.CANCELLED },
-            scheduledAt: { gt: ahora },
+            endsAt: { gt: ahora },
           },
         },
         select: { student: { select: { communicationPreference: true } } },
       }),
     ]);
-
-    const asistenciaSinMarcar = terminadasConDeuda.filter((aula) =>
-      haTerminado(aula, ahora),
-    ).length;
 
     return {
       rol: UserRole.TEACHER,
@@ -185,7 +183,7 @@ export class PanelService {
     const finHoy = new Date(inicioHoy.getTime() + DIA_MS);
     const finSemana = new Date(ahora.getTime() + 7 * DIA_MS);
 
-    const [profesoresPendientes, clasesHoy, enCurso, ocupacion] = await Promise.all([
+    const [profesoresPendientes, clasesHoy, clasesEnCurso, ocupacion] = await Promise.all([
       this.prisma.user.count({
         where: { role: UserRole.TEACHER, status: UserStatus.PENDING },
       }),
@@ -195,12 +193,13 @@ export class PanelService {
           scheduledAt: { gte: inicioHoy, lt: finHoy },
         },
       }),
-      this.prisma.classroom.findMany({
+      // Empezada (`scheduledAt <= ahora`) y todavía sin terminar (`endsAt > ahora`).
+      this.prisma.classroom.count({
         where: {
           status: { not: ClassroomStatus.CANCELLED },
-          scheduledAt: { lte: ahora, gte: new Date(ahora.getTime() - DIA_MS) },
+          scheduledAt: { lte: ahora },
+          endsAt: { gt: ahora },
         },
-        select: { scheduledAt: true, durationMinutes: true },
       }),
       this.prisma.classroom.aggregate({
         where: { status: ClassroomStatus.PUBLISHED, scheduledAt: { gte: ahora, lt: finSemana } },
@@ -212,16 +211,11 @@ export class PanelService {
       rol: UserRole.ADMIN,
       profesoresPendientes,
       clasesHoy,
-      clasesEnCurso: enCurso.filter((aula) => !haTerminado(aula, ahora)).length,
+      clasesEnCurso,
       cuposReservadosSemana: ocupacion._sum.currentBookings ?? 0,
       cuposOfrecidosSemana: ocupacion._sum.maxStudents ?? 0,
     };
   }
-}
-
-/** `scheduledAt + duración ≤ ahora`: el corte fino del eje temporal en memoria. */
-function haTerminado(aula: { scheduledAt: Date; durationMinutes: number }, ahora: Date): boolean {
-  return aula.scheduledAt.getTime() + aula.durationMinutes * 60_000 <= ahora.getTime();
 }
 
 function recuentoPorModo(

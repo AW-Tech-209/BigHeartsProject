@@ -57,6 +57,7 @@ import { PrismaClient, type BookingStatus } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 
 import { BCRYPT_SALT_ROUNDS } from '../src/auth/auth.constants';
+import { finDelAula } from '../src/classrooms/coherencia-temporal.rules';
 import type { AppConfigService } from '../src/config/app-config.service';
 import { MeetingLinkCipher } from '../src/classrooms/meeting-link.cipher';
 
@@ -503,14 +504,16 @@ async function main(): Promise<void> {
 
   const cupo = contarReservasConCupo(RESERVAS);
   for (const aula of AULAS) {
+    const scheduledAt = desdeAhora(aula.scheduledInMinutes);
     const data = {
       teacherId: teacherId.get(aula.teacherEmail)!,
       title: aula.title,
       description: aula.description,
       level: aula.level,
       maxStudents: aula.maxStudents,
-      scheduledAt: desdeAhora(aula.scheduledInMinutes),
+      scheduledAt,
       durationMinutes: aula.durationMinutes,
+      endsAt: finDelAula({ scheduledAt, durationMinutes: aula.durationMinutes }),
       meetingLink: cipher.encrypt(aula.meetingLink),
       meetingProvider: aula.meetingProvider,
       status: aula.status ?? 'PUBLISHED',

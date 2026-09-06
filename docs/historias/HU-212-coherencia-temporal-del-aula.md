@@ -140,6 +140,10 @@ primera es un aviso que se puede confirmar; la segunda, un error que bloquea.
 
 ## Notas de implementación
 
+_(2026-09-06, **D40**: `finDelAula()` —el fin de un intervalo, `scheduledAt + durationMinutes`—
+pasa a ser también el origen de la columna persistida `Classroom.endsAt`, que la app escribe en
+cada `create`/`update` cuando cambia cualquiera de sus dos sumandos.)_
+
 ### Capa `contrato` — 2026-08-24
 
 **Hecho.** Tres códigos en `ApiErrorCode` (no dos), `confirmarPocaAntelacion?: boolean` en

@@ -205,11 +205,12 @@ orden que pide el AC7 cambia de sentido en `now` —ascendente antes, descendent
 ordena por una expresión. Se resuelve con dos `findMany` y el reparto de la página entre ambos
 bloques, con un test específico de la página que cae **a caballo** entre los dos.
 
-**3. El corte temporal es `scheduledAt`, no el instante de fin.** Una clase que empezó hace diez
-minutos ya cuenta como «pasada» en el filtro, aunque `derivarEstadoAula()` la pinte —correctamente—
-como `en-curso` en su tarjeta. Es el mismo corte que usa el catálogo público, y comparar contra
-`scheduledAt + durationMinutes` exigiría una expresión sobre dos columnas que Prisma no filtra. La
-coherencia fina del eje temporal es **HU-212**.
+**3. El corte temporal es el fin de la clase (`endsAt`), no su inicio.** Una clase que empezó hace
+diez minutos sigue en `proximas` mientras esté en curso —es donde el profesor la gestiona— y solo
+pasa a `pasadas` cuando termina. El catálogo público sí corta en `scheduledAt` (una clase que
+empieza deja de ofrecerse), a propósito. _(Actualizado el 2026-09-06, **D40**: originalmente el
+corte era `scheduledAt` porque `scheduledAt + durationMinutes` es una expresión de dos columnas que
+Prisma no filtra; ahora `Classroom.endsAt` está persistida con un `CHECK`.)_
 
 **4. La tarjeta del profesor omite el badge cuando el estado sale del cupo.** El AC8 pide «inscritos
 sobre cupo, **no** cupos disponibles», y el estado `ultimos-cupos` del diccionario dice literalmente

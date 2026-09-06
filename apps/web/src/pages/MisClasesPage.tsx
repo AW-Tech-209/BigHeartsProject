@@ -22,8 +22,9 @@ import { useAnnounce } from '@/hooks/use-announce';
 const TARJETAS_FANTASMA = 4;
 
 /**
- * Las clases que el estudiante tiene reservadas y todavía no pasaron
- * (HU-302; D34 de HU-404 la acota a lo próximo, con el resto en `/historial`).
+ * Las clases que el estudiante tiene reservadas y todavía no han terminado —
+ * incluidas las que están en curso ahora mismo — (HU-302; D34 de HU-404 la
+ * acota a lo que viene, con el resto en `/historial`).
  *
  * Es la contraparte de «Mis aulas» del profesor (HU-207) y copia su forma: la
  * página vive en la URL, y el alcance lo decide el servidor a partir del
@@ -72,7 +73,7 @@ export function MisClasesPage() {
     <AppShell>
       <PaginaCabecera
         titulo="Mis clases"
-        contexto="Las clases que reservaste y todavía no pasaron, con la hora en que se abre el acceso a cada una."
+        contexto="Las clases que reservaste y todavía no han terminado, con la hora en que se abre el acceso a cada una."
         accion={
           <Button
             variant="outline"

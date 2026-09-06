@@ -162,16 +162,16 @@ model User {
 /// Si se vuelve a presentar un token ya revocado, se asume robo y se revoca toda
 /// la familia de sesiones del usuario (detección de reuso).
 model RefreshToken {
-  id        String   @id @default(uuid()) @db.Uuid
+  id        String    @id @default(uuid()) @db.Uuid
   /// Hash SHA-256 del token en claro. Único: identifica la sesión.
-  tokenHash String   @unique @map("token_hash")
-  userId    String   @map("user_id") @db.Uuid
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash String    @unique @map("token_hash")
+  userId    String    @map("user_id") @db.Uuid
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   /// Cuándo caduca (ahora + REFRESH_TOKEN_TTL_DAYS al emitirlo).
-  expiresAt DateTime @map("expires_at")
+  expiresAt DateTime  @map("expires_at")
   /// Momento de revocación (logout, rotación o reuso detectado). `null` = activo.
   revokedAt DateTime? @map("revoked_at")
-  createdAt DateTime @default(now()) @map("created_at")
+  createdAt DateTime  @default(now()) @map("created_at")
 
   @@index([userId])
   @@map("refresh_tokens")
@@ -244,6 +244,15 @@ model Classroom {
   /// del cliente no decide nada.
   scheduledAt     DateTime @map("scheduled_at") @db.Timestamptz(3)
   durationMinutes Int      @map("duration_minutes")
+
+  /// Fin de la clase = `scheduledAt + durationMinutes`. La mantiene la app en
+  /// cada `create`/`update` (con `finDelAula()`); la migración que la añade lleva
+  /// un `CHECK` que garantiza que nunca diverja de las otras dos columnas, igual
+  /// que `current_bookings >= 0`. Existe porque el corte «¿ya terminó?» de «Mis
+  /// clases», «Mis aulas» e historial es un `WHERE` y Prisma no filtra una suma
+  /// de dos columnas (§7.2, D40). La *editabilidad* del aula sigue cortándose en
+  /// `scheduledAt` (D16), no aquí.
+  endsAt DateTime @map("ends_at") @db.Timestamptz(3)
 
   /// Enlace de la videollamada, **CIFRADO con AES-256-GCM** (§4.1). En esta
   /// columna nunca hay una URL legible: quien lea la base de datos por su

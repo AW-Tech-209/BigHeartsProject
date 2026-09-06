@@ -52,11 +52,12 @@ export class HistorialService {
     const ahora = new Date();
     const skip = (page - 1) * pageSize;
 
-    // "Pasada o cancelada" es lo que la convierte en historial (D34): una
-    // reserva CONFIRMED de una clase futura no pertenece aquí.
+    // "Terminada o cancelada" es lo que la convierte en historial (D34): una
+    // clase futura —o en curso— no pertenece aquí. El corte es `endsAt`, no
+    // `scheduledAt`: una clase que acaba de empezar todavía no es historial.
     const where: Prisma.BookingWhereInput = {
       studentId: student.id,
-      OR: [{ status: BookingStatus.CANCELLED }, { classroom: { scheduledAt: { lte: ahora } } }],
+      OR: [{ status: BookingStatus.CANCELLED }, { classroom: { endsAt: { lte: ahora } } }],
       ...(query.resultado && { status: query.resultado }),
       ...((query.desde || query.hasta) && {
         classroom: {
@@ -107,14 +108,15 @@ export class HistorialService {
     const ahora = new Date();
     const skip = (page - 1) * pageSize;
 
-    // `scheduledAt` aparece en varias cláusulas del `AND`, no como claves
-    // repetidas del mismo objeto (que se pisarían entre sí): así "ya
-    // impartida" y el rango desde/hasta se combinan sin que uno tape al otro.
+    // Las cláusulas van en un `AND` y no como claves repetidas del mismo objeto
+    // (que se pisarían entre sí): así "ya impartida" (`endsAt`) y el rango
+    // desde/hasta del usuario (`scheduledAt`) se combinan sin taparse. "Ya
+    // impartida" corta en `endsAt`: una clase en curso todavía no es historial.
     const where: Prisma.ClassroomWhereInput = {
       teacherId: teacher.id,
       status: { not: ClassroomStatus.CANCELLED },
       AND: [
-        { scheduledAt: { lte: ahora } },
+        { endsAt: { lte: ahora } },
         ...(query.desde ? [{ scheduledAt: { gte: new Date(query.desde) } }] : []),
         ...(query.hasta ? [{ scheduledAt: { lte: new Date(query.hasta) } }] : []),
       ],

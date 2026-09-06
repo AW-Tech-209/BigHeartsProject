@@ -22,8 +22,9 @@ import { useAnnounce } from '@/hooks/use-announce';
 const TARJETAS_FANTASMA = 4;
 
 /**
- * Las aulas que el profesor imparte y todavía no pasaron (HU-207; D34 de
- * HU-404 la acota a lo próximo, con el resto en `/historial`).
+ * Las aulas que el profesor imparte y todavía no han terminado —incluidas las
+ * que están en curso— (HU-207; D34 de HU-404 la acota a lo que viene, con el
+ * resto en `/historial`).
  *
  * **No es el catálogo con otro filtro.** `/aulas` es la vista pública —solo
  * publicadas y futuras, para que un estudiante descubra una clase—; esta es el
@@ -85,7 +86,7 @@ export function MisAulasPage() {
     <AppShell>
       <PaginaCabecera
         titulo="Mis aulas"
-        contexto="Las clases que impartes y todavía no pasaron, con su horario, su cupo y los estudiantes inscritos."
+        contexto="Las clases que impartes y todavía no han terminado, con su horario, su cupo y los estudiantes inscritos."
         accion={
           <div className="flex flex-wrap gap-3">
             {verHistorial}

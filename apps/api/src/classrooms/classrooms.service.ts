@@ -101,6 +101,12 @@ export class ClassroomsService {
         // sea cual sea la zona del servidor (§4.7).
         scheduledAt: new Date(input.scheduledAt),
         durationMinutes: input.durationMinutes,
+        // Derivada y con CHECK en la BD: la escribe la app para que «¿ya
+        // terminó?» sea un `WHERE` en «Mis aulas» / historial (§7.2).
+        endsAt: finDelAula({
+          scheduledAt: new Date(input.scheduledAt),
+          durationMinutes: input.durationMinutes,
+        }),
         // El dato más sensible del producto no toca la BD en claro (§4.1).
         meetingLink: this.meetingLinks.encrypt(input.meetingLink),
         // Desde HU-211 lo elige el profesor (Zoom, Meet u otra) — ya no lo fija
@@ -595,6 +601,14 @@ export class ClassroomsService {
         ...(dto.maxStudents !== undefined && { maxStudents: dto.maxStudents }),
         ...(dto.scheduledAt !== undefined && { scheduledAt: new Date(dto.scheduledAt) }),
         ...(dto.durationMinutes !== undefined && { durationMinutes: dto.durationMinutes }),
+        // Recalcular el fin si cambió cualquiera de sus dos sumandos (el CHECK
+        // de la BD rechazaría un `ends_at` desincronizado).
+        ...((dto.scheduledAt !== undefined || dto.durationMinutes !== undefined) && {
+          endsAt: finDelAula({
+            scheduledAt: new Date(dto.scheduledAt ?? classroom.scheduledAt),
+            durationMinutes: dto.durationMinutes ?? classroom.durationMinutes,
+          }),
+        }),
         ...(dto.meetingLink !== undefined && {
           meetingLink: this.meetingLinks.encrypt(dto.meetingLink),
         }),
@@ -864,18 +878,17 @@ export class ClassroomsService {
  * `canceladas` y no como `proximas`: si estuviera en las dos, el filtro
  * `todas` la duplicaría y los totales dejarían de sumar.
  *
- * **El corte temporal es `scheduledAt`, no el instante de fin.** Una clase que
- * empezó hace diez minutos ya cuenta como pasada aquí, aunque
- * `derivarEstadoAula()` la pinte —correctamente— como `en-curso` en la tarjeta.
- * Es el mismo corte que usa el catálogo público, y comparar contra
- * `scheduledAt + durationMinutes` exigiría una expresión sobre dos columnas que
- * Prisma no sabe filtrar. La coherencia fina del eje temporal es HU-212.
+ * **El corte es el fin de la clase (`endsAt`), no su inicio.** Una clase que
+ * empezó hace diez minutos sigue en `proximas` mientras esté en curso —que es
+ * donde el profesor la busca— y solo pasa a `pasadas` cuando termina. El
+ * catálogo público sí corta en `scheduledAt` (una clase que empieza deja de
+ * ofrecerse), a propósito: no es lo mismo descubrir una clase que gestionarla.
  */
 function proximasDe(teacherId: string, ahora: Date): Prisma.ClassroomWhereInput {
   return {
     teacherId,
     status: { not: ClassroomStatus.CANCELLED },
-    scheduledAt: { gt: ahora },
+    endsAt: { gt: ahora },
   };
 }
 
@@ -883,7 +896,7 @@ function pasadasDe(teacherId: string, ahora: Date): Prisma.ClassroomWhereInput {
   return {
     teacherId,
     status: { not: ClassroomStatus.CANCELLED },
-    scheduledAt: { lte: ahora },
+    endsAt: { lte: ahora },
   };
 }
 
@@ -901,6 +914,6 @@ function canceladasDe(teacherId: string): Prisma.ClassroomWhereInput {
 function historialDe(teacherId: string, ahora: Date): Prisma.ClassroomWhereInput {
   return {
     teacherId,
-    OR: [{ status: ClassroomStatus.CANCELLED }, { scheduledAt: { lte: ahora } }],
+    OR: [{ status: ClassroomStatus.CANCELLED }, { endsAt: { lte: ahora } }],
   };
 }

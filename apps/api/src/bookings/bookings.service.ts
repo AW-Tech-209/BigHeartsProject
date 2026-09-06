@@ -417,7 +417,9 @@ function proximasDe(studentId: string, ahora: Date): Prisma.BookingWhereInput {
   return {
     studentId,
     status: { not: 'CANCELLED' },
-    classroom: { status: { not: ClassroomStatus.CANCELLED }, scheduledAt: { gt: ahora } },
+    // El corte es el FIN de la clase: una clase en curso sigue en «Mis clases»
+    // —con el enlace a mano— y no se muda al historial hasta que termina.
+    classroom: { status: { not: ClassroomStatus.CANCELLED }, endsAt: { gt: ahora } },
   };
 }
 
@@ -425,7 +427,7 @@ function pasadasDe(studentId: string, ahora: Date): Prisma.BookingWhereInput {
   return {
     studentId,
     status: { not: 'CANCELLED' },
-    classroom: { status: { not: ClassroomStatus.CANCELLED }, scheduledAt: { lte: ahora } },
+    classroom: { status: { not: ClassroomStatus.CANCELLED }, endsAt: { lte: ahora } },
   };
 }
 
@@ -442,7 +444,7 @@ function historialDe(studentId: string, ahora: Date): Prisma.BookingWhereInput {
     OR: [
       { status: 'CANCELLED' },
       { classroom: { status: ClassroomStatus.CANCELLED } },
-      { classroom: { scheduledAt: { lte: ahora } } },
+      { classroom: { endsAt: { lte: ahora } } },
     ],
   };
 }

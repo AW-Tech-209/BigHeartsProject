@@ -457,6 +457,8 @@ describe('BookingsService.cancelBooking — doble cancelación (AC5)', () => {
 const OTRO_ESTUDIANTE_ID = '99999999-9999-4999-8999-999999999999';
 
 function aulaDeReserva(overrides: Record<string, unknown> = {}) {
+  const scheduledAt = (overrides.scheduledAt as Date) ?? new Date('2099-08-12T23:00:00.000Z');
+  const durationMinutes = (overrides.durationMinutes as number) ?? 60;
   return {
     id: '44444444-4444-4444-8444-444444444444',
     teacherId: 'profesor-id',
@@ -465,8 +467,11 @@ function aulaDeReserva(overrides: Record<string, unknown> = {}) {
     level: EnglishLevel.BEGINNER,
     maxStudents: 8,
     currentBookings: 2,
-    scheduledAt: new Date('2099-08-12T23:00:00.000Z'),
-    durationMinutes: 60,
+    scheduledAt,
+    durationMinutes,
+    // Derivada, como en la BD. Un fixture puede pasar `endsAt` aparte para
+    // montar el caso «empezó pero no ha terminado».
+    endsAt: new Date(scheduledAt.getTime() + durationMinutes * 60_000),
     meetingLink: 'v1.iv.tag.texto',
     meetingProvider: MeetingProvider.MANUAL,
     status: ClassroomStatus.PUBLISHED,
@@ -529,7 +534,7 @@ function reservaCanceladaPorElEstudiante(classroomId: string, scheduledAt: strin
 type WhereReserva = {
   studentId?: string;
   status?: string | { not: string };
-  classroom?: { status?: unknown; scheduledAt?: { gt?: Date; lte?: Date } };
+  classroom?: { status?: unknown; endsAt?: { gt?: Date; lte?: Date } };
   OR?: WhereReserva[];
 };
 
@@ -548,7 +553,7 @@ function coincideConWhere(fila: FilaReserva, where: WhereReserva): boolean {
   }
 
   if (where.classroom) {
-    const { status, scheduledAt } = where.classroom;
+    const { status, endsAt } = where.classroom;
     if (status !== undefined) {
       const coincide =
         typeof status === 'string'
@@ -556,10 +561,10 @@ function coincideConWhere(fila: FilaReserva, where: WhereReserva): boolean {
           : fila.classroom.status !== (status as { not: unknown }).not;
       if (!coincide) return false;
     }
-    if (scheduledAt?.gt && !(fila.classroom.scheduledAt.getTime() > scheduledAt.gt.getTime())) {
+    if (endsAt?.gt && !(fila.classroom.endsAt.getTime() > endsAt.gt.getTime())) {
       return false;
     }
-    if (scheduledAt?.lte && !(fila.classroom.scheduledAt.getTime() <= scheduledAt.lte.getTime())) {
+    if (endsAt?.lte && !(fila.classroom.endsAt.getTime() <= endsAt.lte.getTime())) {
       return false;
     }
   }
@@ -688,6 +693,26 @@ describe('BookingsService.listMisReservas — filtro temporal disjunto (AC1, AC2
 
     expect(resultado.items.map((item) => item.id)).toEqual(['proxima']);
     expect(resultado.total).toBe(1);
+  });
+
+  // El bug que arregla el `endsAt`: una clase que empezó hace 10 min y aún no
+  // termina sigue siendo del estudiante en «Mis clases», no historial.
+  it('una clase EN CURSO cuenta como proximas y NO como historial', async () => {
+    const empezoHace10min = new Date(Date.now() - 10 * 60_000).toISOString();
+    const { service } = setupMisReservas({
+      // Da igual el grupo del helper: el `where` real decide con `endsAt`.
+      pasadas: [filaReserva('en-curso', empezoHace10min)],
+    });
+
+    const proximas = await service.listMisReservas(ESTUDIANTE, {
+      estado: EstadoTemporalAula.PROXIMAS,
+    });
+    const historial = await service.listMisReservas(ESTUDIANTE, {
+      estado: EstadoTemporalAula.PASADAS,
+    });
+
+    expect(proximas.items.map((i) => i.id)).toEqual(['en-curso']);
+    expect(historial.items).toEqual([]);
   });
 
   it('el filtro pasadas devuelve solo lo ya impartido, lo más reciente primero', async () => {

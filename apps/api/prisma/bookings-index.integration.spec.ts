@@ -111,6 +111,7 @@ describe('índice de bookings contra la base de datos real (HU-308)', () => {
         maxStudents: 5,
         scheduledAt,
         durationMinutes: 60,
+        endsAt: new Date(scheduledAt.getTime() + 60 * 60_000),
         meetingLink: 'v1.irrelevante.irrelevante.irrelevante',
       },
     });
