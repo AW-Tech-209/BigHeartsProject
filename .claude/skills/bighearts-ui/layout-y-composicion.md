@@ -57,8 +57,10 @@
   * **Riel lateral:** `absolute inset-y-0 left-0 w-1` con color de estado (sin border-radius
     propio), en las dos perspectivas.
   * **Cuatro zonas** (`flex flex-wrap items-start gap-4`; bajo ~720px se apilan solas):
-    1. **Cuándo** `w-29 border-r`: día abreviado (`describirHorarioRenglon`), hora
-       `tabular-nums`, zona horaria en su propia línea (`text-xs whitespace-nowrap`).
+    1. **Cuándo** `w-29 shrink-0 overflow-hidden border-r`: día abreviado
+       (`describirHorarioRenglon`), hora `tabular-nums`, y la zona horaria envuelta dentro de
+       la columna (`text-xs leading-tight text-pretty`, nunca `whitespace-nowrap`: se
+       desbordaría sobre la zona «qué»).
     2. **Qué** `min-w-0 flex-1`: `<h3>` con el `<Link>` al detalle (único enlace, con el
        `after:absolute after:inset-0` de overlay), subtítulo, y **una sola fila** de badges:
        `<EstadoAula>` + `Tu clase` + `Coincide con tu preferencia` (siempre visibles, no

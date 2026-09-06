@@ -11,8 +11,10 @@ import {
 import { screen, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { useAuthStore } from '@/stores/auth-store';
 import { esperarSinFallosDeAccesibilidad } from '@/test/accesibilidad';
 import { renderConProviders } from '@/test/render-con-providers';
+import { usuarioDePrueba } from '@/test/sesion';
 import { getResumenPanel } from '../api/get-resumen-panel';
 import { ResumenPanel } from './resumen-panel';
 
@@ -52,7 +54,15 @@ function claseReservada(overrides: Partial<ClassroomListItem> = {}): ClassroomLi
 const dar = (resumen: ResumenPanelResponse) =>
   vi.mocked(getResumenPanel).mockResolvedValue(resumen);
 
-beforeEach(() => vi.clearAllMocks());
+beforeEach(() => {
+  vi.clearAllMocks();
+  useAuthStore.setState({
+    status: 'anonymous',
+    user: null,
+    accessToken: null,
+    endReason: 'none',
+  });
+});
 
 describe('ResumenPanel — estudiante (AC1, AC5)', () => {
   it('pinta sus tres tarjetas con sus datos', async () => {
@@ -72,6 +82,33 @@ describe('ResumenPanel — estudiante (AC1, AC5)', () => {
     ).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Tus reservas activas' })).toBeInTheDocument();
     expect(screen.getByText('clases con cupo coinciden con tu preferencia')).toBeInTheDocument();
+  });
+
+  it('«Clases que coinciden contigo» lleva al catálogo con el filtro de modo del estudiante', async () => {
+    useAuthStore.setState({
+      status: 'authenticated',
+      user: {
+        ...usuarioDePrueba(UserRole.STUDENT),
+        communicationPreference: CommunicationPreference.SIGN_LANGUAGE,
+      },
+      accessToken: 'access.token.jwt',
+      endReason: 'none',
+    });
+    dar({
+      rol: UserRole.STUDENT,
+      proximaClase: claseReservada(),
+      reservasActivas: 2,
+      clasesQueCoinciden: 4,
+      sinPreferencia: false,
+    });
+
+    renderConProviders(<ResumenPanel />);
+
+    // Con próxima clase y reservas, «Ver el catálogo» solo aparece en esta tarjeta.
+    expect(await screen.findByRole('link', { name: 'Ver el catálogo' })).toHaveAttribute(
+      'href',
+      '/aulas?communicationMode=SIGN_LANGUAGE',
+    );
   });
 
   it('con la cuenta vacía, cada cero explica qué significa y a dónde ir', async () => {

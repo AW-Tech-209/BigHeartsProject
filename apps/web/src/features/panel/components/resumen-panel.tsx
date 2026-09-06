@@ -20,11 +20,13 @@ import { Button } from '@/components/ui/button';
 import { Callout } from '@/components/ui/callout';
 import { Skeleton } from '@/components/ui/skeleton';
 import { AccionEntrarAClase } from '@/features/aulas/components/accion-entrar-a-clase';
+import { buildSearchParams } from '@/features/aulas/lib/filtros-url';
 import { describirHorario } from '@/features/aulas/lib/horario';
 import {
   etiquetaModoComunicacion,
   MODOS_COMUNICACION_EN_ORDEN,
 } from '@/features/aulas/lib/modos-comunicacion';
+import { useAuth } from '@/features/auth/hooks/use-auth';
 
 import { useResumenPanel } from '../hooks/use-resumen-panel';
 import { tiempoRelativo } from '../lib/tiempo-relativo';
@@ -99,6 +101,14 @@ function Rejilla({ children, ...props }: React.ComponentPropsWithoutRef<'div'>) 
 
 function TarjetasEstudiante({ data }: { data: ResumenPanelEstudiante }) {
   const { proximaClase, reservasActivas, clasesQueCoinciden, sinPreferencia } = data;
+  const { user } = useAuth();
+
+  // «Clases que coinciden contigo» lleva al catálogo con el filtro de modo ya
+  // puesto: es el mismo modo con el que el servidor calculó el número.
+  const preferencia = user?.communicationPreference ?? null;
+  const catalogoConMiModo = preferencia
+    ? `/aulas?${buildSearchParams({ communicationMode: preferencia })}`
+    : '/aulas';
 
   return (
     <>
@@ -138,7 +148,7 @@ function TarjetasEstudiante({ data }: { data: ResumenPanelEstudiante }) {
         enlace={
           sinPreferencia
             ? { texto: 'Ir a mi perfil', a: '/perfil' }
-            : { texto: 'Ver el catálogo', a: '/aulas' }
+            : { texto: 'Ver el catálogo', a: catalogoConMiModo }
         }
       >
         {sinPreferencia ? (

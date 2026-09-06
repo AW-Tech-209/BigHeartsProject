@@ -63,8 +63,12 @@ export function useAccionReservarAula({ aula, puedeReservar, estado }: AccionRes
   if (razon) {
     return {
       boton: (
-        <Button disabled variant="outline" className="h-11 w-full gap-2 px-5 text-base">
-          <razon.icon aria-hidden="true" strokeWidth={2} className="size-4" />
+        <Button
+          disabled
+          variant="outline"
+          className="h-auto min-h-11 w-full gap-2 px-3 py-2 text-sm leading-tight whitespace-normal"
+        >
+          <razon.icon aria-hidden="true" strokeWidth={2} className="size-4 shrink-0" />
           {razon.texto}
         </Button>
       ),
