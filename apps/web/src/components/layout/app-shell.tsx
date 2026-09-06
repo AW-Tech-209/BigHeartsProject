@@ -3,6 +3,7 @@ import { LoaderCircle, LogOut } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { Link, NavLink, useNavigate } from 'react-router-dom';
 
+import { MarcaBigHearts } from '@/components/dominio/marca-bighearts';
 import { SkipLink } from '@/components/skip-link';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/features/auth/hooks/use-auth';
@@ -54,12 +55,15 @@ export function AppShell({ children, conNavegacion = true }: AppShellProps) {
       {/* Primer elemento enfocable del documento, antes que nada más. */}
       <SkipLink />
 
-      <header className="sticky top-0 z-40 border-b border-border bg-card">
+      <header className="sticky top-0 z-40 border-b border-brand-foreground/10 bg-brand text-brand-foreground shadow-sm">
         <Contenedor className="flex h-[58px] items-center justify-between gap-4">
           <Link
             to={isAuthenticated ? '/panel' : '/'}
-            className="shrink-0 rounded-lg text-lg font-medium text-primary hover:underline"
+            className="flex shrink-0 items-center gap-2.5 rounded-lg text-lg font-medium text-brand-foreground hover:underline"
           >
+            <span aria-hidden="true">
+              <MarcaBigHearts className="size-6 text-brand-foreground" />
+            </span>
             BigHearts
           </Link>
 
@@ -73,7 +77,7 @@ export function AppShell({ children, conNavegacion = true }: AppShellProps) {
 
           <div className="flex shrink-0 items-center gap-3">
             {user && <CuentaDelShell user={user} />}
-            <SelectorTema />
+            <SelectorTema className="border-brand-foreground/30 bg-transparent text-brand-foreground hover:bg-brand-foreground/10 hover:text-brand-foreground dark:bg-transparent" />
           </div>
         </Contenedor>
       </header>
@@ -94,7 +98,7 @@ export function AppShell({ children, conNavegacion = true }: AppShellProps) {
       {navegacionAbajo && (
         <nav
           aria-label="Secciones"
-          className="fixed inset-x-0 bottom-0 z-40 flex border-t border-border bg-card pb-[env(safe-area-inset-bottom)]"
+          className="fixed inset-x-0 bottom-0 z-40 flex border-t border-brand-foreground/10 bg-brand text-brand-foreground pb-[env(safe-area-inset-bottom)]"
         >
           {destinos.map((destino) => (
             <EnlaceInferior key={destino.to} destino={destino} />
@@ -125,8 +129,8 @@ function EnlaceSuperior({ destino }: { destino: Destino }) {
         cn(
           'inline-flex h-[58px] items-center gap-2 border-b-2 px-3 text-sm transition-colors',
           isActive
-            ? 'border-primary font-medium text-primary'
-            : 'border-transparent text-foreground hover:text-primary',
+            ? 'border-brand-foreground font-medium text-brand-foreground'
+            : 'border-transparent text-brand-foreground/70 hover:text-brand-foreground',
         )
       }
     >
@@ -154,8 +158,8 @@ function EnlaceInferior({ destino }: { destino: Destino }) {
         cn(
           'flex min-h-14 flex-1 flex-col items-center justify-center gap-1 border-t-2 px-2 py-2 text-xs transition-colors',
           isActive
-            ? 'border-primary font-medium text-primary'
-            : 'border-transparent text-foreground',
+            ? 'border-brand-foreground font-medium text-brand-foreground'
+            : 'border-transparent text-brand-foreground/70',
         )
       }
     >
@@ -194,33 +198,33 @@ function CuentaDelShell({ user }: { user: User }) {
     <div className="flex shrink-0 items-center gap-3">
       <span
         aria-hidden="true"
-        className="flex size-[30px] shrink-0 items-center justify-center rounded-full bg-primary-soft text-xs font-medium text-primary-soft-foreground"
+        className="flex size-[30px] shrink-0 items-center justify-center rounded-full bg-brand-foreground/15 text-xs font-medium text-brand-foreground"
       >
         {iniciales}
       </span>
 
       <p className="sr-only min-w-0 text-sm leading-tight sm:not-sr-only sm:block">
-        <span className="block truncate font-medium text-foreground">
+        <span className="block truncate font-medium text-brand-foreground">
           {user.firstName} {user.lastName}
         </span>
-        <span className="block truncate text-muted-foreground">{label}</span>
+        <span className="block truncate text-brand-foreground/70">{label}</span>
       </p>
 
       <Button
-        variant="outline"
+        variant="ghost"
         onClick={cerrarSesion}
         disabled={logout.isPending}
-        className="h-11 gap-2 px-4 text-sm"
+        className="h-11 gap-2 border border-brand-foreground/30 px-3 text-sm text-brand-foreground hover:bg-brand-foreground/10 hover:text-brand-foreground sm:px-4"
       >
         {logout.isPending ? (
           <>
             <LoaderCircle aria-hidden="true" strokeWidth={2} className="size-4 animate-spin" />
-            Cerrando tu sesión…
+            <span className="sr-only sm:not-sr-only">Cerrando tu sesión…</span>
           </>
         ) : (
           <>
             <LogOut aria-hidden="true" strokeWidth={2} className="size-4" />
-            Cerrar sesión
+            <span className="sr-only sm:not-sr-only">Cerrar sesión</span>
           </>
         )}
       </Button>

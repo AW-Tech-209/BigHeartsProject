@@ -2,15 +2,21 @@
 
 ## 1. Navigation & Shell
 
-- **Posición:** SIEMPRE barra superior (58px, `bg-card border-b border-border`). NUNCA barra lateral.
-- **Elementos:** Marca a la izq (`text-primary font-medium`), Avatar 30px a la der.
+- **Posición:** SIEMPRE barra superior (58px). NUNCA barra lateral. Superficie **`bg-brand`** (azul
+  marino, HU-415) con marca, navegación, cuenta y `SelectorTema` en `brand-foreground`; la barra
+  inferior de móvil, igual. Es la superficie de identidad, la misma en los tres modos.
+- **Elementos:** Lockup marca (glifo `<MarcaBigHearts>` + palabra, `text-brand-foreground`) a la
+  izq, Avatar 30px + cuenta + `Cerrar sesión` a la der.
 - **Destinos por rol (`text-sm`):**
-  - `STUDENT`: Aulas · Mis clases · Perfil
-  - `TEACHER`: Aulas · Mis aulas · Perfil
+  - `STUDENT`: Aulas · Mis clases · Historial · Perfil
+  - `TEACHER`: Aulas · Mis aulas · Historial · Perfil
   - `ADMIN`: Aulas · Panel · Perfil
-- **Estado activo:** Borde inferior de 2px en `border-primary` (no solo cambio de color).
-- **Escritorio:** Todos los enlaces visibles. **PROHIBIDO menú hamburguesa.**
-- **Móvil (< 640px):** Barra inferior fija con Ícono + Texto siempre visible (sin drawers/toggles).
+- **Estado activo:** Borde de 2px en `border-brand-foreground` (blanco sobre la barra), no solo
+  cambio de color.
+- **Escritorio (≥ `lg`):** Todos los enlaces visibles. **PROHIBIDO menú hamburguesa.**
+- **Móvil / tablet (< `lg`, 1024px):** Barra inferior fija con Ícono + Texto siempre visible (sin
+  drawers/toggles). El corte es `lg` y no `sm` (HU-415): entre 640 y 1024 la barra superior no cabe
+  sin apretarse. Lo decide `useEsMovil`.
 - **Accesibilidad:** `<SkipLink>` al inicio del shell apuntando al `<main id="...">`.
 
 ## 2. Contenedor y Rejilla
@@ -21,9 +27,14 @@
 
 ## 3. Anatomía de Página (Orden vertical estricto)
 
-1. **Cabecera:** Único `<h1>` (`text-3xl font-medium tracking-tight sm:text-2xl`), línea de contexto (`text-base text-muted-foreground max-w-[46ch]`), acción principal a la derecha (opcional). Usar `usePageTitle`.
-2. **Controles:** Filtros/búsqueda persistentes (NUNCA en desplegables), separados por `border-b border-border`.
-3. **Contenido:** Rejilla, lista o formulario.
+1. **Cabecera:** Único `<h1>` en **`font-serif font-normal`** (`text-3xl … sm:text-4xl`, HU-415),
+   línea de contexto (`text-base text-muted-foreground max-w-[46ch]`), acción principal a la
+   derecha (opcional). Usar `usePageTitle`. Filigrana de marca decorativa opcional (`aria-hidden`,
+   `<MarcaBigHearts>` al 7 % en neutro).
+2. **Controles:** Filtros/búsqueda persistentes (NUNCA en desplegables). Van en un panel contenido
+   (`rounded-xl border bg-card`), no una línea suelta.
+3. **Contenido:** Rejilla, lista o formulario. Una rejilla/lista de resultados puede entrar con
+   `subir-suave` (`index.css`) — una sola vez, respeta `prefers-reduced-motion`.
 
 - **Ritmo Vertical:** 30px aire superior en cabecera; 32px (`space-y-8`) entre bloques principales; 16px dentro de bloques. Sin valores arbitrarios.
 
@@ -38,7 +49,10 @@
     2. Título `<h3>` (`text-base font-medium` id="title-id").
     3. Subtítulo/Profesor (`text-[13px] text-muted-foreground`).
     4. `<EstadoAula>`.
-- **Anatomía Fila:** Mantiene el riel de 4px, elimina el `rounded-xl`.
+- **Anatomía Fila:** Chip de ícono a la izq + título (`<Link>` al detalle) + subtítulo + resultado
+  o cifras a la derecha; `border-b` entre filas, sin `rounded-xl`. El chip puede tomar el tono
+  suave de su resultado (mismo tono que el badge de al lado — refuerzo, no señal nueva).
+  El historial (`<FilaHistorial>`, HU-415) es el ejemplo vivo — dejó de ser `<table>`.
 
 ## 5. Regla de Estados (Sólido vs. Suave)
 
@@ -49,7 +63,7 @@
 
 - **Ubicación:** SOLO en estados vacíos y onboarding. NUNCA en tarjetas o junto a datos.
 - **Estilo:** Geométrica (construida con rectángulos de tarjeta/rieles). Solo tokens de color (cero degradados, sombras o hex hardcodeados). `role="img"` + `aria-label`. No añade info que no esté en texto.
-- **Orden Estado Vacío:** Ilustración → Titular (`text-xl`) → Ayuda (`text-base text-muted-foreground max-w-[38ch]`) → Botón con verbo de acción.
+- **Orden Estado Vacío:** Ilustración → Titular (`font-serif text-2xl`) → Ayuda (`text-base text-muted-foreground max-w-[38ch]`) → Botón con verbo de acción. El bloque se apoya en un panel de borde discontinuo (`border-dashed bg-muted/30`), no flota en el vacío (HU-415).
 
 ## 7. Reglas Prohibidas (Strict Constraints)
 

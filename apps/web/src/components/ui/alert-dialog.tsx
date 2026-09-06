@@ -68,7 +68,8 @@ export function AlertDialogContent({
         className={cn(
           'fixed top-1/2 left-1/2 z-50 w-[calc(100vw-2rem)] max-w-lg -translate-x-1/2 -translate-y-1/2',
           'space-y-4 rounded-xl border border-border bg-popover p-6 text-popover-foreground shadow-lg',
-          'transition-opacity duration-(--duracion-rapida) data-ending-style:opacity-0 data-starting-style:opacity-0',
+          'origin-center transition-[opacity,scale] duration-(--duracion-rapida) ease-suave',
+          'data-ending-style:scale-95 data-ending-style:opacity-0 data-starting-style:scale-95 data-starting-style:opacity-0',
           className,
         )}
         {...props}

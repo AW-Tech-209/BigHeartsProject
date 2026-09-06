@@ -14,6 +14,9 @@ type FieldProps = {
   description?: ReactNode;
   required?: boolean;
   className?: string;
+  /** Clase adicional del `<label>`. Solo para acentos decorativos (nunca para
+   *  comunicar estado — eso sigue siendo color + ícono + texto en el control). */
+  labelClassName?: string;
   /** Elemento superpuesto al control (p. ej. botón mostrar/ocultar contraseña). */
   adornment?: ReactNode;
   /** Elemento a la derecha de la etiqueta (p. ej. «¿Olvidaste tu contraseña?»). */
@@ -37,6 +40,7 @@ export function Field({
   description,
   required,
   className,
+  labelClassName,
   adornment,
   labelAside,
 }: FieldProps) {
@@ -54,7 +58,7 @@ export function Field({
   return (
     <div className={cn('grid gap-2', className)}>
       <div className="flex items-center justify-between gap-3">
-        <Label htmlFor={id}>
+        <Label htmlFor={id} className={labelClassName}>
           {label}
           {required && <span className="font-normal text-muted-foreground"> (obligatorio)</span>}
         </Label>

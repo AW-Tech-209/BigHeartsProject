@@ -43,11 +43,16 @@ export function EstadoVacio({
   const Ilustracion = ILUSTRACIONES[ilustracion];
 
   return (
-    <div className={cn('flex flex-col items-center gap-4 py-12 text-center', className)}>
-      <Ilustracion />
+    <div
+      className={cn(
+        'flex flex-col items-center gap-4 rounded-xl border border-dashed border-border bg-muted/30 px-6 py-16 text-center',
+        className,
+      )}
+    >
+      <Ilustracion className="mb-1" />
       <p className="text-xl font-medium text-balance text-foreground">{titular}</p>
       <p className="max-w-[38ch] text-base text-muted-foreground">{ayuda}</p>
-      {accion}
+      {accion && <div className="pt-1">{accion}</div>}
     </div>
   );
 }

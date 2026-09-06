@@ -125,7 +125,7 @@ describe('<FiltrosAulas /> — controles y teclado (B4)', () => {
 });
 
 /**
- * HU-208, T4/AC5. La casilla del profesor. Quién es profesor lo decide la
+ * HU-208, T4/AC5. El interruptor del profesor. Quién es profesor lo decide la
  * página; aquí solo se comprueba que la prop la enciende y la apaga, y que
  * apagarla **quita** la clave en vez de mandarla en `false`.
  */
@@ -133,25 +133,25 @@ describe('<FiltrosAulas /> — «Solo mis clases» (T4, AC5)', () => {
   it('no se pinta si no se ofrece: ausente, no deshabilitada', () => {
     montar();
 
-    expect(screen.queryByLabelText('Solo mis clases')).not.toBeInTheDocument();
+    expect(screen.queryByRole('switch', { name: 'Solo mis clases' })).not.toBeInTheDocument();
   });
 
   it('se pinta cuando se ofrece, y arranca desmarcada', () => {
     montar({}, true);
 
-    expect(screen.getByLabelText('Solo mis clases')).not.toBeChecked();
+    expect(screen.getByRole('switch', { name: 'Solo mis clases' })).not.toBeChecked();
   });
 
   it('refleja el valor que llega en el query (AC6)', () => {
     montar({ mias: true }, true);
 
-    expect(screen.getByLabelText('Solo mis clases')).toBeChecked();
+    expect(screen.getByRole('switch', { name: 'Solo mis clases' })).toBeChecked();
   });
 
   it('marcarla avisa con `mias: true`', async () => {
     const { user, onChange } = montar({}, true);
 
-    await user.click(screen.getByLabelText('Solo mis clases'));
+    await user.click(screen.getByRole('switch', { name: 'Solo mis clases' }));
 
     expect(onChange).toHaveBeenCalledWith({ mias: true });
   });
@@ -165,7 +165,7 @@ describe('<FiltrosAulas /> — «Solo mis clases» (T4, AC5)', () => {
   it('desmarcarla apaga el filtro con undefined, no con false', async () => {
     const { user, onChange } = montar({ mias: true }, true);
 
-    await user.click(screen.getByLabelText('Solo mis clases'));
+    await user.click(screen.getByRole('switch', { name: 'Solo mis clases' }));
 
     expect(onChange).toHaveBeenCalledWith({ mias: undefined });
   });
@@ -179,13 +179,13 @@ describe('<FiltrosAulas /> — «Solo mis clases» (T4, AC5)', () => {
     await user.tab();
     await user.tab();
 
-    expect(screen.getByLabelText('Solo mis clases')).toHaveFocus();
+    expect(screen.getByRole('switch', { name: 'Solo mis clases' })).toHaveFocus();
   });
 
   it('cambiarla también quita la página del query', async () => {
     const { user, onChange } = montar({ page: 3 }, true);
 
-    await user.click(screen.getByLabelText('Solo mis clases'));
+    await user.click(screen.getByRole('switch', { name: 'Solo mis clases' }));
 
     expect(onChange.mock.calls[0]?.[0]).not.toHaveProperty('page');
   });
@@ -200,7 +200,7 @@ describe('<FiltrosAulas /> — accesibilidad automática', () => {
     await esperarSinFallosDeAccesibilidad(container);
   });
 
-  // AC8: con la casilla del profesor puesta, que es un control más en la fila.
+  // AC8: con el interruptor del profesor puesto, que es un control más en la fila.
   it.each(TEMAS)('con «Solo mis clases», sin violaciones en el tema %s', async (tema) => {
     const { container } = renderConProviders(
       <FiltrosAulas value={{}} onChange={vi.fn()} ofreceSoloMisClases />,

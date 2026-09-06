@@ -135,7 +135,7 @@ export function SupervisionAulasPage() {
           {totalPaginas > 1 && (
             <nav
               aria-label="Paginación de supervisión de aulas"
-              className="flex items-center justify-center gap-4"
+              className="flex items-center justify-center gap-4 border-t border-border pt-6"
             >
               <Button
                 variant="outline"

@@ -114,7 +114,8 @@ cuerpo del issue.
 | [HU-411](./HU-411-recuperacion-de-contrasena-pantallas.md)   | Recuperación de contraseña (pantallas)              | ✅ Completada                         |
 | [HU-412](./HU-412-rediseno-del-catalogo-de-aulas.md)         | Rediseño del catálogo de aulas y sus filtros        | ⬜ Pendiente                          |
 | [HU-413](./HU-413-rediseno-del-panel-de-inicio.md)           | Rediseño del panel de inicio por rol                | ⬜ Pendiente                          |
-| [HU-414](./HU-414-pasada-de-la-tarjeta-de-aula.md)           | `<TarjetaAula>`: estados, cupos, fechas y microcopy | ⬜ Pendiente                          |
+| [HU-414](./HU-414-pasada-de-la-tarjeta-de-aula.md)           | `<TarjetaAula>`: estados, cupos, fechas y microcopy | ✅ Completada                         |
+| [HU-415](./HU-415-embellecimiento-visual.md)                 | Embellecimiento visual de todas las vistas          | 🔄 En curso                           |
 
 **Sprint 2 — cerrado (2026-08-25).** Las quince HUs de gestión de aulas, incluidas HU-214 y HU-215,
 están implementadas.
@@ -165,6 +166,13 @@ HU-414 (<TarjetaAula>: estados, cupos, fechas, microcopy) ──► HU-412 (cat�
 
 Orden de merge recomendado: HU-414 primero (la pieza compartida), luego HU-412 y HU-413 en
 cualquier orden. Sin dependencia dura entre ellas.
+
+**Cierre de Fase 1 · diseño, lote 3 — embellecimiento (HU-415).** Con la tarjeta de HU-414 ya en
+`main`, HU-415 pasa por **todas las vistas con sesión** subiendo el nivel visual sin tocar lógica:
+barra de marca navy, `<h1>` en serif, elevación mínima, el historial de tabla a lista de filas,
+interruptor y etiquetas de color en los filtros. Amplía dos límites que fijaban los skills
+(`--brand` fuera del panel de acceso; serif fuera de la landing) y los documenta en `bighearts-ui`.
+Frontend en su totalidad. Va después de HU-414; puede entrar antes o después de HU-412/HU-413.
 
 **Fuera del sprint, por decisión:** las preferencias de notificación (los cinco avisos son
 transaccionales; silenciarlos dejaría a alguien sin saber que su clase se canceló) y **el corte a

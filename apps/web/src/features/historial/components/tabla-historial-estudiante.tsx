@@ -1,57 +1,36 @@
 import type { ClassroomListItem } from '@academia/types';
 
-import {
-  Table,
-  TableBody,
-  TableCaption,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-import { describirHorario } from '@/features/aulas/lib/horario';
-import { BadgeResultadoHistorial } from './badge-resultado-historial';
+import { describirFechaCompacta } from '@/features/aulas/lib/horario';
+import { BadgeResultadoHistorial, resultadoHistorial } from './badge-resultado-historial';
+import { FilaHistorial } from './fila-historial';
 
 type TablaHistorialEstudianteProps = {
   items: ClassroomListItem[];
   total: number;
 };
 
-/** El historial del estudiante (HU-404, AC1): clase, fecha con zona, profesor y resultado. */
+/** El historial del estudiante (HU-404, AC1): clase, fecha, profesor y resultado. */
 export function TablaHistorialEstudiante({ items, total }: TablaHistorialEstudianteProps) {
   return (
-    <Table>
-      <TableCaption>
+    <div className="rounded-xl border border-border bg-card shadow-xs">
+      <p className="border-b border-border px-4 py-3 text-base text-muted-foreground sm:px-5">
         {total === 1 ? '1 clase encontrada.' : `${total} clases encontradas.`}
-      </TableCaption>
+      </p>
 
-      <TableHeader>
-        <TableRow>
-          <TableHead>Clase</TableHead>
-          <TableHead>Fecha</TableHead>
-          <TableHead>Profesor</TableHead>
-          <TableHead>Resultado</TableHead>
-        </TableRow>
-      </TableHeader>
-
-      <TableBody>
+      <ul aria-label="Historial de clases" className="subir-suave">
         {items.map((item) => (
-          <TableRow key={item.id}>
-            <TableHead scope="row" className="font-normal text-foreground">
-              {item.title}
-            </TableHead>
-            <TableCell className="whitespace-nowrap text-muted-foreground">
-              {describirHorario(item.scheduledAt)}
-            </TableCell>
-            <TableCell className="text-foreground">
-              {item.teacherFirstName} {item.teacherLastName}
-            </TableCell>
-            <TableCell>
-              <BadgeResultadoHistorial estado={item.myBookingStatus} />
-            </TableCell>
-          </TableRow>
+          <FilaHistorial
+            key={item.id}
+            aulaId={item.id}
+            icon={resultadoHistorial(item.myBookingStatus).icon}
+            tono={resultadoHistorial(item.myBookingStatus).tono}
+            titulo={item.title}
+            subtitulo={`${describirFechaCompacta(item.scheduledAt)} · ${item.teacherFirstName} ${item.teacherLastName}`}
+          >
+            <BadgeResultadoHistorial estado={item.myBookingStatus} />
+          </FilaHistorial>
         ))}
-      </TableBody>
-    </Table>
+      </ul>
+    </div>
   );
 }

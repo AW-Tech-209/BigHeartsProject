@@ -21,6 +21,10 @@ El texto es la interfaz. Se escribe con la misma disciplina que el espaciado.
 - Sentence case en todo: botones, títulos, labels y menús. Nunca Title Case en español.
 - Fechas y horas siempre completas y explícitas: `Martes 12 de agosto, 6:00 p.m. (hora de Colombia)`.
   Nunca `12/08` solo. Nunca formato relativo como única información (`en 2 días` va acompañado de la fecha).
+- **Excepción — celdas de tabla y listas densas (HU-415):** `describirFechaCompacta` →
+  `12 ago. 2026 · 6:00 p.m.`, sin día de la semana ni zona. Se admite SOLO donde llegar a tiempo
+  ya no está en juego (historial de clases pasadas). El detalle del aula y la reserva mantienen la
+  fecha completa con zona.
 
 ## Toasts
 

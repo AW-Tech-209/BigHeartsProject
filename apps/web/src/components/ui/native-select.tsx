@@ -8,29 +8,38 @@ import { cn } from '@/lib/utils';
  * el control más robusto para teclado y lectores de pantalla. El chevron es
  * decorativo (`aria-hidden`).
  */
-export const NativeSelect = forwardRef<HTMLSelectElement, React.ComponentPropsWithoutRef<'select'>>(
-  function NativeSelect({ className, children, ...props }, ref) {
-    return (
-      <div className="relative">
-        <select
-          ref={ref}
-          className={cn(
-            'h-11 w-full appearance-none rounded-lg border border-input bg-card pr-10 pl-3.5',
-            'text-base text-foreground transition-colors',
-            'aria-invalid:border-destructive-border',
-            'disabled:cursor-not-allowed disabled:opacity-50',
-            className,
-          )}
-          {...props}
-        >
-          {children}
-        </select>
-        <ChevronDown
-          aria-hidden="true"
-          strokeWidth={2}
-          className="pointer-events-none absolute top-1/2 right-3 size-5 -translate-y-1/2 text-muted-foreground"
-        />
-      </div>
-    );
-  },
-);
+type NativeSelectProps = React.ComponentPropsWithoutRef<'select'> & {
+  /** Clase adicional del chevron. Solo para acentos decorativos. */
+  iconClassName?: string;
+};
+
+export const NativeSelect = forwardRef<HTMLSelectElement, NativeSelectProps>(function NativeSelect(
+  { className, iconClassName, children, ...props },
+  ref,
+) {
+  return (
+    <div className="relative">
+      <select
+        ref={ref}
+        className={cn(
+          'h-11 w-full appearance-none rounded-lg border border-input bg-card pr-10 pl-3.5',
+          'text-base text-foreground transition-colors',
+          'aria-invalid:border-destructive-border',
+          'disabled:cursor-not-allowed disabled:opacity-50',
+          className,
+        )}
+        {...props}
+      >
+        {children}
+      </select>
+      <ChevronDown
+        aria-hidden="true"
+        strokeWidth={2}
+        className={cn(
+          'pointer-events-none absolute top-1/2 right-3 size-5 -translate-y-1/2 text-muted-foreground',
+          iconClassName,
+        )}
+      />
+    </div>
+  );
+});
