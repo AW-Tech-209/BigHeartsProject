@@ -1,5 +1,8 @@
 # HU-307 — El seed siembra reservas
 
+> **Nota posterior (2026-09-06):** lo que esta HU añadió a `seed.ts` / `seed-data.ts` se movió a
+> `apps/api/prisma/seed-demo.ts` (manual, `npm run db:seed:demo`). `seed.ts` ya solo crea el Admin.
+
 | Campo               | Valor                                                 |
 | ------------------- | ----------------------------------------------------- |
 | **Sprint**          | Sprint 3 — Sistema de Reservas                        |

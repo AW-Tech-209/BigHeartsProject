@@ -79,11 +79,11 @@ blueprint, `PORT` lo inyecta Render solo).
 
 ### 2.3. Migraciones y seed
 
-No hay que hacer nada: el `startCommand` corre `prisma migrate deploy` y luego el seed
+No hay que hacer nada: el `startCommand` corre `prisma migrate deploy` y luego el seed inicial
 (`npm run db:seed`) antes de arrancar, en cada deploy. Ambos son idempotentes: las migraciones ya
-aplicadas no se reaplican, y el seed hace `upsert` por email (nunca pisa un Admin existente ni
-crea usuarios de prueba en `NODE_ENV=production`; en staging sí los crea, ver `seedTestUsers` en
-`apps/api/prisma/seed.ts`).
+aplicadas no se reaplican, y el seed inicial solo hace `upsert` del Admin por email (nunca pisa un
+Admin existente). **No siembra datos de prueba en ningún entorno** — eso es `seed-demo.ts`, que se
+ejecuta a mano (`npm run db:seed:demo`) y nunca en el deploy.
 
 Si `ADMIN_EMAIL`/`ADMIN_PASSWORD` no están seteados en el paso 2.2, el seed aborta con un error
 claro y el deploy falla — es intencional, para no arrancar en staging/prod sin Admin.

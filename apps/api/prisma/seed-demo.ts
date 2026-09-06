@@ -1,25 +1,27 @@
 /**
- * Seed de DEMOSTRACIÓN EN VIVO. Pensado para ejecutarse JUSTO ANTES de enseñarle
- * el software al cliente: todas las fechas se calculan contra `Date.now()` en el
- * momento de correrlo, así que los estados temporales de las aulas
- * (`en-curso`, `acceso-abierto`, `finalizada`…) son ciertos durante la demo.
+ * Seed de DATOS DE PRUEBA. Es el escenario completo para trastear con la app o
+ * para enseñársela al cliente: usuarios, aulas y reservas que cubren **todos los
+ * casos** que la interfaz puede mostrar.
  *
- * NO lo ejecuta el deploy. El seed del deploy es `seed.ts`; este es aparte y
- * manual. Idempotente: `upsert` por email (usuarios) o por id fijo (aulas y
- * reservas), en un rango de ids propio (`d0c0…`) que no colisiona con `seed.ts`.
- * Reejecutarlo solo refresca las fechas.
+ * NO lo ejecuta el deploy ni `docker compose up` — esos solo corren `seed.ts`
+ * (el Admin). Este es aparte y MANUAL:
  *
  *   npm run db:seed:demo            (desde la raíz del repo)
  *
- * Requiere `apps/api/.env` con DATABASE_URL y MEETING_LINK_KEY (los mismos que
- * usa la app). La contraseña de todas las cuentas de demo es `Password123!`
- * salvo que definas SEED_DEMO_PASSWORD.
+ * Todas las fechas se calculan contra `Date.now()` en el momento de correrlo,
+ * así que los estados temporales de las aulas (`en-curso`, `acceso-abierto`,
+ * `finalizada`…) son ciertos justo después de sembrar. Reejecutarlo solo
+ * refresca las fechas: es idempotente (`upsert` por email en usuarios, por id
+ * fijo en aulas y reservas, en el rango `d0c0…` que no colisiona con nada).
+ *
+ * Requiere `apps/api/.env` con `DATABASE_URL` y `MEETING_LINK_KEY` (los mismos
+ * que usa la app). La contraseña de todas las cuentas es `Password123!` salvo
+ * que definas `SEED_DEMO_PASSWORD`.
  *
  * ─── Escenarios que deja montados ──────────────────────────────────────────
  *
- * Aulas del profesor `demo.profe@bighearts.local` / `demo.profe2@bighearts.local`
- * (contraseña `Password123!`). En «Mis aulas» se ven todas; en el catálogo
- * público solo las PUBLISHED con fecha futura.
+ * Aulas de `demo.profe@bighearts.local` / `demo.profe2@bighearts.local`. En «Mis
+ * aulas» se ven todas; en el catálogo público solo las PUBLISHED futuras.
  *
  *   LEJANA          empieza en +7 días · cupo de sobra                → disponible
  *   ULTIMOS_CUPOS   empieza en +3 días · 5/6 ocupado                  → últimos-cupos
@@ -28,18 +30,20 @@
  *   EMPIEZA_PRONTO  empieza en +25 min · dentro de la ventana de 30   → acceso-abierto (enlace visible)
  *   EN_CURSO        empezó hace 30 min, dura 45 · aún en marcha       → en-curso (enlace visible)
  *   LLEGUE_TARDE    empezó hace 90 min, terminó hace 30               → finalizada (enlace sin-acceso)
- *   FINALIZADA_HIST fue hace 6 días · asistencia marcada              → finalizada (historial)
+ *   FINALIZADA_HIST fue hace 6 días · asistencia marcada (profe 1)    → finalizada (historial)
+ *   FINALIZADA_HIST_2 fue hace 4 días · asistencia marcada (profe 2)  → finalizada (historial)
  *   CANCELADA       el profesor la canceló                            → cancelada
  *   SIN_MODOS       sin modos de comunicación declarados (pre-HU-211) → disponible, sin distintivos de modo
  *   ACCESIBLE       señas + texto + intérprete + subtítulos + material→ disponible, con todos los apoyos
  *
  * Cuentas para probar el login y la cola de aprobación:
- *   demo.alumno@bighearts.local          STUDENT ACTIVE  (señas, hipoacusia severa) — dueño de las reservas
- *   demo.alumno2@bighearts.local         STUDENT ACTIVE  (texto escrito, hipoacusia moderada)
+ *   demo.alumno@bighearts.local             STUDENT ACTIVE  (señas, hipoacusia severa) — dueño de las reservas
+ *   demo.alumno2@bighearts.local            STUDENT ACTIVE  (texto escrito, hipoacusia moderada)
  *   demo.alumno.suspendido@bighearts.local  STUDENT SUSPENDED  — el login responde cuenta deshabilitada
  *   demo.profe.pendiente@bighearts.local    TEACHER PENDING    — aparece en la cola del admin
  *   demo.profe.rechazado@bighearts.local    TEACHER REJECTED   — el login responde solicitud denegada
- *   demo.relleno1..5@bighearts.local     STUDENT ACTIVE  — solo ocupan cupo
+ *   demo.relleno1..5@bighearts.local        STUDENT ACTIVE  — ocupan cupo; 1-3 con preferencia declarada
+ *                                                             para que el panel del profesor resuma modos
  *
  * NOTA sobre «llegar tarde»: el enlace de una clase es visible para quien tiene
  * reserva desde 30 min antes y hasta que la clase TERMINA (`scheduledAt +
@@ -83,15 +87,16 @@ const PASSWORD = process.env.SEED_DEMO_PASSWORD?.trim() || 'Password123!';
 
 type Rol = 'STUDENT' | 'TEACHER';
 type Estado = 'ACTIVE' | 'PENDING' | 'REJECTED' | 'SUSPENDED';
+type ModoComunicacion = 'SIGN_LANGUAGE' | 'LIP_READING' | 'WRITTEN_TEXT' | 'SPOKEN_AUDIO';
 
-type UsuarioDemo = {
+export type UsuarioDemo = {
   email: string;
   firstName: string;
   lastName: string;
   role: Rol;
   status: Estado;
   hearingLossLevel?: 'MILD' | 'MODERATE' | 'SEVERE' | 'PROFOUND';
-  communicationPreference?: 'SIGN_LANGUAGE' | 'LIP_READING' | 'WRITTEN_TEXT' | 'SPOKEN_AUDIO';
+  communicationPreference?: ModoComunicacion;
 };
 
 const PROFE = 'demo.profe@bighearts.local';
@@ -100,7 +105,14 @@ const ALUMNO = 'demo.alumno@bighearts.local';
 const ALUMNO2 = 'demo.alumno2@bighearts.local';
 const RELLENO = (n: number) => `demo.relleno${n}@bighearts.local`;
 
-const USUARIOS: UsuarioDemo[] = [
+/** Preferencia de cada relleno: `null` = sin declarar. */
+const PREFERENCIA_RELLENO: Record<number, ModoComunicacion | undefined> = {
+  1: 'SIGN_LANGUAGE',
+  2: 'LIP_READING',
+  3: 'WRITTEN_TEXT',
+};
+
+export const USUARIOS: UsuarioDemo[] = [
   { email: PROFE, firstName: 'Paula', lastName: 'Profesora', role: 'TEACHER', status: 'ACTIVE' },
   { email: PROFE2, firstName: 'Diego', lastName: 'Docente', role: 'TEACHER', status: 'ACTIVE' },
   {
@@ -148,12 +160,11 @@ const USUARIOS: UsuarioDemo[] = [
     lastName: 'Demo',
     role: 'STUDENT',
     status: 'ACTIVE',
+    communicationPreference: PREFERENCIA_RELLENO[n],
   })),
 ];
 
-type ModoComunicacion = 'SIGN_LANGUAGE' | 'LIP_READING' | 'WRITTEN_TEXT' | 'SPOKEN_AUDIO';
-
-type AulaDemo = {
+export type AulaDemo = {
   id: string;
   teacherEmail: string;
   title: string;
@@ -174,7 +185,7 @@ type AulaDemo = {
 const idAula = (n: number) => `d0c00000-0000-4000-8000-0000000000${String(n).padStart(2, '0')}`;
 const idReserva = (n: number) => `d0c00000-0000-4000-9000-0000000000${String(n).padStart(2, '0')}`;
 
-const AULA = {
+export const AULA = {
   LEJANA: idAula(1),
   ULTIMOS_CUPOS: idAula(2),
   LLENA: idAula(3),
@@ -186,9 +197,10 @@ const AULA = {
   CANCELADA: idAula(9),
   SIN_MODOS: idAula(10),
   ACCESIBLE: idAula(11),
+  FINALIZADA_HIST_2: idAula(12),
 };
 
-const AULAS: AulaDemo[] = [
+export const AULAS: AulaDemo[] = [
   {
     id: AULA.LEJANA,
     teacherEmail: PROFE,
@@ -301,6 +313,20 @@ const AULAS: AulaDemo[] = [
     communicationModes: ['WRITTEN_TEXT'],
   },
   {
+    id: AULA.FINALIZADA_HIST_2,
+    teacherEmail: PROFE2,
+    title: 'Clase de hace unos días (profe 2)',
+    description: 'Aula pasada del segundo profesor, con asistencia marcada mezclando resultados.',
+    level: 'ADVANCED',
+    maxStudents: 6,
+    scheduledInMinutes: -4 * DIA,
+    durationMinutes: 60,
+    meetingLink: 'https://zoom.us/j/demo-finalizada-hist-2',
+    meetingProvider: 'ZOOM',
+    communicationModes: ['SIGN_LANGUAGE', 'WRITTEN_TEXT'],
+    hasLiveCaptions: true,
+  },
+  {
     id: AULA.CANCELADA,
     teacherEmail: PROFE2,
     title: 'Clase cancelada por el profesor',
@@ -345,7 +371,7 @@ const AULAS: AulaDemo[] = [
   },
 ];
 
-type ReservaDemo = {
+export type ReservaDemo = {
   id: string;
   studentEmail: string;
   classroomId: string;
@@ -353,8 +379,9 @@ type ReservaDemo = {
   cancelledAtInMinutes?: number;
 };
 
-const RESERVAS: ReservaDemo[] = [
-  // El alumno de demo: una reserva en cada estado que quiere enseñarse.
+export const RESERVAS: ReservaDemo[] = [
+  // El alumno de demo: una reserva en cada estado que quiere enseñarse. Tiene
+  // las tres salidas del historial — asistió, no asistió y canceló.
   { id: idReserva(1), studentEmail: ALUMNO, classroomId: AULA.RESERVADA, status: 'CONFIRMED' },
   { id: idReserva(2), studentEmail: ALUMNO, classroomId: AULA.EMPIEZA_PRONTO, status: 'CONFIRMED' },
   { id: idReserva(3), studentEmail: ALUMNO, classroomId: AULA.EN_CURSO, status: 'CONFIRMED' },
@@ -368,9 +395,21 @@ const RESERVAS: ReservaDemo[] = [
     status: 'CANCELLED',
     cancelledAtInMinutes: -1 * DIA,
   },
+  {
+    id: idReserva(20),
+    studentEmail: ALUMNO,
+    classroomId: AULA.FINALIZADA_HIST_2,
+    status: 'NO_SHOW',
+  },
   // Segundo alumno: para enseñar «Mis reservas» de otra cuenta.
   { id: idReserva(8), studentEmail: ALUMNO2, classroomId: AULA.RESERVADA, status: 'CONFIRMED' },
   { id: idReserva(9), studentEmail: ALUMNO2, classroomId: AULA.FINALIZADA_HIST, status: 'NO_SHOW' },
+  {
+    id: idReserva(21),
+    studentEmail: ALUMNO2,
+    classroomId: AULA.FINALIZADA_HIST_2,
+    status: 'ATTENDED',
+  },
   // Relleno: ocupa cupo para los estados «llena» y «últimos cupos».
   { id: idReserva(10), studentEmail: RELLENO(1), classroomId: AULA.LEJANA, status: 'CONFIRMED' },
   { id: idReserva(11), studentEmail: RELLENO(2), classroomId: AULA.LEJANA, status: 'CONFIRMED' },
@@ -407,12 +446,24 @@ const RESERVAS: ReservaDemo[] = [
   { id: idReserva(17), studentEmail: RELLENO(1), classroomId: AULA.LLENA, status: 'CONFIRMED' },
   { id: idReserva(18), studentEmail: RELLENO(2), classroomId: AULA.LLENA, status: 'CONFIRMED' },
   { id: idReserva(19), studentEmail: RELLENO(3), classroomId: AULA.LLENA, status: 'CONFIRMED' },
+  {
+    id: idReserva(22),
+    studentEmail: RELLENO(3),
+    classroomId: AULA.FINALIZADA_HIST_2,
+    status: 'ATTENDED',
+  },
 ];
 
-/** Cupo ocupado = reservas que no están canceladas (marcar asistencia no libera cupo). */
-function cupoPorAula(): Map<string, number> {
+/**
+ * Cuenta por aula las reservas que ocupan cupo: todo lo que no está `CANCELLED`
+ * (marcar asistencia no libera el cupo, HU-403 AC4). Es lo único que decide
+ * `currentBookings`.
+ */
+export function contarReservasConCupo(
+  reservas: Pick<ReservaDemo, 'classroomId' | 'status'>[],
+): Map<string, number> {
   const conteo = new Map<string, number>();
-  for (const r of RESERVAS) {
+  for (const r of reservas) {
     if (r.status === 'CANCELLED') continue;
     conteo.set(r.classroomId, (conteo.get(r.classroomId) ?? 0) + 1);
   }
@@ -442,7 +493,7 @@ async function main(): Promise<void> {
       create: { email: u.email, password: passwordHash, ...data },
     });
   }
-  console.log(`  ✔ ${USUARIOS.length} usuarios de demo (contraseña: ${PASSWORD})`);
+  console.log(`  ✔ ${USUARIOS.length} usuarios de prueba (contraseña: ${PASSWORD})`);
 
   const teachers = await prisma.user.findMany({
     where: { email: { in: [PROFE, PROFE2] } },
@@ -450,7 +501,7 @@ async function main(): Promise<void> {
   });
   const teacherId = new Map(teachers.map((t) => [t.email, t.id]));
 
-  const cupo = cupoPorAula();
+  const cupo = contarReservasConCupo(RESERVAS);
   for (const aula of AULAS) {
     const data = {
       teacherId: teacherId.get(aula.teacherEmail)!,
@@ -475,7 +526,7 @@ async function main(): Promise<void> {
       create: { id: aula.id, ...data },
     });
   }
-  console.log(`  ✔ ${AULAS.length} aulas de demo`);
+  console.log(`  ✔ ${AULAS.length} aulas de prueba`);
 
   const students = await prisma.user.findMany({
     where: { email: { in: [...new Set(RESERVAS.map((r) => r.studentEmail))] } },
@@ -496,16 +547,20 @@ async function main(): Promise<void> {
       create: { id: r.id, ...data },
     });
   }
-  console.log(`  ✔ ${RESERVAS.length} reservas de demo`);
+  console.log(`  ✔ ${RESERVAS.length} reservas de prueba`);
 
-  console.log('\nSeed de demo listo. Entra con demo.alumno@bighearts.local / ' + PASSWORD);
+  console.log('\nSeed de prueba listo. Entra con demo.alumno@bighearts.local / ' + PASSWORD);
 }
 
-main()
-  .catch((error: unknown) => {
-    console.error('Seed de demo fallido:', error instanceof Error ? error.message : error);
-    process.exitCode = 1;
-  })
-  .finally(() => {
-    void prisma.$disconnect();
-  });
+// Solo se ejecuta al lanzarlo como script (`npm run db:seed:demo`); al importarlo
+// desde un test para revisar las invariantes de los datos, no toca la BD.
+if (require.main === module) {
+  main()
+    .catch((error: unknown) => {
+      console.error('Seed de prueba fallido:', error instanceof Error ? error.message : error);
+      process.exitCode = 1;
+    })
+    .finally(() => {
+      void prisma.$disconnect();
+    });
+}
