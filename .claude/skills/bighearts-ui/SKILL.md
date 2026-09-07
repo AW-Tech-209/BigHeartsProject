@@ -129,6 +129,15 @@ cambio de ruta · animar un elemento que acaba de recibir el foco (`<PaginaCabec
 `<h1>` en cada navegación; no se anima). Cero colores literales también aquí: se anima interpolando
 tokens, nunca introduciendo un tono nuevo.
 
+**El cambio de tema (`use-tema.ts`) es un caso aparte, por rendimiento.** Transicionar cada nodo del
+DOM (`.cambiando-tema *`) cuesta proporcional al tamaño de la página: en una lista larga se siente
+lag porque el navegador repinta cientos de filas en cada fotograma. Donde el navegador soporta
+`document.startViewTransition` (y no hay movimiento reducido), `use-tema.ts` la usa: cambia la clase
+`dark` de un tirón y funde dos capturas de pantalla por compositor — costo fijo en GPU, no crece con
+el DOM. `.cambiando-tema` sigue existiendo como resguardo (navegador sin la API, o con movimiento
+reducido — la API no la respeta por su cuenta, hay que comprobarla a mano antes de llamarla). El
+resultado final es idéntico en ambos caminos; solo cambia cómo se llega a él.
+
 **Movimiento reducido:** el único mecanismo hoy es `prefers-reduced-motion` del sistema — el bloque
 `@media` de `index.css` lo cubre de forma global (`useMovimientoReducido` en `src/hooks/` para JS que
 decide si dispara un pulso o arranca una demo en autoplay). **No existe** una preferencia de
