@@ -120,4 +120,6 @@ verde/ámbar/rojo, porque en este producto esos significan éxito/tiempo/error y
   superior se solapaba con marca + destinos + cuenta.
 - El historial adopta el patrón «Fila» que `layout-y-composicion.md` §4 ya prescribía para listas
   largas — la versión `<table>` de HU-404 fue una lectura; esta es la del skill. _(El historial del
-  profesor quedó en `<table>` en esta HU; se pasó a «Fila» en el ajuste posterior de HU-404.)_
+  profesor quedó en `<table>` en esta HU; se pasó a «Fila» en el ajuste posterior de HU-404.
+  Después, en el ajuste posterior de HU-210, `<FilaHistorial>` se promovió a `<FilaLista>` en
+  `components/dominio/` y la supervisión de aulas del admin la reutiliza.)_

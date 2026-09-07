@@ -1,10 +1,7 @@
 import { UserRole } from '@academia/types';
-import { Presentation } from 'lucide-react';
-import { Link } from 'react-router-dom';
 
 import { AppShell } from '@/components/layout/app-shell';
 import { PaginaCabecera } from '@/components/layout/pagina-cabecera';
-import { Button } from '@/components/ui/button';
 import { AprobacionesPendientes } from '@/features/admin/components/aprobaciones-pendientes';
 import { RoleGate } from '@/features/auth/components/role-gate';
 import { useAuth } from '@/features/auth/hooks/use-auth';
@@ -33,6 +30,8 @@ const CONTEXTO_POR_ROL: Record<UserRole, string> = {
  * panel de operación**: la aprobación de profesores se pinta aquí, no detrás de
  * un enlace, porque era su trabajo real escondido tras una tarjeta. `/admin`
  * sigue existiendo y redirige aquí, así que ningún marcador antiguo se rompe.
+ * La supervisión de aulas (HU-210) se alcanza por el destino «Aulas» de la
+ * barra, que para el admin lleva a `/admin/aulas` — no hace falta un botón aquí.
  *
  * `<RoleGate>` monta un solo panel: los otros dos no llegan a renderizarse, así
  * que sus consultas tampoco se disparan. Lo que decide de verdad quién puede
@@ -61,22 +60,7 @@ export function PanelPage() {
         </RoleGate>
 
         <RoleGate roles={[UserRole.ADMIN]}>
-          <div id="aprobaciones-pendientes" className="space-y-8">
-            {/*
-              HU-210: la vía desde el panel de operación hacia la supervisión de
-              aulas. No compite con `AprobacionesPendientes` por la acción
-              primaria de la pantalla — es un enlace secundario a otra vista,
-              no un botón de acción.
-            */}
-            <Button
-              render={<Link to="/admin/aulas" />}
-              variant="outline"
-              className="h-11 gap-2 px-5 text-base"
-            >
-              <Presentation aria-hidden="true" strokeWidth={2} className="size-5" />
-              Ver supervisión de aulas
-            </Button>
-
+          <div id="aprobaciones-pendientes">
             <AprobacionesPendientes />
           </div>
         </RoleGate>

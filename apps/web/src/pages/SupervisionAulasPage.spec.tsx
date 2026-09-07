@@ -95,6 +95,17 @@ describe('SupervisionAulasPage — no alcanzable fuera de ADMIN (T12)', () => {
       await screen.findByRole('heading', { level: 1, name: 'Supervisión de aulas' }),
     ).toBeInTheDocument();
   });
+
+  it('para el ADMIN, /aulas redirige a la supervisión (no al catálogo)', async () => {
+    darSesion(UserRole.ADMIN);
+    vi.mocked(getAdminClassrooms).mockResolvedValue(respuesta([]));
+
+    montar('/aulas');
+
+    expect(
+      await screen.findByRole('heading', { level: 1, name: 'Supervisión de aulas' }),
+    ).toBeInTheDocument();
+  });
 });
 
 describe('SupervisionAulasPage — el listado (AC1, AC2)', () => {
@@ -112,6 +123,19 @@ describe('SupervisionAulasPage — el listado (AC1, AC2)', () => {
 
     expect(await screen.findByText('Paula Profesora')).toBeInTheDocument();
     expect(screen.getByText('Marco Profesora')).toBeInTheDocument();
+  });
+
+  it('cada aula enlaza a su detalle desde el título', async () => {
+    vi.mocked(getAdminClassrooms).mockResolvedValue(
+      respuesta([aula({ id: 'aula-9', title: 'Conversación cotidiana' })]),
+    );
+
+    montar();
+
+    expect(await screen.findByRole('link', { name: 'Conversación cotidiana' })).toHaveAttribute(
+      'href',
+      '/aulas/aula-9',
+    );
   });
 
   it('muestra canceladas y pasadas, cada una con su estado (AC2)', async () => {

@@ -40,5 +40,7 @@ export const destinosPorRol: Record<UserRole, Destino[]> = {
     { to: '/mis-aulas', label: 'Mis aulas', icon: CalendarCheck },
     HISTORIAL,
   ],
-  [UserRole.ADMIN]: [PANEL, AULAS],
+  // Para el admin «Aulas» ES la supervisión (HU-210): todas las aulas de la
+  // academia, no el catálogo público. No hay una vista aparte que ofrecer.
+  [UserRole.ADMIN]: [PANEL, { to: '/admin/aulas', label: 'Aulas', icon: BookOpen }],
 };

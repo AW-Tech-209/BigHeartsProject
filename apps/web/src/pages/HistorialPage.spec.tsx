@@ -1,4 +1,5 @@
 import {
+  type AulaImpartida,
   BookingStatus,
   ClassroomStatus,
   EnglishLevel,
@@ -72,6 +73,22 @@ describe('HistorialPage — estudiante (AC1)', () => {
     expect(screen.getByText('No asististe')).toBeInTheDocument();
   });
 
+  it('cada fila lleva un botón «Ver detalle» que va al mismo sitio que el título', async () => {
+    vi.mocked(getHistorial).mockResolvedValue({
+      items: [{ ...filaClasica(), myBookingStatus: BookingStatus.ATTENDED }],
+      total: 1,
+      page: 1,
+      pageSize: 20,
+    });
+
+    montar();
+
+    expect(await screen.findByRole('link', { name: 'Ver detalle' })).toHaveAttribute(
+      'href',
+      '/aulas/aula-1',
+    );
+  });
+
   it('sin historial, explica el vacío sin sonar a error (AC5)', async () => {
     vi.mocked(getHistorial).mockResolvedValue({ items: [], total: 0, page: 1, pageSize: 20 });
 
@@ -102,7 +119,7 @@ describe('HistorialPage — profesor (AC2)', () => {
     expect(screen.getByText('Asistencia marcada')).toBeInTheDocument();
   });
 
-  it('avisa en la fila cuando todavía falta marcar la asistencia', async () => {
+  it('avisa en la fila cuando no hay ninguna asistencia marcada', async () => {
     vi.mocked(getHistorial).mockResolvedValue({
       items: [{ ...filaClasica(), totalInscritos: 4, totalAsistieron: 0, asistenciaPendiente: 4 }],
       total: 1,
@@ -113,6 +130,60 @@ describe('HistorialPage — profesor (AC2)', () => {
     montar();
 
     expect(await screen.findByText('Falta marcar asistencia')).toBeInTheDocument();
+    expect(screen.queryByText('0 de 4 asistieron')).toBeNull();
+    // El botón de acción invita a marcar, y lleva al detalle (donde está el control).
+    expect(screen.getByRole('link', { name: 'Marcar asistencia' })).toHaveAttribute(
+      'href',
+      '/aulas/aula-1',
+    );
+  });
+
+  it('con la asistencia cerrada, el botón de la fila es solo «Ver detalle»', async () => {
+    vi.mocked(getHistorial).mockResolvedValue({
+      items: [{ ...filaClasica(), totalInscritos: 4, totalAsistieron: 3, asistenciaPendiente: 0 }],
+      total: 1,
+      page: 1,
+      pageSize: 20,
+    });
+
+    montar();
+
+    expect(await screen.findByRole('link', { name: 'Ver detalle' })).toHaveAttribute(
+      'href',
+      '/aulas/aula-1',
+    );
+    expect(screen.queryByRole('link', { name: 'Marcar asistencia' })).toBeNull();
+  });
+
+  it('muestra el estado parcial cuando falta marcar solo a algunos', async () => {
+    vi.mocked(getHistorial).mockResolvedValue({
+      items: [{ ...filaClasica(), totalInscritos: 5, totalAsistieron: 2, asistenciaPendiente: 2 }],
+      total: 1,
+      page: 1,
+      pageSize: 20,
+    });
+
+    montar();
+
+    expect(await screen.findByText('Falta marcar (2 de 5)')).toBeInTheDocument();
+    expect(screen.queryByText('2 de 5 asistieron')).toBeNull();
+  });
+
+  it('sin el dato de pendientes no afirma que la asistencia esté marcada', async () => {
+    vi.mocked(getHistorial).mockResolvedValue({
+      // Simula una respuesta sin `asistenciaPendiente` (API sin recompilar).
+      items: [
+        { ...filaClasica(), totalInscritos: 3, totalAsistieron: 0 } as unknown as AulaImpartida,
+      ],
+      total: 1,
+      page: 1,
+      pageSize: 20,
+    });
+
+    montar();
+
+    expect(await screen.findByText('Falta marcar asistencia')).toBeInTheDocument();
+    expect(screen.queryByText('Asistencia marcada')).toBeNull();
   });
 });
 

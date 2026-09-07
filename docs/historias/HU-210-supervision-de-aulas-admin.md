@@ -142,3 +142,14 @@ listara profesores. Se preguntó al usuario: se añadió `GET /admin/teachers` (
 cualquier estado) para poblar el `<select>` del filtro — un profesor `SUSPENDED` puede tener aulas
 pasadas que el admin todavía necesita encontrar. AC9 verificado en HU-215 (2026-08-25) salvo
 `.dark`/`.hc`, inalcanzables hasta HU-216.
+
+_(Ajuste posterior, 2026-09-06)_ Unificación de la vista de aulas del admin:
+
+- El destino **«Aulas» de la barra** lleva al admin a `/admin/aulas`, no a `/aulas`; `/aulas` para
+  un `ADMIN` redirige a `/admin/aulas` (`RutaAulas` en el router). Su vista de aulas es la
+  supervisión, no el catálogo público. Se quitó el botón «Ver supervisión de aulas» del panel.
+- El listado pasa de `<table>` al patrón «Fila» compartido (`<FilaLista>`, `components/dominio/`),
+  igual que el historial: **cada fila enlaza al detalle del aula** (`/aulas/:id`), con el chip en
+  el tono/ícono del estado derivado, profesor + fecha compacta en el subtítulo, y estado + inscritos
+  a la derecha. Responsive: apila bajo `sm`. AC7 («filas, no tarjetas») se mantiene; AC9 deja de
+  hablar de `<table>`.

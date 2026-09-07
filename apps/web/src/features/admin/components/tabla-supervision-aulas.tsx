@@ -1,13 +1,5 @@
 import type { ClassroomListItem } from '@academia/types';
 
-import {
-  Table,
-  TableBody,
-  TableCaption,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
 import { FilaAulaSupervision } from './fila-aula-supervision';
 
 type TablaSupervisionAulasProps = {
@@ -17,33 +9,23 @@ type TablaSupervisionAulasProps = {
 };
 
 /**
- * La supervisión completa, como tabla (T9, AC7): fila y no tarjeta, porque
- * aquí se escanea para administrar, no para elegir. Mismo mecanismo que
- * `<PendingTeachersTable>`: `<table>` nativa, `<caption>` visible y
- * `<th scope="col">`/`scope="row"`.
+ * La supervisión completa, en filas (HU-210 T9/AC7): fila y no tarjeta, porque
+ * aquí se escanea para administrar, no para elegir. Mismo patrón «Fila» que el
+ * historial (`<FilaLista>`) — dejó de ser `<table>`—: cada fila enlaza al
+ * detalle del aula.
  */
 export function TablaSupervisionAulas({ items, total, ahora }: TablaSupervisionAulasProps) {
   return (
-    <Table>
-      <TableCaption>
+    <div className="rounded-xl border border-border bg-card shadow-xs">
+      <p className="border-b border-border px-4 py-3 text-base text-muted-foreground sm:px-5">
         {total === 1 ? '1 aula encontrada.' : `${total} aulas encontradas.`}
-      </TableCaption>
+      </p>
 
-      <TableHeader>
-        <TableRow>
-          <TableHead>Profesor</TableHead>
-          <TableHead>Título</TableHead>
-          <TableHead>Fecha</TableHead>
-          <TableHead>Estado</TableHead>
-          <TableHead>Inscritos</TableHead>
-        </TableRow>
-      </TableHeader>
-
-      <TableBody>
+      <ul aria-label="Aulas de la academia" className="subir-suave">
         {items.map((classroom) => (
           <FilaAulaSupervision key={classroom.id} classroom={classroom} ahora={ahora} />
         ))}
-      </TableBody>
-    </Table>
+      </ul>
+    </div>
   );
 }

@@ -19,18 +19,28 @@ type AulaConAcceso = Pick<ClassroomListItem, 'id' | 'accessState' | 'accessOpens
  * de verdad. Va en el amarillo sólido del estado `acceso-abierto` (la regla del
  * sólido: «hay algo que hacer ahora mismo»). `sin-acceso` no pinta nada: sin
  * reserva, ni cuenta atrás ni botón.
+ *
+ * `forzarEntrada` es para el profesor dueño mirando su clase EN CURSO: no tiene
+ * reserva ni ventana de 30 min, pero el botón al detalle (donde está el enlace)
+ * le sirve igual que al estudiante.
  */
-export function useAccionEntrarAClase({ aula }: { aula: AulaConAcceso }): {
+export function useAccionEntrarAClase({
+  aula,
+  forzarEntrada = false,
+}: {
+  aula: AulaConAcceso;
+  forzarEntrada?: boolean;
+}): {
   boton: ReactNode | null;
   aviso: ReactNode | null;
 } {
   const estado = useAccesoAlEnlace(aula.accessState, aula.accessOpensAt);
 
-  if (estado === 'sin-acceso') {
+  if (!forzarEntrada && estado === 'sin-acceso') {
     return { boton: null, aviso: null };
   }
 
-  if (estado === 'aun-no') {
+  if (!forzarEntrada && estado === 'aun-no') {
     return {
       boton: null,
       aviso: aula.accessOpensAt ? (

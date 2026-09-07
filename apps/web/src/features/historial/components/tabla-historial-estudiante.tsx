@@ -1,8 +1,9 @@
 import type { ClassroomListItem } from '@academia/types';
 
+import { FilaLista } from '@/components/dominio/fila-lista';
 import { describirFechaCompacta } from '@/features/aulas/lib/horario';
+import { AccionFilaHistorial } from './accion-fila-historial';
 import { BadgeResultadoHistorial, resultadoHistorial } from './badge-resultado-historial';
-import { FilaHistorial } from './fila-historial';
 
 type TablaHistorialEstudianteProps = {
   items: ClassroomListItem[];
@@ -19,7 +20,7 @@ export function TablaHistorialEstudiante({ items, total }: TablaHistorialEstudia
 
       <ul aria-label="Historial de clases" className="subir-suave">
         {items.map((item) => (
-          <FilaHistorial
+          <FilaLista
             key={item.id}
             aulaId={item.id}
             icon={resultadoHistorial(item.myBookingStatus).icon}
@@ -28,7 +29,8 @@ export function TablaHistorialEstudiante({ items, total }: TablaHistorialEstudia
             subtitulo={`${describirFechaCompacta(item.scheduledAt)} · ${item.teacherFirstName} ${item.teacherLastName}`}
           >
             <BadgeResultadoHistorial estado={item.myBookingStatus} />
-          </FilaHistorial>
+            <AccionFilaHistorial aulaId={item.id} />
+          </FilaLista>
         ))}
       </ul>
     </div>

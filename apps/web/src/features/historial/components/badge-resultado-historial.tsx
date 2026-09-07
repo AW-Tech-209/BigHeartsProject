@@ -8,7 +8,7 @@ type Tono = NonNullable<VariantProps<typeof badgeVariants>['tono']>;
 
 /**
  * El resultado de una reserva pasada, en primera persona (HU-404, AC1), con su
- * ícono y tono. Centralizado aquí porque `<FilaHistorial>` reutiliza el mismo
+ * ícono y tono. Centralizado aquí porque `<FilaLista>` reutiliza el mismo
  * ícono en el chip de la fila — misma forma en dos sitios, nunca dos mapeos
  * que un día puedan decir cosas distintas.
  *

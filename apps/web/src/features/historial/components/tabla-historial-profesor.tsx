@@ -1,8 +1,9 @@
 import type { AulaImpartida } from '@academia/types';
 
+import { FilaLista } from '@/components/dominio/fila-lista';
 import { describirFechaCompacta } from '@/features/aulas/lib/horario';
+import { AccionFilaHistorial } from './accion-fila-historial';
 import { BadgeAsistenciaAula, estadoAsistenciaAula } from './badge-asistencia-aula';
-import { FilaHistorial } from './fila-historial';
 
 type TablaHistorialProfesorProps = {
   items: AulaImpartida[];
@@ -25,7 +26,7 @@ export function TablaHistorialProfesor({ items, total }: TablaHistorialProfesorP
         {items.map((item) => {
           const asistencia = estadoAsistenciaAula(item);
           return (
-            <FilaHistorial
+            <FilaLista
               key={item.id}
               aulaId={item.id}
               icon={asistencia.icon}
@@ -33,15 +34,14 @@ export function TablaHistorialProfesor({ items, total }: TablaHistorialProfesorP
               titulo={item.title}
               subtitulo={describirFechaCompacta(item.scheduledAt)}
             >
-              <div className="flex flex-col items-end gap-1.5 text-right">
-                <BadgeAsistenciaAula aula={item} />
-                {item.totalInscritos > 0 && (
-                  <span className="text-sm text-muted-foreground tabular-nums">
-                    {item.totalAsistieron} de {item.totalInscritos} asistieron
-                  </span>
-                )}
-              </div>
-            </FilaHistorial>
+              <BadgeAsistenciaAula aula={item} />
+              {asistencia.completa && (
+                <span className="text-sm text-muted-foreground tabular-nums">
+                  {item.totalAsistieron} de {item.totalInscritos} asistieron
+                </span>
+              )}
+              <AccionFilaHistorial aulaId={item.id} marcarAsistencia={asistencia.pendiente} />
+            </FilaLista>
           );
         })}
       </ul>
