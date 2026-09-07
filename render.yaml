@@ -68,7 +68,12 @@ services:
       # no arranca. Cambiarla deja ilegibles los enlaces ya guardados.
       - key: MEETING_LINK_KEY # openssl rand -hex 32
         sync: false
-      - key: CORS_ORIGIN # URL del frontend en Vercel, p. ej. https://academia-web.vercel.app
+      # Orígenes del frontend permitidos, separados por comas (dominio propio, www,
+      # Vercel). Cada uno exacto y sin barra final; con credentials no vale `*`.
+      - key: CORS_ORIGIN # p. ej. https://tudominio.com,https://www.tudominio.com,https://academia-web.vercel.app
+        sync: false
+      # Una sola URL, el dominio canónico: base de los enlaces de correos y recordatorios.
+      - key: FRONTEND_URL # p. ej. https://tudominio.com
         sync: false
       - key: ADMIN_EMAIL # Credenciales del Admin sembrado por prisma/seed.ts
         sync: false

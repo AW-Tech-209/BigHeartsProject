@@ -62,17 +62,18 @@ Para que **un fallo bloquee el merge**, hay que activar la protección de rama (
 
 En el servicio → **Environment**, rellena las marcadas `sync: false` en el blueprint:
 
-| Variable           | Valor                                                                                                                                            |
-| ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `DATABASE_URL`     | Supabase → pooler (6543, `?pgbouncer=true`). La misma de tu `.env` local.                                                                        |
-| `DIRECT_URL`       | Supabase → conexión directa (5432).                                                                                                              |
-| `JWT_SECRET`       | Genera uno nuevo: `openssl rand -base64 48`.                                                                                                     |
-| `MEETING_LINK_KEY` | Clave AES-256-GCM del enlace de reunión: `openssl rand -hex 32` (64 hex exactos). **Guárdala**: cambiarla deja ilegibles los enlaces ya creados. |
-| `CORS_ORIGIN`      | La URL del frontend en Vercel (la tendrás tras el paso 3). Ej: `https://academia-web.vercel.app`                                                 |
-| `ADMIN_EMAIL`      | Email del Admin que crea el seed. **No uses el de dev** (`admin@academia.local`).                                                                |
-| `ADMIN_PASSWORD`   | Contraseña del Admin del seed. Genera una fuerte, no la de dev.                                                                                  |
-| `RESEND_API_KEY`   | Clave de API de Resend (resend.com → API Keys). Sin ella la API arranca igual pero solo registra los avisos en el log, no los envía (D32).       |
-| `EMAIL_FROM`       | Dirección remitente de los correos. Obligatoria si defines `RESEND_API_KEY`.                                                                     |
+| Variable           | Valor                                                                                                                                                                                                                                                                   |
+| ------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `DATABASE_URL`     | Supabase → pooler (6543, `?pgbouncer=true`). La misma de tu `.env` local.                                                                                                                                                                                               |
+| `DIRECT_URL`       | Supabase → conexión directa (5432).                                                                                                                                                                                                                                     |
+| `JWT_SECRET`       | Genera uno nuevo: `openssl rand -base64 48`.                                                                                                                                                                                                                            |
+| `MEETING_LINK_KEY` | Clave AES-256-GCM del enlace de reunión: `openssl rand -hex 32` (64 hex exactos). **Guárdala**: cambiarla deja ilegibles los enlaces ya creados.                                                                                                                        |
+| `CORS_ORIGIN`      | Orígenes del frontend permitidos, **separados por comas**: dominio propio, su `www`, la URL de Vercel, previews. Cada uno exacto, sin barra final; con `credentials` no vale `*`. Ej: `https://tudominio.com,https://www.tudominio.com,https://academia-web.vercel.app` |
+| `FRONTEND_URL`     | **Una sola** URL, el dominio canónico. Es la base de los enlaces que la API mete en correos (recuperación de contraseña) y recordatorios. Ej: `https://tudominio.com`                                                                                                   |
+| `ADMIN_EMAIL`      | Email del Admin que crea el seed. **No uses el de dev** (`admin@academia.local`).                                                                                                                                                                                       |
+| `ADMIN_PASSWORD`   | Contraseña del Admin del seed. Genera una fuerte, no la de dev.                                                                                                                                                                                                         |
+| `RESEND_API_KEY`   | Clave de API de Resend (resend.com → API Keys). Sin ella la API arranca igual pero solo registra los avisos en el log, no los envía (D32).                                                                                                                              |
+| `EMAIL_FROM`       | Dirección remitente de los correos. Obligatoria si defines `RESEND_API_KEY`.                                                                                                                                                                                            |
 
 `NODE_ENV=staging`, `NODE_VERSION=22` y `PORT` ya los gestiona Render (los dos primeros vía el
 blueprint, `PORT` lo inyecta Render solo).
@@ -138,8 +139,10 @@ Las previews usan el mismo `VITE_API_URL` (apuntan al backend de staging).
 
 ## 4. Cerrar el círculo del CORS
 
-Cuando tengas la URL de Vercel, ponla en `CORS_ORIGIN` del backend en Render (paso 2.2) y
-redeploya el backend. Sin esto, el navegador bloquea las peticiones del frontend al backend.
+Cuando tengas las URLs del frontend (dominio propio, su `www`, la de Vercel), ponlas en
+`CORS_ORIGIN` del backend en Render (paso 2.2) **separadas por comas** y redeploya el backend.
+Sin esto, el navegador bloquea las peticiones del frontend al backend. Añadir un dominio nuevo
+en el futuro es solo editar esta variable y redeployar; no hace falta tocar código.
 
 Si quieres que las **preview URLs** (dominios cambiantes por PR) también funcionen contra el
 backend, añade a `CORS_ORIGIN` un patrón/URL de preview, o usa un dominio fijo de preview en Vercel.
