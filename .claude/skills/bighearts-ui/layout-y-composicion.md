@@ -88,10 +88,12 @@
   * **Banda de aviso** (`border-t`): **solo reubica** mensajes que la acción ya pintaba
     —cuenta atrás de acceso, «ya no se puede cancelar», error de reserva—. No entra ningún
     aviso nuevo.
-- **Anatomía Fila:** Chip de ícono a la izq + título (`<Link>` al detalle) + subtítulo + resultado
-  o cifras a la derecha; `border-b` entre filas, sin `rounded-xl`. El chip puede tomar el tono
-  suave de su resultado (mismo tono que el badge de al lado — refuerzo, no señal nueva).
-  El historial (`<FilaHistorial>`, HU-415) es el ejemplo vivo — dejó de ser `<table>`.
+- **Anatomía Fila (`<FilaLista>`, `components/dominio/`):** Chip de ícono a la izq + título
+  (`<Link>` al detalle) + subtítulo + resultado/estado/cifras a la derecha; `border-b` entre filas,
+  sin `rounded-xl`. El chip toma el tono suave de su resultado (mismo tono que el badge de al lado
+  — refuerzo, no señal nueva). Bajo `sm` la fila apila: cabecera arriba, bloque derecho debajo
+  sangrado (`pl-14`). La usan el historial (HU-415) y la supervisión de aulas del admin (HU-210) —
+  ambas dejaron de ser `<table>`.
 
 ## 5. Regla de Estados (Sólido vs. Suave)
 

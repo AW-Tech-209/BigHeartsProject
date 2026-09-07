@@ -69,6 +69,13 @@ describe('AppShell — navegación por rol', () => {
     },
   );
 
+  it('para el admin, «Aulas» lleva a la supervisión, no al catálogo público', () => {
+    darSesion(UserRole.ADMIN);
+    renderConProviders(<AppShell>Contenido</AppShell>);
+
+    expect(screen.getByRole('link', { name: 'Aulas' })).toHaveAttribute('href', '/admin/aulas');
+  });
+
   it('sin sesión no ofrece destinos: la home pública solo lleva marca y contenido', () => {
     darSesion(null);
     renderConProviders(<AppShell>Contenido</AppShell>);

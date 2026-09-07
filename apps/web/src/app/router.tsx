@@ -3,6 +3,7 @@ import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 
 import { RedirectIfAuthenticated } from '@/features/auth/components/redirect-if-authenticated';
 import { RequireAuth } from '@/features/auth/components/require-auth';
+import { useAuth } from '@/features/auth/hooks/use-auth';
 import { AulaDetallePage } from '@/pages/AulaDetallePage';
 import { AulasPage } from '@/pages/AulasPage';
 import { CompletarAccesibilidadPage } from '@/pages/CompletarAccesibilidadPage';
@@ -118,9 +119,9 @@ export function AppRoutes() {
       {/*
         Supervisión de aulas para el administrador (HU-210, D20). Solo lectura:
         el admin ve todas las aulas de todos los profesores, pero no edita ni
-        cancela nada ajeno (decisión 4 de la HU). Cuelga de `/admin` y no de
-        `/panel` porque no es el inicio del rol sino una pantalla a la que se
-        llega desde ahí.
+        cancela nada ajeno (decisión 4 de la HU). Es el destino «Aulas» de la
+        barra para el admin (`/aulas` lo redirige aquí): su vista de aulas es
+        esta, no el catálogo público.
       */}
       <Route
         path="/admin/aulas"
@@ -144,7 +145,7 @@ export function AppRoutes() {
         path="/aulas"
         element={
           <RequireAuth>
-            <AulasPage />
+            <RutaAulas />
           </RequireAuth>
         }
       />
@@ -245,4 +246,20 @@ export function AppRoutes() {
       <Route path="*" element={<NotFoundPage />} />
     </Routes>
   );
+}
+
+/**
+ * `/aulas` para el `ADMIN` **es** la supervisión (HU-210, D20): se redirige a
+ * `/admin/aulas` para que la academia tenga una sola vista de aulas por rol y
+ * el admin no aterrice en el catálogo público, que le enseña lo mismo que a un
+ * estudiante. Los demás roles ven el catálogo.
+ */
+function RutaAulas() {
+  const { user } = useAuth();
+
+  if (user?.role === UserRole.ADMIN) {
+    return <Navigate to="/admin/aulas" replace />;
+  }
+
+  return <AulasPage />;
 }

@@ -775,19 +775,21 @@ contrato del shell: `<SkipLink>` primero y `<main id="contenido" tabIndex={-1}>`
 tabla; están separados para que un test pueda montar las rutas reales dentro de un `<MemoryRouter>`
 y verificar a dónde lleva de verdad una URL.
 
-| Ruta               | Sesión                | Qué es                                                        |
-| ------------------ | --------------------- | ------------------------------------------------------------- |
-| `/`                | Pública               | Portada.                                                      |
-| `/login`           | Pública               | Redirige al panel si ya hay sesión.                           |
-| `/registro`        | Pública               | —                                                             |
-| `/panel`           | Cualquier rol         | **El inicio de los tres roles.** Ver abajo.                   |
-| `/perfil`          | Cualquier rol         | —                                                             |
-| `/aulas`           | Cualquier rol         | Catálogo único, presentación por rol (D18).                   |
-| `/mis-clases`      | `STUDENT`             | Reservas del estudiante (contenido en Sprint 3).              |
-| `/mis-aulas`       | `TEACHER`             | Listado del profesor, con filtro temporal en la URL (HU-207). |
-| `/mis-aulas/nueva` | `TEACHER`             | Crear un aula (HU-201).                                       |
-| `/admin`           | La que exija `/panel` | **Redirección a `/panel`.** No es una pantalla desde HU-209.  |
-| `*`                | Pública               | 404.                                                          |
+| Ruta               | Sesión                | Qué es                                                                                 |
+| ------------------ | --------------------- | -------------------------------------------------------------------------------------- |
+| `/`                | Pública               | Portada.                                                                               |
+| `/login`           | Pública               | Redirige al panel si ya hay sesión.                                                    |
+| `/registro`        | Pública               | —                                                                                      |
+| `/panel`           | Cualquier rol         | **El inicio de los tres roles.** Ver abajo.                                            |
+| `/perfil`          | Cualquier rol         | —                                                                                      |
+| `/aulas`           | Cualquier rol         | Catálogo único, presentación por rol (D18). Para el `ADMIN` redirige a `/admin/aulas`. |
+| `/admin/aulas`     | `ADMIN`               | Supervisión de todas las aulas (HU-210). El destino «Aulas» de la barra del admin.     |
+| `/mis-clases`      | `STUDENT`             | Reservas del estudiante (contenido en Sprint 3).                                       |
+| `/mis-aulas`       | `TEACHER`             | Listado del profesor, con filtro temporal en la URL (HU-207).                          |
+| `/mis-aulas/nueva` | `TEACHER`             | Crear un aula (HU-201).                                                                |
+| `/historial`       | `STUDENT` · `TEACHER` | Clases ya pasadas, con su resultado/asistencia (HU-404).                               |
+| `/admin`           | La que exija `/panel` | **Redirección a `/panel`.** No es una pantalla desde HU-209.                           |
+| `*`                | Pública               | 404.                                                                                   |
 
 **`/panel` es una ruta con tres contenidos** (D19). `<RoleGate>` monta uno solo, así que las
 consultas de los otros dos no se disparan: el estudiante ve sus reservas o el camino al catálogo, el
