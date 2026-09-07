@@ -151,7 +151,7 @@ export function MisAulasPage() {
           */}
           <h2 className="sr-only">Tus aulas</h2>
 
-          <ListaAulas className="subir-suave">
+          <ListaAulas className="entra-escalonada">
             {data.items.map((aula) => (
               // El renglón es el punto de decisión del listado: el detalle
               // conserva las mismas acciones para quien ya está dentro.

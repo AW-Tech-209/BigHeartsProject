@@ -127,7 +127,7 @@ function EnlaceSuperior({ destino }: { destino: Destino }) {
       to={destino.to}
       className={({ isActive }) =>
         cn(
-          'inline-flex h-[58px] items-center gap-2 border-b-2 px-3 text-sm transition-colors',
+          'inline-flex h-[58px] items-center gap-2 border-b-2 px-3 text-sm transicion-suave',
           isActive
             ? 'border-brand-foreground font-medium text-brand-foreground'
             : 'border-transparent text-brand-foreground/70 hover:text-brand-foreground',
@@ -156,7 +156,7 @@ function EnlaceInferior({ destino }: { destino: Destino }) {
       to={destino.to}
       className={({ isActive }) =>
         cn(
-          'flex min-h-14 flex-1 flex-col items-center justify-center gap-1 border-t-2 px-2 py-2 text-xs transition-colors',
+          'flex min-h-14 flex-1 flex-col items-center justify-center gap-1 border-t-2 px-2 py-2 text-xs transicion-suave',
           isActive
             ? 'border-brand-foreground font-medium text-brand-foreground'
             : 'border-transparent text-brand-foreground/70',
@@ -205,7 +205,7 @@ function CuentaDelShell({ user }: { user: User }) {
         to="/perfil"
         className={({ isActive }) =>
           cn(
-            '-mx-1 flex min-w-0 items-center gap-3 rounded-lg px-1 py-2 outline-none transition-colors sm:px-2',
+            '-mx-1 flex min-w-0 items-center gap-3 rounded-lg px-1 py-2 outline-none transicion-suave sm:px-2',
             'hover:bg-brand-foreground/10 focus-visible:ring-2 focus-visible:ring-brand-foreground/50',
             isActive && 'bg-brand-foreground/10',
           )

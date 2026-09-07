@@ -4,7 +4,7 @@ import type { ReactNode } from 'react';
 
 import { cn } from '@/lib/utils';
 
-const calloutVariants = cva('flex gap-3 rounded-xl border p-4 text-base', {
+const calloutVariants = cva('flex gap-3 rounded-xl border p-4 text-base aparece', {
   variants: {
     variant: {
       info: 'border-info/30 bg-info-soft text-info-soft-foreground',

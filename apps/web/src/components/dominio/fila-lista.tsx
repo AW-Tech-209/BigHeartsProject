@@ -51,7 +51,7 @@ export function FilaLista({
   children,
 }: FilaListaProps) {
   return (
-    <li className="flex flex-col gap-2.5 border-b border-border px-4 py-4 last:border-b-0 sm:flex-row sm:items-center sm:gap-4 sm:px-5">
+    <li className="flex flex-col gap-2.5 border-b border-border px-4 py-4 transicion-suave last:border-b-0 hover:bg-muted/40 sm:flex-row sm:items-center sm:gap-4 sm:px-5">
       <div className="flex min-w-0 flex-1 items-center gap-4">
         <span
           aria-hidden="true"

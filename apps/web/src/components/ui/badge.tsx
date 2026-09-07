@@ -17,7 +17,7 @@ import { cn } from '@/lib/utils';
  * primitiva es genérica y no debe conocer los estados del aula.
  */
 const badgeVariants = cva(
-  'inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-sm font-medium',
+  'inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-sm font-medium transicion-suave',
   {
     variants: {
       tono: {

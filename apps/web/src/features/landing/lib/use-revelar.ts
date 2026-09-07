@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 
-import { useMovimientoReducido } from './use-movimiento-reducido';
+import { useMovimientoReducido } from '@/hooks/use-movimiento-reducido';
 
 /**
  * Revela un elemento al entrar en el viewport. Devuelve la `ref` que hay que

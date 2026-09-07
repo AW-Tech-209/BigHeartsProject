@@ -1,11 +1,32 @@
-import { type ReactNode } from 'react';
-import type { ClassroomListItem } from '@academia/types';
+import { type ReactNode, useEffect, useRef, useState } from 'react';
+import type { ClassroomListItem, EstadoAccesoEnlace } from '@academia/types';
 import { DoorOpen } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 import { Button } from '@/components/ui/button';
 import { useAccesoAlEnlace } from '@/features/aulas/hooks/use-acceso-al-enlace';
 import { describirHorario } from '@/features/aulas/lib/horario';
+import { useMovimientoReducido } from '@/hooks/use-movimiento-reducido';
+
+/**
+ * Cuenta las transiciones reales «aún no → abierto» de `estado`. Solo lee y
+ * escribe la `ref` del estado anterior dentro de un efecto —nunca durante el
+ * render, que rompe la regla `react-hooks/refs`— así que el contador sube un
+ * `tick` después del cambio, sin que se note: el efecto corre en el mismo commit.
+ */
+function useTransicionAAbierto(estado: EstadoAccesoEnlace, activo: boolean): number {
+  const [pulso, setPulso] = useState(0);
+  const anteriorRef = useRef(estado);
+
+  useEffect(() => {
+    if (activo && anteriorRef.current === 'aun-no' && estado === 'abierto') {
+      setPulso((n) => n + 1);
+    }
+    anteriorRef.current = estado;
+  }, [estado, activo]);
+
+  return pulso;
+}
 
 type AulaConAcceso = Pick<ClassroomListItem, 'id' | 'accessState' | 'accessOpensAt'>;
 
@@ -35,6 +56,7 @@ export function useAccionEntrarAClase({
   aviso: ReactNode | null;
 } {
   const estado = useAccesoAlEnlace(aula.accessState, aula.accessOpensAt);
+  const pulso = useTransicionAAbierto(estado, !forzarEntrada);
 
   if (!forzarEntrada && estado === 'sin-acceso') {
     return { boton: null, aviso: null };
@@ -52,17 +74,40 @@ export function useAccionEntrarAClase({
   }
 
   return {
-    boton: (
-      <Button
-        render={<Link to={`/aulas/${aula.id}`} />}
-        className="relative z-10 h-11 w-full gap-2 bg-attention px-4 text-base text-attention-foreground hover:bg-attention/90"
-      >
-        <DoorOpen aria-hidden="true" strokeWidth={2} className="size-4" />
-        Ingresa a la clase
-      </Button>
-    ),
+    boton: <BotonIngresarAClase aulaId={aula.id} pulso={pulso} />,
     aviso: null,
   };
+}
+
+/**
+ * Extraído aparte porque necesita una `ref`: cada vez que `pulso` sube —solo
+ * ocurre en la transición real «aún no → abierto», nunca al montar ya abierto
+ * (recargar la página no es un aviso nuevo)— pulsa una vez con `alerta-visual`
+ * (`patrones-dominio.md`, el reemplazo accesible del "ding"). No pulsa con
+ * movimiento reducido.
+ */
+function BotonIngresarAClase({ aulaId, pulso }: { aulaId: string; pulso: number }) {
+  const ref = useRef<HTMLButtonElement>(null);
+  const movimientoReducido = useMovimientoReducido();
+
+  useEffect(() => {
+    if (pulso === 0 || movimientoReducido || !ref.current) return;
+    const nodo = ref.current;
+    nodo.classList.remove('alerta-visual');
+    void nodo.offsetWidth;
+    nodo.classList.add('alerta-visual');
+  }, [pulso, movimientoReducido]);
+
+  return (
+    <Button
+      ref={ref}
+      render={<Link to={`/aulas/${aulaId}`} />}
+      className="transicion-rapida relative z-10 h-11 w-full gap-2 bg-attention px-4 text-base text-attention-foreground hover:bg-attention/90"
+    >
+      <DoorOpen aria-hidden="true" strokeWidth={2} className="size-4" />
+      Ingresa a la clase
+    </Button>
+  );
 }
 
 export function AccionEntrarAClase({ aula }: { aula: AulaConAcceso }) {

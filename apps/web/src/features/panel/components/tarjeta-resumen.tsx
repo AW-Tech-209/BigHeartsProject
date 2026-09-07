@@ -61,7 +61,7 @@ export function TarjetaResumen({
         'resumen-entra relative isolate flex h-full flex-col overflow-hidden rounded-xl border bg-card p-6 shadow-sm',
         TONO[tono].borde,
         enlazable &&
-          'transition-shadow hover:shadow-md focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2 focus-within:ring-offset-background',
+          'transicion-suave hover:-translate-y-px hover:shadow-md focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2 focus-within:ring-offset-background',
       )}
     >
       <span aria-hidden="true" className={cn('absolute inset-y-0 left-0 w-1', TONO[tono].riel)} />

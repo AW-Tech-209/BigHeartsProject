@@ -216,7 +216,7 @@ export function AulasPage() {
           */}
           <h2 className="sr-only">Aulas publicadas</h2>
 
-          <ListaAulas className="subir-suave">
+          <ListaAulas className="entra-escalonada">
             {data.items.map((item) => (
               <TarjetaAula
                 key={item.id}

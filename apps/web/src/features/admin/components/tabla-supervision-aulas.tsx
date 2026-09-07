@@ -21,7 +21,7 @@ export function TablaSupervisionAulas({ items, total, ahora }: TablaSupervisionA
         {total === 1 ? '1 aula encontrada.' : `${total} aulas encontradas.`}
       </p>
 
-      <ul aria-label="Aulas de la academia" className="subir-suave">
+      <ul aria-label="Aulas de la academia" className="entra-escalonada">
         {items.map((classroom) => (
           <FilaAulaSupervision key={classroom.id} classroom={classroom} ahora={ahora} />
         ))}

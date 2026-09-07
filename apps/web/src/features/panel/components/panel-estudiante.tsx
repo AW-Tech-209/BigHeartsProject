@@ -106,7 +106,7 @@ export function PanelEstudiante() {
       )}
 
       {!isPending && !isError && proximas.length > 0 && (
-        <RejillaAulas className="subir-suave">
+        <RejillaAulas className="entra-escalonada">
           {proximas.map((aula) => (
             <TarjetaClaseProxima key={aula.id} aula={aula} />
           ))}

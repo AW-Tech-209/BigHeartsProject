@@ -22,7 +22,7 @@ export function CabeceraLanding() {
       <Contenedor className="flex h-16 items-center justify-between gap-4">
         <a
           href="#inicio"
-          className="flex shrink-0 items-center gap-2.5 rounded-lg text-lg font-medium text-primary hover:underline"
+          className="transicion-rapida flex shrink-0 items-center gap-2.5 rounded-lg text-lg font-medium text-primary hover:underline"
         >
           <MarcaBigHearts className="size-6" />
           BigHearts
@@ -33,7 +33,7 @@ export function CabeceraLanding() {
             <a
               key={href}
               href={href}
-              className="inline-flex h-11 items-center rounded-lg px-3 text-sm text-foreground hover:bg-muted"
+              className="transicion-rapida inline-flex h-11 items-center rounded-lg px-3 text-sm text-foreground hover:bg-muted"
             >
               {texto}
             </a>
