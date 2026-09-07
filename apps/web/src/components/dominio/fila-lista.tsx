@@ -27,8 +27,9 @@ const CHIP_POR_TONO: Record<Tono, string> = {
  * ícono que lleva el resultado/estado a la derecha—, nunca una señal nueva:
  * quien la mira sin distinguir el color todavía tiene la forma y el texto.
  *
- * Bajo `sm` la fila apila: cabecera arriba (chip + título + subtítulo) y el
- * bloque de la derecha debajo, sangrado para alinearse con el texto.
+ * En `sm+` los elementos de la derecha (badge de estado, cifras y botón de
+ * acción) van **en fila**, con el botón al extremo derecho. Bajo `sm` la fila
+ * apila: cabecera arriba y ese bloque debajo, sangrado y envolviendo.
  */
 type FilaListaProps = {
   aulaId: string;
@@ -75,7 +76,7 @@ export function FilaLista({
         </div>
       </div>
 
-      <div className="flex shrink-0 flex-wrap items-center gap-x-3 gap-y-1 pl-14 sm:flex-col sm:items-end sm:gap-1.5 sm:pl-0 sm:text-right">
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-2 pl-14 sm:justify-end sm:gap-x-4 sm:pl-0">
         {children}
       </div>
     </li>
