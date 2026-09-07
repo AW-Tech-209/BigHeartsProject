@@ -248,9 +248,11 @@ function BadgeDeReserva({ estado }: { estado: BookingStatus }) {
         </Badge>
       );
     case BookingStatus.NO_SHOW:
-      // Neutro y sin juicio (HU-403): nunca un ícono de alerta.
+      // Rojo para el profesor que marca, simétrico con el verde de «Asistió»
+      // (HU-415). Ícono `CircleMinus`, no de alerta: es un dato, no un reproche
+      // — y el historial del ESTUDIANTE sigue viendo «No asististe» en neutro.
       return (
-        <Badge tono="neutral" icon={CircleMinus}>
+        <Badge tono="destructive" icon={CircleMinus}>
           No asistió
         </Badge>
       );
@@ -306,9 +308,10 @@ function ControlAsistencia({
           disabled={mutation.isPending}
           onClick={() => marcar(BookingStatus.ATTENDED)}
           className={cn(
-            'h-11 gap-1.5 px-3 text-sm',
-            estadoActual === BookingStatus.ATTENDED &&
-              'border-success bg-success-soft text-success-soft-foreground',
+            'h-11 gap-1.5 px-3.5 text-sm transition-colors',
+            estadoActual === BookingStatus.ATTENDED
+              ? 'border-success bg-success-soft font-medium text-success-soft-foreground shadow-xs hover:bg-success-soft'
+              : 'text-muted-foreground',
           )}
         >
           <CircleCheck aria-hidden="true" strokeWidth={2} className="size-4" />
@@ -321,8 +324,10 @@ function ControlAsistencia({
           disabled={mutation.isPending}
           onClick={() => marcar(BookingStatus.NO_SHOW)}
           className={cn(
-            'h-11 gap-1.5 px-3 text-sm',
-            estadoActual === BookingStatus.NO_SHOW && 'border-foreground bg-muted text-foreground',
+            'h-11 gap-1.5 px-3.5 text-sm transition-colors',
+            estadoActual === BookingStatus.NO_SHOW
+              ? 'border-destructive bg-destructive-soft font-medium text-destructive-soft-foreground shadow-xs hover:bg-destructive-soft'
+              : 'text-muted-foreground',
           )}
         >
           <CircleMinus aria-hidden="true" strokeWidth={2} className="size-4" />
