@@ -2,6 +2,7 @@ import type { AulaImpartida } from '@academia/types';
 
 import { FilaLista } from '@/components/dominio/fila-lista';
 import { describirFechaCompacta } from '@/features/aulas/lib/horario';
+import { AccionFilaHistorial } from './accion-fila-historial';
 import { BadgeAsistenciaAula, estadoAsistenciaAula } from './badge-asistencia-aula';
 
 type TablaHistorialProfesorProps = {
@@ -39,6 +40,7 @@ export function TablaHistorialProfesor({ items, total }: TablaHistorialProfesorP
                   {item.totalAsistieron} de {item.totalInscritos} asistieron
                 </span>
               )}
+              <AccionFilaHistorial aulaId={item.id} marcarAsistencia={asistencia.pendiente} />
             </FilaLista>
           );
         })}

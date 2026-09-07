@@ -73,6 +73,22 @@ describe('HistorialPage — estudiante (AC1)', () => {
     expect(screen.getByText('No asististe')).toBeInTheDocument();
   });
 
+  it('cada fila lleva un botón «Ver detalle» que va al mismo sitio que el título', async () => {
+    vi.mocked(getHistorial).mockResolvedValue({
+      items: [{ ...filaClasica(), myBookingStatus: BookingStatus.ATTENDED }],
+      total: 1,
+      page: 1,
+      pageSize: 20,
+    });
+
+    montar();
+
+    expect(await screen.findByRole('link', { name: 'Ver detalle' })).toHaveAttribute(
+      'href',
+      '/aulas/aula-1',
+    );
+  });
+
   it('sin historial, explica el vacío sin sonar a error (AC5)', async () => {
     vi.mocked(getHistorial).mockResolvedValue({ items: [], total: 0, page: 1, pageSize: 20 });
 
@@ -115,6 +131,28 @@ describe('HistorialPage — profesor (AC2)', () => {
 
     expect(await screen.findByText('Falta marcar asistencia')).toBeInTheDocument();
     expect(screen.queryByText('0 de 4 asistieron')).toBeNull();
+    // El botón de acción invita a marcar, y lleva al detalle (donde está el control).
+    expect(screen.getByRole('link', { name: 'Marcar asistencia' })).toHaveAttribute(
+      'href',
+      '/aulas/aula-1',
+    );
+  });
+
+  it('con la asistencia cerrada, el botón de la fila es solo «Ver detalle»', async () => {
+    vi.mocked(getHistorial).mockResolvedValue({
+      items: [{ ...filaClasica(), totalInscritos: 4, totalAsistieron: 3, asistenciaPendiente: 0 }],
+      total: 1,
+      page: 1,
+      pageSize: 20,
+    });
+
+    montar();
+
+    expect(await screen.findByRole('link', { name: 'Ver detalle' })).toHaveAttribute(
+      'href',
+      '/aulas/aula-1',
+    );
+    expect(screen.queryByRole('link', { name: 'Marcar asistencia' })).toBeNull();
   });
 
   it('muestra el estado parcial cuando falta marcar solo a algunos', async () => {

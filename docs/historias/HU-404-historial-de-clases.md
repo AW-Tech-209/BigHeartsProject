@@ -130,3 +130,7 @@ clases pasadas, es también desde donde marca la asistencia que le falta:
   real y con inscritos. Con parte marcada muestra «Falta marcar (N de M)»; si el campo no llega
   (`undefined`), se muestra como pendiente, nunca como hecha. La cifra «X de Y asistieron» solo
   aparece con la asistencia cerrada, para no sugerir ausencias que en realidad están sin marcar.
+- Cada fila lleva un **botón de acción** (`<AccionFilaHistorial>`), extensión del enlace del
+  título — mismo destino `/aulas/:id`, sin lógica nueva — porque el título-enlace no es evidente
+  para todos: el estudiante ve «Ver detalle»; el profesor, «Marcar asistencia» si le queda
+  asistencia por resolver (`pendiente`), y «Ver detalle» si no.

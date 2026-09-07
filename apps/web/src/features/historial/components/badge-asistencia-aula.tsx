@@ -18,12 +18,18 @@ type Tono = NonNullable<VariantProps<typeof badgeVariants>['tono']>;
  */
 export function estadoAsistenciaAula(
   aula: Pick<AulaImpartida, 'totalInscritos' | 'asistenciaPendiente'>,
-): { icon: LucideIcon; texto: string; tono: Tono; completa: boolean } {
+): { icon: LucideIcon; texto: string; tono: Tono; completa: boolean; pendiente: boolean } {
   const inscritos = aula.totalInscritos;
   const pendientes = aula.asistenciaPendiente;
 
   if (!Number.isFinite(inscritos) || inscritos <= 0) {
-    return { icon: Users, texto: 'Sin inscritos', tono: 'neutral', completa: false };
+    return {
+      icon: Users,
+      texto: 'Sin inscritos',
+      tono: 'neutral',
+      completa: false,
+      pendiente: false,
+    };
   }
   if (!Number.isFinite(pendientes) || pendientes >= inscritos) {
     return {
@@ -31,6 +37,7 @@ export function estadoAsistenciaAula(
       texto: 'Falta marcar asistencia',
       tono: 'attention',
       completa: false,
+      pendiente: true,
     };
   }
   if (pendientes > 0) {
@@ -39,9 +46,16 @@ export function estadoAsistenciaAula(
       texto: `Falta marcar (${pendientes} de ${inscritos})`,
       tono: 'attention',
       completa: false,
+      pendiente: true,
     };
   }
-  return { icon: CircleCheck, texto: 'Asistencia marcada', tono: 'success', completa: true };
+  return {
+    icon: CircleCheck,
+    texto: 'Asistencia marcada',
+    tono: 'success',
+    completa: true,
+    pendiente: false,
+  };
 }
 
 export function BadgeAsistenciaAula({
