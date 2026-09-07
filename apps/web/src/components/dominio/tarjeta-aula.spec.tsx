@@ -256,6 +256,32 @@ describe('<TarjetaAula perspectiva="profesor" /> — la vista del dueño (AC8)',
     expect(screen.queryByRole('link', { name: /Editar clase/ })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /Cancelar clase/ })).not.toBeInTheDocument();
   });
+
+  // Una clase en curso: el dueño no puede editarla, pero sí entrar a darla.
+  it('una clase en curso ofrece «Ingresa a la clase» y lleva al detalle', () => {
+    tarjetaDelProfesor({
+      id: 'aula-7',
+      scheduledAt: new Date(AHORA.getTime() - 20 * 60_000).toISOString(),
+      durationMinutes: 60,
+    });
+
+    expect(screen.getByRole('link', { name: 'Ingresa a la clase' })).toHaveAttribute(
+      'href',
+      '/aulas/aula-7',
+    );
+  });
+
+  it('una clase que aún no ha empezado no ofrece «Ingresa a la clase»', () => {
+    tarjetaDelProfesor();
+
+    expect(screen.queryByRole('link', { name: 'Ingresa a la clase' })).not.toBeInTheDocument();
+  });
+
+  it('el conteo de inscritos se centra en vertical, como la zona de acción', () => {
+    tarjetaDelProfesor({ currentBookings: 3, maxStudents: 10 });
+
+    expect(screen.getByText('3 de 10 inscritos').closest('.w-44')).toHaveClass('self-center');
+  });
 });
 
 /**

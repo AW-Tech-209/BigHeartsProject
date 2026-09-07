@@ -122,3 +122,9 @@ breve y 2px de subida con `motion-safe`) que además cubría un hueco —la tarj
 enlace y no daba señal al puntero—; más aire (`p-5 pl-6`); y la cabecera (fecha + título +
 subtítulo) agrupada apretada con ritmo uniforme (`gap-2.5`) hasta las filas de badges,
 en vez del `space-y-1.5` + `mt-1` apilados.
+
+**Ajuste posterior (2026-09-06):** en la perspectiva del profesor, la clase **en curso** ofrece
+«Ingresa a la clase» en la zona de acción (lleva al detalle, donde está el enlace; `derivarEstadoAula`
+ya da `en-curso`) —`useAccionEntrarAClase` gana un flag `forzarEntrada` para el dueño, que no tiene
+reserva ni ventana de 30 min—. Y la zona 3 (cupo) pasa a `self-center` para centrarse en vertical
+igual que la de acción.

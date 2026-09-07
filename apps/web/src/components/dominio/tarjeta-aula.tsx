@@ -238,6 +238,9 @@ export function TarjetaAula({
       accessState: esVistaDelProfesor ? 'sin-acceso' : (classroom.accessState ?? 'sin-acceso'),
       accessOpensAt: classroom.accessOpensAt ?? null,
     },
+    // El dueño entra a su propia clase mientras está en curso (D25: el enlace es
+    // suyo sin ventana), igual que el estudiante con el acceso abierto.
+    forzarEntrada: esVistaDelProfesor && estado === 'en-curso',
   });
   const gestion = useAccionesDeAula({ aula: classroom, esDueno: esVistaDelProfesor });
 
@@ -347,9 +350,11 @@ export function TarjetaAula({
           </div>
         </div>
 
-        {/* Zona 3 — cupo. Solo el profesor: en el catálogo lo dice el badge. */}
+        {/* Zona 3 — cupo. Solo el profesor: en el catálogo lo dice el badge.
+            `self-center`: se centra en el alto de la fila igual que la zona de
+            acción, en vez de colgar del borde superior. */}
         {esVistaDelProfesor && (
-          <div className="w-44 shrink-0">
+          <div className="w-44 shrink-0 self-center">
             <IndicadorCupo
               variante="inscritos"
               maxStudents={classroom.maxStudents}

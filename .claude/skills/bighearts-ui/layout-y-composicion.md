@@ -72,12 +72,15 @@
        que ya ocupe la fila (`Tu clase`, `Coincide…`, `Modo sin indicar`), para que la fila
        nunca envuelva y el renglón no crezca de alto; el resto colapsa tras un
        `<button aria-expanded aria-controls>` `+N`.
-    3. **Cupo** `w-44`: `<IndicadorCupo variante="inscritos">` solo en la perspectiva del
-       profesor; en el catálogo el badge de estado ya dice el cupo y la zona va vacía.
+    3. **Cupo** `w-44 self-center`: `<IndicadorCupo variante="inscritos">` solo en la perspectiva
+       del profesor; en el catálogo el badge de estado ya dice el cupo y la zona va vacía. Se
+       centra en vertical igual que la acción.
     4. **Qué hago** `w-49 self-center`: una acción primaria, siempre un `<Button>` de ancho
        completo (reservar / entrar / cancelar / gestionar / completar accesibilidad — nunca un
        enlace suelto subrayado). `self-center` la alinea al centro vertical de la fila en vez de
-       colgarla del borde superior cuando la zona «qué» es más alta.
+       colgarla del borde superior cuando la zona «qué» es más alta. El profesor dueño ve
+       «Ingresa a la clase» aquí mientras su clase está **en curso** (lleva al detalle, donde
+       está el enlace), igual que el estudiante con el acceso abierto.
   * **Orden DOM estricto:** cuándo → `<h3>` → subtítulo → fila de badges → cupo → acción →
     banda «También:» → banda de aviso.
   * **Banda «También:»** (`border-t`, `+N` abierto): las etiquetas colapsadas, precedidas de
