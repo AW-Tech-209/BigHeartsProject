@@ -133,7 +133,7 @@ export function MisClasesPage() {
         <>
           <h2 className="sr-only">Tus clases</h2>
 
-          <ListaAulas className="subir-suave">
+          <ListaAulas className="entra-escalonada">
             {data.items.map((aula) => (
               <TarjetaAula key={aula.id} classroom={aula} perspectiva="catalogo" />
             ))}

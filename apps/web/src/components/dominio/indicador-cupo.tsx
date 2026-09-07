@@ -86,7 +86,7 @@ export function IndicadorCupo({
       aria-valuenow={currentBookings}
       aria-valuetext={valueText}
       className={cn(
-        'inline-flex items-center gap-1.5 text-sm font-medium',
+        'inline-flex items-center gap-1.5 text-sm font-medium transicion-suave',
         CLASE_POR_TONO[tono],
         className,
       )}

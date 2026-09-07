@@ -107,7 +107,7 @@ export function PanelProfesor() {
 
       {/* Estado 4 — la lista. */}
       {!isPending && !isError && proximas.length > 0 && (
-        <ListaAulas className="subir-suave">
+        <ListaAulas className="entra-escalonada">
           {proximas.map((aula) => (
             // Misma perspectiva que «Mis aulas»: es el profesor mirando sus
             // propias clases, así que el renglón responde su pregunta —cuánta

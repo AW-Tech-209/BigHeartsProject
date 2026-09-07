@@ -13,13 +13,13 @@ export function Switch({ className, ...props }: SwitchPrimitive.Root.Props) {
     <SwitchPrimitive.Root
       className={cn(
         'inline-flex h-6 w-10 shrink-0 items-center rounded-full bg-muted p-0.5',
-        'transition-colors data-[checked]:bg-primary',
+        'transicion-rapida data-[checked]:bg-primary',
         'disabled:cursor-not-allowed disabled:opacity-50',
         className,
       )}
       {...props}
     >
-      <SwitchPrimitive.Thumb className="block size-5 rounded-full bg-card shadow-sm transition-transform data-[checked]:translate-x-4" />
+      <SwitchPrimitive.Thumb className="block size-5 rounded-full bg-card shadow-sm transicion-rapida data-[checked]:translate-x-4" />
     </SwitchPrimitive.Root>
   );
 }
@@ -55,7 +55,7 @@ export function SwitchField({
   return (
     <label
       className={cn(
-        'flex min-h-11 w-fit cursor-pointer items-center gap-3 rounded-lg border border-border bg-card px-3.5 py-2.5 transition-colors',
+        'flex min-h-11 w-fit cursor-pointer items-center gap-3 rounded-lg border border-border bg-card px-3.5 py-2.5 transicion-rapida',
         'hover:border-input',
         'has-[:focus-visible]:outline has-[:focus-visible]:outline-[3px] has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-ring',
         className,

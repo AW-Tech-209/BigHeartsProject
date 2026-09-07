@@ -18,7 +18,7 @@ export function TablaHistorialEstudiante({ items, total }: TablaHistorialEstudia
         {total === 1 ? '1 clase encontrada.' : `${total} clases encontradas.`}
       </p>
 
-      <ul aria-label="Historial de clases" className="subir-suave">
+      <ul aria-label="Historial de clases" className="entra-escalonada">
         {items.map((item) => (
           <FilaLista
             key={item.id}

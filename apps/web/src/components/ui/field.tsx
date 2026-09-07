@@ -84,7 +84,7 @@ export function Field({
         <p
           id={errorId}
           role="alert"
-          className="flex items-start gap-1.5 text-sm font-medium text-destructive"
+          className="aparece flex items-start gap-1.5 text-sm font-medium text-destructive"
         >
           <CircleAlert aria-hidden="true" strokeWidth={2} className="mt-0.5 size-4 shrink-0" />
           <span>{error}</span>

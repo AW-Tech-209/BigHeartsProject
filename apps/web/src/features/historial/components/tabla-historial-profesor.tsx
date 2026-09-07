@@ -22,7 +22,7 @@ export function TablaHistorialProfesor({ items, total }: TablaHistorialProfesorP
         {total === 1 ? '1 aula encontrada.' : `${total} aulas encontradas.`}
       </p>
 
-      <ul aria-label="Historial de clases impartidas" className="subir-suave">
+      <ul aria-label="Historial de clases impartidas" className="entra-escalonada">
         {items.map((item) => {
           const asistencia = estadoAsistenciaAula(item);
           return (

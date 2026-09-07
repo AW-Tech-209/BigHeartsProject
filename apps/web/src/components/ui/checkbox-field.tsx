@@ -33,7 +33,7 @@ export function CheckboxField({
     <label
       htmlFor={id}
       className={cn(
-        'flex min-h-11 cursor-pointer items-center gap-3 rounded-lg border border-border bg-card px-3.5 py-2.5 transition-colors',
+        'flex min-h-11 cursor-pointer items-center gap-3 rounded-lg border border-border bg-card px-3.5 py-2.5 transicion-rapida',
         'hover:border-input',
         'has-[:focus-visible]:outline has-[:focus-visible]:outline-[3px] has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-ring',
         className,

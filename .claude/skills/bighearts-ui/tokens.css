@@ -10,6 +10,16 @@
 /* Modo alto contraste elegible por el usuario en su perfil de accesibilidad */
 @custom-variant hc (&:is(.hc *));
 
+/* La escala de movimiento — ver «Movimiento» en SKILL.md. Solo la escala vive
+   aquí; las clases de animación y el bloque `prefers-reduced-motion` están en
+   `apps/web/src/index.css`, no se duplican en este archivo de solo color. */
+@theme {
+  --ease-suave: cubic-bezier(0.22, 1, 0.36, 1);
+  --duracion-rapida: 150ms;
+  --duracion-normal: 220ms;
+  --duracion-lenta: 320ms;
+}
+
 /* ─────────────────────────────────────────────
    MODO CLARO (por defecto)
    ───────────────────────────────────────────── */

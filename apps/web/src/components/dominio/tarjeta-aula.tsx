@@ -254,15 +254,14 @@ export function TarjetaAula({
         // El anillo va en el renglón aunque el foco lo reciba el enlace del
         // título: lo que el usuario necesita saber es qué renglón tiene el foco.
         'focus-within:ring-2 focus-within:ring-ring',
-        'transition-[border-color,box-shadow,background-color] duration-150 ease-suave',
-        'hover:border-input hover:bg-muted/50',
+        'transicion-suave hover:border-input hover:bg-muted/50',
         className,
       )}
     >
       <span
         aria-hidden="true"
         className={cn(
-          'absolute inset-y-0 left-0 w-1',
+          'absolute inset-y-0 left-0 w-1 transicion-suave',
           miReservaCancelada ? varianteEstadoAula.cancelada.riel : variante.riel,
         )}
       />
@@ -332,7 +331,7 @@ export function TarjetaAula({
                 aria-controls={bandaId}
                 aria-label={abierta ? 'Ver menos etiquetas' : `Ver ${ocultas.length} etiquetas más`}
                 onClick={() => setEtiquetasAbiertas((v) => !v)}
-                className="relative z-10 inline-flex items-center gap-1 rounded-full border border-input bg-card px-2.5 py-0.5 text-xs font-medium text-foreground hover:bg-muted"
+                className="relative z-10 inline-flex items-center gap-1 rounded-full border border-input bg-card px-2.5 py-0.5 text-xs font-medium text-foreground transicion-rapida hover:bg-muted"
               >
                 {abierta ? (
                   <>
@@ -405,7 +404,7 @@ export function TarjetaAula({
       {abierta && (
         <div
           id={bandaId}
-          className="relative z-10 mt-3 flex flex-wrap items-center gap-1.5 border-t border-border pt-3 whitespace-nowrap"
+          className="aparece relative z-10 mt-3 flex flex-wrap items-center gap-1.5 border-t border-border pt-3 whitespace-nowrap"
         >
           <span className="text-xs text-muted-foreground">También:</span>
           {ocultas.map((etiqueta) => etiqueta.node)}

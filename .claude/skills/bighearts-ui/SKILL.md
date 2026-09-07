@@ -92,6 +92,48 @@ popovers. Objetivos táctiles ≥ 44px, 48px en acciones primarias y en móvil.
 borde + `shadow-sm`, y `shadow-md` al pasar el cursor si la tarjeta entera es enlazable. No abre la
 puerta a sombras en el resto: las tarjetas de aula, formularios y listados siguen con borde a secas.
 
+## Movimiento
+
+Un cambio visible sin movimiento se lee como un salto; el movimiento existe para que un cambio de
+estado, una lista que llega o un hover se sientan como una transición y no como un parpadeo. Nunca
+al revés: el movimiento **nunca** es la única señal de un estado (sigue siendo color + ícono +
+texto) y **nunca** esconde contenido — toda entrada usa `both`, así que si la animación no corre
+(motor viejo, `prefers-reduced-motion`) el contenido queda en su sitio, visible.
+
+**La escala** (`index.css`): `--ease-suave` (una sola curva, `cubic-bezier(0.22, 1, 0.36, 1)`) y tres
+duraciones — `--duracion-rapida` (150ms), `--duracion-normal` (220ms), `--duracion-lenta` (320ms,
+reservada a entradas de bloque, no de interacción).
+
+**Las dos utilidades de interacción**, sobre esa escala — úsalas en vez de `transition-colors` o
+`transition-all` sueltos:
+
+- `transicion-rapida` — lo que el dedo toca: botones, inputs, switches, checkboxes. La respuesta
+  tiene que sentirse inmediata.
+- `transicion-suave` — lo que el ojo lee: renglones de aula, filas de lista, badges de estado,
+  rieles, enlaces de navegación.
+
+**Las clases nombradas de entrada** (`index.css`, todas con `both` y todas ya cubiertas por
+`prefers-reduced-motion`):
+
+| Clase                      | Para qué                                                                                                                                                                                                                                                                                                                                                    |
+| -------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `subir-suave`              | Un bloque entero al montar (una rejilla, un detalle). Una sola vez.                                                                                                                                                                                                                                                                                         |
+| `entra-escalonada`         | Lo mismo, pero hijo a hijo — listas y rejillas de resultados. Se detiene en el 6.º hijo.                                                                                                                                                                                                                                                                    |
+| `aparece`                  | Algo que llega a una página ya montada: un callout, el error de un campo, una banda que se despliega.                                                                                                                                                                                                                                                       |
+| `alerta-visual`            | El pulso de `box-shadow` en `--attention`, 900ms, 2 iteraciones — **el reemplazo accesible del "ding"**. Se dispara UNA VEZ en la transición real a un estado que exige atención inmediata (la ventana de acceso que se abre), nunca al montar ya en ese estado. Es la única animación con iteración fija >1; ninguna otra puede repetirse ni ser infinita. |
+| `riel-entra`               | El riel de 4px creciendo desde arriba al aparecer una tarjeta (demo de la landing).                                                                                                                                                                                                                                                                         |
+| `revelar` (+ `useRevelar`) | Aparición al entrar en el viewport (landing, vía `IntersectionObserver`).                                                                                                                                                                                                                                                                                   |
+
+**Prohibido:** animación infinita o parpadeante fuera de `alerta-visual` · parallax · transición de
+cambio de ruta · animar un elemento que acaba de recibir el foco (`<PaginaCabecera>` mueve el foco al
+`<h1>` en cada navegación; no se anima). Cero colores literales también aquí: se anima interpolando
+tokens, nunca introduciendo un tono nuevo.
+
+**Movimiento reducido:** el único mecanismo hoy es `prefers-reduced-motion` del sistema — el bloque
+`@media` de `index.css` lo cubre de forma global (`useMovimientoReducido` en `src/hooks/` para JS que
+decide si dispara un pulso o arranca una demo en autoplay). **No existe** una preferencia de
+movimiento guardada en la cuenta ni en el perfil; sería una HU propia.
+
 ## Accesibilidad — no negociable en cada componente
 
 - Foco visible siempre: anillo 3px + 2px de offset. **Jamás** `outline: none` sin reemplazo.
@@ -100,7 +142,8 @@ puerta a sombras en el resto: las tarjetas de aula, formularios y listados sigue
 - Formularios: `<label>` visible siempre (placeholder no sustituye label), error junto al campo
   con `aria-invalid` + `aria-describedby` + ícono, nunca solo borde rojo.
 - Cambios dinámicos (cupos, confirmaciones) → `aria-live="polite"`; errores bloqueantes → `assertive`.
-- Respeta `prefers-reduced-motion` y la preferencia de movimiento guardada en el perfil del usuario.
+- Respeta `prefers-reduced-motion` del sistema (ver «Movimiento» arriba; no hay preferencia propia
+  guardada en la cuenta).
 - Todo componente necesita sus 4 estados: cargando, vacío, error, éxito. No se da por terminado sin ellos.
 
 ## Layout y composición

@@ -47,7 +47,15 @@ export function TableBody({ className, ...props }: ComponentPropsWithoutRef<'tbo
 }
 
 export function TableRow({ className, ...props }: ComponentPropsWithoutRef<'tr'>) {
-  return <tr className={cn('border-b border-border last:border-b-0', className)} {...props} />;
+  return (
+    <tr
+      className={cn(
+        'border-b border-border transicion-suave last:border-b-0 hover:bg-muted/40',
+        className,
+      )}
+      {...props}
+    />
+  );
 }
 
 /**

@@ -48,7 +48,7 @@ export function RadioCardGroup<T extends string>({
           <label
             key={option.value}
             className={cn(
-              'relative flex cursor-pointer items-start gap-3 rounded-xl border bg-card p-4 transition-colors',
+              'relative flex cursor-pointer items-start gap-3 rounded-xl border bg-card p-4 transicion-rapida',
               'hover:border-input',
               'has-[:focus-visible]:outline has-[:focus-visible]:outline-[3px] has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-ring',
               selected ? 'border-primary bg-primary-soft' : 'border-border',
@@ -84,7 +84,7 @@ export function RadioCardGroup<T extends string>({
             <span
               aria-hidden="true"
               className={cn(
-                'flex size-5 shrink-0 items-center justify-center rounded-full border transition-colors',
+                'flex size-5 shrink-0 items-center justify-center rounded-full border transicion-rapida',
                 selected ? 'border-primary bg-primary text-primary-foreground' : 'border-input',
               )}
             >

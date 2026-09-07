@@ -347,6 +347,19 @@
 /* ─────────────────────────────────────────────
    MOVIMIENTO
    ───────────────────────────────────────────── */
+/* La transición de interacción del producto. `rapida` para lo que el dedo toca
+   (botones, campos); `suave` para lo que el ojo lee (renglones, badges, nav). */
+@utility transicion-rapida {
+  transition-property: color, background-color, border-color, box-shadow, opacity, transform, fill;
+  transition-timing-function: var(--ease-suave);
+  transition-duration: var(--duracion-rapida);
+}
+@utility transicion-suave {
+  transition-property: color, background-color, border-color, box-shadow, opacity, transform, fill;
+  transition-timing-function: var(--ease-suave);
+  transition-duration: var(--duracion-normal);
+}
+
 /* Alerta visual: el equivalente accesible de un "ding". */
 @keyframes alerta-visual {
   0% {
@@ -388,6 +401,60 @@
 }
 .subir-suave {
   animation: subir-suave 500ms var(--ease-suave) both;
+}
+
+/* La misma entrada, pero hijo a hijo (listas y rejillas de resultados). El
+   escalonado se detiene en el 6.º: una lista de 20 aulas no puede tardar
+   segundos en asentarse. */
+.entra-escalonada > * {
+  animation: subir-suave 460ms var(--ease-suave) both;
+}
+.entra-escalonada > *:nth-child(2) {
+  animation-delay: 45ms;
+}
+.entra-escalonada > *:nth-child(3) {
+  animation-delay: 90ms;
+}
+.entra-escalonada > *:nth-child(4) {
+  animation-delay: 135ms;
+}
+.entra-escalonada > *:nth-child(5) {
+  animation-delay: 180ms;
+}
+.entra-escalonada > *:nth-child(6) {
+  animation-delay: 225ms;
+}
+.entra-escalonada > *:nth-child(n + 7) {
+  animation-delay: 270ms;
+}
+
+/* Algo que llega a una página ya montada: un aviso, el error de un campo, una
+   banda que se despliega. 4px de recorrido — se nota que llegó, no salta. */
+@keyframes aparece {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.aparece {
+  animation: aparece var(--duracion-normal) var(--ease-suave) both;
+}
+
+/* Solo mientras se conmuta claro/oscuro; `use-tema.ts` pone y quita la clase.
+   Permanente cobraría en cada hover de toda la aplicación. */
+.cambiando-tema,
+.cambiando-tema *,
+.cambiando-tema *::before,
+.cambiando-tema *::after {
+  transition:
+    background-color var(--duracion-normal) var(--ease-suave),
+    border-color var(--duracion-normal) var(--ease-suave),
+    color var(--duracion-normal) var(--ease-suave),
+    fill var(--duracion-normal) var(--ease-suave) !important;
 }
 
 /* La franja de estado que crece desde arriba al aparecer una tarjeta (landing). */
@@ -447,6 +514,18 @@
   }
   .resumen-entra {
     animation: none;
+  }
+  /* El bloque global de abajo acorta la duración, pero NO el `animation-delay`:
+     sin esto un escalonado dejaría sus hijos invisibles hasta 270ms. */
+  .entra-escalonada > *,
+  .aparece {
+    animation: none;
+  }
+  .cambiando-tema,
+  .cambiando-tema *,
+  .cambiando-tema *::before,
+  .cambiando-tema *::after {
+    transition: none !important;
   }
   *,
   *::before,

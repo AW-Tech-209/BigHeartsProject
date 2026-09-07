@@ -9,9 +9,9 @@ function suscribir(alCambiar: () => void) {
 }
 
 /**
- * `true` si el sistema pide movimiento reducido. La landing lo usa para arrancar
- * la demostración de la ventana de acceso en pausa y para no disparar la alerta
- * visual — nunca para esconder contenido.
+ * `true` si el sistema pide movimiento reducido. Se usa para arrancar
+ * demostraciones en pausa y para no disparar pulsos como `alerta-visual` —
+ * nunca para esconder contenido.
  */
 export function useMovimientoReducido(): boolean {
   return useSyncExternalStore(

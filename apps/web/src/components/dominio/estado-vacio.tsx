@@ -45,7 +45,7 @@ export function EstadoVacio({
   return (
     <div
       className={cn(
-        'flex flex-col items-center gap-4 rounded-xl border border-dashed border-border bg-muted/30 px-6 py-16 text-center',
+        'subir-suave flex flex-col items-center gap-4 rounded-xl border border-dashed border-border bg-muted/30 px-6 py-16 text-center',
         className,
       )}
     >

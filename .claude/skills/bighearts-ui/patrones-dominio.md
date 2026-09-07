@@ -36,7 +36,8 @@ Revela acceso 30 min antes. Componente de 5 fases:
 | **Terminada**   | `muted`              | `CircleCheckBig` | `Esta clase ya terminó`           | Enlace `Ver mi historial`                         |
 
 - **A11y:** `aria-live="polite"` solo en hitos (30, 15, 5, 1 min).
-- **Animación:** Transición a "Abierto" dispara `alerta-visual` (`tokens.css`).
+- **Animación:** Transición a "Abierto" dispara `alerta-visual` (`index.css` de la app — ver
+  «Movimiento» en `SKILL.md`), una sola vez y nunca al montar ya abierto.
 
 ## 3. `<IndicadorCupo />`
 
@@ -74,17 +75,30 @@ Sin porcentajes ni gráficos. Usa `role="progressbar"` con `aria-valuemin/max/no
 
 ## 6. Preferencias de Accesibilidad
 
-Store persistido en `src/stores/preferencias-accesibilidad.ts`:
+**Pendiente de implementar** — no confundir con lo que ya existe. Hoy solo hay tema claro/oscuro
+(`src/hooks/use-tema.ts`, en `localStorage`, clase `dark` en `<html>`) y la variante `.hc` de alto
+contraste en CSS (`index.css`), sin interruptor propio todavía. `src/stores/` solo tiene
+`auth-store.ts` y `useAppStore.ts` — el store de abajo no existe.
+
+Forma prevista para cuando se implemente, como un único store persistido en
+`src/stores/preferencias-accesibilidad.ts`:
 
 ```ts
 type Preferencias = {
   tema: 'claro' | 'oscuro' | 'sistema';
   altoContraste: boolean;
-  movimientoReducido: boolean;
   tamanoTexto: 'normal' | 'grande' | 'muy-grande'; // 100% / 112.5% / 125%
   preferenciaComunicacion: 'texto' | 'senas' | 'ambos';
 };
+```
 
-Se aplican como clases en `<html>`: `dark`, `hc`, `texto-grande`. Todas cambiables desde Ajustes,
-accesible en 1 clic desde cualquier página — nadie debería volver al registro para arreglar su contraste.
+Se aplicarían como clases en `<html>`: `dark`, `hc`, `texto-grande`. Todas cambiables desde Ajustes,
+accesible en 1 clic desde cualquier página — nadie debería volver al registro para arreglar su
+contraste.
+
+El movimiento reducido **no** entra en este store: es `prefers-reduced-motion` del sistema, sin
+preferencia propia (ver «Movimiento» en `SKILL.md`).
+
+```
+
 ```

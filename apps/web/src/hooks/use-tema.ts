@@ -3,9 +3,21 @@ import { useCallback, useState } from 'react';
 export type Tema = 'claro' | 'oscuro';
 
 const CLAVE = 'bighearts:tema';
+/** Duración normal (220ms) + margen; ver `.cambiando-tema` en `index.css`. */
+const DURACION_TRANSICION_TEMA_MS = 260;
+
+let timeoutTransicion: ReturnType<typeof setTimeout> | undefined;
 
 function aplicarClase(tema: Tema) {
-  document.documentElement.classList.toggle('dark', tema === 'oscuro');
+  const html = document.documentElement;
+  // Solo mientras dura el cruce: permanente cobraría en cada hover de la app.
+  html.classList.add('cambiando-tema');
+  if (timeoutTransicion) clearTimeout(timeoutTransicion);
+  timeoutTransicion = setTimeout(() => {
+    html.classList.remove('cambiando-tema');
+  }, DURACION_TRANSICION_TEMA_MS);
+
+  html.classList.toggle('dark', tema === 'oscuro');
 }
 
 function leerTemaGuardado(): Tema {
