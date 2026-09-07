@@ -34,12 +34,12 @@ export function TablaHistorialProfesor({ items, total }: TablaHistorialProfesorP
               titulo={item.title}
               subtitulo={describirFechaCompacta(item.scheduledAt)}
             >
-              <BadgeAsistenciaAula aula={item} />
               {asistencia.completa && (
                 <span className="text-sm text-muted-foreground tabular-nums">
                   {item.totalAsistieron} de {item.totalInscritos} asistieron
                 </span>
               )}
+              <BadgeAsistenciaAula aula={item} />
               <AccionFilaHistorial aulaId={item.id} marcarAsistencia={asistencia.pendiente} />
             </FilaLista>
           );

@@ -5,6 +5,9 @@ import { varianteEstadoAula } from '@/components/dominio/estado-aula-variantes';
 import { FilaLista } from '@/components/dominio/fila-lista';
 import { IndicadorCupo } from '@/components/dominio/indicador-cupo';
 import { describirFechaCompacta } from '@/features/aulas/lib/horario';
+import { Button } from '@/components/ui/button';
+import { Link } from 'react-router-dom';
+import { ArrowRight } from 'lucide-react';
 
 type FilaAulaSupervisionProps = {
   classroom: ClassroomListItem;
@@ -47,6 +50,14 @@ export function FilaAulaSupervision({ classroom, ahora = new Date() }: FilaAulaS
         maxStudents={classroom.maxStudents}
         currentBookings={classroom.currentBookings}
       />
+      <Button
+        render={<Link to={`/aulas/${classroom.id}`} />}
+        variant="outline"
+        className="h-11 gap-2 px-3.5 text-sm"
+      >
+        <ArrowRight aria-hidden="true" strokeWidth={2} className="size-4" />
+        {'Ver detalle'}
+      </Button>
     </FilaLista>
   );
 }

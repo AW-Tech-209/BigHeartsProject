@@ -444,8 +444,9 @@
   animation: aparece var(--duracion-normal) var(--ease-suave) both;
 }
 
-/* Solo mientras se conmuta claro/oscuro; `use-tema.ts` pone y quita la clase.
-   Permanente cobraría en cada hover de toda la aplicación. */
+/* Resguardo del cambio de tema para el navegador sin View Transitions (o con
+   movimiento reducido, que `use-tema.ts` sí comprueba): transiciona cada nodo.
+   Con View Transitions, `use-tema.ts` no llega a poner esta clase. */
 .cambiando-tema,
 .cambiando-tema *,
 .cambiando-tema *::before,
@@ -455,6 +456,16 @@
     border-color var(--duracion-normal) var(--ease-suave),
     color var(--duracion-normal) var(--ease-suave),
     fill var(--duracion-normal) var(--ease-suave) !important;
+}
+
+/* El crossfade del cambio de tema (`use-tema.ts`, `document.startViewTransition`):
+   dos capturas de pantalla fundiéndose por compositor, con el mismo ritmo que
+   el resto del sistema en vez del 250ms/ease por defecto del navegador. Costo
+   fijo en GPU — no crece con el tamaño de la lista, a diferencia de arriba. */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: var(--duracion-normal);
+  animation-timing-function: var(--ease-suave);
 }
 
 /* La franja de estado que crece desde arriba al aparecer una tarjeta (landing). */
@@ -526,6 +537,15 @@
   .cambiando-tema *::before,
   .cambiando-tema *::after {
     transition: none !important;
+  }
+  /* `use-tema.ts` ya evita llamar a `startViewTransition` con movimiento
+     reducido; esto es la defensa en profundidad de siempre por si algo más
+     del sistema la dispara en el futuro. La API no respeta la preferencia
+     por su cuenta. */
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
   }
   *,
   *::before,
