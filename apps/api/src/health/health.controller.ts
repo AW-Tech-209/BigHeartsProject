@@ -1,7 +1,9 @@
 import { Controller, Get, Logger, ServiceUnavailableException } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import { ApiErrorCode } from '@academia/types';
 
 import { Public } from '../auth/decorators/public.decorator';
+import { API_THROTTLE } from '../common/api-throttle';
 import { PrismaService } from '../prisma/prisma.service';
 
 /** Payload que devuelve el health-check cuando todo está operativo. */
@@ -14,6 +16,7 @@ export interface HealthStatus {
 }
 
 @Controller('health')
+@Throttle(API_THROTTLE)
 export class HealthController {
   private readonly logger = new Logger(HealthController.name);
 

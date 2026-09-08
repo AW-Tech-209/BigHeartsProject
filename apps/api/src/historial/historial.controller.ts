@@ -1,4 +1,5 @@
 import { Controller, Get, Query } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import {
   type HistorialEstudianteResponse,
   type HistorialProfesorResponse,
@@ -8,6 +9,7 @@ import {
 import type { AuthenticatedUser } from '../auth/auth.types';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { Roles } from '../auth/decorators/roles.decorator';
+import { API_THROTTLE } from '../common/api-throttle';
 import { ListHistorialDto } from './dto/list-historial.dto';
 import { HistorialService } from './historial.service';
 
@@ -19,6 +21,7 @@ import { HistorialService } from './historial.service';
  */
 @Controller('historial')
 @Roles(UserRole.STUDENT, UserRole.TEACHER)
+@Throttle(API_THROTTLE)
 export class HistorialController {
   constructor(private readonly historialService: HistorialService) {}
 

@@ -1,4 +1,5 @@
 import { Controller, Get, HttpCode, HttpStatus, Param, ParseUUIDPipe, Post } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import {
   type PendingTeachersResponse,
   type TeacherApprovalResponse,
@@ -7,6 +8,7 @@ import {
 } from '@academia/types';
 
 import { Roles } from '../auth/decorators/roles.decorator';
+import { API_THROTTLE } from '../common/api-throttle';
 import { AdminService } from './admin.service';
 import { teacherNotFound } from './admin.errors';
 
@@ -43,6 +45,7 @@ export const idDeProfesor = new ParseUUIDPipe({ exceptionFactory: () => teacherN
  */
 @Controller('admin/teachers')
 @Roles(UserRole.ADMIN)
+@Throttle(API_THROTTLE)
 export class AdminController {
   constructor(private readonly adminService: AdminService) {}
 

@@ -3,12 +3,9 @@ import { ThrottlerGuard } from '@nestjs/throttler';
 import { ApiErrorCode } from '@academia/types';
 
 /**
- * Rate limiting de los endpoints sensibles de `/auth` (login y registro).
- *
- * Extiende el guard de @nestjs/throttler solo para traducir el 429 al envelope
- * del proyecto: código estable `TOO_MANY_REQUESTS` + mensaje en español, en vez
- * del "Too Many Requests" en inglés por defecto. Los límites (ventana e
- * intentos) salen de la config (`AUTH_THROTTLE_TTL` / `AUTH_THROTTLE_LIMIT`).
+ * Rate limiting global (`APP_GUARD`, `app.module.ts`): solo traduce el 429 al
+ * envelope del proyecto. El límite base es el de `/auth`; el resto lo afloja
+ * `@Throttle(API_THROTTLE)` (`common/api-throttle.ts`).
  */
 @Injectable()
 export class AuthThrottlerGuard extends ThrottlerGuard {

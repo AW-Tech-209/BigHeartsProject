@@ -40,6 +40,10 @@ export function esAulaNoEncontrada(error: unknown): boolean {
  *
  * Sin `placeholderData`: aquí no se cambia de filtro ni de página, así que no
  * hay una respuesta anterior que mantener mientras llega la siguiente.
+ *
+ * `staleTime: 0` explícito, contra el default global de 30 s: esta pantalla
+ * enseña el cupo y el acceso al enlace, y son datos que cambian con quien
+ * más importa que estén al día.
  */
 export function useClassroom(id: string, options?: { enabled?: boolean }) {
   return useQuery({
@@ -47,5 +51,6 @@ export function useClassroom(id: string, options?: { enabled?: boolean }) {
     queryFn: () => getClassroom(id),
     retry: (intentos, error) => !esAulaNoEncontrada(error) && intentos < REINTENTOS,
     enabled: options?.enabled ?? true,
+    staleTime: 0,
   });
 }

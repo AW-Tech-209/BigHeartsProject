@@ -1,8 +1,10 @@
 import { Module } from '@nestjs/common';
+import { APP_GUARD } from '@nestjs/core';
 import { ThrottlerModule } from '@nestjs/throttler';
 
 import { AdminModule } from './admin/admin.module';
 import { AuthModule } from './auth/auth.module';
+import { AuthThrottlerGuard } from './auth/guards/auth-throttler.guard';
 import { BookingsModule } from './bookings/bookings.module';
 import { ClassroomsModule } from './classrooms/classrooms.module';
 import { CommonModule } from './common/common.module';
@@ -22,8 +24,8 @@ import { UsersModule } from './users/users.module';
     AppConfigModule,
     PrismaModule,
     CommonModule,
-    // Rate limiting: la ventana y el límite salen de la config. El módulo es
-    // global; el AuthThrottlerGuard lo aplica solo a login y register.
+    // Límite base: el de /auth. `@Throttle(API_THROTTLE)` lo afloja en el
+    // resto de controladores (`common/api-throttle.ts`).
     ThrottlerModule.forRootAsync({
       inject: [AppConfigService],
       useFactory: (config: AppConfigService) => ({
@@ -41,5 +43,6 @@ import { UsersModule } from './users/users.module';
     HistorialModule,
     PanelModule,
   ],
+  providers: [{ provide: APP_GUARD, useClass: AuthThrottlerGuard }],
 })
 export class AppModule {}

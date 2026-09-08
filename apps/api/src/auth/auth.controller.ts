@@ -18,7 +18,6 @@ import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { LoginDto } from './dto/login.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 import { RegisterDto } from './dto/register.dto';
-import { AuthThrottlerGuard } from './guards/auth-throttler.guard';
 import { SameOriginGuard } from './guards/same-origin.guard';
 import { clearRefreshCookie, setRefreshCookie } from './refresh-cookie';
 
@@ -35,12 +34,10 @@ export class AuthController {
   /**
    * POST /auth/register
    *
-   * Registra un estudiante o profesor. Público y con rate limiting (freno de
-   * fuerza bruta / creación masiva). El envelope de éxito lo añade el
-   * ResponseInterceptor global.
+   * Registra un estudiante o profesor. Público; el rate limiting es global
+   * (`AuthThrottlerGuard` en `app.module.ts`) y aquí no se afloja.
    */
   @Public()
-  @UseGuards(AuthThrottlerGuard)
   @Post('register')
   @HttpCode(HttpStatus.CREATED)
   async register(@Body() dto: RegisterDto): Promise<RegisterResponse> {
@@ -52,10 +49,9 @@ export class AuthController {
    * POST /auth/login
    *
    * Valida credenciales y abre sesión: devuelve el Access Token en el cuerpo y
-   * planta el Refresh Token en una cookie httpOnly. Público y con rate limiting.
+   * planta el Refresh Token en una cookie httpOnly. Público; rate limiting global.
    */
   @Public()
-  @UseGuards(AuthThrottlerGuard)
   @Post('login')
   @HttpCode(HttpStatus.OK)
   async login(
@@ -74,7 +70,7 @@ export class AuthController {
    * público para el guard de JWT (no usa Access Token; se apoya en la cookie).
    */
   @Public()
-  @UseGuards(SameOriginGuard, AuthThrottlerGuard)
+  @UseGuards(SameOriginGuard)
   @Throttle(SESSION_THROTTLE)
   @Post('refresh')
   @HttpCode(HttpStatus.OK)
@@ -95,7 +91,7 @@ export class AuthController {
    * sesión debe funcionar aunque el Access Token ya haya caducado.
    */
   @Public()
-  @UseGuards(SameOriginGuard, AuthThrottlerGuard)
+  @UseGuards(SameOriginGuard)
   @Throttle(SESSION_THROTTLE)
   @Post('logout')
   @HttpCode(HttpStatus.OK)
@@ -114,11 +110,10 @@ export class AuthController {
   /**
    * POST /auth/forgot-password
    *
-   * Pide un enlace de recuperación. Público y con rate limiting. La respuesta es
-   * siempre la misma, exista o no la cuenta (HU-410, AC1).
+   * Pide un enlace de recuperación. Público; rate limiting global. La
+   * respuesta es siempre la misma, exista o no la cuenta (HU-410, AC1).
    */
   @Public()
-  @UseGuards(AuthThrottlerGuard)
   @Post('forgot-password')
   @HttpCode(HttpStatus.OK)
   async forgotPassword(@Body() dto: ForgotPasswordDto): Promise<ForgotPasswordResponse> {
@@ -130,10 +125,9 @@ export class AuthController {
    * POST /auth/reset-password
    *
    * Cambia la contraseña con un token de un solo uso y revoca todas las
-   * sesiones del usuario. Público y con rate limiting.
+   * sesiones del usuario. Público; rate limiting global.
    */
   @Public()
-  @UseGuards(AuthThrottlerGuard)
   @Post('reset-password')
   @HttpCode(HttpStatus.OK)
   async resetPassword(@Body() dto: ResetPasswordDto): Promise<ResetPasswordResponse> {
