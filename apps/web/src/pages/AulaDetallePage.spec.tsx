@@ -616,15 +616,19 @@ describe('AulaDetallePage — quién viene a la clase (HU-305)', () => {
       ],
       cancelados: [],
     });
-    montarDetalle();
+    const { user } = montarDetalle();
 
     expect(await screen.findByRole('rowheader', { name: 'Ana Estudiante' })).toBeInTheDocument();
-    expect(screen.getByText('Lengua de signos')).toBeInTheDocument();
-    expect(screen.getByText('Moderada')).toBeInTheDocument();
     expect(screen.getByText('Confirmada')).toBeInTheDocument();
     expect(
       screen.getByRole('list', { name: 'Resumen de accesibilidad del grupo' }),
     ).toHaveTextContent('1 lengua de signos');
+
+    // El modo de comunicación y la pérdida auditiva de cada inscrito se
+    // despliegan con «Ver detalle», no ocupan una columna propia.
+    await user.click(screen.getByRole('button', { name: 'Ver el detalle de Ana Estudiante' }));
+    expect(await screen.findByText('Lengua de signos')).toBeInTheDocument();
+    expect(screen.getByText('Moderada')).toBeInTheDocument();
   });
 
   it('el vacío dice que aún no hay inscritos, sin sonar a error', async () => {

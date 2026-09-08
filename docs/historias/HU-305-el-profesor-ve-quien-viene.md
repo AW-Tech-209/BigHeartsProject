@@ -58,8 +58,11 @@ comunicación y nivel de pérdida auditiva—, que hoy se recoge al registrarse 
 
 ### Frontend
 
-- [x] **T5** — Lista en **filas** dentro del detalle del aula propia, con nombre, modo de
-      comunicación —color + ícono + texto—, nivel de pérdida auditiva y estado de la reserva.
+- [x] **T5** — Lista en **filas** dentro del detalle del aula propia, con nombre y estado de la
+      reserva a la vista; el modo de comunicación —color + ícono + texto— y el nivel de pérdida
+      auditiva se despliegan por fila tras «Ver detalle» (mismo patrón que el «+N» del renglón de
+      aula), para que la tabla no se amontone dentro del detalle del aula, sobre todo al añadirse
+      la columna de asistencia de HU-403.
 - [x] **T6** — Un **resumen de accesibilidad del grupo** arriba: cuántos por cada modo. Es lo que
       el profesor mira antes de preparar; que no tenga que contarlo él.
 - [x] **T7** — Los 4 estados. El vacío dice que aún no hay inscritos, sin sonar a error.
@@ -68,8 +71,9 @@ comunicación y nivel de pérdida auditiva—, que hoy se recoge al registrarse 
 
 - [x] **AC1** — El profesor dueño ve la lista completa de inscritos de su aula, con el estado de
       cada reserva y el recuento sobre el cupo.
-- [x] **AC2** — Cada inscrito muestra **su modo de comunicación y su nivel de pérdida auditiva**, y
-      arriba aparece el resumen del grupo por modo.
+- [x] **AC2** — Cada inscrito muestra **su modo de comunicación y su nivel de pérdida auditiva**
+      (tras «Ver detalle» en su fila), y arriba aparece —siempre a la vista— el resumen del grupo
+      por modo.
 - [x] **AC3** — **Autorización:** otro profesor recibe `404`; un `STUDENT` y un `ADMIN`, `403`.
 - [x] **AC4** — **El email del estudiante no aparece** en la respuesta. Verificado con un test.
 - [x] **AC5** — Tras una cancelación, la lista y el recuento reflejan el cambio al volver a
