@@ -26,6 +26,20 @@ function formatearFechaUTC(fecha: Date): string {
   return `${dia.charAt(0).toUpperCase()}${dia.slice(1)}, ${hora} (UTC)`;
 }
 
+/**
+ * Escapa HTML en valores que no escribió este módulo (nombre, título del
+ * aula): sin esto, un profesor podría meter marcado propio en el título y
+ * que llegara intacto al correo de cada estudiante inscrito.
+ */
+function escaparHtml(valor: string): string {
+  return valor
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 function html(paragraphs: string[]): string {
   return paragraphs.map((p) => `<p>${p}</p>`).join('\n');
 }
@@ -40,12 +54,17 @@ export function buildEmail(notification: Notification): EmailContent {
   const aula = classroom?.title ?? 'tu clase';
   const cuando = classroom ? formatearFechaUTC(classroom.scheduledAt) : 'la hora que reservaste';
 
+  // Solo para la rama `html`: el texto plano no interpreta marcado.
+  const nombreHtml = escaparHtml(nombre);
+  const aulaHtml = escaparHtml(aula);
+  const enlaceReminderHtml = classroom?.url ? escaparHtml(classroom.url) : undefined;
+
   switch (type) {
     case NotificationType.TEACHER_APPROVED:
       return {
         subject: 'Tu cuenta de profesor fue aprobada',
         html: html([
-          `Hola ${nombre},`,
+          `Hola ${nombreHtml},`,
           'Un administrador aprobó tu solicitud. Ya puedes entrar a la plataforma y publicar tus aulas.',
         ]),
         text: text([
@@ -58,7 +77,7 @@ export function buildEmail(notification: Notification): EmailContent {
       return {
         subject: 'Tu solicitud de profesor fue rechazada',
         html: html([
-          `Hola ${nombre},`,
+          `Hola ${nombreHtml},`,
           'Un administrador rechazó tu solicitud para ser profesor en la plataforma.',
         ]),
         text: text([
@@ -71,8 +90,8 @@ export function buildEmail(notification: Notification): EmailContent {
       return {
         subject: 'Tu reserva fue confirmada',
         html: html([
-          `Hola ${nombre},`,
-          `Tu reserva para «${aula}» quedó confirmada.`,
+          `Hola ${nombreHtml},`,
+          `Tu reserva para «${aulaHtml}» quedó confirmada.`,
           `Fecha y hora: ${cuando}.`,
           'Entra a la plataforma antes de la clase para ver el enlace de la videollamada.',
         ]),
@@ -88,8 +107,8 @@ export function buildEmail(notification: Notification): EmailContent {
       return {
         subject: 'Tu reserva fue cancelada',
         html: html([
-          `Hola ${nombre},`,
-          `Tu reserva para «${aula}» (${cuando}) quedó cancelada. El cupo ya está disponible para otro estudiante.`,
+          `Hola ${nombreHtml},`,
+          `Tu reserva para «${aulaHtml}» (${cuando}) quedó cancelada. El cupo ya está disponible para otro estudiante.`,
         ]),
         text: text([
           `Hola ${nombre},`,
@@ -101,8 +120,8 @@ export function buildEmail(notification: Notification): EmailContent {
       return {
         subject: 'Tu clase es mañana',
         html: html([
-          `Hola ${nombre},`,
-          `En menos de 24 horas empieza tu clase «${aula}» (${cuando}).`,
+          `Hola ${nombreHtml},`,
+          `En menos de 24 horas empieza tu clase «${aulaHtml}» (${cuando}).`,
         ]),
         text: text([
           `Hola ${nombre},`,
@@ -114,9 +133,9 @@ export function buildEmail(notification: Notification): EmailContent {
       return {
         subject: 'Tu clase empieza en 30 minutos',
         html: html([
-          `Hola ${nombre},`,
-          `Tu clase «${aula}» empieza en 30 minutos (${cuando}).`,
-          `Entra a la plataforma para ver el enlace: <a href="${classroom?.url}">${classroom?.url}</a>.`,
+          `Hola ${nombreHtml},`,
+          `Tu clase «${aulaHtml}» empieza en 30 minutos (${cuando}).`,
+          `Entra a la plataforma para ver el enlace: <a href="${enlaceReminderHtml}">${enlaceReminderHtml}</a>.`,
         ]),
         text: text([
           `Hola ${nombre},`,
@@ -129,8 +148,8 @@ export function buildEmail(notification: Notification): EmailContent {
       return {
         subject: 'La clase que reservaste fue cancelada',
         html: html([
-          `Hola ${nombre},`,
-          `El profesor canceló «${aula}», programada para ${cuando}. Tu cupo quedó liberado.`,
+          `Hola ${nombreHtml},`,
+          `El profesor canceló «${aulaHtml}», programada para ${cuando}. Tu cupo quedó liberado.`,
           'Puedes reservar otra aula disponible cuando quieras.',
         ]),
         text: text([
@@ -142,12 +161,13 @@ export function buildEmail(notification: Notification): EmailContent {
 
     case NotificationType.PASSWORD_RESET: {
       const enlace = resetUrl ?? '';
+      const enlaceHtml = escaparHtml(enlace);
       return {
         subject: 'Recupera tu contraseña',
         html: html([
-          `Hola ${nombre},`,
+          `Hola ${nombreHtml},`,
           'Recibimos una solicitud para crear una contraseña nueva en tu cuenta.',
-          `Abre este enlace para hacerlo: <a href="${enlace}">${enlace}</a>.`,
+          `Abre este enlace para hacerlo: <a href="${enlaceHtml}">${enlaceHtml}</a>.`,
           'Si no fuiste tú, ignora este correo: tu contraseña no cambia hasta que uses el enlace.',
         ]),
         text: text([

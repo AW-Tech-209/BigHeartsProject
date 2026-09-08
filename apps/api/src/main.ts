@@ -2,7 +2,9 @@ import 'reflect-metadata';
 
 import { Logger } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
+import type { NestExpressApplication } from '@nestjs/platform-express';
 import cookieParser from 'cookie-parser';
+import helmet from 'helmet';
 
 import { AppModule } from './app.module';
 import { AppConfigService } from './config/app-config.service';
@@ -10,9 +12,17 @@ import { AppConfigService } from './config/app-config.service';
 async function bootstrap(): Promise<void> {
   // Si el .env es inválido, NestFactory.create lanza aquí: el proceso muere
   // antes de abrir ningún puerto.
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
   const config = app.get(AppConfigService);
+
+  // Render añade un proxy delante: sin esto, todo el tráfico comparte la IP
+  // del proxy y el rate limiting de /auth se vuelve un solo cupo global.
+  app.set('trust proxy', 1);
+
+  // Cabeceras de seguridad HTTP. Sin CSP: la API solo sirve JSON.
+  app.use(helmet({ contentSecurityPolicy: false }));
+  app.disable('x-powered-by');
 
   // Parseo de cookies: el refresh token viaja en una cookie httpOnly que
   // /auth/refresh y /auth/logout leen de `req.cookies`.
