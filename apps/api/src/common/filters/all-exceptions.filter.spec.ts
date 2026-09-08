@@ -1,4 +1,10 @@
-import { BadRequestException, ConflictException, type ArgumentsHost } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  Logger,
+  ServiceUnavailableException,
+  type ArgumentsHost,
+} from '@nestjs/common';
 import { ApiErrorCode, type ApiResponse } from '@academia/types';
 import { describe, expect, it, vi } from 'vitest';
 
@@ -90,5 +96,32 @@ describe('AllExceptionsFilter', () => {
     expect(status).toBe(500);
     expect(error.code).toBe(ApiErrorCode.INTERNAL_ERROR);
     expect(error.message).not.toContain('pooler');
+  });
+
+  // S10: un 5xx lanzado a propósito (503 de /health, un 500 de dominio) es tan
+  // invisible como uno no controlado si no se registra.
+  it('registra en el log un 5xx lanzado como HttpException', () => {
+    const spy = vi.spyOn(Logger.prototype, 'error').mockImplementation(() => undefined);
+
+    respuestaA(
+      new ServiceUnavailableException({
+        code: ApiErrorCode.DATABASE_UNAVAILABLE,
+        message: 'La API está viva pero no puede conectar con la base de datos.',
+      }),
+    );
+
+    expect(spy).toHaveBeenCalled();
+    spy.mockRestore();
+  });
+
+  it('no registra un 4xx de dominio: no es una incidencia', () => {
+    const spy = vi.spyOn(Logger.prototype, 'error').mockImplementation(() => undefined);
+
+    respuestaA(
+      new ConflictException({ code: ApiErrorCode.CLASSROOM_FORBIDDEN, message: 'No es tuya.' }),
+    );
+
+    expect(spy).not.toHaveBeenCalled();
+    spy.mockRestore();
   });
 });

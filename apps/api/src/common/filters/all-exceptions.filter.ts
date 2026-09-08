@@ -40,6 +40,12 @@ export class AllExceptionsFilter implements ExceptionFilter {
     if (exception instanceof HttpException) {
       status = exception.getStatus();
       error = this.toApiError(exception);
+
+      // Un 5xx lanzado a propósito (503 de /health, un 500 de dominio) es
+      // igual de invisible en los logs que uno no controlado si no se registra.
+      if (status >= HttpStatus.INTERNAL_SERVER_ERROR) {
+        this.logger.error(`${error.code}: ${error.message}`, exception.stack);
+      }
     } else {
       this.logger.error(
         'Excepción no controlada',
