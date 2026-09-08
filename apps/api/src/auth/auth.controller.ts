@@ -1,4 +1,5 @@
 import { Body, Controller, HttpCode, HttpStatus, Post, Req, Res, UseGuards } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import type {
   ForgotPasswordResponse,
   LoginResponse,
@@ -18,7 +19,11 @@ import { LoginDto } from './dto/login.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 import { RegisterDto } from './dto/register.dto';
 import { AuthThrottlerGuard } from './guards/auth-throttler.guard';
+import { SameOriginGuard } from './guards/same-origin.guard';
 import { clearRefreshCookie, setRefreshCookie } from './refresh-cookie';
+
+/** Límite propio de /auth/refresh y /auth/logout: más holgado que login (rehidrata en cada pestaña). */
+const SESSION_THROTTLE = { default: { limit: 30, ttl: 60_000 } };
 
 @Controller('auth')
 export class AuthController {
@@ -69,6 +74,8 @@ export class AuthController {
    * público para el guard de JWT (no usa Access Token; se apoya en la cookie).
    */
   @Public()
+  @UseGuards(SameOriginGuard, AuthThrottlerGuard)
+  @Throttle(SESSION_THROTTLE)
   @Post('refresh')
   @HttpCode(HttpStatus.OK)
   async refresh(
@@ -88,6 +95,8 @@ export class AuthController {
    * sesión debe funcionar aunque el Access Token ya haya caducado.
    */
   @Public()
+  @UseGuards(SameOriginGuard, AuthThrottlerGuard)
+  @Throttle(SESSION_THROTTLE)
   @Post('logout')
   @HttpCode(HttpStatus.OK)
   async logout(
