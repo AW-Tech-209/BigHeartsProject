@@ -1,7 +1,9 @@
 import type { EstadoAccesoEnlace } from '@academia/types';
+import { useQueryClient } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
 
 import { useAnnounce } from '@/hooks/use-announce';
+import { classroomQueryKey } from './use-classroom';
 
 /**
  * El máximo que admite `setTimeout` (2³¹ − 1 ms, ~24.8 días). Por encima,
@@ -14,14 +16,18 @@ const ESPERA_MAXIMA_MS = 2_147_483_647;
 /**
  * El paso de «aún no» a «abierto», en vivo (HU-304, T7).
  *
- * El servidor ya decidió el estado y el instante en que se abre; este hook
- * solo programa un `setTimeout` para ese instante exacto y actualiza la
- * pantalla sin que el estudiante tenga que recargar. Al ocurrir, lo anuncia
- * por la región viva raíz — es el único punto de la pantalla donde pasa.
+ * Con `classroomId` (el detalle, que sí muestra el enlace): al cumplirse el
+ * plazo se invalida la query en vez de fijar `'abierto'` a mano, porque fuera
+ * de la ventana el servidor omite `meetingLink` (§4.1) y un estado optimista
+ * dejaría la pantalla sin enlace y sin cuenta atrás.
+ *
+ * Sin `classroomId` (tarjetas de lista, que nunca traen el enlace): fijar
+ * `'abierto'` de inmediato es seguro y no depende de refrescar la lista.
  */
 export function useAccesoAlEnlace(
   accessState: EstadoAccesoEnlace,
   accessOpensAt: string | null,
+  classroomId?: string,
 ): EstadoAccesoEnlace {
   const [estado, setEstado] = useState(accessState);
   // Sincroniza con la prop durante el render en vez de en un efecto (patrón
@@ -34,18 +40,29 @@ export function useAccesoAlEnlace(
   }
 
   const announce = useAnnounce();
+  const queryClient = useQueryClient();
 
   useEffect(() => {
     if (accessState !== 'aun-no' || !accessOpensAt) return;
 
     let temporizador: number;
+    let disparado = false;
 
     function programar() {
       const espera = new Date(accessOpensAt!).getTime() - Date.now();
 
       if (espera <= 0) {
-        setEstado('abierto');
+        // Una sola vez: si el refetch tarda, no queremos reprogramar en bucle.
+        if (disparado) return;
+        disparado = true;
+
         announce('Ya puedes entrar a la clase.');
+
+        if (classroomId) {
+          void queryClient.invalidateQueries({ queryKey: classroomQueryKey(classroomId) });
+        } else {
+          setEstado('abierto');
+        }
         return;
       }
 
@@ -55,7 +72,7 @@ export function useAccesoAlEnlace(
     programar();
 
     return () => window.clearTimeout(temporizador);
-  }, [accessState, accessOpensAt, announce]);
+  }, [accessState, accessOpensAt, announce, classroomId, queryClient]);
 
   return estado;
 }
