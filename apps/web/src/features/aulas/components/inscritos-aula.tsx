@@ -4,8 +4,17 @@ import {
   type CommunicationPreference,
   type InscritoAula,
 } from '@academia/types';
-import { CircleCheck, CircleHelp, CircleMinus, CircleX, RotateCw, Users } from 'lucide-react';
-import { useState } from 'react';
+import {
+  ChevronDown,
+  ChevronUp,
+  CircleCheck,
+  CircleHelp,
+  CircleMinus,
+  CircleX,
+  RotateCw,
+  Users,
+} from 'lucide-react';
+import { useId, useState } from 'react';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -133,10 +142,9 @@ export function InscritosAula({
             <TableHeader>
               <TableRow>
                 <TableHead>Estudiante</TableHead>
-                <TableHead>Modo de comunicación</TableHead>
-                <TableHead>Pérdida auditiva</TableHead>
                 <TableHead>Reserva</TableHead>
                 {claseTerminada && <TableHead>Asistencia</TableHead>}
+                <TableHead className="text-right">Detalle</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -188,6 +196,13 @@ function ResumenAccesibilidad({ inscritos }: { inscritos: InscritoAula[] }) {
   );
 }
 
+/**
+ * Una fila por inscrito. El modo de comunicación y la pérdida auditiva ya no
+ * son columnas propias —apretaban la fila dentro del detalle del aula—: viven
+ * tras «Ver detalle», que despliega una segunda fila con esos dos datos, igual
+ * que el «+N» del renglón de aula. El resumen del grupo, arriba, sigue a la
+ * vista: es lo que el profesor mira antes de preparar (HU-305 T6).
+ */
 function FilaInscrito({
   inscrito,
   classroomId,
@@ -198,38 +213,83 @@ function FilaInscrito({
   claseTerminada: boolean;
 }) {
   const nombre = `${inscrito.firstName} ${inscrito.lastName}`;
+  const [abierto, setAbierto] = useState(false);
+  const detalleId = useId();
+  const columnas = claseTerminada ? 4 : 3;
 
   return (
-    <TableRow>
-      <TableHead scope="row" className="font-normal text-foreground">
-        {nombre}
-      </TableHead>
-      <TableCell>
-        <ModoDelEstudiante modo={inscrito.communicationPreference} />
-      </TableCell>
-      <TableCell className="text-foreground">
-        {inscrito.hearingLossLevel
-          ? hearingLossLevelLabels[inscrito.hearingLossLevel]
-          : 'Sin declarar'}
-      </TableCell>
-      <TableCell>
-        <BadgeDeReserva estado={inscrito.bookingStatus} />
-      </TableCell>
-      {claseTerminada && (
+    <>
+      <TableRow className={abierto ? 'border-b-0 hover:bg-transparent' : undefined}>
+        <TableHead scope="row" className="font-normal text-foreground">
+          {nombre}
+        </TableHead>
         <TableCell>
-          {inscrito.bookingStatus === BookingStatus.CANCELLED ? (
-            <span className="text-sm text-muted-foreground">No aplica</span>
-          ) : (
-            <ControlAsistencia
-              classroomId={classroomId}
-              bookingId={inscrito.bookingId}
-              nombre={nombre}
-              estadoActual={inscrito.bookingStatus}
-            />
-          )}
+          <BadgeDeReserva estado={inscrito.bookingStatus} />
         </TableCell>
+        {claseTerminada && (
+          <TableCell>
+            {inscrito.bookingStatus === BookingStatus.CANCELLED ? (
+              <span className="text-sm text-muted-foreground">No aplica</span>
+            ) : (
+              <ControlAsistencia
+                classroomId={classroomId}
+                bookingId={inscrito.bookingId}
+                nombre={nombre}
+                estadoActual={inscrito.bookingStatus}
+              />
+            )}
+          </TableCell>
+        )}
+        <TableCell className="text-right">
+          <button
+            type="button"
+            aria-expanded={abierto}
+            aria-controls={detalleId}
+            aria-label={abierto ? `Ocultar el detalle de ${nombre}` : `Ver el detalle de ${nombre}`}
+            onClick={() => setAbierto((v) => !v)}
+            className="inline-flex items-center gap-1 rounded-full border border-input bg-card px-2.5 py-1 text-xs font-medium text-foreground transicion-rapida hover:bg-muted"
+          >
+            {abierto ? (
+              <>
+                <ChevronUp aria-hidden="true" strokeWidth={2} className="size-3.5" />
+                Ver menos
+              </>
+            ) : (
+              <>
+                <ChevronDown aria-hidden="true" strokeWidth={2} className="size-3.5" />
+                Ver detalle
+              </>
+            )}
+          </button>
+        </TableCell>
+      </TableRow>
+
+      {abierto && (
+        <TableRow className="hover:bg-transparent">
+          <TableCell colSpan={columnas} className="pt-0">
+            <dl
+              id={detalleId}
+              className="aparece flex flex-wrap gap-x-10 gap-y-3 border-t border-border pt-3"
+            >
+              <div className="space-y-1">
+                <dt className="text-sm text-muted-foreground">Modo de comunicación</dt>
+                <dd>
+                  <ModoDelEstudiante modo={inscrito.communicationPreference} />
+                </dd>
+              </div>
+              <div className="space-y-1">
+                <dt className="text-sm text-muted-foreground">Pérdida auditiva</dt>
+                <dd className="text-foreground">
+                  {inscrito.hearingLossLevel
+                    ? hearingLossLevelLabels[inscrito.hearingLossLevel]
+                    : 'Sin declarar'}
+                </dd>
+              </div>
+            </dl>
+          </TableCell>
+        </TableRow>
       )}
-    </TableRow>
+    </>
   );
 }
 
