@@ -215,12 +215,12 @@ export class ClassroomsService {
    * cadena SQL que ningún test unitario puede recorrer. Aquí la decide una
    * función pura con sus propios tests.
    *
-   * Por eso el `where` solo acota por arriba (`scheduledAt < fin`): es un
-   * superconjunto exacto, sin suponer nada sobre lo que duran las aulas ya
-   * guardadas. Filtrar también por abajo exigiría dar por hecho un tope de
-   * duración que las filas anteriores a esta HU no tuvieron. El conjunto es
-   * pequeño —las aulas de UN profesor, y solo las publicadas— y se leen cuatro
-   * columnas.
+   * El `where` acota por los dos lados con columnas, no con una duración
+   * supuesta: `scheduledAt < fin` por arriba y `endsAt > scheduledAt` por
+   * abajo —`endsAt` ya existe y un `CHECK` garantiza que nunca diverja de
+   * `scheduledAt + durationMinutes` (P4)—, así que sigue siendo un
+   * superconjunto exacto sin adivinar nada. El conjunto es pequeño —las aulas
+   * de UN profesor, y solo las publicadas— y se leen cuatro columnas.
    *
    * **Las canceladas no cuentan** (AC3): un aula `CANCELLED` no ocupa a nadie.
    * Se filtra por `PUBLISHED` en positivo, no por «distinto de CANCELLED», para
@@ -237,6 +237,7 @@ export class ClassroomsService {
         teacherId: aula.teacherId,
         status: ClassroomStatus.PUBLISHED,
         scheduledAt: { lt: finDelAula(aula) },
+        endsAt: { gt: aula.scheduledAt },
         ...(aula.excluirId ? { id: { not: aula.excluirId } } : {}),
       },
       select: { id: true, title: true, scheduledAt: true, durationMinutes: true },
@@ -492,11 +493,18 @@ export class ClassroomsService {
 
     const classroom = await this.prisma.classroom.findUnique({
       where: { id: classroomId },
-      select: { teacherId: true, scheduledAt: true, durationMinutes: true },
+      select: { teacherId: true, scheduledAt: true, durationMinutes: true, status: true },
     });
 
     if (!classroom || classroom.teacherId !== teacher.id) {
       throw classroomNotFound();
+    }
+
+    // Un aula CANCELLED nunca llega aquí en la práctica —cancelar arrastra
+    // todas sus reservas a CANCELLED (§4.3)—, pero es la comprobación barata
+    // que lo garantiza aunque ese invariante fallara en algún dato antiguo.
+    if (classroom.status === ClassroomStatus.CANCELLED) {
+      throw bookingNotInClassroom();
     }
 
     const fin = classroom.scheduledAt.getTime() + classroom.durationMinutes * 60_000;
@@ -504,33 +512,24 @@ export class ClassroomsService {
       throw classNotFinished();
     }
 
-    const booking = await this.prisma.booking.findUnique({
-      where: { id: dto.bookingId },
-      select: {
-        classroomId: true,
-        status: true,
-        student: {
-          select: {
-            firstName: true,
-            lastName: true,
-            hearingLossLevel: true,
-            communicationPreference: true,
-          },
-        },
+    // `updateMany` condicionado, no leer→validar→escribir: dos peticiones a la
+    // vez sobre la misma reserva quedan serializadas por la condición del
+    // `where`, y solo la primera encuentra `count > 0`.
+    const { count } = await this.prisma.booking.updateMany({
+      where: {
+        id: dto.bookingId,
+        classroomId,
+        status: { in: [BookingStatus.CONFIRMED, BookingStatus.ATTENDED, BookingStatus.NO_SHOW] },
       },
+      data: { status: dto.status },
     });
 
-    if (
-      !booking ||
-      booking.classroomId !== classroomId ||
-      booking.status === BookingStatus.CANCELLED
-    ) {
+    if (count === 0) {
       throw bookingNotInClassroom();
     }
 
-    const actualizada = await this.prisma.booking.update({
+    const actualizada = await this.prisma.booking.findUniqueOrThrow({
       where: { id: dto.bookingId },
-      data: { status: dto.status },
       select: {
         id: true,
         status: true,

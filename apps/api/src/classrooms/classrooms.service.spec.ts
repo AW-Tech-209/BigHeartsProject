@@ -2125,10 +2125,20 @@ describe('ClassroomsService.cancelClassroom', () => {
   });
 });
 
-/** Monta el servicio solo para `markAttendance` (HU-403). */
+/**
+ * Monta el servicio solo para `markAttendance` (HU-403). `updateMany` y
+ * `findUniqueOrThrow` operan sobre un estado real (no un stub ciego), para
+ * probar de verdad el filtro condicionado (S8): una reserva que no cumple el
+ * `where` no cambia de estado, sea cual sea el motivo.
+ */
 function setupAsistencia(
   options: {
-    aula?: { teacherId: string; scheduledAt: Date; durationMinutes: number } | null;
+    aula?: {
+      teacherId: string;
+      scheduledAt: Date;
+      durationMinutes: number;
+      status?: string;
+    } | null;
     booking?: Record<string, unknown> | null;
   } = {},
 ) {
@@ -2151,26 +2161,48 @@ function setupAsistencia(
       communicationPreference: 'SIGN_LANGUAGE',
     },
   };
-  const booking = 'booking' in options ? options.booking : bookingPorDefecto;
+  const bookingInicial = ('booking' in options ? options.booking : bookingPorDefecto) as
+    typeof bookingPorDefecto | null;
+  const estado = bookingInicial ? { ...bookingInicial } : null;
 
-  const findUnique = vi.fn().mockResolvedValue(aula);
-  const findUniqueBooking = vi.fn().mockResolvedValue(booking);
-  const update = vi
+  const findUnique = vi
     .fn()
-    .mockImplementation(({ data }: { data: { status: string } }) =>
-      Promise.resolve({ ...bookingPorDefecto, ...booking, status: data.status }),
-    );
+    .mockResolvedValue(aula ? { ...aula, status: aula.status ?? ClassroomStatus.PUBLISHED } : null);
+  const updateMany = vi.fn(
+    async ({
+      where,
+      data,
+    }: {
+      where: { id: string; classroomId: string; status: { in: string[] } };
+      data: { status: string };
+    }) => {
+      if (
+        !estado ||
+        estado.id !== where.id ||
+        estado.classroomId !== where.classroomId ||
+        !where.status.in.includes(estado.status)
+      ) {
+        return { count: 0 };
+      }
+      estado.status = data.status;
+      return { count: 1 };
+    },
+  );
+  const findUniqueOrThrow = vi.fn(async () => {
+    if (!estado) throw new Error('no encontrado');
+    return { id: estado.id, status: estado.status, student: estado.student };
+  });
   const cipher = new MeetingLinkCipher({ meetingLinkKey: 'a'.repeat(64) } as AppConfigService);
   const findUniqueUser = vi.fn().mockResolvedValue({ status: UserStatus.ACTIVE });
   const prisma = {
     classroom: { findUnique },
-    booking: { findUnique: findUniqueBooking, update },
+    booking: { updateMany, findUniqueOrThrow },
     user: { findUnique: findUniqueUser },
   } as unknown as PrismaService;
 
   return {
     service: new ClassroomsService(prisma, cipher, configuracion(), notificacionesFalsas().service),
-    update,
+    update: updateMany,
     findUniqueUser,
   };
 }
@@ -2249,6 +2281,27 @@ describe('ClassroomsService.markAttendance — el profesor marca asistencia (HU-
     expect(codigo).toBe(ApiErrorCode.CLASSROOM_NOT_FOUND);
   });
 
+  it('un aula CANCELLED no admite marcar asistencia', async () => {
+    const { service, update } = setupAsistencia({
+      aula: {
+        teacherId: PROFESOR_ID,
+        scheduledAt: new Date('2020-01-01T00:00:00.000Z'),
+        durationMinutes: 60,
+        status: ClassroomStatus.CANCELLED,
+      },
+    });
+
+    const codigo = await codigoDe(
+      service.markAttendance(profesorDelToken, ID_DEL_AULA, {
+        bookingId: 'reserva-1',
+        status: BookingStatus.ATTENDED,
+      }),
+    );
+
+    expect(codigo).toBe(ApiErrorCode.BOOKING_NOT_IN_CLASSROOM);
+    expect(update).not.toHaveBeenCalled();
+  });
+
   it('antes de que la clase termine responde CLASS_NOT_FINISHED', async () => {
     const { service, update } = setupAsistencia({
       aula: {
@@ -2270,7 +2323,7 @@ describe('ClassroomsService.markAttendance — el profesor marca asistencia (HU-
   });
 
   it('una reserva CANCELLED no cambia de estado', async () => {
-    const { service, update } = setupAsistencia({
+    const { service } = setupAsistencia({
       booking: {
         id: 'reserva-1',
         classroomId: ID_DEL_AULA,
@@ -2291,12 +2344,13 @@ describe('ClassroomsService.markAttendance — el profesor marca asistencia (HU-
       }),
     );
 
+    // El `updateMany` sí se intenta (condicionado por el `where`), pero su
+    // condición excluye CANCELLED: `count` sale en 0 y el estado no cambia.
     expect(codigo).toBe(ApiErrorCode.BOOKING_NOT_IN_CLASSROOM);
-    expect(update).not.toHaveBeenCalled();
   });
 
   it('una reserva de otra aula responde BOOKING_NOT_IN_CLASSROOM', async () => {
-    const { service, update } = setupAsistencia({
+    const { service } = setupAsistencia({
       booking: {
         id: 'reserva-1',
         classroomId: 'otra-aula',
@@ -2318,7 +2372,6 @@ describe('ClassroomsService.markAttendance — el profesor marca asistencia (HU-
     );
 
     expect(codigo).toBe(ApiErrorCode.BOOKING_NOT_IN_CLASSROOM);
-    expect(update).not.toHaveBeenCalled();
   });
 
   // currentBookings no es un campo que este flujo toque: no aparece en `data`.
