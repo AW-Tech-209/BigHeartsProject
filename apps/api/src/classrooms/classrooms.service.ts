@@ -19,6 +19,7 @@ import {
 import type { AuthenticatedUser } from '../auth/auth.types';
 import { insufficientRole } from '../auth/auth.errors';
 import { AppConfigService } from '../config/app-config.service';
+import { assertCuentaActiva } from '../common/assert-cuenta-activa';
 import { puedeCancelarse } from '../bookings/cancelacion.rules';
 import {
   type Notification,
@@ -487,6 +488,8 @@ export class ClassroomsService {
     classroomId: string,
     dto: MarkAttendanceDto,
   ): Promise<MarkAttendanceResponse> {
+    await assertCuentaActiva(this.prisma, teacher.id);
+
     const classroom = await this.prisma.classroom.findUnique({
       where: { id: classroomId },
       select: { teacherId: true, scheduledAt: true, durationMinutes: true },
@@ -560,6 +563,8 @@ export class ClassroomsService {
     classroomId: string,
     dto: UpdateClassroomDto,
   ): Promise<Classroom> {
+    await assertCuentaActiva(this.prisma, teacher.id);
+
     const classroom = await this.prisma.classroom.findUnique({ where: { id: classroomId } });
 
     if (!classroom) {
@@ -638,6 +643,8 @@ export class ClassroomsService {
    * cancelación ya escrita.
    */
   async cancelClassroom(teacher: AuthenticatedUser, classroomId: string): Promise<Classroom> {
+    await assertCuentaActiva(this.prisma, teacher.id);
+
     const classroom = await this.prisma.classroom.findUnique({ where: { id: classroomId } });
 
     if (!classroom) {

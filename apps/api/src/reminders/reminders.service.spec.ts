@@ -80,14 +80,13 @@ function fakePrisma(reservas: ReservaFake[]) {
     async ({ where, data }: { where: Record<string, unknown>; data: Partial<ReservaFake> }) => {
       const marca: 'reminder24hSentAt' | 'reminder30mSentAt' =
         'reminder24hSentAt' in where ? 'reminder24hSentAt' : 'reminder30mSentAt';
-      const r = reservas.find((x) => x.id === where.id && x[marca] === null);
+      // `where.id` llega como string en el resto de servicios, pero el barrido
+      // lo manda agrupado (`{ in: [...] }`): el fake acepta las dos formas.
+      const ids = typeof where.id === 'string' ? [where.id] : (where.id as { in: string[] }).in;
+      const afectadas = reservas.filter((r) => ids.includes(r.id) && r[marca] === null);
 
-      if (!r) {
-        return { count: 0 };
-      }
-
-      Object.assign(r, data);
-      return { count: 1 };
+      afectadas.forEach((r) => Object.assign(r, data));
+      return { count: afectadas.length };
     },
   );
 

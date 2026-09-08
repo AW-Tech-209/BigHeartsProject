@@ -13,6 +13,8 @@ import { PrismaService } from '../prisma/prisma.service';
 
 const REMINDER_24H_MINUTES = 24 * 60;
 const INTERVAL_NAME = 'recordatorios-de-clase';
+/** Tope por barrido: un pico se reparte entre ciclos en vez de bloquear uno solo. */
+const LIMITE_POR_BARRIDO = 500;
 
 const RESERVA_SELECT = {
   id: true,
@@ -74,49 +76,62 @@ export class RemindersService implements OnModuleInit, OnModuleDestroy {
 
   private async barrer24h(ahora: Date): Promise<void> {
     const limite = new Date(ahora.getTime() + REMINDER_24H_MINUTES * 60_000);
-    const reservas = await this.prisma.booking.findMany({
-      where: {
-        status: 'CONFIRMED',
-        reminder24hSentAt: null,
-        classroom: {
-          status: { not: ClassroomStatus.CANCELLED },
-          scheduledAt: { gt: ahora, lte: limite },
-        },
-      },
-      select: RESERVA_SELECT,
-    });
-
-    for (const reserva of reservas) {
-      if (await this.enviar(reserva, NotificationType.BOOKING_REMINDER_24H)) {
-        await this.prisma.booking.updateMany({
-          where: { id: reserva.id, reminder24hSentAt: null },
-          data: { reminder24hSentAt: new Date() },
-        });
-      }
-    }
+    await this.barrerVentana(
+      ahora,
+      limite,
+      'reminder24hSentAt',
+      NotificationType.BOOKING_REMINDER_24H,
+    );
   }
 
   private async barrer30m(ahora: Date): Promise<void> {
     const limite = new Date(ahora.getTime() + this.config.accessWindowMinutes * 60_000);
+    await this.barrerVentana(
+      ahora,
+      limite,
+      'reminder30mSentAt',
+      NotificationType.BOOKING_REMINDER_30M,
+    );
+  }
+
+  /**
+   * Un barrido: busca reservas pendientes de esta marca dentro de la ventana,
+   * envía secuencialmente y marca las que salieron bien en un solo `updateMany`
+   * (antes era uno por reserva). `take` acota el peor caso: un pico se reparte
+   * entre ciclos de 60 s en vez de bloquear uno solo.
+   */
+  private async barrerVentana(
+    ahora: Date,
+    limite: Date,
+    marca: 'reminder24hSentAt' | 'reminder30mSentAt',
+    tipo:
+      typeof NotificationType.BOOKING_REMINDER_24H | typeof NotificationType.BOOKING_REMINDER_30M,
+  ): Promise<void> {
     const reservas = await this.prisma.booking.findMany({
       where: {
         status: 'CONFIRMED',
-        reminder30mSentAt: null,
+        [marca]: null,
         classroom: {
           status: { not: ClassroomStatus.CANCELLED },
           scheduledAt: { gt: ahora, lte: limite },
         },
       },
       select: RESERVA_SELECT,
+      take: LIMITE_POR_BARRIDO,
     });
 
+    const enviadas: string[] = [];
     for (const reserva of reservas) {
-      if (await this.enviar(reserva, NotificationType.BOOKING_REMINDER_30M)) {
-        await this.prisma.booking.updateMany({
-          where: { id: reserva.id, reminder30mSentAt: null },
-          data: { reminder30mSentAt: new Date() },
-        });
+      if (await this.enviar(reserva, tipo)) {
+        enviadas.push(reserva.id);
       }
+    }
+
+    if (enviadas.length > 0) {
+      await this.prisma.booking.updateMany({
+        where: { id: { in: enviadas }, [marca]: null },
+        data: { [marca]: new Date() },
+      });
     }
   }
 

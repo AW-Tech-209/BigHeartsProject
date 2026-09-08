@@ -1750,11 +1750,13 @@ function setupEditar(
 
   const tx = { classroom: { update }, booking: { findMany: bookingFindMany, updateMany } };
   const $transaction = vi.fn((callback: (t: typeof tx) => unknown) => callback(tx));
+  const findUniqueUser = vi.fn().mockResolvedValue({ status: UserStatus.ACTIVE });
 
   const prisma = {
     $transaction,
     classroom: { findUnique, update, findMany },
     booking: { findMany: bookingFindMany, updateMany },
+    user: { findUnique: findUniqueUser },
   } as unknown as PrismaService;
   const cipher = new MeetingLinkCipher({ meetingLinkKey: 'a'.repeat(64) } as AppConfigService);
   const { notify, service: notifications } = notificacionesFalsas();
@@ -1767,6 +1769,7 @@ function setupEditar(
     findMany,
     bookingFindMany,
     notify,
+    findUniqueUser,
   };
 }
 
@@ -1973,6 +1976,28 @@ describe('ClassroomsService.editClassroom', () => {
   });
 });
 
+describe('ClassroomsService — revalida el estado de la cuenta en las escrituras', () => {
+  it('profesor suspendido no puede editar su aula', async () => {
+    const { service, update, findUniqueUser } = setupEditar({ teacherId: PROFESOR_ID });
+    findUniqueUser.mockResolvedValueOnce({ status: UserStatus.SUSPENDED });
+
+    expect(
+      await codigoDe(service.editClassroom(profesorDelToken, ID_DEL_AULA, { title: 'x' })),
+    ).toBe(ApiErrorCode.ACCOUNT_SUSPENDED);
+    expect(update).not.toHaveBeenCalled();
+  });
+
+  it('profesor suspendido no puede cancelar su aula', async () => {
+    const { service, update, findUniqueUser } = setupEditar({ teacherId: PROFESOR_ID });
+    findUniqueUser.mockResolvedValueOnce({ status: UserStatus.SUSPENDED });
+
+    expect(await codigoDe(service.cancelClassroom(profesorDelToken, ID_DEL_AULA))).toBe(
+      ApiErrorCode.ACCOUNT_SUSPENDED,
+    );
+    expect(update).not.toHaveBeenCalled();
+  });
+});
+
 describe('ClassroomsService.cancelClassroom', () => {
   it('el dueño cancela su aula', async () => {
     const { service, update } = setupEditar({ teacherId: PROFESOR_ID });
@@ -2136,14 +2161,17 @@ function setupAsistencia(
       Promise.resolve({ ...bookingPorDefecto, ...booking, status: data.status }),
     );
   const cipher = new MeetingLinkCipher({ meetingLinkKey: 'a'.repeat(64) } as AppConfigService);
+  const findUniqueUser = vi.fn().mockResolvedValue({ status: UserStatus.ACTIVE });
   const prisma = {
     classroom: { findUnique },
     booking: { findUnique: findUniqueBooking, update },
+    user: { findUnique: findUniqueUser },
   } as unknown as PrismaService;
 
   return {
     service: new ClassroomsService(prisma, cipher, configuracion(), notificacionesFalsas().service),
     update,
+    findUniqueUser,
   };
 }
 
@@ -2162,6 +2190,21 @@ describe('ClassroomsService.markAttendance — el profesor marca asistencia (HU-
       where: { id: 'reserva-1' },
       data: { status: BookingStatus.ATTENDED },
     });
+  });
+
+  it('profesor suspendido no puede marcar asistencia', async () => {
+    const { service, update, findUniqueUser } = setupAsistencia();
+    findUniqueUser.mockResolvedValueOnce({ status: UserStatus.SUSPENDED });
+
+    expect(
+      await codigoDe(
+        service.markAttendance(profesorDelToken, ID_DEL_AULA, {
+          bookingId: 'reserva-1',
+          status: BookingStatus.ATTENDED,
+        }),
+      ),
+    ).toBe(ApiErrorCode.ACCOUNT_SUSPENDED);
+    expect(update).not.toHaveBeenCalled();
   });
 
   it('corregir de ATTENDED a NO_SHOW funciona', async () => {

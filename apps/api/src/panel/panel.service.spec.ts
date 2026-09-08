@@ -101,6 +101,7 @@ describe('PanelService.resumen — reparto por rol (AC1, AC3)', () => {
   });
 
   it('cuenta las clases que coinciden solo si tienen cupo', async () => {
+    const queryRaw = vi.fn().mockResolvedValue([{ count: 2 }]);
     const prisma = prismaMock({
       user: {
         findUnique: vi.fn().mockResolvedValue({
@@ -113,21 +114,13 @@ describe('PanelService.resumen — reparto por rol (AC1, AC3)', () => {
         count: vi.fn().mockResolvedValue(0),
         findMany: vi.fn(),
       },
-      classroom: {
-        findFirst: vi.fn(),
-        findMany: vi.fn().mockResolvedValue([
-          { maxStudents: 8, currentBookings: 2 },
-          { maxStudents: 5, currentBookings: 5 },
-          { maxStudents: 4, currentBookings: 3 },
-        ]),
-        count: vi.fn(),
-        aggregate: vi.fn(),
-      },
+      $queryRaw: queryRaw,
     });
 
     const resumen = await new PanelService(prisma, config).resumen(estudiante);
 
     expect(resumen).toMatchObject({ clasesQueCoinciden: 2, sinPreferencia: false });
+    expect(queryRaw).toHaveBeenCalledOnce();
   });
 
   it('la próxima clase del estudiante viaja sin meetingLink', async () => {

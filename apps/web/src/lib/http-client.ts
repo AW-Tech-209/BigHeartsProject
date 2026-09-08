@@ -8,6 +8,7 @@ import axios, {
 
 import { ApiClientError, toApiClientError } from './api-error';
 import { refreshSession } from './auth/refresh-session';
+import { SAME_ORIGIN_HEADER } from './same-origin-header';
 import { getAccessToken } from '@/stores/auth-store';
 
 // El interceptor de éxito de abajo desenvuelve `ApiResponse<T>` y devuelve
@@ -52,6 +53,7 @@ const instance = axios.create({
   // El navegador solo la adjunta si el cliente pide credenciales, y la API
   // responde con `Access-Control-Allow-Credentials: true`.
   withCredentials: true,
+  headers: SAME_ORIGIN_HEADER,
 });
 
 instance.interceptors.request.use((config: InternalAxiosRequestConfig) => {

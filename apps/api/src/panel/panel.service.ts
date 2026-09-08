@@ -75,24 +75,12 @@ export class PanelService {
       this.prisma.booking.count({ where: reservaProxima }),
     ]);
 
-    const preferencia = perfil?.communicationPreference ?? null;
+    const preferencia = (perfil?.communicationPreference as CommunicationPreference | null) ?? null;
 
     // «Con cupo» compara `currentBookings` contra `maxStudents`, dos columnas
-    // que Prisma no filtra entre sí: se traen las candidatas —futuras,
-    // publicadas y con el modo— y el filtro de cupo se hace en memoria.
-    const conElModo = preferencia
-      ? await this.prisma.classroom.findMany({
-          where: {
-            status: ClassroomStatus.PUBLISHED,
-            scheduledAt: { gt: ahora },
-            communicationModes: { has: preferencia },
-          },
-          select: { maxStudents: true, currentBookings: true },
-        })
-      : [];
-    const clasesQueCoinciden = conElModo.filter(
-      (aula) => aula.currentBookings < aula.maxStudents,
-    ).length;
+    // que Prisma no filtra entre sí: un conteo en SQL evita traer todo el
+    // catálogo futuro para descartarlo en memoria (era O(catálogo), no O(1)).
+    const clasesQueCoinciden = preferencia ? await this.contarClasesConCupo(ahora, preferencia) : 0;
 
     let proximaClase = null;
     if (proxima) {
@@ -124,6 +112,22 @@ export class PanelService {
       clasesQueCoinciden,
       sinPreferencia: preferencia === null,
     };
+  }
+
+  /** Cuenta en SQL, no en memoria: `current_bookings < max_students` no es filtrable en Prisma. */
+  private async contarClasesConCupo(
+    ahora: Date,
+    preferencia: CommunicationPreference,
+  ): Promise<number> {
+    const filas = await this.prisma.$queryRaw<{ count: number }[]>`
+      SELECT count(*)::int AS count
+        FROM classrooms
+       WHERE status = 'PUBLISHED'
+         AND scheduled_at > ${ahora}
+         AND ${preferencia}::"CommunicationPreference" = ANY(communication_modes)
+         AND current_bookings < max_students
+    `;
+    return filas[0]?.count ?? 0;
   }
 
   private async resumenProfesor(teacher: AuthenticatedUser): Promise<ResumenPanelProfesor> {

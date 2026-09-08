@@ -2,6 +2,7 @@ import type { ApiResponse, AuthSession } from '@academia/types';
 import axios from 'axios';
 
 import { ApiClientError, toApiClientError } from '@/lib/api-error';
+import { SAME_ORIGIN_HEADER } from '@/lib/same-origin-header';
 import { useAuthStore } from '@/stores/auth-store';
 
 /**
@@ -24,6 +25,7 @@ const refreshClient = axios.create({
   // dejar entrar a nadie. Si se agota, se asume "sin sesión": el usuario puede
   // iniciarla a mano, que es mejor que no poder hacer nada.
   timeout: 10_000,
+  headers: SAME_ORIGIN_HEADER,
 });
 
 /**

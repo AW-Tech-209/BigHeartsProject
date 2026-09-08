@@ -19,6 +19,7 @@ import {
   NotificationType,
 } from '../notifications/notification.service';
 import { PrismaService } from '../prisma/prisma.service';
+import { assertCuentaActiva } from '../common/assert-cuenta-activa';
 import { seSolapan } from '../classrooms/coherencia-temporal.rules';
 import { classroomNotFound } from '../classrooms/classrooms.errors';
 import { derivarAccesoAlEnlace } from '../classrooms/acceso-enlace.rules';
@@ -71,6 +72,8 @@ export class BookingsService {
     student: AuthenticatedUser,
     dto: CreateBookingDto,
   ): Promise<CreateBookingResponse> {
+    await assertCuentaActiva(this.prisma, student.id);
+
     let aulaReservada!: AulaBloqueada;
 
     const creada = await this.prisma.$transaction(async (tx) => {
