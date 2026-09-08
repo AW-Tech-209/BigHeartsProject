@@ -95,6 +95,7 @@ function setup(
     create,
     update,
     notify,
+    findUniqueUser: findUnique,
   };
 }
 
@@ -226,6 +227,19 @@ describe('BookingsService.createBooking — las cuatro comprobaciones (§1)', ()
       where: { studentId: ESTUDIANTE.id, classroomId: AULA_ID, status: 'CONFIRMED' },
       select: { id: true },
     });
+  });
+});
+
+/** El token es una foto de hasta 15 min: la escritura revalida el estado contra la BD. */
+describe('BookingsService.createBooking — revalida el estado de la cuenta', () => {
+  it('estudiante suspendido tras emitirse el token no puede reservar', async () => {
+    const { service, create, findUniqueUser } = setup();
+    findUniqueUser.mockResolvedValueOnce({ status: UserStatus.SUSPENDED });
+
+    expect(await codigoDeError(service.createBooking(ESTUDIANTE, dto))).toBe(
+      ApiErrorCode.ACCOUNT_SUSPENDED,
+    );
+    expect(create).not.toHaveBeenCalled();
   });
 });
 
