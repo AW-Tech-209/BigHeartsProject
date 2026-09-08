@@ -184,7 +184,7 @@ function DetalleDelAula({
   });
 
   // HU-304, T7: el paso de «aún no» a «abierto» ocurre en vivo, sin recargar.
-  const accesoAlEnlace = useAccesoAlEnlace(aula.accessState, aula.accessOpensAt);
+  const accesoAlEnlace = useAccesoAlEnlace(aula.accessState, aula.accessOpensAt, aula.id);
 
   const horario = describirHorarioPartes(aula.scheduledAt);
 
