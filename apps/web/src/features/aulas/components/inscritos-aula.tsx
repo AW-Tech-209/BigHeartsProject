@@ -133,7 +133,7 @@ export function InscritosAula({
             </Callout>
           )}
 
-          <Table>
+          <Table className="table-fixed min-w-160">
             <TableCaption>
               {data.confirmados.length === 1
                 ? '1 inscrito con cupo confirmado.'
@@ -141,10 +141,16 @@ export function InscritosAula({
             </TableCaption>
             <TableHeader>
               <TableRow>
-                <TableHead>Estudiante</TableHead>
-                <TableHead>Reserva</TableHead>
-                {claseTerminada && <TableHead>Asistencia</TableHead>}
-                <TableHead className="text-right">Detalle</TableHead>
+                <TableHead className={claseTerminada ? 'w-[26%]' : 'w-[40%]'}>Estudiante</TableHead>
+                <TableHead className={cn('text-center', claseTerminada ? 'w-[20%]' : 'w-[30%]')}>
+                  Reserva
+                </TableHead>
+                {claseTerminada && (
+                  <TableHead className="w-[34%] text-center">Asistencia</TableHead>
+                )}
+                <TableHead className={cn('text-center', claseTerminada ? 'w-[20%]' : 'w-[30%]')}>
+                  Detalle
+                </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -220,14 +226,14 @@ function FilaInscrito({
   return (
     <>
       <TableRow className={abierto ? 'border-b-0 hover:bg-transparent' : undefined}>
-        <TableHead scope="row" className="font-normal text-foreground">
+        <TableHead scope="row" className="truncate font-normal text-foreground">
           {nombre}
         </TableHead>
-        <TableCell>
+        <TableCell className="text-center">
           <BadgeDeReserva estado={inscrito.bookingStatus} />
         </TableCell>
         {claseTerminada && (
-          <TableCell>
+          <TableCell className="text-center">
             {inscrito.bookingStatus === BookingStatus.CANCELLED ? (
               <span className="text-sm text-muted-foreground">No aplica</span>
             ) : (
@@ -240,7 +246,7 @@ function FilaInscrito({
             )}
           </TableCell>
         )}
-        <TableCell className="text-right">
+        <TableCell className="text-center">
           <button
             type="button"
             aria-expanded={abierto}
@@ -266,18 +272,18 @@ function FilaInscrito({
 
       {abierto && (
         <TableRow className="hover:bg-transparent">
-          <TableCell colSpan={columnas} className="pt-0">
+          <TableCell colSpan={columnas} className="pt-0 pb-4">
             <dl
               id={detalleId}
-              className="aparece flex flex-wrap gap-x-10 gap-y-3 border-t border-border pt-3"
+              className="aparece grid grid-cols-1 gap-x-6 gap-y-3 border-t border-border pt-3 text-center sm:grid-cols-2"
             >
-              <div className="space-y-1">
+              <div className="space-y-1.5">
                 <dt className="text-sm text-muted-foreground">Modo de comunicación</dt>
-                <dd>
+                <dd className="flex justify-center">
                   <ModoDelEstudiante modo={inscrito.communicationPreference} />
                 </dd>
               </div>
-              <div className="space-y-1">
+              <div className="space-y-1.5">
                 <dt className="text-sm text-muted-foreground">Pérdida auditiva</dt>
                 <dd className="text-foreground">
                   {inscrito.hearingLossLevel
@@ -358,9 +364,16 @@ function ControlAsistencia({
     );
   }
 
+  // Excepción consciente al objetivo táctil de 44px: los dos botones van juntos
+  // en una celda estrecha que solo ve el profesor. Se prioriza el orden visual
+  // de la tabla; siguen teniendo color + ícono + texto y foco visible.
   return (
     <div className="space-y-2">
-      <div role="group" aria-label={`Asistencia de ${nombre}`} className="flex flex-wrap gap-2">
+      <div
+        role="group"
+        aria-label={`Asistencia de ${nombre}`}
+        className="flex flex-nowrap justify-center gap-2"
+      >
         <Button
           type="button"
           variant="outline"
@@ -368,13 +381,13 @@ function ControlAsistencia({
           disabled={mutation.isPending}
           onClick={() => marcar(BookingStatus.ATTENDED)}
           className={cn(
-            'h-11 gap-1.5 px-3.5 text-sm transition-colors',
+            'h-9 gap-1.5 px-3 text-xs transition-colors',
             estadoActual === BookingStatus.ATTENDED
               ? 'border-success bg-success-soft font-medium text-success-soft-foreground shadow-xs hover:bg-success-soft'
               : 'text-muted-foreground',
           )}
         >
-          <CircleCheck aria-hidden="true" strokeWidth={2} className="size-4" />
+          <CircleCheck aria-hidden="true" strokeWidth={2} className="size-3.5" />
           Asistió
         </Button>
         <Button
@@ -384,13 +397,13 @@ function ControlAsistencia({
           disabled={mutation.isPending}
           onClick={() => marcar(BookingStatus.NO_SHOW)}
           className={cn(
-            'h-11 gap-1.5 px-3.5 text-sm transition-colors',
+            'h-9 gap-1.5 px-3 text-xs transition-colors',
             estadoActual === BookingStatus.NO_SHOW
               ? 'border-destructive bg-destructive-soft font-medium text-destructive-soft-foreground shadow-xs hover:bg-destructive-soft'
               : 'text-muted-foreground',
           )}
         >
-          <CircleMinus aria-hidden="true" strokeWidth={2} className="size-4" />
+          <CircleMinus aria-hidden="true" strokeWidth={2} className="size-3.5" />
           No asistió
         </Button>
       </div>
