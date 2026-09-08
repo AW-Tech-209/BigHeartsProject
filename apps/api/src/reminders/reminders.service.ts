@@ -15,6 +15,8 @@ const REMINDER_24H_MINUTES = 24 * 60;
 const INTERVAL_NAME = 'recordatorios-de-clase';
 /** Tope por barrido: un pico se reparte entre ciclos en vez de bloquear uno solo. */
 const LIMITE_POR_BARRIDO = 500;
+/** Retención de tokens caducados (S9): un mes de margen tras `expiresAt`. */
+const RETENCION_TOKENS_DIAS = 30;
 
 const RESERVA_SELECT = {
   id: true,
@@ -69,9 +71,22 @@ export class RemindersService implements OnModuleInit, OnModuleDestroy {
     try {
       await this.barrer24h(new Date());
       await this.barrer30m(new Date());
+      await this.limpiarTokensCaducados(new Date());
     } finally {
       this.barriendo = false;
     }
+  }
+
+  /**
+   * S9: sin esto, `refresh_tokens` y `password_reset_tokens` crecen sin techo
+   * (cada rotación crea una fila y nunca borra la anterior). Un mes de margen
+   * tras `expiresAt` es de sobra para que la detección de reuso vea la fila.
+   */
+  private async limpiarTokensCaducados(ahora: Date): Promise<void> {
+    const limite = new Date(ahora.getTime() - RETENCION_TOKENS_DIAS * 24 * 60 * 60 * 1000);
+
+    await this.prisma.refreshToken.deleteMany({ where: { expiresAt: { lt: limite } } });
+    await this.prisma.passwordResetToken.deleteMany({ where: { expiresAt: { lt: limite } } });
   }
 
   private async barrer24h(ahora: Date): Promise<void> {

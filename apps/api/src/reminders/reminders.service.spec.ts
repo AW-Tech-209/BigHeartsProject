@@ -90,7 +90,14 @@ function fakePrisma(reservas: ReservaFake[]) {
     },
   );
 
-  return { booking: { findMany, updateMany } } as unknown as PrismaService;
+  const deleteManyRefreshToken = vi.fn().mockResolvedValue({ count: 0 });
+  const deleteManyPasswordResetToken = vi.fn().mockResolvedValue({ count: 0 });
+
+  return {
+    booking: { findMany, updateMany },
+    refreshToken: { deleteMany: deleteManyRefreshToken },
+    passwordResetToken: { deleteMany: deleteManyPasswordResetToken },
+  } as unknown as PrismaService;
 }
 
 const SCHEDULER_REGISTRY = {
@@ -104,7 +111,7 @@ function setup(reservas: ReservaFake[], notify = vi.fn().mockResolvedValue({ del
   const notifications = { notify } as unknown as NotificationService;
   const service = new RemindersService(prisma, notifications, CONFIG, SCHEDULER_REGISTRY);
 
-  return { service, notify, reservas };
+  return { service, notify, reservas, prisma };
 }
 
 const AHORA = new Date('2026-09-01T00:00:00.000Z');
@@ -223,6 +230,22 @@ describe('RemindersService.sweep', () => {
     );
     expect(llamada![0].classroom.url).toBe('https://academia-web.vercel.app/aulas/aula-1');
     expect(llamada![0]).not.toHaveProperty('meetingLink');
+    vi.useRealTimers();
+  });
+
+  it('S9 — cada barrido borra los tokens caducados hace más de 30 días', async () => {
+    vi.setSystemTime(AHORA);
+    const { service, prisma } = setup([]);
+
+    await service.sweep();
+
+    const limite = new Date(AHORA.getTime() - 30 * 24 * 60 * 60 * 1000);
+    expect(prisma.refreshToken.deleteMany).toHaveBeenCalledWith({
+      where: { expiresAt: { lt: limite } },
+    });
+    expect(prisma.passwordResetToken.deleteMany).toHaveBeenCalledWith({
+      where: { expiresAt: { lt: limite } },
+    });
     vi.useRealTimers();
   });
 });
