@@ -9,6 +9,7 @@ import {
   Post,
   Query,
 } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import {
   type CancelBookingResponse,
   type CreateBookingResponse,
@@ -19,6 +20,7 @@ import {
 import type { AuthenticatedUser } from '../auth/auth.types';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { Roles } from '../auth/decorators/roles.decorator';
+import { API_THROTTLE } from '../common/api-throttle';
 import { bookingNotFound } from './bookings.errors';
 import { BookingsService } from './bookings.service';
 import { CreateBookingDto } from './dto/create-booking.dto';
@@ -34,6 +36,7 @@ export const idDeReserva = new ParseUUIDPipe({ exceptionFactory: () => bookingNo
  */
 @Controller('bookings')
 @Roles(UserRole.STUDENT)
+@Throttle(API_THROTTLE)
 export class BookingsController {
   constructor(private readonly bookingsService: BookingsService) {}
 

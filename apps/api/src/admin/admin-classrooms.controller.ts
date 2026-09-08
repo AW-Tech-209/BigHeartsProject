@@ -1,7 +1,9 @@
 import { Controller, Get, Query } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import { type AdminClassroomsResponse, UserRole } from '@academia/types';
 
 import { Roles } from '../auth/decorators/roles.decorator';
+import { API_THROTTLE } from '../common/api-throttle';
 import { AdminClassroomsService } from './admin-classrooms.service';
 import { ListAdminClassroomsDto } from './dto/list-admin-classrooms.dto';
 
@@ -16,6 +18,7 @@ import { ListAdminClassroomsDto } from './dto/list-admin-classrooms.dto';
  */
 @Controller('admin/classrooms')
 @Roles(UserRole.ADMIN)
+@Throttle(API_THROTTLE)
 export class AdminClassroomsController {
   constructor(private readonly adminClassroomsService: AdminClassroomsService) {}
 

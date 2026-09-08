@@ -1,8 +1,10 @@
 import { Body, Controller, Get, HttpCode, HttpStatus, Patch } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import type { ProfileResponse } from '@academia/types';
 
 import type { AuthenticatedUser } from '../auth/auth.types';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
+import { API_THROTTLE } from '../common/api-throttle';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 import { UsersService } from './users.service';
 
@@ -20,6 +22,7 @@ import { UsersService } from './users.service';
  * responde `UNAUTHENTICATED` si falta.
  */
 @Controller('users')
+@Throttle(API_THROTTLE)
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 

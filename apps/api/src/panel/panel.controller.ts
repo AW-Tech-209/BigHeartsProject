@@ -1,8 +1,10 @@
 import { Controller, Get } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import type { ResumenPanelResponse } from '@academia/types';
 
 import type { AuthenticatedUser } from '../auth/auth.types';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
+import { API_THROTTLE } from '../common/api-throttle';
 import { PanelService } from './panel.service';
 
 /**
@@ -11,6 +13,7 @@ import { PanelService } from './panel.service';
  * el alcance (§4.8: un endpoint por propósito, alcance desde el token).
  */
 @Controller('panel')
+@Throttle(API_THROTTLE)
 export class PanelController {
   constructor(private readonly panelService: PanelService) {}
 

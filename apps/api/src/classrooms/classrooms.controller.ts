@@ -10,6 +10,7 @@ import {
   Post,
   Query,
 } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import {
   type CancelClassroomResponse,
   type ClassroomDetailResponse,
@@ -25,6 +26,7 @@ import {
 import type { AuthenticatedUser } from '../auth/auth.types';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { Roles } from '../auth/decorators/roles.decorator';
+import { API_THROTTLE } from '../common/api-throttle';
 import { ClassroomsService } from './classrooms.service';
 import { classroomNotFound } from './classrooms.errors';
 import { CreateClassroomDto } from './dto/create-classroom.dto';
@@ -61,6 +63,7 @@ export const idDeAula = new ParseUUIDPipe({ exceptionFactory: () => classroomNot
  * estudiantes, que son justo para quienes existe el catálogo.
  */
 @Controller('classrooms')
+@Throttle(API_THROTTLE)
 export class ClassroomsController {
   constructor(private readonly classroomsService: ClassroomsService) {}
 
