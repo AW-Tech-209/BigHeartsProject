@@ -44,13 +44,17 @@ export function PaginaCabecera({
   return (
     <header className={cn('relative flex flex-wrap items-start justify-between gap-4', className)}>
       {/* Filigrana de marca: textura, no información. Neutra y al 7 % para no
-          tocar el contraste del titular; oculta bajo `sm` para no estorbar. */}
-      <span
-        aria-hidden="true"
-        className="pointer-events-none absolute right-0 top-1/2 hidden -translate-y-1/2 text-muted-foreground/[0.07] sm:block"
-      >
-        <MarcaBigHearts className="size-28 text-current" />
-      </span>
+          tocar el contraste del titular; oculta bajo `sm` para no estorbar.
+          Solo cuando no hay `accion`: si la hay, ya ocupa ese espacio y la
+          filigrana quedaría debajo del botón, no detrás del vacío. */}
+      {!accion && (
+        <span
+          aria-hidden="true"
+          className="pointer-events-none absolute right-0 top-1/2 hidden -translate-y-1/2 text-muted-foreground/[0.07] sm:block"
+        >
+          <MarcaBigHearts className="size-28 text-current" />
+        </span>
+      )}
 
       <div className="relative min-w-0 space-y-2">
         <h1
