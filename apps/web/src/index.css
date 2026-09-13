@@ -47,6 +47,7 @@
    ───────────────────────────────────────────── */
 :root {
   --radius: 0.75rem;
+  color-scheme: light;
 
   --background: oklch(0.99 0.004 250);
   --foreground: oklch(0.235 0.038 258);
@@ -131,6 +132,7 @@
    MODO OSCURO
    ───────────────────────────────────────────── */
 .dark {
+  color-scheme: dark;
   --background: oklch(0.205 0.022 258);
   --foreground: oklch(0.965 0.008 250);
   --card: oklch(0.255 0.026 258);
