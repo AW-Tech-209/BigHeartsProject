@@ -1,6 +1,6 @@
 {
   "name": "@academia/web",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "private": true,
   "type": "module",
   "description": "Frontend React + Vite de la plataforma Academia.",
