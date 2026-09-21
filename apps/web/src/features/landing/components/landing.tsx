@@ -5,10 +5,13 @@ import { SeccionAcceso } from './seccion-acceso';
 import { SeccionAccesibilidad } from './seccion-accesibilidad';
 import { SeccionCatalogo } from './seccion-catalogo';
 import { SeccionCierre } from './seccion-cierre';
+import { SeccionComoEsUnaClase } from './seccion-como-es-una-clase';
+import { SeccionEstandarAcademia } from './seccion-estandar-academia';
 import { SeccionHero } from './seccion-hero';
 import { SeccionPasos } from './seccion-pasos';
 import { SeccionProblema } from './seccion-problema';
 import { SeccionProfesores } from './seccion-profesores';
+import { SeccionQueNoEs } from './seccion-que-no-es';
 import { SeccionReglas } from './seccion-reglas';
 
 /**
@@ -28,6 +31,8 @@ export function Landing() {
 
       <main id="contenido" tabIndex={-1} className="flex-1 outline-none">
         <SeccionHero />
+        <SeccionComoEsUnaClase />
+        <SeccionEstandarAcademia />
         <SeccionProblema />
         <SeccionPasos />
         <SeccionCatalogo />
@@ -35,6 +40,7 @@ export function Landing() {
         <SeccionReglas />
         <SeccionProfesores />
         <SeccionAccesibilidad />
+        <SeccionQueNoEs />
         <SeccionCierre />
       </main>
 

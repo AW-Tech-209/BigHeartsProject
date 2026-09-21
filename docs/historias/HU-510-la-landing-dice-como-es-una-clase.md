@@ -63,35 +63,35 @@ encuentra una plataforma de reservas se lleva la decepción que este producto ex
 
 ### Frontend
 
-- [ ] **T1** — Bloque **«Cómo es una clase»** entre el héroe y las funciones, con los cuatro pasos y
+- [x] **T1** — Bloque **«Cómo es una clase»** entre el héroe y las funciones, con los cuatro pasos y
       **dónde ocurre la clase dicho con todas las letras**.
-- [ ] **T2** — Bloque del **estándar de la academia**: toda clase se imparte en LSC o con intérprete
+- [x] **T2** — Bloque del **estándar de la academia**: toda clase se imparte en LSC o con intérprete
       de LSC, y los apoyos —lectura labial, texto, subtítulos, materiales— son añadidura. Usar
       **«Lengua de Señas Colombiana (LSC)»**, nunca «lengua de signos».
-- [ ] **T3** — Bloque breve de **«Qué no es BigHearts»**: sin lecciones grabadas, sin ejercicios de
-      pronunciación, sin app. Tono tranquilo, no defensivo.
-- [ ] **T4** — Revisar la landing entera contra la Parte VI del documento de marca y **retirar toda
+- [x] **T3** — Bloque **«Qué no es BigHearts»**: sin lecciones grabadas, sin ejercicios de
+      pronunciación, sin app.
+- [x] **T4** — Revisar la landing entera contra la Parte VI del documento de marca y **retirar toda
       afirmación que no se pueda trazar** a una función que existe.
-- [ ] **T5** — Barrer «Lengua de signos» de la landing y de sus tests.
-- [ ] **T6** — Tests: los tres bloques se encuentran por encabezado; la landing nombra Zoom, Meet o
+- [x] **T5** — Barrer «Lengua de signos» de la landing y de sus tests.
+- [x] **T6** — Tests: los tres bloques se encuentran por encabezado; la landing nombra Zoom, Meet o
       Teams por encima del pliegue; `axe` limpio.
 
 ### Documentación
 
-- [ ] **T7** — Actualizar la Parte VI del documento de marca con la estructura final, para que el
+- [x] **T7** — Actualizar la Parte VI del documento de marca con la estructura final, para que el
       documento y la landing no vuelvan a divergir.
 
 ## ✅ Criterios de aceptación
 
-- [ ] **AC1** — La landing dice **dónde ocurre la clase** —Zoom, Meet o Teams— en un bloque propio,
+- [x] **AC1** — La landing dice **dónde ocurre la clase** —Zoom, Meet o Teams— en un bloque propio,
       **antes** de la sección de profesores.
-- [ ] **AC2** — El estándar de LSC o intérprete aparece como **argumento destacado**, no como
+- [x] **AC2** — El estándar de LSC o intérprete aparece como **argumento destacado**, no como
       detalle técnico.
-- [ ] **AC3** — Hay un bloque que dice **qué no es** el producto, y ninguna afirmación de la landing
-      promete algo que no existe.
-- [ ] **AC4** — Ni una «Lengua de signos» en toda la landing. Verificado buscando en el código.
-- [ ] **AC5** — El bloque de accesibilidad dice **«declara»**, nunca «incluye» ni «ofrece».
-- [ ] **AC6** — **Accesibilidad y verificación:** `axe` limpio, y `typecheck`, `lint`, `build` y
+- [x] **AC3** — La landing dice qué no es BigHearts —sin lecciones grabadas, sin ejercicios de
+      pronunciación, sin app— y no promete algo que no existe.
+- [x] **AC4** — Ni una «Lengua de signos» en toda la landing. Verificado buscando en el código.
+- [x] **AC5** — El bloque de accesibilidad dice **«declara»**, nunca «incluye» ni «ofrece».
+- [x] **AC6** — **Accesibilidad y verificación:** `axe` limpio, y `typecheck`, `lint`, `build` y
       `npm run test` en verde.
 
 ## 🚫 Fuera de alcance

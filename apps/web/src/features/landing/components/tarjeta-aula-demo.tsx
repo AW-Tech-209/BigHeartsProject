@@ -6,11 +6,15 @@ import {
   type EstadoAula as EstadoAulaTipo,
 } from '@/components/dominio/estado-aula-variantes';
 import { IndicadorCupo } from '@/components/dominio/indicador-cupo';
-import { ModoComunicacionBadge } from '@/components/dominio/modo-comunicacion-badge';
-import { MODOS_COMUNICACION_EN_ORDEN } from '@/features/aulas/lib/modos-comunicacion';
+import { Badge } from '@/components/ui/badge';
 import { nivelesDeIngles } from '@/features/aulas/lib/niveles';
 import { cn } from '@/lib/utils';
 import type { AulaDemo } from '../lib/aulas-demo';
+import {
+  ETIQUETA_MODO_LANDING,
+  ICONO_MODO_LANDING,
+  MODOS_LANDING_EN_ORDEN,
+} from '../lib/modos-comunicacion-landing';
 
 /**
  * El estado de cupo de un aula de ejemplo. Solo depende de cuántos lugares
@@ -41,7 +45,7 @@ export function TarjetaAulaDemo({
   const estado = estadoDeCupo(aula);
   const libres = Math.max(aula.maxStudents - aula.currentBookings, 0);
   const tituloId = `aula-demo-${aula.id}`;
-  const modos = MODOS_COMUNICACION_EN_ORDEN.filter((modo) => aula.modos.includes(modo));
+  const modos = MODOS_LANDING_EN_ORDEN.filter((modo) => aula.modos.includes(modo));
 
   return (
     <article
@@ -72,7 +76,14 @@ export function TarjetaAulaDemo({
 
         <div className="mt-1 flex flex-wrap items-center gap-1" aria-label="Formas de comunicación">
           {modos.map((modo) => (
-            <ModoComunicacionBadge key={modo} modo={modo} className="px-2 py-0.5 text-xs" />
+            <Badge
+              key={modo}
+              tono="neutral"
+              icon={ICONO_MODO_LANDING[modo]}
+              className="px-2 py-0.5 text-xs"
+            >
+              {ETIQUETA_MODO_LANDING[modo]}
+            </Badge>
           ))}
         </div>
 

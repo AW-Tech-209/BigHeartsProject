@@ -457,7 +457,7 @@ basta un titular ambicioso para prometer algo que la plataforma no hace.
 
 ## Estructura propuesta
 
-Ocho bloques, en este orden. El copy está redactado para usarse tal cual.
+Once bloques, en este orden. El copy está redactado para usarse tal cual.
 
 ### 1 · Hero
 
@@ -476,7 +476,34 @@ solo estuvo en pruebas, la acción fue «dejar un correo»; ese momento ya pasó
 Sin imagen de fondo con texto encima: **está prohibido**. La ilustración, si la hay, es geométrica y
 construida con los mismos rectángulos y rieles del producto.
 
-### 2 · El problema, en dos columnas
+### 2 · Cómo es una clase
+
+Cuatro pasos, y el último dice sin rodeos dónde ocurre la videollamada — es el bloque que responde
+directamente al hallazgo #1 de la auditoría.
+
+> **1. El profesor crea el aula.** Con horario, cupo y su propio enlace de videollamada.
+>
+> **2. Tú reservas.** Tu cupo queda confirmado al instante, o no queda.
+>
+> **3. El enlace aparece 30 minutos antes.** Solo en tu pantalla, solo si reservaste.
+>
+> **4. La clase ocurre en Zoom, Meet o Teams.** BigHearts no aloja la videollamada: gestiona el
+> acceso a ella.
+
+### 3 · El estándar de la academia
+
+El bloque más importante de todos, con trato visual destacado (HU-506): toda clase de BigHearts se
+imparte en Lengua de Señas Colombiana (LSC) o con intérprete de LSC. No es una opción entre varias.
+
+> **Titular:** Toda clase se imparte en Lengua de Señas Colombiana (LSC), o con intérprete de LSC.
+>
+> **Cuerpo:** Cada profesor declara, clase por clase, cuál de los dos imparte — y qué apoyos añade:
+> lectura labial, texto escrito, subtítulos en vivo o materiales visuales. Son añadidura, nunca un
+> reemplazo de la lengua de señas.
+
+Mismo cuidado que el bloque 6: **«declara»**, nunca «incluye» ni «ofrece».
+
+### 4 · El problema, en dos columnas
 
 Es el bloque que más convence porque no vende: describe.
 
@@ -488,7 +515,7 @@ Es el bloque que más convence porque no vende: describe.
 | El estudiante depende de revisar el chat.      | Recibe confirmación y recordatorios por correo.         |
 | Las herramientas asumen que el usuario oye.    | Toda la experiencia es visual, clara y accesible.       |
 
-### 3 · Cómo funciona, en tres pasos
+### 5 · Cómo funciona, en tres pasos
 
 > **1. Encuentras tu clase.** Filtra por nivel y por fecha. Cada clase dice cuántos cupos quedan y
 > cómo se imparte.
@@ -499,7 +526,7 @@ Es el bloque que más convence porque no vende: describe.
 > **3. Entras a la clase.** El enlace aparece 30 minutos antes, en tu pantalla, sin que tengas que
 > pedírselo a nadie.
 
-### 4 · Cada clase dice cómo se imparte
+### 6 · Cada clase dice cómo se imparte
 
 Es el bloque **más diferencial** de la landing y el que ninguna plataforma genérica puede copiar sin
 rehacerse.
@@ -514,7 +541,7 @@ rehacerse.
 > el profesor. El copy dice «declara», nunca «incluye» ni «ofrece». La diferencia entre esas dos
 > palabras es la diferencia entre informar y prometer.
 
-### 5 · Lo que hace distinta a la plataforma
+### 7 · Lo que hace distinta a la plataforma
 
 Las cuatro reglas, en lenguaje de persona:
 
@@ -527,7 +554,7 @@ Las cuatro reglas, en lenguaje de persona:
 - **No puedes reservar dos clases a la misma hora.** Tu historial refleja lo que de verdad pudo
   pasar.
 
-### 6 · Para profesores
+### 8 · Para profesores
 
 > **Titular:** Sabes quién viene y cómo se comunica.
 >
@@ -542,7 +569,7 @@ Debajo del botón, una línea que evita una frustración: **«Las cuentas de pro
 academia antes de poder publicar clases.»** Es información que el usuario necesita _antes_ de
 registrarse, no después.
 
-### 7 · Accesibilidad, dicho sin adornos
+### 9 · Accesibilidad, dicho sin adornos
 
 > **Titular:** Construido para no oír, no adaptado después.
 >
@@ -550,7 +577,18 @@ registrarse, no después.
 > vez. Toda la plataforma se recorre con teclado, funciona en modo claro y oscuro, y las horas
 > siempre se muestran completas y con su zona.
 
-### 8 · Cierre
+### 10 · Qué no es BigHearts
+
+Breve y sin complejo, justo antes del cierre: ahorra la decepción de quien llegó esperando otra
+cosa, y de paso ahorra la próxima auditoría equivocada.
+
+> **Titular:** Qué no es BigHearts.
+>
+> - No hay lecciones grabadas. Enseña un profesor, en vivo.
+> - No hay ejercicios de pronunciación ni de audio.
+> - No hay aplicación móvil. La web funciona en tu navegador.
+
+### 11 · Cierre
 
 > **Titular:** Aprender inglés no debería ser más difícil por no poder oír.
 >
