@@ -6,7 +6,7 @@ import { RotuloSeccion, SeccionLanding } from './primitivos-landing';
 import { Revelar } from './revelar';
 
 const INSCRITOS: { iniciales: string; nombre: string; modo: string; icon: LucideIcon }[] = [
-  { iniciales: 'MR', nombre: 'Mariana R.', modo: 'Lengua de signos', icon: Hand },
+  { iniciales: 'MR', nombre: 'Mariana R.', modo: 'Lengua de Señas Colombiana (LSC)', icon: Hand },
   { iniciales: 'JC', nombre: 'Julián C.', modo: 'Texto escrito', icon: Type },
   { iniciales: 'SD', nombre: 'Sofía D.', modo: 'Lectura labial', icon: Eye },
 ];

@@ -6,9 +6,9 @@ import { EstadoVacio } from '@/components/dominio/estado-vacio';
 import { Button } from '@/components/ui/button';
 import { Field } from '@/components/ui/field';
 import { NativeSelect } from '@/components/ui/native-select';
-import { communicationPreferenceLabels } from '@/features/auth/lib/accessibility-labels';
 import { nivelesDeIngles } from '@/features/aulas/lib/niveles';
 import { AULAS_DEMO } from '../lib/aulas-demo';
+import { ETIQUETA_MODO_LANDING } from '../lib/modos-comunicacion-landing';
 import { RotuloSeccion, SeccionLanding } from './primitivos-landing';
 import { Revelar } from './revelar';
 import { TarjetaAulaDemo } from './tarjeta-aula-demo';
@@ -82,7 +82,7 @@ export function SeccionCatalogo() {
               onChange={(event) => setModo(event.target.value as CommunicationPreference | '')}
             >
               <option value="">Todos los modos</option>
-              {Object.entries(communicationPreferenceLabels).map(([valor, etiqueta]) => (
+              {Object.entries(ETIQUETA_MODO_LANDING).map(([valor, etiqueta]) => (
                 <option key={valor} value={valor}>
                   {etiqueta}
                 </option>
