@@ -6,11 +6,13 @@ import {
   CLASSROOMS_PAGE_SIZE_DEFAULT,
   type ClassroomDetail,
   ClassroomStatus,
+  esProveedorPermitido,
   ESTADO_TEMPORAL_POR_DEFECTO,
   EstadoTemporalAula,
   type InscritosAulaResponse,
   type ListClassroomsResponse,
   type MarkAttendanceResponse,
+  type MeetingProvider,
   type MisAulasResponse,
   UserRole,
   UserStatus,
@@ -37,12 +39,15 @@ import {
 import {
   bookingNotInClassroom,
   classNotFinished,
+  classroomAccessibilityNotDeclared,
   classroomDurationInvalid,
   classroomForbidden,
   classroomHasBookings,
   classroomLeadTimeWarning,
   classroomNotEditable,
   classroomNotFound,
+  instructionModeRequired,
+  meetingProviderNotAllowed,
   teacherNotActive,
   teacherProfileNotFound,
   teacherScheduleConflict,
@@ -83,6 +88,11 @@ export class ClassroomsService {
   async createClassroom(teacher: AuthenticatedUser, input: CreateClassroomDto): Promise<Classroom> {
     await this.assertPuedeCrearAulas(teacher.id);
 
+    if (!input.instructionMode) {
+      throw instructionModeRequired();
+    }
+    const meetingProvider = this.derivarMeetingProvider(input.meetingLink);
+
     await this.assertCoherenciaTemporal({
       teacherId: teacher.id,
       scheduledAt: new Date(input.scheduledAt),
@@ -110,17 +120,13 @@ export class ClassroomsService {
         }),
         // El dato más sensible del producto no toca la BD en claro (§4.1).
         meetingLink: this.meetingLinks.encrypt(input.meetingLink),
-        // Desde HU-211 lo elige el profesor (Zoom, Meet u otra) — ya no lo fija
-        // el servidor. El DTO solo acepta las tres opciones ofrecidas.
-        meetingProvider: input.meetingProvider,
+        // Derivado del dominio del enlace (D45), no elegido por el profesor: un
+        // desplegable que pudiera contradecir a la URL de al lado mentiría.
+        meetingProvider,
 
-        // Obligatorio y no vacío: lo exige el DTO (§4.9, AC1). Se escribe tal
-        // cual llega, sin normalizar duplicados — dos veces el mismo modo no
-        // cambia el resultado de `coincideConLaPreferencia()`.
-        communicationModes: input.communicationModes,
-        hasInterpreter: input.hasInterpreter ?? false,
-        hasLiveCaptions: input.hasLiveCaptions ?? false,
-        hasVisualMaterials: input.hasVisualMaterials ?? false,
+        // Obligatorio: lo exige el DTO (§4.9, D42).
+        instructionMode: input.instructionMode,
+        supports: input.supports ?? [],
 
         // Los dos campos que decide el servidor. Se escriben EXPLÍCITAMENTE
         // aunque el esquema ya los tenga como default: así el valor con el que
@@ -132,6 +138,23 @@ export class ClassroomsService {
     });
 
     return toPublicClassroom(classroom);
+  }
+
+  /**
+   * Valida el dominio del enlace y devuelve la plataforma que le corresponde
+   * (HU-506, T4, D45). Es el único sitio del servidor que decide
+   * `meetingProvider`: ni el DTO de crear ni el de editar lo aceptan del
+   * cliente.
+   */
+  private derivarMeetingProvider(meetingLink: string): MeetingProvider {
+    const proveedor = esProveedorPermitido(meetingLink);
+    if (!proveedor) {
+      throw meetingProviderNotAllowed();
+    }
+    // Los tres valores de `AllowedMeetingProvider` son también miembros de
+    // `MeetingProvider` (comparten la misma cadena) — el segundo es el
+    // superconjunto que además guarda `MANUAL`/`DAILY` de las aulas de antes.
+    return proveedor as unknown as MeetingProvider;
   }
 
   /**
@@ -283,9 +306,7 @@ export class ClassroomsService {
         // AC9: combinable con los demás. No viene puesto por defecto en
         // ninguna pantalla (§4.9, regla 1) — quien lo manda es el filtro
         // explícito del catálogo, nunca un valor implícito de este método.
-        ...(query.communicationMode
-          ? [{ communicationModes: { has: query.communicationMode } }]
-          : []),
+        ...(query.instructionMode ? [{ instructionMode: query.instructionMode }] : []),
         // HU-208, AC5. **El id sale de `viewer`, jamás del query**: el DTO ni
         // siquiera declara un `teacherId`, así que no hay forma de pedir el
         // catálogo de otro profesor (§4.8, regla 3). Con `mias` puesto y un
@@ -576,6 +597,15 @@ export class ClassroomsService {
 
     this.assertEsEditable(classroom);
 
+    // T5: sin declarar, ningún otro cambio se acepta hasta que esta misma
+    // petición lo declare — es la fricción que hace que se complete.
+    if (classroom.instructionMode === null && dto.instructionMode === undefined) {
+      throw classroomAccessibilityNotDeclared();
+    }
+
+    const meetingProvider =
+      dto.meetingLink !== undefined ? this.derivarMeetingProvider(dto.meetingLink) : undefined;
+
     if (
       (dto.scheduledAt !== undefined || dto.durationMinutes !== undefined) &&
       classroom.currentBookings > 0
@@ -615,14 +645,10 @@ export class ClassroomsService {
         }),
         ...(dto.meetingLink !== undefined && {
           meetingLink: this.meetingLinks.encrypt(dto.meetingLink),
+          meetingProvider,
         }),
-        ...(dto.communicationModes !== undefined && {
-          communicationModes: dto.communicationModes,
-        }),
-        ...(dto.hasInterpreter !== undefined && { hasInterpreter: dto.hasInterpreter }),
-        ...(dto.hasLiveCaptions !== undefined && { hasLiveCaptions: dto.hasLiveCaptions }),
-        ...(dto.hasVisualMaterials !== undefined && { hasVisualMaterials: dto.hasVisualMaterials }),
-        ...(dto.meetingProvider !== undefined && { meetingProvider: dto.meetingProvider }),
+        ...(dto.instructionMode !== undefined && { instructionMode: dto.instructionMode }),
+        ...(dto.supports !== undefined && { supports: dto.supports }),
       },
     });
 

@@ -181,6 +181,35 @@ export const classroomHasBookings = (reservasActivas: number): ConflictException
   });
 };
 
+/** Falta `instructionMode` al crear un aula (HU-506, D42). */
+export const instructionModeRequired = (): BadRequestException =>
+  new BadRequestException({
+    code: ApiErrorCode.INSTRUCTION_MODE_REQUIRED,
+    message: 'Elige en qué modo se imparte la clase: LSC nativa o con intérprete de LSC.',
+  });
+
+/**
+ * El enlace no es de Zoom, Meet ni Teams (HU-506, D45, `esProveedorPermitido()`).
+ * Son los tres que ofrecen subtítulos en vivo.
+ */
+export const meetingProviderNotAllowed = (): BadRequestException =>
+  new BadRequestException({
+    code: ApiErrorCode.MEETING_PROVIDER_NOT_ALLOWED,
+    message: 'El enlace tiene que ser de Zoom, Google Meet o Microsoft Teams.',
+  });
+
+/**
+ * El aula no declaró su modo de instrucción y la operación lo exige (HU-506).
+ * Editar o duplicar un aula «sin declarar» está bloqueado hasta que el
+ * profesor complete `instructionMode` — es la fricción que hace que se
+ * complete (Contexto de la HU).
+ */
+export const classroomAccessibilityNotDeclared = (): ConflictException =>
+  new ConflictException({
+    code: ApiErrorCode.CLASSROOM_ACCESSIBILITY_NOT_DECLARED,
+    message: 'Esta clase no tiene declarado su modo de instrucción. Decláralo para poder editarla.',
+  });
+
 /** Se intentó marcar asistencia antes de que la clase terminara (HU-403, D33). */
 export const classNotFinished = (): ConflictException =>
   new ConflictException({
