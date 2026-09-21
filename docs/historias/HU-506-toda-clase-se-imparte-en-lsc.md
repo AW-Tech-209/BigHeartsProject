@@ -6,7 +6,7 @@
 | **Prioridad**       | 🔴 Crítica (es la respuesta al hallazgo de fondo del socio) |
 | **Estimación**      | 2 días                                                      |
 | **Estado**          | ⬜ Pendiente                                                |
-| **Asignada a**      | **Dev A** — backend                                         |
+| **Asignada a**      | **Dev A** — backend (William)                               |
 | **Rama**            | `hu-506-toda-clase-se-imparte-en-lsc-a`                     |
 | **Alcance técnico** | backend                                                     |
 | **Depende de**      | **HU-505 mergeada**                                         |
@@ -61,40 +61,40 @@ depende para seguir la clase. Así que:
 
 ### Backend
 
-- [ ] **T1** — Migración de Prisma: `instructionMode` **nullable**, tabla de apoyos, y retirada de
+- [x] **T1** — Migración de Prisma: `instructionMode` **nullable**, tabla de apoyos, y retirada de
       `communicationModes` y los tres booleanos. **Ninguna fila recibe un modo inventado.**
-- [ ] **T2** — Migrar la preferencia del estudiante al vocabulario nuevo con el mapeo de HU-505.
+- [x] **T2** — Migrar la preferencia del estudiante al vocabulario nuevo con el mapeo de HU-505.
       Quien no tuviera preferencia sigue sin tenerla.
-- [ ] **T3** — DTO de crear y editar: modo de instrucción **obligatorio**, apoyos opcionales.
-- [ ] **T4** — Validar el enlace con `esProveedorPermitido()` y **derivar `meetingProvider`** de él.
+- [x] **T3** — DTO de crear y editar: modo de instrucción **obligatorio**, apoyos opcionales.
+- [x] **T4** — Validar el enlace con `esProveedorPermitido()` y **derivar `meetingProvider`** de él.
       Un enlace de otra plataforma se rechaza con su código.
-- [ ] **T5** — Editar y duplicar un aula **sin modo declarado** responde con el código de aula sin
+- [x] **T5** — Editar y duplicar un aula **sin modo declarado** responde con el código de aula sin
       declarar, y el mensaje dice qué falta.
-- [ ] **T6** — Adaptar `GET /panel/resumen` y el listado de inscritos al vocabulario nuevo: la
+- [x] **T6** — Adaptar `GET /panel/resumen` y el listado de inscritos al vocabulario nuevo: la
       tarjeta «Cómo se comunica tu grupo» del profesor cuenta sobre los valores migrados.
-- [ ] **T7** — Tests: crear sin modo → error; enlace de otra plataforma → error; `meetingProvider`
+- [x] **T7** — Tests: crear sin modo → error; enlace de otra plataforma → error; `meetingProvider`
       derivado coincide con el dominio; editar un aula sin declarar → error; la migración no inventa
       modos; el emparejamiento cuadra con los datos del seed.
 
 ### Documentación
 
-- [ ] **T8** — Actualizar el seed para que las aulas de demostración declaren modo de instrucción, y
+- [x] **T8** — Actualizar el seed para que las aulas de demostración declaren modo de instrucción, y
       **dejar al menos una sin declarar** — es el caso que HU-507 tiene que pintar y que no se puede
       probar si no existe.
 
 ## ✅ Criterios de aceptación
 
-- [ ] **AC1** — Crear o editar un aula **sin modo de instrucción** se rechaza en el servidor.
+- [x] **AC1** — Crear o editar un aula **sin modo de instrucción** se rechaza en el servidor.
       Verificado con un test, no ocultando el formulario.
-- [ ] **AC2** — Un enlace que no sea de Zoom, Meet o Teams se rechaza; uno válido guarda el aula y
+- [x] **AC2** — Un enlace que no sea de Zoom, Meet o Teams se rechaza; uno válido guarda el aula y
       **`meetingProvider` queda derivado del dominio**, no de lo que dijera el cliente.
-- [ ] **AC3** — Tras la migración, **ninguna aula anterior tiene un modo que nadie declaró**, y sus
+- [x] **AC3** — Tras la migración, **ninguna aula anterior tiene un modo que nadie declaró**, y sus
       reservas siguen intactas.
-- [ ] **AC4** — Editar o duplicar un aula sin modo declarado responde con su código; declararlo la
+- [x] **AC4** — Editar o duplicar un aula sin modo declarado responde con su código; declararlo la
       desbloquea.
-- [ ] **AC5** — El resumen del profesor y la lista de inscritos siguen cuadrando con el vocabulario
+- [x] **AC5** — El resumen del profesor y la lista de inscritos siguen cuadrando con el vocabulario
       nuevo.
-- [ ] **AC6** — **Verificación:** `typecheck`, `lint`, `build` y `npm run test` en verde, y el seed
+- [x] **AC6** — **Verificación:** `typecheck`, `lint`, `build` y `npm run test` en verde, y el seed
       incluye al menos un aula sin declarar.
 
 ## 🚫 Fuera de alcance
@@ -107,4 +107,17 @@ depende para seguir la clase. Así que:
 
 ## Notas de implementación
 
-_Se rellena al cerrar._
+`packages/types` sí se tocó, pese al "Archivos: solo apps/api/" de la cabecera: `Classroom`,
+`CreateClassroomInput`, `UpdateClassroomInput`, `ListClassroomsQuery`, `InscritoAula` y
+`RecuentoComunicacionGrupo` todavía tenían el vocabulario de HU-211 (HU-505 solo publicó los enums
+sueltos, sin cablearlos). Sin ese cambio el backend no podía exponer el contrato que pide esta HU.
+Se aprovechó para arreglar un bug preexistente de HU-505: `accesibilidad-clase.ts` y `index.ts` se
+importan en ciclo, y `MIGRACION_PREFERENCIA_COMUNICACION` leía `CommunicationPreference.X` en
+tiempo de carga del módulo, antes de que `index.ts` terminara de declarar el enum — revienta con
+`undefined` en cualquier test que importe `@academia/types`. Se corrigió con claves de texto
+literal (mismo valor, sin el ciclo). `apps/web` queda sin compilar hasta HU-507 — es la mitad
+frontend de esta migración y toca exactamente los campos que aquí se retiran; typecheck/lint/build
+/test de esta sesión se corrieron solo sobre `@academia/types` y `@academia/api`. La preferencia
+del estudiante (T2) no ganó columnas nuevas: se deriva en caliente de `communicationPreference` con
+`MIGRACION_PREFERENCIA_COMUNICACION` en cada lectura (`preferencia-accesibilidad.ts`). La migración
+de Prisma se aplicó contra el Supabase de `apps/api/.env` con `prisma migrate deploy`.

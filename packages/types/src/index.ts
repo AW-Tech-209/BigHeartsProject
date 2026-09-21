@@ -1,6 +1,18 @@
 import type { EstadoAccesoEnlace } from './acceso-enlace';
 
 /**
+ * Tipos de `accesibilidad-clase.ts`, referenciados con `import('...')` en vez
+ * de un `import type` normal a propósito: ese archivo importa
+ * `CommunicationPreference` DE ESTE (para `MIGRACION_PREFERENCIA_COMUNICACION`),
+ * así que un `import` de verdad aquí arriba crea un ciclo que carga
+ * `accesibilidad-clase.ts` antes de que los enums de este archivo existan
+ * todavía — el `MIGRACION_PREFERENCIA_COMUNICACION` revienta en tiempo de
+ * ejecución. La consulta inline no crea ese borde del grafo de módulos.
+ */
+type InstructionMode = import('./accesibilidad-clase').InstructionMode;
+type ClassroomSupport = import('./accesibilidad-clase').ClassroomSupport;
+
+/**
  * Tipos compartidos entre el backend (@academia/api) y el frontend (@academia/web).
  *
  * Todo lo que viva aquí debe ser agnóstico de framework: nada de decoradores de
@@ -283,12 +295,19 @@ export enum ClassroomStatus {
  *    cierto para ellas (decisión 5: no se les inventa una plataforma).
  *  - `DAILY` — reservado, **sin escritor**. Gancho para cuando Fase 1.5
  *    integre generación automática; no se ofrece como opción manual.
+ *
+ * `MICROSOFT_TEAMS` se añade en HU-506, D45: desde esa HU un aula nueva ya no
+ * elige la plataforma, la deriva `esProveedorPermitido()` del enlace, y solo
+ * entre las tres que ofrecen subtítulos en vivo. `MANUAL` y `DAILY` quedan
+ * sin escritor nuevo, pero no se retiran: son el valor honesto de las aulas
+ * de antes de esta HU.
  */
 export enum MeetingProvider {
   MANUAL = 'MANUAL',
   DAILY = 'DAILY',
   GOOGLE_MEET = 'GOOGLE_MEET',
   ZOOM = 'ZOOM',
+  MICROSOFT_TEAMS = 'MICROSOFT_TEAMS',
 }
 
 /**
@@ -329,22 +348,17 @@ export interface Classroom {
   /** Gancho de Fase 1.5. En Fase 1 no hay ninguna regla de recurrencia. */
   isRecurring: boolean;
   /**
-   * En qué modos se imparte la clase (HU-211, `ARQUITECTURA.md` §4.9).
-   *
-   * **Array vacío significa «el profesor no lo ha indicado», nunca «no se
-   * imparte en ningún modo».** Las aulas creadas antes de HU-211 se migran así
-   * a propósito (decisión 5 de la HU): inventarles un modo por defecto sería
-   * mentirle al estudiante sobre algo de lo que depende para seguir la clase.
-   * Puede tener varios modos a la vez — una clase en señas con subtítulos en
-   * vivo declara los dos — por eso es un conjunto y no un valor único.
+   * En qué modo se imparte la clase (HU-505/HU-506, D42, `ARQUITECTURA.md`
+   * §4.9). **`null` significa «el profesor no lo ha declarado», nunca «esta
+   * clase no tiene modo».** Las aulas creadas antes de HU-506 quedan así a
+   * propósito (regla 3 de §4.9): inventarles un modo sería mentirle al
+   * estudiante sobre algo de lo que depende para seguir la clase. Un aula
+   * nueva siempre lo trae — el DTO lo exige — así que `null` identifica de un
+   * vistazo a las aulas heredadas.
    */
-  communicationModes: CommunicationPreference[];
-  /** Hay intérprete de lengua de señas. Distinto de impartirse en señas. */
-  hasInterpreter: boolean;
-  /** Hay subtítulos en vivo durante la clase. */
-  hasLiveCaptions: boolean;
-  /** Hay materiales visuales de apoyo. */
-  hasVisualMaterials: boolean;
+  instructionMode: InstructionMode | null;
+  /** Apoyos opcionales, nunca el método (D43). */
+  supports: ClassroomSupport[];
   /** Presente SOLO cuando el servidor decide revelarlo. Ver arriba. */
   meetingLink?: string;
   createdAt: string;
@@ -361,6 +375,9 @@ export interface Classroom {
  *  - `status` nace `PUBLISHED` (D15) y `currentBookings` en `0`: no son
  *    decisiones del formulario.
  *  - `isRecurring` no se ofrece: la columna existe, la funcionalidad no.
+ *  - `meetingProvider` no se elige (HU-506, D45): el servidor lo deriva del
+ *    dominio de `meetingLink` con `esProveedorPermitido()`. Un desplegable que
+ *    pudiera contradecir a la URL de al lado sería un dato que miente.
  *
  * Añadir un campo a este tipo es autorizar a que el cliente lo decida.
  */
@@ -372,26 +389,20 @@ export interface CreateClassroomInput {
   /** Instante de inicio, ISO 8601. Debe ser futuro; lo comprueba el servidor. */
   scheduledAt: string;
   durationMinutes: number;
-  /** URL de la reunión que el profesor creó en Zoom o Meet. Se guarda cifrada. */
+  /**
+   * URL de la reunión que el profesor creó en Zoom, Meet o Teams. Se guarda
+   * cifrada. Su dominio se valida con `esProveedorPermitido()` (D45): un
+   * enlace de otra plataforma se rechaza con `MEETING_PROVIDER_NOT_ALLOWED`.
+   */
   meetingLink: string;
   /**
-   * Obligatorio y no vacío (HU-211, AC1): un aula nueva no puede quedar «sin
-   * indicar». Las que ya existían antes de esta HU sí pueden estarlo — esta
-   * regla es solo de creación, `UpdateClassroomAccessibilityInput` es la vía
-   * para completarlas.
+   * Obligatorio (HU-506, D42): un aula nueva no puede quedar «sin declarar».
+   * Las que ya existían antes de esta HU sí pueden estarlo, y no hay forma de
+   * completarlas con este tipo — `UpdateClassroomInput` es la vía.
    */
-  communicationModes: CommunicationPreference[];
-  /** Los tres apoyos son opcionales: por defecto, ninguno. */
-  hasInterpreter?: boolean;
-  hasLiveCaptions?: boolean;
-  hasVisualMaterials?: boolean;
-  /**
-   * Solo `MANUAL` (Otra), `GOOGLE_MEET` o `ZOOM`. `DAILY` no se ofrece: está
-   * reservado para cuando Fase 1.5 genere el enlace automáticamente, y no
-   * tiene sentido como respuesta a "¿a qué plataforma apunta el enlace que
-   * acabas de pegar?".
-   */
-  meetingProvider: MeetingProvider;
+  instructionMode: InstructionMode;
+  /** Apoyos opcionales (D43): por defecto, ninguno. */
+  supports?: ClassroomSupport[];
   /**
    * El profesor ya vio el aviso de poca antelación y decidió publicar igual
    * (HU-212, AC7).
@@ -510,12 +521,13 @@ export interface ListClassroomsQuery {
   /** ISO 8601. Cota superior de `scheduledAt`, combinable con `desde`. */
   hasta?: string;
   /**
-   * Solo aulas que incluyan este modo entre las suyas (HU-211, AC9). Combinable
+   * Solo aulas con este modo de instrucción (HU-506, reemplaza al
+   * `communicationMode` de HU-211/AC9 con el vocabulario de D42). Combinable
    * con `level`, `desde` y `hasta`. **No viene puesto por defecto en ninguna
    * pantalla**: el catálogo destaca la coincidencia, no filtra por ella
    * (`ARQUITECTURA.md` §4.9, regla 1).
    */
-  communicationMode?: CommunicationPreference;
+  instructionMode?: InstructionMode;
   /**
    * Solo las aulas de quien pregunta (HU-208, AC5). Un filtro de
    * **presentación**, no de autorización: el catálogo entero sigue siendo
@@ -702,8 +714,11 @@ export interface ClassroomDetailResponse {
  * decisión D25 de `ARQUITECTURA.md`: mismo endpoint, mismo verbo, un solo DTO).
  *
  * Todo opcional: **omitir un campo lo deja intacto** (AC5), incluido
- * `communicationModes` — ya no es obligatorio como en HU-211, porque una
- * edición parcial del resto de campos no puede exigir declarar accesibilidad.
+ * `instructionMode` — no es obligatorio mandarlo en cada edición, porque una
+ * edición parcial del resto de campos no puede exigir declarar accesibilidad
+ * de nuevo. Pero si el aula todavía no lo declaró (HU-506, `instructionMode:
+ * null`), **ningún otro campo se acepta sin declararlo en esa misma
+ * petición**: responde `CLASSROOM_ACCESSIBILITY_NOT_DECLARED`.
  */
 export interface UpdateClassroomInput {
   title?: string;
@@ -713,13 +728,13 @@ export interface UpdateClassroomInput {
   /** Instante de inicio, ISO 8601. Debe ser futuro; lo comprueba el servidor. */
   scheduledAt?: string;
   durationMinutes?: number;
-  /** Si cambia, se vuelve a cifrar (§4.1). */
+  /**
+   * Si cambia, se vuelve a cifrar (§4.1) y `meetingProvider` se deriva de
+   * nuevo con `esProveedorPermitido()` (D45).
+   */
   meetingLink?: string;
-  communicationModes?: CommunicationPreference[];
-  hasInterpreter?: boolean;
-  hasLiveCaptions?: boolean;
-  hasVisualMaterials?: boolean;
-  meetingProvider?: MeetingProvider;
+  instructionMode?: InstructionMode;
+  supports?: ClassroomSupport[];
   /** Acuse de recibo del aviso de poca antelación (HU-212, AC7). */
   confirmarPocaAntelacion?: boolean;
 }
@@ -883,7 +898,12 @@ export interface InscritoAula {
   firstName: string;
   lastName: string;
   hearingLossLevel: HearingLossLevel | null;
-  communicationPreference: CommunicationPreference | null;
+  /**
+   * Migrado al vocabulario de D42 (HU-506) con `MIGRACION_PREFERENCIA_COMUNICACION`.
+   * `null` si no declaró preferencia, o si su preferencia vieja no tiene
+   * destino como modo de instrucción (p. ej. lectura labial).
+   */
+  instructionMode: InstructionMode | null;
   bookingStatus: BookingStatus;
 }
 
@@ -966,12 +986,13 @@ export interface HistorialProfesorResponse {
 }
 
 /**
- * Recuento de inscritos por modo de comunicación (HU-502, tarjeta «Cómo se
- * comunica tu grupo»). `sinIndicar` son los inscritos que no declararon
- * preferencia: no se les inventa un modo, se cuentan aparte.
+ * Recuento de inscritos por modo de instrucción (HU-502, tarjeta «Cómo se
+ * comunica tu grupo»; migrado al vocabulario de D42 en HU-506). `sinIndicar`
+ * son los inscritos sin ese modo migrado: no se les inventa uno, se cuentan
+ * aparte.
  */
 export interface RecuentoComunicacionGrupo {
-  porModo: Partial<Record<CommunicationPreference, number>>;
+  porModo: Partial<Record<InstructionMode, number>>;
   sinIndicar: number;
   total: number;
 }

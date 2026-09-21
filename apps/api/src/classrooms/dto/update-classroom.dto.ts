@@ -1,16 +1,14 @@
 import {
-  CommunicationPreference,
+  ClassroomSupport,
   EnglishLevel,
-  type MeetingProvider,
+  InstructionMode,
   type UpdateClassroomInput,
 } from '@academia/types';
 import { Transform } from 'class-transformer';
 import {
-  ArrayNotEmpty,
   IsArray,
   IsBoolean,
   IsEnum,
-  IsIn,
   IsInt,
   IsNotEmpty,
   IsOptional,
@@ -22,7 +20,6 @@ import {
 } from 'class-validator';
 
 import { EsInstanteFuturo } from './es-instante-futuro.validator';
-import { PLATAFORMAS_OFRECIDAS } from './create-classroom.dto';
 
 const trim = ({ value }: { value: unknown }): unknown =>
   typeof value === 'string' ? value.trim() : value;
@@ -72,6 +69,8 @@ export class UpdateClassroomDto implements UpdateClassroomInput {
   @Max(INT4_MAX, { message: 'Esa duración es demasiado larga.' })
   durationMinutes?: number;
 
+  // La plataforma se deriva de nuevo si el enlace cambia (D45); no se valida
+  // aquí por el mismo motivo que en `CreateClassroomDto`.
   @IsOptional()
   @Transform(trim)
   @IsUrl(
@@ -85,29 +84,15 @@ export class UpdateClassroomDto implements UpdateClassroomInput {
   meetingLink?: string;
 
   @IsOptional()
-  @IsArray()
-  @ArrayNotEmpty({ message: 'Elige al menos un modo en que se imparte la clase.' })
-  @IsEnum(CommunicationPreference, {
-    each: true,
-    message: 'Elige modos de comunicación válidos.',
+  @IsEnum(InstructionMode, {
+    message: 'Elige en qué modo se imparte la clase: LSC nativa o con intérprete de LSC.',
   })
-  communicationModes?: CommunicationPreference[];
+  instructionMode?: InstructionMode;
 
   @IsOptional()
-  @IsBoolean({ message: 'Indica si hay intérprete de lengua de señas.' })
-  hasInterpreter?: boolean;
-
-  @IsOptional()
-  @IsBoolean({ message: 'Indica si hay subtítulos en vivo.' })
-  hasLiveCaptions?: boolean;
-
-  @IsOptional()
-  @IsBoolean({ message: 'Indica si hay materiales visuales de apoyo.' })
-  hasVisualMaterials?: boolean;
-
-  @IsOptional()
-  @IsIn(PLATAFORMAS_OFRECIDAS, { message: 'Elige la plataforma: Zoom, Meet u otra.' })
-  meetingProvider?: MeetingProvider;
+  @IsArray()
+  @IsEnum(ClassroomSupport, { each: true, message: 'Elige apoyos válidos.' })
+  supports?: ClassroomSupport[];
 
   @IsOptional()
   @IsBoolean({ message: 'Confirma si quieres publicar con poca antelación.' })

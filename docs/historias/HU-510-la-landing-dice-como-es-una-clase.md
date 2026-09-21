@@ -1,16 +1,16 @@
 # HU-510 — La landing dice cómo es una clase de verdad
 
-| Campo               | Valor                                               |
-| ------------------- | --------------------------------------------------- |
-| **Sprint**          | Post-Fase 1 · Auditoría                             |
-| **Prioridad**       | 🟠 Alta                                             |
-| **Estimación**      | 1 día                                               |
-| **Estado**          | ⬜ Pendiente                                        |
-| **Asignada a**      | **Dev A** — frontend, acotado a `features/landing/` |
-| **Rama**            | `hu-510-la-landing-dice-como-es-una-clase-a`        |
-| **Alcance técnico** | frontend                                            |
-| **Depende de**      | **HU-505 mergeada**                                 |
-| **Labels**          | `post-fase-1` `prioridad:alta` `frontend`           |
+| Campo               | Valor                                                        |
+| ------------------- | ------------------------------------------------------------ |
+| **Sprint**          | Post-Fase 1 · Auditoría                                      |
+| **Prioridad**       | 🟠 Alta                                                      |
+| **Estimación**      | 1 día                                                        |
+| **Estado**          | ⬜ Pendiente                                                 |
+| **Asignada a**      | **Dev A** — frontend, acotado a `features/landing/`(William) |
+| **Rama**            | `hu-510-la-landing-dice-como-es-una-clase-a`                 |
+| **Alcance técnico** | frontend                                                     |
+| **Depende de**      | **HU-505 mergeada**                                          |
+| **Labels**          | `post-fase-1` `prioridad:alta` `frontend`                    |
 
 > **Como** persona que llega a bigheartsacademy.co,
 > **Quiero** entender en treinta segundos cómo es una clase y dónde ocurre,

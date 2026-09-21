@@ -1,4 +1,4 @@
-import { CommunicationPreference } from './index';
+import type { CommunicationPreference } from './index';
 
 /**
  * Modo de instrucción de una clase (D42, `ARQUITECTURA.md` §4.9).
@@ -60,24 +60,32 @@ export interface AccessibilityPreference {
  * (T3). Lo usa HU-506 para migrar los perfiles ya declarados. `SPOKEN_AUDIO`
  * desaparece del vocabulario del aula (D43): no tiene destino como instrucción
  * ni como apoyo, así que migra a "sin declarar".
+ *
+ * **Claves como literales de texto, no `CommunicationPreference.X`.** Este
+ * archivo importa `CommunicationPreference` de `./index`, e `index.ts` vuelve
+ * a exportar este archivo (`export * from './accesibilidad-clase'`): un
+ * acceso a la enum en tiempo de carga de este objeto cae en medio de ese
+ * ciclo, antes de que `index.ts` haya terminado de declararla, y revienta con
+ * `undefined`. Los literales son el mismo valor —el enum es de cadena— sin
+ * depender del orden de evaluación del ciclo.
  */
 export const MIGRACION_PREFERENCIA_COMUNICACION: Record<
   CommunicationPreference,
   AccessibilityPreference
 > = {
-  [CommunicationPreference.SIGN_LANGUAGE]: {
+  SIGN_LANGUAGE: {
     instructionMode: InstructionMode.LSC_NATIVA,
     supports: [],
   },
-  [CommunicationPreference.LIP_READING]: {
+  LIP_READING: {
     instructionMode: null,
     supports: [ClassroomSupport.LIP_READING],
   },
-  [CommunicationPreference.WRITTEN_TEXT]: {
+  WRITTEN_TEXT: {
     instructionMode: null,
     supports: [ClassroomSupport.WRITTEN_TEXT],
   },
-  [CommunicationPreference.SPOKEN_AUDIO]: {
+  SPOKEN_AUDIO: {
     instructionMode: null,
     supports: [],
   },

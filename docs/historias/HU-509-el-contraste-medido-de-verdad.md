@@ -6,7 +6,7 @@
 | **Prioridad**       | 🟡 Media (barata, y responde a una pregunta directa del socio) |
 | **Estimación**      | 0.5 días                                                       |
 | **Estado**          | ⬜ Pendiente                                                   |
-| **Asignada a**      | **Dev A** — infraestructura                                    |
+| **Asignada a**      | **Dev A** — infraestructura (William)                          |
 | **Rama**            | `hu-509-el-contraste-medido-de-verdad-a`                       |
 | **Alcance técnico** | infra · documentación                                          |
 | **Depende de**      | ninguna                                                        |

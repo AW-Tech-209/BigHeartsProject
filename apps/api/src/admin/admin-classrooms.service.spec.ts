@@ -1,9 +1,4 @@
-import {
-  ClassroomStatus,
-  CommunicationPreference,
-  EnglishLevel,
-  MeetingProvider,
-} from '@academia/types';
+import { ClassroomStatus, EnglishLevel, InstructionMode, MeetingProvider } from '@academia/types';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { PrismaService } from '../prisma/prisma.service';
@@ -25,10 +20,8 @@ function fila(overrides: Record<string, unknown> = {}) {
     meetingProvider: MeetingProvider.MANUAL,
     status: ClassroomStatus.PUBLISHED,
     isRecurring: false,
-    communicationModes: [CommunicationPreference.WRITTEN_TEXT],
-    hasInterpreter: false,
-    hasLiveCaptions: false,
-    hasVisualMaterials: false,
+    instructionMode: InstructionMode.LSC_NATIVA,
+    supports: [],
     createdAt: new Date('2026-08-01T00:00:00.000Z'),
     updatedAt: new Date('2026-08-01T00:00:00.000Z'),
     teacher: { firstName: 'Paula', lastName: 'Profesora' },

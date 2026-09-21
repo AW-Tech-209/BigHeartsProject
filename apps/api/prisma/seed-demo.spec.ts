@@ -140,6 +140,11 @@ describe('seed-demo — invariantes del seed', () => {
     expect(conPreferencia.length).toBeGreaterThanOrEqual(3);
   });
 
+  it('HU-506 T8: al menos un aula queda sin modo de instrucción declarado', () => {
+    const sinDeclarar = AULAS.filter((aula) => aula.instructionMode === null);
+    expect(sinDeclarar.length).toBeGreaterThan(0);
+  });
+
   it('cubre las cuentas de borde del login: PENDING, REJECTED y SUSPENDED', () => {
     const estados = new Set(USUARIOS.map((u) => u.status));
     expect(estados).toContain('PENDING');

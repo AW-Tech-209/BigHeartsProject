@@ -91,9 +91,10 @@ describe('enums del contrato', () => {
     ]);
   });
 
-  it('MeetingProvider incluye MANUAL, que es el único que la Fase 1 escribe', () => {
+  it('MeetingProvider incluye MANUAL y MICROSOFT_TEAMS (HU-506, D45)', () => {
     expect(MeetingProvider.MANUAL).toBe('MANUAL');
-    expect(Object.values(MeetingProvider)).toHaveLength(4);
+    expect(MeetingProvider.MICROSOFT_TEAMS).toBe('MICROSOFT_TEAMS');
+    expect(Object.values(MeetingProvider)).toHaveLength(5);
   });
 
   /**
