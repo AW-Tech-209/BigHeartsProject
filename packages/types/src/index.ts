@@ -1231,6 +1231,12 @@ export const ApiErrorCode = {
    * de ellos ocurrió.
    */
   BOOKING_NOT_IN_CLASSROOM: 'BOOKING_NOT_IN_CLASSROOM',
+  /** Falta `instructionMode` al crear o editar un aula (HU-505, D42). */
+  INSTRUCTION_MODE_REQUIRED: 'INSTRUCTION_MODE_REQUIRED',
+  /** El enlace no es de Zoom, Meet ni Teams (HU-505, D45, `esProveedorPermitido()`). */
+  MEETING_PROVIDER_NOT_ALLOWED: 'MEETING_PROVIDER_NOT_ALLOWED',
+  /** El aula no declaró su modo de instrucción y la operación lo exige (HU-506). */
+  CLASSROOM_ACCESSIBILITY_NOT_DECLARED: 'CLASSROOM_ACCESSIBILITY_NOT_DECLARED',
   /** Se superó el límite de peticiones (rate limiting). */
   TOO_MANY_REQUESTS: 'TOO_MANY_REQUESTS',
   DATABASE_UNAVAILABLE: 'DATABASE_UNAVAILABLE',
@@ -1302,3 +1308,12 @@ export * from './accesibilidad-aula';
  * que los anteriores: es parte del contrato, no lógica de negocio derivada.
  */
 export * from './acceso-enlace';
+
+/**
+ * El contrato de la clase accesible (HU-505, D42–D45): modo de instrucción,
+ * apoyos y la preferencia del estudiante reenfocada al mismo vocabulario.
+ */
+export * from './accesibilidad-clase';
+
+/** Proveedores de videollamada permitidos y `esProveedorPermitido()` (HU-505, D45). */
+export * from './proveedor-reunion';

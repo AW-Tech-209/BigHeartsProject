@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import { coincideConLaPreferencia } from './accesibilidad-aula';
+import { InstructionMode } from './accesibilidad-clase';
+import { coincideConLaAccesibilidad, coincideConLaPreferencia } from './accesibilidad-aula';
 import { CommunicationPreference } from './index';
 
 describe('coincideConLaPreferencia', () => {
@@ -56,6 +57,35 @@ describe('coincideConLaPreferencia', () => {
       coincideConLaPreferencia(
         { communicationModes: [CommunicationPreference.SIGN_LANGUAGE] },
         null,
+      ),
+    ).toBe(false);
+  });
+});
+
+describe('coincideConLaAccesibilidad', () => {
+  it('coincidencia exacta: mismo modo de instrucción en aula y preferencia', () => {
+    expect(
+      coincideConLaAccesibilidad(
+        { instructionMode: InstructionMode.LSC_NATIVA },
+        { instructionMode: InstructionMode.LSC_NATIVA, supports: [] },
+      ),
+    ).toBe(true);
+  });
+
+  it('aula con intérprete no coincide con quien prefiere LSC nativa: son modos distintos', () => {
+    expect(
+      coincideConLaAccesibilidad(
+        { instructionMode: InstructionMode.INTERPRETE_LSC },
+        { instructionMode: InstructionMode.LSC_NATIVA, supports: [] },
+      ),
+    ).toBe(false);
+  });
+
+  it('aula sin declarar modo de instrucción, no hay coincidencia posible', () => {
+    expect(
+      coincideConLaAccesibilidad(
+        { instructionMode: null },
+        { instructionMode: InstructionMode.LSC_NATIVA, supports: [] },
       ),
     ).toBe(false);
   });

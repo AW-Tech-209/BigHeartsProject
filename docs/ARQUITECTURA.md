@@ -371,17 +371,21 @@ llama.
 ### 4.9 Accesibilidad declarada del aula
 
 **Es lo que separa a BigHearts de una academia de inglés cualquiera.** El estudiante declara su
-`communicationPreference` al registrarse; el aula declara en qué modos se imparte. Sin esa segunda
-mitad, la primera no sirve para nada y el catálogo filtra por nivel y horario como filtraría
-cualquier otro producto.
+preferencia de accesibilidad al registrarse; el aula declara en qué modo se imparte. Sin esa
+segunda mitad, la primera no sirve para nada y el catálogo filtra por nivel y horario como
+filtraría cualquier otro producto.
 
-| Campo                | Qué es                                                                                                                                    |
-| -------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
-| `communicationModes` | Conjunto de `CommunicationPreference`. **Obligatorio y no vacío** en las aulas nuevas. Un aula puede impartirse en varios modos a la vez. |
-| `hasInterpreter`     | Hay intérprete de lengua de señas. Distinto de impartir en señas.                                                                         |
-| `hasLiveCaptions`    | Hay subtítulos en vivo.                                                                                                                   |
-| `hasVisualMaterials` | Hay materiales visuales de apoyo.                                                                                                         |
-| `meetingProvider`    | A qué plataforma apunta el enlace (Zoom · Meet · Otra). Los subtítulos automáticos no funcionan igual en todas.                           |
+**Modelo reescrito por la auditoría del socio (HU-505, D42–D45).** El modelo de HU-211 —un conjunto
+plano de `CommunicationPreference` más tres booleanos— trataba instrucción, interpretación y apoyo
+como intercambiables. El framework del socio (§2) es explícito en que no lo son: una clase para
+personas sordas se imparte en LSC o con intérprete de LSC, y todo lo demás es apoyo, nunca el
+método.
+
+| Campo             | Qué es                                                                                                                                      |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| `instructionMode` | `InstructionMode`: `LSC_NATIVA` o `INTERPRETE_LSC`. **Obligatorio** en las aulas nuevas — no hay tercera opción ni valor por defecto.       |
+| `supports`        | Conjunto de `ClassroomSupport`: lectura labial, texto escrito, subtítulos en vivo, materiales visuales. Opcional y aparte, nunca el método. |
+| `meetingProvider` | A qué plataforma apunta el enlace. Solo Zoom, Google Meet o Microsoft Teams (D45): son los tres que ofrecen subtítulos en vivo.             |
 
 **Reglas:**
 
@@ -390,19 +394,40 @@ cualquier otro producto.
    este producto existe para lo contrario. El filtro existe y **no viene puesto**.
 2. **Nunca se marca una clase como vetada.** La coincidencia es información, no una puerta. Un
    estudiante puede reservar cualquier clase.
-3. **A un aula sin modos declarados no se le inventa uno.** Las creadas antes de HU-211 quedan
-   «sin indicar» y el profesor las completa. Rellenar la migración con un valor por defecto sería
-   mentirle al estudiante sobre algo de lo que depende para seguir la clase.
+3. **A un aula sin modo de instrucción declarado no se le inventa uno.** Las creadas antes de esta
+   HU quedan «sin declarar» y el profesor las completa. Rellenar la migración con un valor por
+   defecto sería mentirle al estudiante sobre algo de lo que depende para seguir la clase.
 4. **La declaración es de buena fe.** La plataforma no audita que el profesor cumpla lo que dice.
-5. **`hearingLossLevel` y `communicationPreference` son del rol `STUDENT`.** Nadie más los lee: el
-   catálogo los usa para destacar clases y el profesor no los ve. Registro y perfil solo los piden
-   al estudiante, y `PATCH /users/me` los rechaza (`ACCESSIBILITY_FIELDS_NOT_ALLOWED`) si vienen de
-   un `TEACHER` o un `ADMIN` (HU-504).
+5. **`hearingLossLevel` y la preferencia de accesibilidad son del rol `STUDENT`.** Nadie más los
+   lee: el catálogo los usa para destacar clases y el profesor no los ve. Registro y perfil solo
+   los piden al estudiante, y `PATCH /users/me` los rechaza (`ACCESSIBILITY_FIELDS_NOT_ALLOWED`) si
+   vienen de un `TEACHER` o un `ADMIN` (HU-504).
 
-> **Decisión D21 (2026-08-20).** Se reutiliza el enum `CommunicationPreference` para el aula en vez
-> de crear uno paralelo, para que el emparejamiento sea directo:
-> `modosDelAula.includes(preferenciaDelEstudiante)`. La función vive en `@academia/types` y la usan
-> las dos apps, como `derivarEstadoAula()`.
+> **Decisión D42 (2026-09-21, HU-505).** Toda aula declara un modo de instrucción obligatorio,
+> `InstructionMode`: `LSC_NATIVA` o `INTERPRETE_LSC`. Son dos valores y no una lista porque son
+> experiencias pedagógicas distintas, no niveles de una escala — el framework del socio (§2) trata
+> instrucción e interpretación como no intercambiables.
+>
+> **Decisión D43 (2026-09-21, HU-505).** Los apoyos —lectura labial, texto escrito, subtítulos en
+> vivo, materiales visuales— son opcionales y viven aparte en `ClassroomSupport`. Nunca son el
+> método, siempre añadidura (framework §3). `SPOKEN_AUDIO` desaparece del vocabulario del aula.
+>
+> **Decisión D44 (2026-09-21, HU-505).** La preferencia del estudiante se reenfoca al mismo
+> vocabulario que el aula (`AccessibilityPreference`: `instructionMode` + `supports`), para que el
+> emparejamiento sea directo y no una tabla de conversión entre dos lenguajes distintos. Reemplaza a
+> D21 como eje de comparación; el mapeo desde los valores viejos de `CommunicationPreference` vive
+> en `@academia/types` (`MIGRACION_PREFERENCIA_COMUNICACION`) para que HU-506 migre sin inventar
+> reglas nuevas.
+>
+> **Decisión D45 (2026-09-21, HU-505).** Solo se aceptan enlaces de Zoom, Google Meet y Microsoft
+> Teams — son los tres que ofrecen subtítulos en vivo. `esProveedorPermitido()`, en
+> `@academia/types`, es la única fuente de esta regla: la comparten el DTO del backend y el
+> formulario del frontend para que no se desincronicen.
+>
+> **Decisión D21 (2026-08-20).** _Superada por D44._ Se reutilizaba el enum `CommunicationPreference`
+> para el aula, con emparejamiento directo `modosDelAula.includes(preferenciaDelEstudiante)`. Queda
+> aquí por su valor histórico; `coincideConLaPreferencia()` sigue en `@academia/types` hasta que
+> HU-506/HU-507 terminen la migración, pero `coincideConLaAccesibilidad()` es la función nueva.
 
 ## 5. Estructura del monorepo
 
