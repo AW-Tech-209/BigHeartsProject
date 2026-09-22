@@ -29,7 +29,9 @@ describe('PerfilPage — accesibilidad es del estudiante', () => {
 
       expect(screen.queryByText('Todavía no indicaste tus preferencias')).toBeNull();
       expect(screen.queryByLabelText('Nivel de hipoacusia', { exact: false })).toBeNull();
-      expect(screen.queryByLabelText('Preferencia de comunicación', { exact: false })).toBeNull();
+      expect(
+        screen.queryByLabelText('Cómo prefieres seguir las clases', { exact: false }),
+      ).toBeNull();
       expect(screen.getByLabelText('Apellidos', { exact: false })).toBeInTheDocument();
 
       await esperarSinFallosDeAccesibilidad(container);
@@ -46,7 +48,7 @@ describe('PerfilPage — accesibilidad es del estudiante', () => {
       await screen.findByLabelText('Nivel de hipoacusia', { exact: false }),
     ).toBeInTheDocument();
     expect(
-      screen.getByLabelText('Preferencia de comunicación', { exact: false }),
+      screen.getByLabelText('Cómo prefieres seguir las clases', { exact: false }),
     ).toBeInTheDocument();
     expect(
       screen.getByText('Todavía no indicaste tus preferencias', { exact: false }),

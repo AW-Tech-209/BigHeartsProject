@@ -2,11 +2,11 @@ import {
   BookingStatus,
   type ClassroomListItem,
   ClassroomStatus,
-  CommunicationPreference,
   EnglishLevel,
   EstadoTemporalAula,
   MeetingProvider,
   UserRole,
+  InstructionMode,
 } from '@academia/types';
 import { screen, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
@@ -39,10 +39,8 @@ function claseReservada(overrides: Partial<ClassroomListItem> = {}): ClassroomLi
     meetingProvider: MeetingProvider.MANUAL,
     status: ClassroomStatus.PUBLISHED,
     isRecurring: false,
-    communicationModes: [],
-    hasInterpreter: false,
-    hasLiveCaptions: false,
-    hasVisualMaterials: false,
+    instructionMode: null,
+    supports: [],
     createdAt: '2026-08-01T10:00:00.000Z',
     updatedAt: '2026-08-01T10:00:00.000Z',
     myBookingStatus: BookingStatus.CONFIRMED,
@@ -176,7 +174,7 @@ describe('MisClasesPage — accesibilidad con datos (AC6)', () => {
         claseReservada({
           id: 'aula-2',
           title: 'Inglés de negocios',
-          communicationModes: [CommunicationPreference.SIGN_LANGUAGE],
+          instructionMode: InstructionMode.LSC_NATIVA,
         }),
       ]),
     );

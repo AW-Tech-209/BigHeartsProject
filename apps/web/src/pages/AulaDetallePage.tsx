@@ -1,11 +1,13 @@
 import {
+  type AccessibilityPreference,
   BookingStatus,
   type ClassroomDetail,
-  coincideConLaPreferencia,
+  coincideConLaAccesibilidad,
   derivarEstadoAula,
   UserRole,
 } from '@academia/types';
 import {
+  Accessibility,
   BookOpen,
   CalendarClock,
   Clock,
@@ -22,7 +24,7 @@ import { EstadoAula } from '@/components/dominio/estado-aula';
 import { varianteEstadoAula } from '@/components/dominio/estado-aula-variantes';
 import { EstadoVacio } from '@/components/dominio/estado-vacio';
 import { IndicadorCupo } from '@/components/dominio/indicador-cupo';
-import { ModoComunicacionBadge } from '@/components/dominio/modo-comunicacion-badge';
+import { ModoInstruccion } from '@/components/dominio/modo-instruccion';
 import { AppShell } from '@/components/layout/app-shell';
 import { PaginaCabecera } from '@/components/layout/pagina-cabecera';
 import { Button } from '@/components/ui/button';
@@ -34,7 +36,12 @@ import { AccionReservarAula } from '@/features/aulas/components/accion-reservar-
 import { InscritosAula } from '@/features/aulas/components/inscritos-aula';
 import { useAccesoAlEnlace } from '@/features/aulas/hooks/use-acceso-al-enlace';
 import { esAulaNoEncontrada, useClassroom } from '@/features/aulas/hooks/use-classroom';
-import { APOYOS_AULA } from '@/features/aulas/lib/apoyos-aula';
+import {
+  apoyosEnOrden,
+  etiquetaApoyo,
+  iconoApoyo,
+  preferenciaAccesibilidadDe,
+} from '@/features/aulas/lib/accesibilidad-aula';
 import {
   describirDuracion,
   describirHorario,
@@ -145,7 +152,9 @@ export function AulaDetallePage() {
           esDueno={user?.id === aula.teacherId}
           puedeReservarla={puedeReservar(user)}
           preferenciaEstudiante={
-            user?.role === UserRole.STUDENT ? user.communicationPreference : undefined
+            user?.role === UserRole.STUDENT
+              ? preferenciaAccesibilidadDe(user.communicationPreference)
+              : undefined
           }
         />
       )}
@@ -164,8 +173,8 @@ type DetalleDelAulaProps = {
   esDueno: boolean;
   /** Lo que decidió `puedeReservar()`. Ya resuelto: aquí no se vuelve a razonar sobre el rol. */
   puedeReservarla: boolean;
-  /** `undefined` si quien mira no es estudiante o no declaró preferencia. */
-  preferenciaEstudiante?: ClassroomDetail['communicationModes'][number] | null;
+  /** `undefined` si quien mira no es estudiante; `null` si no declaró preferencia. */
+  preferenciaEstudiante?: AccessibilityPreference | null;
 };
 
 function DetalleDelAula({
@@ -187,6 +196,7 @@ function DetalleDelAula({
   const accesoAlEnlace = useAccesoAlEnlace(aula.accessState, aula.accessOpensAt, aula.id);
 
   const horario = describirHorarioPartes(aula.scheduledAt);
+  const apoyos = apoyosEnOrden(aula.supports);
 
   return (
     <div className="subir-suave space-y-8">
@@ -225,38 +235,55 @@ function DetalleDelAula({
                     Cómo se imparte
                   </h2>
                   <p className="text-sm text-muted-foreground">
-                    Comunicación y apoyos disponibles para seguir la clase.
+                    La lengua en que se imparte y los apoyos para seguir la clase.
                   </p>
                 </div>
               </div>
 
-              <div className="flex flex-wrap items-center gap-1.5">
-                {aula.communicationModes.length === 0 ? (
-                  <ModoComunicacionBadge modo={null} />
-                ) : (
-                  aula.communicationModes.map((modo) => (
-                    <ModoComunicacionBadge key={modo} modo={modo} />
-                  ))
-                )}
-                {coincideConLaPreferencia(aula, preferenciaEstudiante) && (
+              <div className="flex flex-wrap items-center gap-2">
+                <ModoInstruccion modo={aula.instructionMode} tamano="destacado" />
+                {coincideConLaAccesibilidad(aula, preferenciaEstudiante) && (
                   <Badge tono="primary" icon={UserCheck}>
                     Coincide con tu preferencia
                   </Badge>
                 )}
               </div>
 
-              {(aula.hasInterpreter || aula.hasLiveCaptions || aula.hasVisualMaterials) && (
-                <ul className="flex flex-wrap gap-2" aria-label="Apoyos disponibles">
-                  {APOYOS_AULA.filter(({ clave }) => aula[clave]).map(
-                    ({ clave, etiqueta, icon: Icon }) => (
-                      <li key={clave}>
-                        <Badge tono="neutral" icon={Icon} className="px-2.5 py-1 text-sm">
-                          {etiqueta}
+              {/* HU-507, T5: sin inventarle un modo, al dueño se le ofrece declararlo. */}
+              {!aula.instructionMode && esDueno && (
+                <Callout variant="info" icon={Accessibility} title="Declara cómo se imparte">
+                  <div className="space-y-3">
+                    <p>
+                      Tus estudiantes necesitan saber si la clase es en LSC o con intérprete antes
+                      de reservar.
+                    </p>
+                    <Button
+                      variant="outline"
+                      render={<Link to={`/mis-aulas/${aula.id}/accesibilidad`} />}
+                      className="h-11 gap-2 px-5 text-base"
+                    >
+                      <Accessibility aria-hidden="true" strokeWidth={2} className="size-4" />
+                      Completar accesibilidad
+                    </Button>
+                  </div>
+                </Callout>
+              )}
+
+              {apoyos.length > 0 && (
+                <div className="space-y-2">
+                  <p id="aula-apoyos" className="text-sm text-muted-foreground">
+                    Apoyos
+                  </p>
+                  <ul className="flex flex-wrap gap-2" aria-labelledby="aula-apoyos">
+                    {apoyos.map((apoyo) => (
+                      <li key={apoyo}>
+                        <Badge tono="neutral" icon={iconoApoyo[apoyo]} className="px-2.5 py-1">
+                          {etiquetaApoyo[apoyo]}
                         </Badge>
                       </li>
-                    ),
-                  )}
-                </ul>
+                    ))}
+                  </ul>
+                </div>
               )}
 
               <p className="border-t border-border pt-4 text-sm text-muted-foreground">

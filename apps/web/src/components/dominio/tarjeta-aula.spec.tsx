@@ -2,11 +2,12 @@ import {
   BookingStatus,
   type ClassroomListItem,
   ClassroomStatus,
-  CommunicationPreference,
+  ClassroomSupport,
   EnglishLevel,
+  InstructionMode,
   MeetingProvider,
 } from '@academia/types';
-import { screen } from '@testing-library/react';
+import { screen, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 
 import { esperarSinFallosDeAccesibilidad } from '@/test/accesibilidad';
@@ -30,10 +31,8 @@ function aula(overrides: Partial<ClassroomListItem> = {}): ClassroomListItem {
     meetingProvider: MeetingProvider.MANUAL,
     status: ClassroomStatus.PUBLISHED,
     isRecurring: false,
-    communicationModes: [],
-    hasInterpreter: false,
-    hasLiveCaptions: false,
-    hasVisualMaterials: false,
+    instructionMode: InstructionMode.LSC_NATIVA,
+    supports: [],
     createdAt: '2026-08-01T10:00:00.000Z',
     updatedAt: '2026-08-01T10:00:00.000Z',
     teacherFirstName: 'Ana',
@@ -94,15 +93,16 @@ describe('<TarjetaAula /> — anatomía (layout-y-composicion.md)', () => {
   it('muestra los apoyos declarados con sus etiquetas visibles', () => {
     renderConProviders(
       <TarjetaAula
-        classroom={aula({ hasInterpreter: true, hasLiveCaptions: true, hasVisualMaterials: true })}
+        classroom={aula({
+          supports: [ClassroomSupport.LIVE_CAPTIONS, ClassroomSupport.VISUAL_MATERIALS],
+        })}
         maxEtiquetasVisibles={4}
         ahora={AHORA}
       />,
     );
 
-    expect(screen.getByText('Intérprete de lengua de señas')).toBeInTheDocument();
     expect(screen.getByText('Subtítulos en vivo')).toBeInTheDocument();
-    expect(screen.getByText('Materiales visuales de apoyo')).toBeInTheDocument();
+    expect(screen.getByText('Materiales visuales')).toBeInTheDocument();
   });
 });
 
@@ -285,89 +285,79 @@ describe('<TarjetaAula perspectiva="profesor" /> — la vista del dueño (AC8)',
 });
 
 /**
- * HU-211: el modo de comunicación en la tarjeta (T10), la marca de
- * coincidencia (T12) y la vía para completar un aula «sin indicar» (T15).
+ * HU-507: el modo de instrucción se distingue de los apoyos (T1/T2/AC1), un
+ * aula sin declarar se dice tal cual (T5/AC4) y la coincidencia se destaca sin
+ * filtrar (AC5).
  */
-describe('<TarjetaAula /> — accesibilidad declarada del aula (T10, T12, T15)', () => {
-  it('sin modos declarados, muestra «Modo sin indicar»', () => {
-    renderConProviders(<TarjetaAula classroom={aula({ communicationModes: [] })} ahora={AHORA} />);
+describe('<TarjetaAula /> — modo de instrucción y apoyos (HU-507)', () => {
+  const LSC = 'Lengua de Señas Colombiana (LSC)';
+  const INTERPRETE = 'Con intérprete de Lengua de Señas Colombiana (LSC)';
+  const PREFIERE_LSC = { instructionMode: InstructionMode.LSC_NATIVA, supports: [] };
 
-    expect(screen.getByText('Modo sin indicar')).toBeInTheDocument();
-  });
-
-  it('con un modo declarado, lo muestra con su etiqueta', () => {
+  it('el modo de instrucción se encuentra por su rol, separado de los apoyos', () => {
     renderConProviders(
       <TarjetaAula
-        classroom={aula({ communicationModes: [CommunicationPreference.SIGN_LANGUAGE] })}
-        ahora={AHORA}
-      />,
-    );
-
-    expect(screen.getByText('Lengua de signos')).toBeInTheDocument();
-  });
-
-  // El orden CANÓNICO decide, no el de inserción: todas las etiquetas deben
-  // aparecer y conservar la misma secuencia en cada tarjeta. `maxEtiquetasVisibles`
-  // sube al número de modos: aquí se valida el orden, no el colapso tras «+N».
-  it('muestra todos los modos en orden canónico sin importar el orden de llegada', () => {
-    const { rerender } = renderConProviders(
-      <TarjetaAula
-        maxEtiquetasVisibles={4}
         classroom={aula({
-          communicationModes: [
-            CommunicationPreference.SPOKEN_AUDIO,
-            CommunicationPreference.LIP_READING,
-            CommunicationPreference.WRITTEN_TEXT,
-            CommunicationPreference.SIGN_LANGUAGE,
-          ],
+          instructionMode: InstructionMode.LSC_NATIVA,
+          supports: [ClassroomSupport.LIP_READING, ClassroomSupport.LIVE_CAPTIONS],
         })}
         ahora={AHORA}
       />,
     );
-    expect(screen.getByText('Lengua de signos')).toBeInTheDocument();
-    expect(screen.getByText('Lectura labial')).toBeInTheDocument();
-    expect(screen.getByText('Texto escrito')).toBeInTheDocument();
-    expect(screen.getByText('Audio con apoyo')).toBeInTheDocument();
-    expect(
-      screen
-        .getByText('Lengua de signos')
-        .compareDocumentPosition(screen.getByText('Lectura labial')),
-    ).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
-    expect(
-      screen.getByText('Lectura labial').compareDocumentPosition(screen.getByText('Texto escrito')),
-    ).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
-    expect(
-      screen
-        .getByText('Texto escrito')
-        .compareDocumentPosition(screen.getByText('Audio con apoyo')),
-    ).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
 
-    rerender(
+    const modo = screen.getByRole('group', { name: 'Modo de instrucción' });
+    const apoyos = screen.getByRole('list', { name: 'Apoyos de la clase' });
+
+    expect(modo).toHaveTextContent(LSC);
+    expect(within(apoyos).getByText('Lectura labial')).toBeInTheDocument();
+    expect(within(apoyos).getByText('Subtítulos en vivo')).toBeInTheDocument();
+    expect(within(apoyos).queryByText(LSC)).not.toBeInTheDocument();
+    // AC1: no comparten fila — ninguno contiene al otro ni cuelga del mismo contenedor.
+    expect(modo.parentElement).not.toBe(apoyos.parentElement);
+  });
+
+  it('con intérprete, lo dice así', () => {
+    renderConProviders(
       <TarjetaAula
-        maxEtiquetasVisibles={4}
-        classroom={aula({
-          communicationModes: [
-            CommunicationPreference.SIGN_LANGUAGE,
-            CommunicationPreference.WRITTEN_TEXT,
-            CommunicationPreference.SPOKEN_AUDIO,
-            CommunicationPreference.LIP_READING,
-          ],
-        })}
+        classroom={aula({ instructionMode: InstructionMode.INTERPRETE_LSC })}
         ahora={AHORA}
       />,
     );
-    expect(screen.getByText('Lengua de signos')).toBeInTheDocument();
-    expect(screen.getByText('Lectura labial')).toBeInTheDocument();
-    expect(screen.getByText('Texto escrito')).toBeInTheDocument();
-    expect(screen.getByText('Audio con apoyo')).toBeInTheDocument();
+
+    expect(screen.getByRole('group', { name: 'Modo de instrucción' })).toHaveTextContent(
+      INTERPRETE,
+    );
   });
 
-  // AC4: solo marca las que coinciden, y nunca con una marca negativa.
+  it('sin modo declarado muestra su propio estado, sin inventarle uno', () => {
+    renderConProviders(<TarjetaAula classroom={aula({ instructionMode: null })} ahora={AHORA} />);
+
+    const modo = screen.getByRole('group', { name: 'Modo de instrucción' });
+    expect(modo).toHaveTextContent('Modo de instrucción sin declarar');
+    expect(modo).not.toHaveTextContent(/LSC/);
+  });
+
+  it('el modo nunca colapsa tras «+N», aunque el tope sea 0', () => {
+    renderConProviders(
+      <TarjetaAula
+        classroom={aula({
+          instructionMode: InstructionMode.LSC_NATIVA,
+          supports: [ClassroomSupport.WRITTEN_TEXT],
+        })}
+        maxEtiquetasVisibles={0}
+        ahora={AHORA}
+      />,
+    );
+
+    expect(screen.getByText(LSC)).toBeInTheDocument();
+    expect(screen.queryByText('Texto escrito')).not.toBeInTheDocument();
+  });
+
   it('coincide con la preferencia del estudiante: muestra la marca', () => {
     renderConProviders(
       <TarjetaAula
-        classroom={aula({ communicationModes: [CommunicationPreference.SIGN_LANGUAGE] })}
-        preferenciaEstudiante={CommunicationPreference.SIGN_LANGUAGE}
+        classroom={aula({ instructionMode: InstructionMode.LSC_NATIVA })}
+        preferenciaEstudiante={PREFIERE_LSC}
         ahora={AHORA}
       />,
     );
@@ -375,23 +365,26 @@ describe('<TarjetaAula /> — accesibilidad declarada del aula (T10, T12, T15)',
     expect(screen.getByText('Coincide con tu preferencia')).toBeInTheDocument();
   });
 
-  it('no coincide: no muestra la marca, y ninguna marca negativa la sustituye', () => {
+  // AC5: se destaca, no se filtra — la clase que no coincide se sigue pudiendo reservar.
+  it('no coincide: sin marca, sin marca negativa, y se puede reservar igual', () => {
     renderConProviders(
       <TarjetaAula
-        classroom={aula({ communicationModes: [CommunicationPreference.LIP_READING] })}
-        preferenciaEstudiante={CommunicationPreference.SIGN_LANGUAGE}
+        classroom={aula({ instructionMode: InstructionMode.INTERPRETE_LSC })}
+        preferenciaEstudiante={PREFIERE_LSC}
+        puedeReservarla
         ahora={AHORA}
       />,
     );
 
     expect(screen.queryByText('Coincide con tu preferencia')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /reservar/i })).toBeEnabled();
   });
 
-  // AC6: sin preferencia declarada, nunca hay marca.
-  it('sin preferencia declarada, no hay marca aunque el aula tenga modos', () => {
+  it('sin preferencia declarada, no hay marca aunque el aula tenga modo', () => {
     renderConProviders(
       <TarjetaAula
-        classroom={aula({ communicationModes: [CommunicationPreference.SIGN_LANGUAGE] })}
+        classroom={aula({ instructionMode: InstructionMode.LSC_NATIVA })}
+        preferenciaEstudiante={null}
         ahora={AHORA}
       />,
     );
@@ -402,9 +395,9 @@ describe('<TarjetaAula /> — accesibilidad declarada del aula (T10, T12, T15)',
   it('en la perspectiva del profesor nunca aparece la marca de coincidencia', () => {
     renderConProviders(
       <TarjetaAula
-        classroom={aula({ communicationModes: [CommunicationPreference.SIGN_LANGUAGE] })}
+        classroom={aula({ instructionMode: InstructionMode.LSC_NATIVA })}
         perspectiva="profesor"
-        preferenciaEstudiante={CommunicationPreference.SIGN_LANGUAGE}
+        preferenciaEstudiante={PREFIERE_LSC}
         ahora={AHORA}
       />,
     );
@@ -412,10 +405,10 @@ describe('<TarjetaAula /> — accesibilidad declarada del aula (T10, T12, T15)',
     expect(screen.queryByText('Coincide con tu preferencia')).not.toBeInTheDocument();
   });
 
-  it('el profesor ve «Completar accesibilidad» cuando su aula no tiene modos', () => {
+  it('el profesor ve «Completar accesibilidad» cuando su aula no tiene modo', () => {
     renderConProviders(
       <TarjetaAula
-        classroom={aula({ id: 'aula-42', communicationModes: [] })}
+        classroom={aula({ id: 'aula-42', instructionMode: null })}
         perspectiva="profesor"
         ahora={AHORA}
       />,
@@ -427,10 +420,25 @@ describe('<TarjetaAula /> — accesibilidad declarada del aula (T10, T12, T15)',
     );
   });
 
-  it('el profesor NO ve el enlace cuando su aula ya declaró modos', () => {
+  it('el dueño también lo ve desde el catálogo (T5)', () => {
     renderConProviders(
       <TarjetaAula
-        classroom={aula({ communicationModes: [CommunicationPreference.SIGN_LANGUAGE] })}
+        classroom={aula({ id: 'aula-42', instructionMode: null })}
+        esMia
+        ahora={AHORA}
+      />,
+    );
+
+    expect(screen.getByRole('link', { name: 'Completar accesibilidad' })).toHaveAttribute(
+      'href',
+      '/mis-aulas/aula-42/accesibilidad',
+    );
+  });
+
+  it('el profesor NO ve el enlace cuando su aula ya declaró modo', () => {
+    renderConProviders(
+      <TarjetaAula
+        classroom={aula({ instructionMode: InstructionMode.LSC_NATIVA })}
         perspectiva="profesor"
         ahora={AHORA}
       />,
@@ -439,97 +447,112 @@ describe('<TarjetaAula /> — accesibilidad declarada del aula (T10, T12, T15)',
     expect(screen.queryByRole('link', { name: 'Completar accesibilidad' })).not.toBeInTheDocument();
   });
 
-  // El catálogo es del estudiante: la acción de gestión del profesor no le sirve.
-  it('en el catálogo (perspectiva estudiante) nunca aparece «Completar accesibilidad»', () => {
-    renderConProviders(<TarjetaAula classroom={aula({ communicationModes: [] })} ahora={AHORA} />);
+  it('a quien no es dueño nunca se le ofrece «Completar accesibilidad»', () => {
+    renderConProviders(<TarjetaAula classroom={aula({ instructionMode: null })} ahora={AHORA} />);
 
     expect(screen.queryByRole('link', { name: 'Completar accesibilidad' })).not.toBeInTheDocument();
+  });
+
+  it.each(TEMAS)('sin violaciones de axe con modo y apoyos (tema %s)', async (tema) => {
+    const { container } = renderConProviders(
+      <TarjetaAula
+        classroom={aula({
+          instructionMode: InstructionMode.INTERPRETE_LSC,
+          supports: [ClassroomSupport.LIVE_CAPTIONS, ClassroomSupport.VISUAL_MATERIALS],
+        })}
+        preferenciaEstudiante={{ instructionMode: InstructionMode.INTERPRETE_LSC, supports: [] }}
+        ahora={AHORA}
+      />,
+      { tema },
+    );
+
+    await esperarSinFallosDeAccesibilidad(container);
   });
 });
 
 /**
- * El renglón horizontal: una sola fila de etiquetas que colapsa tras «+N», y la
- * banda al pie que reubica los avisos que la acción ya pintaba.
+ * Solo los apoyos colapsan tras «+N»; la banda al pie reubica los ocultos.
  */
-describe('<TarjetaAula /> — la fila de etiquetas y su «+N»', () => {
-  const CUATRO_MODOS = aula({
-    communicationModes: [
-      CommunicationPreference.SIGN_LANGUAGE,
-      CommunicationPreference.LIP_READING,
-      CommunicationPreference.WRITTEN_TEXT,
-      CommunicationPreference.SPOKEN_AUDIO,
+describe('<TarjetaAula /> — los apoyos y su «+N»', () => {
+  const CUATRO_APOYOS = aula({
+    instructionMode: InstructionMode.LSC_NATIVA,
+    supports: [
+      ClassroomSupport.VISUAL_MATERIALS,
+      ClassroomSupport.LIVE_CAPTIONS,
+      ClassroomSupport.WRITTEN_TEXT,
+      ClassroomSupport.LIP_READING,
     ],
   });
 
-  it('con más etiquetas que el tope, las de más quedan fuera del DOM tras un «+N»', () => {
+  it('en orden canónico; con más apoyos que el tope, el resto queda tras un «+N»', () => {
     renderConProviders(
-      <TarjetaAula classroom={CUATRO_MODOS} maxEtiquetasVisibles={2} ahora={AHORA} />,
+      <TarjetaAula classroom={CUATRO_APOYOS} maxEtiquetasVisibles={2} ahora={AHORA} />,
     );
 
-    expect(screen.getByText('Lengua de signos')).toBeInTheDocument();
     expect(screen.getByText('Lectura labial')).toBeInTheDocument();
-    expect(screen.queryByText('Texto escrito')).not.toBeInTheDocument();
-    expect(screen.queryByText('Audio con apoyo')).not.toBeInTheDocument();
+    expect(screen.getByText('Texto escrito')).toBeInTheDocument();
+    expect(
+      screen.getByText('Lectura labial').compareDocumentPosition(screen.getByText('Texto escrito')),
+    ).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
+    expect(screen.queryByText('Subtítulos en vivo')).not.toBeInTheDocument();
+    expect(screen.queryByText('Materiales visuales')).not.toBeInTheDocument();
 
-    expect(screen.getByRole('button', { name: /2 etiquetas más/i })).toHaveAttribute(
+    expect(screen.getByRole('button', { name: /2 apoyos más/i })).toHaveAttribute(
       'aria-expanded',
       'false',
     );
   });
 
-  it('el «+N» despliega las etiquetas ocultas en una banda al pie', async () => {
+  it('el «+N» despliega los apoyos ocultos en una banda al pie', async () => {
     const { user } = renderConProviders(
-      <TarjetaAula classroom={CUATRO_MODOS} maxEtiquetasVisibles={2} ahora={AHORA} />,
+      <TarjetaAula classroom={CUATRO_APOYOS} maxEtiquetasVisibles={2} ahora={AHORA} />,
     );
 
-    await user.click(screen.getByRole('button', { name: /2 etiquetas más/i }));
+    await user.click(screen.getByRole('button', { name: /2 apoyos más/i }));
 
     expect(screen.getByRole('button', { name: /ver menos/i })).toHaveAttribute(
       'aria-expanded',
       'true',
     );
-    expect(screen.getByText('También:')).toBeInTheDocument();
-    expect(screen.getByText('Texto escrito')).toBeInTheDocument();
-    expect(screen.getByText('Audio con apoyo')).toBeInTheDocument();
+    const banda = screen.getByRole('list', { name: 'Más apoyos de la clase' });
+    expect(within(banda).getByText('Subtítulos en vivo')).toBeInTheDocument();
+    expect(within(banda).getByText('Materiales visuales')).toBeInTheDocument();
   });
 
   it('el «+N» se alcanza con el teclado y alterna la banda con Enter', async () => {
     const { user } = renderConProviders(
-      <TarjetaAula classroom={CUATRO_MODOS} maxEtiquetasVisibles={2} ahora={AHORA} />,
+      <TarjetaAula classroom={CUATRO_APOYOS} maxEtiquetasVisibles={2} ahora={AHORA} />,
     );
 
     await user.tab(); // el enlace del título
     await user.tab(); // el «+N»
-    expect(screen.getByRole('button', { name: /2 etiquetas más/i })).toHaveFocus();
+    expect(screen.getByRole('button', { name: /2 apoyos más/i })).toHaveFocus();
 
     await user.keyboard('{Enter}');
     expect(screen.getByText('También:')).toBeInTheDocument();
   });
 
-  it('los badges fijos (Tu clase, Coincide) reducen el hueco: los modos van al «+N»', () => {
+  it('«Tu clase» reduce el hueco de los apoyos', () => {
     renderConProviders(
       <TarjetaAula
         classroom={aula({
-          communicationModes: [
-            CommunicationPreference.SIGN_LANGUAGE,
-            CommunicationPreference.LIP_READING,
-          ],
+          instructionMode: InstructionMode.LSC_NATIVA,
+          supports: [ClassroomSupport.LIP_READING, ClassroomSupport.WRITTEN_TEXT],
         })}
-        preferenciaEstudiante={CommunicationPreference.SIGN_LANGUAGE}
         esMia
         ahora={AHORA}
       />,
     );
 
     expect(screen.getByText('Tu clase')).toBeInTheDocument();
-    expect(screen.getByText('Coincide con tu preferencia')).toBeInTheDocument();
-    expect(screen.queryByText('Lengua de signos')).not.toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /2 etiquetas más/i })).toBeInTheDocument();
+    expect(screen.getByText('Lectura labial')).toBeInTheDocument();
+    expect(screen.queryByText('Texto escrito')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /1 apoyo más/i })).toBeInTheDocument();
   });
 
   it('con tope 0, el estado y «Tu clase» siguen visibles', () => {
     renderConProviders(
-      <TarjetaAula classroom={CUATRO_MODOS} maxEtiquetasVisibles={0} esMia ahora={AHORA} />,
+      <TarjetaAula classroom={CUATRO_APOYOS} maxEtiquetasVisibles={0} esMia ahora={AHORA} />,
     );
 
     expect(screen.getByText('Hay cupo')).toBeInTheDocument();

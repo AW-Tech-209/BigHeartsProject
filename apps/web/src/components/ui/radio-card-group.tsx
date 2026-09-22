@@ -14,8 +14,11 @@ type RadioCardGroupProps<T extends string> = {
   name: string;
   /** Etiqueta accesible del grupo (id del texto que lo titula). */
   labelledBy: string;
+  /** Ids de la ayuda y el error del grupo (`aria-describedby`). */
+  describedBy?: string;
   options: RadioCardOption<T>[];
-  value: T;
+  /** `null`: ninguna opción elegida todavía. */
+  value: T | null;
   onChange: (value: T) => void;
   className?: string;
 };
@@ -29,6 +32,7 @@ type RadioCardGroupProps<T extends string> = {
 export function RadioCardGroup<T extends string>({
   name,
   labelledBy,
+  describedBy,
   options,
   value,
   onChange,
@@ -38,6 +42,7 @@ export function RadioCardGroup<T extends string>({
     <div
       role="radiogroup"
       aria-labelledby={labelledBy}
+      aria-describedby={describedBy}
       className={cn('grid gap-3 sm:grid-cols-2', className)}
     >
       {options.map((option) => {

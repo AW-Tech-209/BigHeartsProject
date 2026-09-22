@@ -6,7 +6,6 @@ import {
   type ClassroomLeadTimeWarningDetails,
   type CreateClassroomInput,
   EnglishLevel,
-  MeetingProvider,
   type ValidationErrorDetail,
 } from '@academia/types';
 import { CalendarClock, Copy, LoaderCircle, Lock } from 'lucide-react';
@@ -30,10 +29,11 @@ import {
 } from '../lib/coherencia-temporal';
 import { aFechaYHora, aInstanteISO, describirDuracion, describirHorario } from '../lib/horario';
 import { duracionesHasta, nivelesDeIngles } from '../lib/niveles';
-import { etiquetaPlataformaReunion, PLATAFORMAS_OFRECIDAS } from '../lib/plataforma-reunion';
 import {
   type ClassroomFieldErrors,
   type ClassroomFormValues,
+  MENSAJE_MODO_OBLIGATORIO,
+  MENSAJE_PROVEEDOR_NO_PERMITIDO,
   validateClassroom,
 } from '../lib/validate-classroom';
 import { DialogoPocaAntelacion } from './dialogo-poca-antelacion';
@@ -49,7 +49,7 @@ const ORDEN_DE_CAMPOS: (keyof ClassroomFormValues)[] = [
   'durationMinutes',
   'maxStudents',
   'meetingLink',
-  'communicationModes',
+  'instructionMode',
 ];
 
 /** Los valores con los que arranca el formulario: en blanco al crear, precargados al editar. */
@@ -64,11 +64,8 @@ function valoresIniciales(aula?: ClassroomDetail): ClassroomFormValues {
       hora: '',
       durationMinutes: '60',
       meetingLink: '',
-      communicationModes: [],
-      hasInterpreter: false,
-      hasLiveCaptions: false,
-      hasVisualMaterials: false,
-      meetingProvider: MeetingProvider.GOOGLE_MEET,
+      instructionMode: null,
+      supports: [],
     };
   }
 
@@ -82,11 +79,8 @@ function valoresIniciales(aula?: ClassroomDetail): ClassroomFormValues {
     hora,
     durationMinutes: String(aula.durationMinutes),
     meetingLink: aula.meetingLink ?? '',
-    communicationModes: aula.communicationModes,
-    hasInterpreter: aula.hasInterpreter,
-    hasLiveCaptions: aula.hasLiveCaptions,
-    hasVisualMaterials: aula.hasVisualMaterials,
-    meetingProvider: aula.meetingProvider,
+    instructionMode: aula.instructionMode,
+    supports: aula.supports,
   };
 }
 
@@ -105,8 +99,7 @@ const CAMPO_DEL_BACKEND: Record<string, keyof ClassroomFormValues> = {
   scheduledAt: 'fecha',
   durationMinutes: 'durationMinutes',
   meetingLink: 'meetingLink',
-  communicationModes: 'communicationModes',
-  meetingProvider: 'meetingProvider',
+  instructionMode: 'instructionMode',
 };
 
 type FormularioAulaProps = {
@@ -274,6 +267,19 @@ export function FormularioAula({ aula, duplicarDesde, onGuardada }: FormularioAu
         // Cae al aviso de bloque con el mensaje del servidor.
       }
 
+      if (error.code === ApiErrorCode.MEETING_PROVIDER_NOT_ALLOWED) {
+        applyFieldErrors({ meetingLink: MENSAJE_PROVEEDOR_NO_PERMITIDO });
+        return;
+      }
+
+      if (
+        error.code === ApiErrorCode.INSTRUCTION_MODE_REQUIRED ||
+        error.code === ApiErrorCode.CLASSROOM_ACCESSIBILITY_NOT_DECLARED
+      ) {
+        applyFieldErrors({ instructionMode: MENSAJE_MODO_OBLIGATORIO });
+        return;
+      }
+
       if (error.code === ApiErrorCode.VALIDATION_ERROR) {
         const fields = (error.details?.fields as ValidationErrorDetail[] | undefined) ?? [];
         const mapped: ClassroomFieldErrors = {};
@@ -310,6 +316,10 @@ export function FormularioAula({ aula, duplicarDesde, onGuardada }: FormularioAu
       applyFieldErrors({ fecha: 'Esa fecha no existe. Revisa el día y el mes.' });
       return;
     }
+    if (!values.instructionMode) {
+      applyFieldErrors({ instructionMode: MENSAJE_MODO_OBLIGATORIO });
+      return;
+    }
 
     const input: CreateClassroomInput = {
       title: values.title.trim(),
@@ -319,11 +329,8 @@ export function FormularioAula({ aula, duplicarDesde, onGuardada }: FormularioAu
       scheduledAt,
       durationMinutes: Number(values.durationMinutes),
       meetingLink: values.meetingLink.trim(),
-      communicationModes: values.communicationModes,
-      hasInterpreter: values.hasInterpreter,
-      hasLiveCaptions: values.hasLiveCaptions,
-      hasVisualMaterials: values.hasVisualMaterials,
-      meetingProvider: values.meetingProvider,
+      instructionMode: values.instructionMode,
+      supports: values.supports,
       ...(confirmarPocaAntelacion ? { confirmarPocaAntelacion: true } : {}),
     };
 
@@ -531,7 +538,8 @@ export function FormularioAula({ aula, duplicarDesde, onGuardada }: FormularioAu
         error={errors.meetingLink}
         description={
           <>
-            Pega aquí el enlace de la reunión que creaste en Zoom o Meet.
+            Pega aquí el enlace de la reunión que creaste en Zoom, Google Meet o Microsoft Teams:
+            son las plataformas con subtítulos en vivo.
             <span className="mt-2 flex items-start gap-1.5 font-medium text-foreground">
               <Lock aria-hidden="true" strokeWidth={2} className="mt-0.5 size-4 shrink-0" />
               <span>
@@ -552,35 +560,6 @@ export function FormularioAula({ aula, duplicarDesde, onGuardada }: FormularioAu
         />
       </Field>
 
-      {/*
-        T9: junto al campo del enlace, no dentro de la sección de
-        accesibilidad — es sobre ESTE enlace, no un dato del aula en general.
-      */}
-      <Field
-        id="meetingProvider"
-        label="Plataforma de la reunión"
-        required
-        error={errors.meetingProvider}
-        description="Los subtítulos automáticos no funcionan igual en todas las plataformas: el estudiante lo necesita saber para prepararse."
-      >
-        <NativeSelect
-          name="meetingProvider"
-          value={values.meetingProvider}
-          onChange={(event) =>
-            updateField(
-              'meetingProvider',
-              event.target.value as ClassroomFormValues['meetingProvider'],
-            )
-          }
-        >
-          {PLATAFORMAS_OFRECIDAS.map((plataforma) => (
-            <option key={plataforma} value={plataforma}>
-              {etiquetaPlataformaReunion[plataforma]}
-            </option>
-          ))}
-        </NativeSelect>
-      </Field>
-
       <SeccionAccesibilidadAula
         values={values}
         onChange={(patch) => {
@@ -588,7 +567,7 @@ export function FormularioAula({ aula, duplicarDesde, onGuardada }: FormularioAu
             updateField(field as keyof ClassroomFormValues, value as never);
           }
         }}
-        error={errors.communicationModes}
+        error={errors.instructionMode}
       />
 
       <Button type="submit" disabled={mutation.isPending} className="h-12 w-full gap-2 text-base">

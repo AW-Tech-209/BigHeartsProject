@@ -4,6 +4,7 @@ import {
   ClassroomStatus,
   CommunicationPreference,
   EnglishLevel,
+  InstructionMode,
   MeetingProvider,
   type ResumenPanelResponse,
   UserRole,
@@ -34,10 +35,8 @@ function claseReservada(overrides: Partial<ClassroomListItem> = {}): ClassroomLi
     meetingProvider: MeetingProvider.MANUAL,
     status: ClassroomStatus.PUBLISHED,
     isRecurring: false,
-    communicationModes: [],
-    hasInterpreter: false,
-    hasLiveCaptions: false,
-    hasVisualMaterials: false,
+    instructionMode: null,
+    supports: [],
     createdAt: '2026-08-01T10:00:00.000Z',
     updatedAt: '2026-08-01T10:00:00.000Z',
     teacherFirstName: 'Paula',
@@ -107,7 +106,7 @@ describe('ResumenPanel — estudiante (AC1, AC5)', () => {
     // Con próxima clase y reservas, «Ver el catálogo» solo aparece en esta tarjeta.
     expect(await screen.findByRole('link', { name: 'Ver el catálogo' })).toHaveAttribute(
       'href',
-      '/aulas?communicationMode=SIGN_LANGUAGE',
+      '/aulas?instructionMode=LSC_NATIVA',
     );
   });
 
@@ -122,7 +121,7 @@ describe('ResumenPanel — estudiante (AC1, AC5)', () => {
 
     renderConProviders(<ResumenPanel />);
 
-    expect(await screen.findByText(/indica tu preferencia de comunicación/i)).toBeInTheDocument();
+    expect(await screen.findByText(/indica cómo prefieres seguir las clases/i)).toBeInTheDocument();
     expect(screen.getByText('No tienes ninguna clase reservada.')).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Ir a mi perfil' })).toHaveAttribute('href', '/perfil');
   });
@@ -158,14 +157,14 @@ describe('ResumenPanel — profesor (AC4)', () => {
       ...base,
       asistenciaSinMarcar: 0,
       comunicacionDelGrupo: {
-        porModo: { [CommunicationPreference.SIGN_LANGUAGE]: 3 },
+        porModo: { [InstructionMode.LSC_NATIVA]: 3 },
         sinIndicar: 1,
         total: 4,
       },
     });
     renderConProviders(<ResumenPanel />);
 
-    expect(await screen.findByText(/Lengua de signos · 3/)).toBeInTheDocument();
+    expect(await screen.findByText('Lengua de Señas Colombiana (LSC) · 3')).toBeInTheDocument();
     expect(screen.getByText('Sin indicar · 1')).toBeInTheDocument();
   });
 });
