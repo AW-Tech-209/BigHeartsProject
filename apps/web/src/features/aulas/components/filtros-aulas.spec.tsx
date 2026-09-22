@@ -1,5 +1,5 @@
 import type { ListClassroomsQuery } from '@academia/types';
-import { CommunicationPreference, EnglishLevel } from '@academia/types';
+import { EnglishLevel, InstructionMode } from '@academia/types';
 import { screen } from '@testing-library/react';
 import { useState } from 'react';
 import { describe, expect, it, vi } from 'vitest';
@@ -55,7 +55,7 @@ describe('<FiltrosAulas /> — controles y teclado (B4)', () => {
     await user.tab();
     expect(screen.getByLabelText('Nivel')).toHaveFocus();
     await user.tab();
-    expect(screen.getByLabelText('Modo de comunicación')).toHaveFocus();
+    expect(screen.getByLabelText('Modo de instrucción')).toHaveFocus();
     await user.tab();
     expect(screen.getByLabelText('Desde')).toHaveFocus();
     await user.tab();
@@ -82,28 +82,28 @@ describe('<FiltrosAulas /> — controles y teclado (B4)', () => {
   it('"Todos los modos" es el valor inicial: AC5, no se filtra por defecto', () => {
     montar();
 
-    expect(screen.getByLabelText('Modo de comunicación')).toHaveValue('');
+    expect(screen.getByLabelText('Modo de instrucción')).toHaveValue('');
   });
 
   it('elegir un modo avisa con el modo elegido', async () => {
     const { user, onChange } = montar();
 
     await user.selectOptions(
-      screen.getByLabelText('Modo de comunicación'),
-      CommunicationPreference.SIGN_LANGUAGE,
+      screen.getByLabelText('Modo de instrucción'),
+      InstructionMode.LSC_NATIVA,
     );
 
     expect(onChange).toHaveBeenCalledWith({
-      communicationMode: CommunicationPreference.SIGN_LANGUAGE,
+      instructionMode: InstructionMode.LSC_NATIVA,
     });
   });
 
   it('volver a "Todos los modos" limpia el filtro', async () => {
-    const { user, onChange } = montar({ communicationMode: CommunicationPreference.LIP_READING });
+    const { user, onChange } = montar({ instructionMode: InstructionMode.INTERPRETE_LSC });
 
-    await user.selectOptions(screen.getByLabelText('Modo de comunicación'), 'Todos los modos');
+    await user.selectOptions(screen.getByLabelText('Modo de instrucción'), 'Todos los modos');
 
-    expect(onChange).toHaveBeenCalledWith({ communicationMode: undefined });
+    expect(onChange).toHaveBeenCalledWith({ instructionMode: undefined });
   });
 
   it('escribir una fecha "desde" avisa con el valor completo', async () => {

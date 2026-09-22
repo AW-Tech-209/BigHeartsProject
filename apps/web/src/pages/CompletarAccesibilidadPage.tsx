@@ -1,4 +1,4 @@
-import { type ClassroomDetail, MeetingProvider } from '@academia/types';
+import type { ClassroomDetail } from '@academia/types';
 import { LoaderCircle, RotateCw, ShieldAlert } from 'lucide-react';
 import { type FormEvent, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
@@ -7,8 +7,6 @@ import { AppShell } from '@/components/layout/app-shell';
 import { PaginaCabecera } from '@/components/layout/pagina-cabecera';
 import { Button } from '@/components/ui/button';
 import { Callout } from '@/components/ui/callout';
-import { Field } from '@/components/ui/field';
-import { NativeSelect } from '@/components/ui/native-select';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
   SeccionAccesibilidadAula,
@@ -16,18 +14,15 @@ import {
 } from '@/features/aulas/components/seccion-accesibilidad-aula';
 import { esAulaNoEncontrada, useClassroom } from '@/features/aulas/hooks/use-classroom';
 import { useUpdateClassroom } from '@/features/aulas/hooks/use-update-classroom';
-import {
-  etiquetaPlataformaReunion,
-  PLATAFORMAS_OFRECIDAS,
-} from '@/features/aulas/lib/plataforma-reunion';
+import { MENSAJE_MODO_OBLIGATORIO } from '@/features/aulas/lib/validate-classroom';
 import { useAuth } from '@/features/auth/hooks/use-auth';
 import { useAnnounce } from '@/hooks/use-announce';
 import { ApiClientError } from '@/lib/api-error';
 
 /**
- * Completa (o corrige) los 5 campos de accesibilidad de un aula ya creada
- * (HU-211, T4/T15). **No es la edición general del aula** — eso es HU-202,
- * pendiente—: aquí solo viven los campos que introdujo esta HU.
+ * Completa (o corrige) el modo de instrucción y los apoyos de un aula ya
+ * creada (HU-507, T5). **No es la edición general del aula** (HU-202): aquí
+ * solo vive la accesibilidad.
  *
  * Llega desde el enlace «Completar accesibilidad» de `<TarjetaAula
  * perspectiva="profesor">` cuando el aula está «sin indicar», pero también
@@ -56,9 +51,7 @@ export function CompletarAccesibilidadPage() {
       <PaginaCabecera
         titulo={titulo}
         contexto={
-          aula
-            ? 'Declara en qué modos se imparte, sus apoyos y la plataforma de la reunión.'
-            : undefined
+          aula ? 'Declara en qué lengua se imparte la clase y qué apoyos ofrece.' : undefined
         }
       />
 
@@ -118,16 +111,8 @@ export function CompletarAccesibilidadPage() {
   );
 }
 
-type FormValues = ValoresAccesibilidadAula & { meetingProvider: MeetingProvider };
-
-function valoresIniciales(aula: ClassroomDetail): FormValues {
-  return {
-    communicationModes: aula.communicationModes,
-    hasInterpreter: aula.hasInterpreter,
-    hasLiveCaptions: aula.hasLiveCaptions,
-    hasVisualMaterials: aula.hasVisualMaterials,
-    meetingProvider: aula.meetingProvider,
-  };
+function valoresIniciales(aula: ClassroomDetail): ValoresAccesibilidadAula {
+  return { instructionMode: aula.instructionMode, supports: aula.supports };
 }
 
 /**
@@ -144,7 +129,7 @@ function FormularioAccesibilidad({ aula }: { aula: ClassroomDetail }) {
   const announce = useAnnounce();
   const mutation = useUpdateClassroom(aula.id);
 
-  const [values, setValues] = useState<FormValues>(() => valoresIniciales(aula));
+  const [values, setValues] = useState<ValoresAccesibilidadAula>(() => valoresIniciales(aula));
   const [errorModos, setErrorModos] = useState<string | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
 
@@ -152,15 +137,16 @@ function FormularioAccesibilidad({ aula }: { aula: ClassroomDetail }) {
     event.preventDefault();
     setFormError(null);
 
-    if (values.communicationModes.length === 0) {
-      setErrorModos('Elige al menos un modo en que se imparte la clase.');
-      document.getElementById('communicationModes')?.focus();
+    if (!values.instructionMode) {
+      setErrorModos(MENSAJE_MODO_OBLIGATORIO);
+      document.getElementById('instructionMode')?.focus();
       announce('El formulario tiene un error. Revisa el campo marcado.');
       return;
     }
     setErrorModos(null);
 
-    mutation.mutate(values, {
+    const input = { instructionMode: values.instructionMode, supports: values.supports };
+    mutation.mutate(input, {
       onSuccess: () => {
         announce(`Accesibilidad actualizada: ${aula.title}.`);
         navigate('/mis-aulas');
@@ -186,33 +172,12 @@ function FormularioAccesibilidad({ aula }: { aula: ClassroomDetail }) {
 
       <SeccionAccesibilidadAula
         values={values}
-        onChange={(patch) => setValues((prev) => ({ ...prev, ...patch }))}
+        onChange={(patch) => {
+          setValues((prev) => ({ ...prev, ...patch }));
+          if (patch.instructionMode) setErrorModos(null);
+        }}
         error={errorModos ?? undefined}
       />
-
-      <Field
-        id="meetingProvider"
-        label="Plataforma de la reunión"
-        required
-        description="Los subtítulos automáticos no funcionan igual en todas las plataformas: el estudiante lo necesita saber para prepararse."
-      >
-        <NativeSelect
-          name="meetingProvider"
-          value={values.meetingProvider}
-          onChange={(event) =>
-            setValues((prev) => ({
-              ...prev,
-              meetingProvider: event.target.value as MeetingProvider,
-            }))
-          }
-        >
-          {PLATAFORMAS_OFRECIDAS.map((plataforma) => (
-            <option key={plataforma} value={plataforma}>
-              {etiquetaPlataformaReunion[plataforma]}
-            </option>
-          ))}
-        </NativeSelect>
-      </Field>
 
       <Button type="submit" disabled={mutation.isPending} className="h-12 w-full gap-2 text-base">
         {mutation.isPending ? (

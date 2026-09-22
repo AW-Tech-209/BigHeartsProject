@@ -1,8 +1,8 @@
 import {
   type AttendanceStatus,
   BookingStatus,
-  type CommunicationPreference,
   type InscritoAula,
+  type InstructionMode,
 } from '@academia/types';
 import {
   ChevronDown,
@@ -36,10 +36,10 @@ import { useMarkAttendance } from '@/features/aulas/hooks/use-mark-attendance';
 import { describirHorario } from '@/features/aulas/lib/horario';
 import { mensajeErrorAsistencia } from '@/features/aulas/lib/mensaje-error-asistencia';
 import {
-  etiquetaModoComunicacion,
-  iconoModoComunicacion,
-  MODOS_COMUNICACION_EN_ORDEN,
-} from '@/features/aulas/lib/modos-comunicacion';
+  etiquetaModoInstruccion,
+  iconoModoInstruccion,
+  MODOS_INSTRUCCION_EN_ORDEN,
+} from '@/features/aulas/lib/accesibilidad-aula';
 import { hearingLossLevelLabels } from '@/features/auth/lib/accessibility-labels';
 import { cn } from '@/lib/utils';
 
@@ -170,31 +170,29 @@ export function InscritosAula({
   );
 }
 
-/** Cuántos inscritos confirmados hay por cada modo de comunicación (T6). */
+/** Cuántos inscritos confirmados prefieren cada modo de instrucción (HU-305 T6, D44). */
 function ResumenAccesibilidad({ inscritos }: { inscritos: InscritoAula[] }) {
   if (inscritos.length === 0) return null;
 
-  const porModo = MODOS_COMUNICACION_EN_ORDEN.map((modo) => ({
+  const porModo = MODOS_INSTRUCCION_EN_ORDEN.map((modo) => ({
     modo,
-    cantidad: inscritos.filter((inscrito) => inscrito.communicationPreference === modo).length,
+    cantidad: inscritos.filter((inscrito) => inscrito.instructionMode === modo).length,
   })).filter(({ cantidad }) => cantidad > 0);
-  const sinDeclarar = inscritos.filter(
-    (inscrito) => inscrito.communicationPreference === null,
-  ).length;
+  const sinDeclarar = inscritos.filter((inscrito) => inscrito.instructionMode === null).length;
 
   return (
     <ul aria-label="Resumen de accesibilidad del grupo" className="flex flex-wrap gap-2">
       {porModo.map(({ modo, cantidad }) => (
         <li key={modo}>
-          <Badge tono="neutral" icon={iconoModoComunicacion[modo]}>
-            {cantidad} {etiquetaModoComunicacion[modo].toLocaleLowerCase('es')}
+          <Badge tono="neutral" icon={iconoModoInstruccion[modo]}>
+            {cantidad} · {etiquetaModoInstruccion[modo]}
           </Badge>
         </li>
       ))}
       {sinDeclarar > 0 && (
         <li>
           <Badge tono="neutral" icon={CircleHelp}>
-            {sinDeclarar} sin preferencia declarada
+            {sinDeclarar} · Sin modo de instrucción preferido
           </Badge>
         </li>
       )}
@@ -278,9 +276,9 @@ function FilaInscrito({
               className="aparece grid grid-cols-1 gap-x-6 gap-y-3 border-t border-border pt-3 text-center sm:grid-cols-2"
             >
               <div className="space-y-1.5">
-                <dt className="text-sm text-muted-foreground">Modo de comunicación</dt>
+                <dt className="text-sm text-muted-foreground">Modo de instrucción que prefiere</dt>
                 <dd className="flex justify-center">
-                  <ModoDelEstudiante modo={inscrito.communicationPreference} />
+                  <ModoDelEstudiante modo={inscrito.instructionMode} />
                 </dd>
               </div>
               <div className="space-y-1.5">
@@ -417,18 +415,18 @@ function ControlAsistencia({
 }
 
 /** El modo del ESTUDIANTE, no el del aula: la ausencia se llama distinto que `<ModoComunicacionBadge>`. */
-function ModoDelEstudiante({ modo }: { modo: CommunicationPreference | null }) {
+function ModoDelEstudiante({ modo }: { modo: InstructionMode | null }) {
   if (!modo) {
     return (
       <Badge tono="neutral" icon={CircleHelp}>
-        Sin declarar preferencia
+        Sin preferencia declarada
       </Badge>
     );
   }
 
   return (
-    <Badge tono="neutral" icon={iconoModoComunicacion[modo]}>
-      {etiquetaModoComunicacion[modo]}
+    <Badge tono="neutral" icon={iconoModoInstruccion[modo]}>
+      {etiquetaModoInstruccion[modo]}
     </Badge>
   );
 }

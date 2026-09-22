@@ -1,11 +1,11 @@
 import {
   type Classroom,
   ClassroomStatus,
-  CommunicationPreference,
   EnglishLevel,
   EstadoTemporalAula,
   MeetingProvider,
   UserRole,
+  InstructionMode,
 } from '@academia/types';
 import { screen, waitFor, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
@@ -35,10 +35,8 @@ function aula(overrides: Partial<Classroom> = {}): Classroom {
     meetingProvider: MeetingProvider.MANUAL,
     status: ClassroomStatus.PUBLISHED,
     isRecurring: false,
-    communicationModes: [],
-    hasInterpreter: false,
-    hasLiveCaptions: false,
-    hasVisualMaterials: false,
+    instructionMode: null,
+    supports: [],
     createdAt: '2026-08-01T10:00:00.000Z',
     updatedAt: '2026-08-01T10:00:00.000Z',
     ...overrides,
@@ -201,7 +199,7 @@ describe('MisAulasPage — una sola acción primaria (B5, AC10)', () => {
 describe('MisAulasPage — completar accesibilidad (T15)', () => {
   it('un aula sin modos declarados ofrece «Completar accesibilidad»', async () => {
     vi.mocked(getMisAulas).mockResolvedValue(
-      respuesta([aula({ id: 'sin-indicar', communicationModes: [] })]),
+      respuesta([aula({ id: 'sin-indicar', instructionMode: null })]),
     );
 
     renderConProviders(<MisAulasPage />);
@@ -215,7 +213,7 @@ describe('MisAulasPage — completar accesibilidad (T15)', () => {
 
   it('un aula que ya declaró modos no ofrece el enlace', async () => {
     vi.mocked(getMisAulas).mockResolvedValue(
-      respuesta([aula({ communicationModes: [CommunicationPreference.SIGN_LANGUAGE] })]),
+      respuesta([aula({ instructionMode: InstructionMode.LSC_NATIVA })]),
     );
 
     renderConProviders(<MisAulasPage />);

@@ -1,8 +1,4 @@
-import {
-  type CommunicationPreference,
-  type EnglishLevel,
-  type ListClassroomsQuery,
-} from '@academia/types';
+import { type EnglishLevel, type InstructionMode, type ListClassroomsQuery } from '@academia/types';
 import { Presentation } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
@@ -10,7 +6,7 @@ import { Field } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { NativeSelect } from '@/components/ui/native-select';
 import { SwitchField } from '@/components/ui/switch';
-import { communicationPreferenceLabels } from '@/features/auth/lib/accessibility-labels';
+import { etiquetaModoInstruccion, MODOS_INSTRUCCION_EN_ORDEN } from '../lib/accesibilidad-aula';
 import { hayFiltrosActivos } from '../lib/filtros-url';
 import { nivelesDeIngles } from '../lib/niveles';
 
@@ -43,7 +39,7 @@ export function FiltrosAulas({ value, onChange, ofreceSoloMisClases = false }: F
 
   function actualizar(
     cambio: Partial<
-      Pick<ListClassroomsQuery, 'level' | 'communicationMode' | 'desde' | 'hasta' | 'mias'>
+      Pick<ListClassroomsQuery, 'level' | 'instructionMode' | 'desde' | 'hasta' | 'mias'>
     >,
   ) {
     const { page: _page, ...resto } = value;
@@ -70,27 +66,26 @@ export function FiltrosAulas({ value, onChange, ofreceSoloMisClases = false }: F
           </NativeSelect>
         </Field>
 
-        {/* AC5: no viene puesto por defecto — «Todos los modos» es el valor inicial. */}
+        {/* Regla 1 de §4.9: no viene puesto por defecto — «Todos los modos» es el valor inicial. */}
         <Field
           id="filtro-modo"
-          label="Modo de comunicación"
+          label="Modo de instrucción"
           labelClassName="text-accent-teal"
-          className="w-56"
+          className="w-full sm:w-72"
         >
           <NativeSelect
             iconClassName="text-accent-teal"
-            value={value.communicationMode ?? ''}
+            value={value.instructionMode ?? ''}
             onChange={(event) =>
               actualizar({
-                communicationMode: (event.target.value || undefined) as
-                  CommunicationPreference | undefined,
+                instructionMode: (event.target.value || undefined) as InstructionMode | undefined,
               })
             }
           >
             <option value="">Todos los modos</option>
-            {Object.entries(communicationPreferenceLabels).map(([modo, etiqueta]) => (
+            {MODOS_INSTRUCCION_EN_ORDEN.map((modo) => (
               <option key={modo} value={modo}>
-                {etiqueta}
+                {etiquetaModoInstruccion[modo]}
               </option>
             ))}
           </NativeSelect>

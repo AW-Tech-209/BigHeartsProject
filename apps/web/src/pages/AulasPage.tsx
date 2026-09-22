@@ -14,6 +14,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { FiltrosAulas } from '@/features/aulas/components/filtros-aulas';
 import { InvitacionPreferencia } from '@/features/aulas/components/invitacion-preferencia';
 import { useClassrooms } from '@/features/aulas/hooks/use-classrooms';
+import { preferenciaAccesibilidadDe } from '@/features/aulas/lib/accesibilidad-aula';
 import {
   buildSearchParams,
   hayFiltrosActivos,
@@ -54,11 +55,12 @@ export function AulasPage() {
   const announce = useAnnounce();
   const { user } = useAuth();
 
-  // T12: solo el estudiante ve la marca de coincidencia. Un `undefined` aquí
-  // hace que `coincideConLaPreferencia()` devuelva `false` siempre — nunca una
-  // marca sobre el aula de otro rol.
+  // Solo el estudiante ve la marca de coincidencia (D44). Un `undefined` aquí
+  // hace que `coincideConLaAccesibilidad()` devuelva `false` siempre.
   const preferenciaEstudiante =
-    user?.role === UserRole.STUDENT ? user.communicationPreference : undefined;
+    user?.role === UserRole.STUDENT
+      ? preferenciaAccesibilidadDe(user.communicationPreference)
+      : undefined;
 
   /**
    * HU-208. Las dos derivaciones de presentación por rol, resueltas UNA vez

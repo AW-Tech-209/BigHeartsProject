@@ -21,7 +21,7 @@ export function InvitacionPreferencia({ userId }: { userId: string }) {
   if (cerrada) return null;
 
   return (
-    <Callout variant="info" title="Cuéntanos cómo prefieres comunicarte">
+    <Callout variant="info" title="Cuéntanos cómo prefieres seguir las clases">
       <div className="space-y-3">
         <p>
           Con esa preferencia destacamos las clases que puedes seguir sin depender del audio. Es

@@ -14,8 +14,11 @@ import { Field } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { NativeSelect } from '@/components/ui/native-select';
 import {
+  AYUDA_PREFERENCIA,
   communicationPreferenceLabels,
+  ETIQUETA_PREFERENCIA,
   hearingLossLevelLabels,
+  PREFERENCIAS_OFRECIDAS,
 } from '@/features/auth/lib/accessibility-labels';
 import { useAnnounce } from '@/hooks/use-announce';
 import { ApiClientError } from '@/lib/api-error';
@@ -50,6 +53,12 @@ function toFormValues(user: User): ProfileFormValues {
 
 export function ProfileForm({ user }: { user: User }) {
   const isStudent = user.role === UserRole.STUDENT;
+  // Un valor ya guardado que no se ofrece a nadie nuevo se sigue mostrando: el
+  // `<select>` no puede mentir sobre lo que hay.
+  const preferenciasOfrecidas =
+    user.communicationPreference && !PREFERENCIAS_OFRECIDAS.includes(user.communicationPreference)
+      ? [...PREFERENCIAS_OFRECIDAS, user.communicationPreference]
+      : PREFERENCIAS_OFRECIDAS;
   const [values, setValues] = useState<ProfileFormValues>(() => toFormValues(user));
   const [errors, setErrors] = useState<ProfileFieldErrors>({});
   const [formError, setFormError] = useState<string | null>(null);
@@ -219,7 +228,8 @@ export function ProfileForm({ user }: { user: User }) {
 
           <Field
             id="communicationPreference"
-            label="Preferencia de comunicación"
+            label={ETIQUETA_PREFERENCIA}
+            description={AYUDA_PREFERENCIA}
             error={errors.communicationPreference}
           >
             <NativeSelect
@@ -233,9 +243,9 @@ export function ProfileForm({ user }: { user: User }) {
               }
             >
               <option value="">Prefiero no indicarlo</option>
-              {Object.entries(communicationPreferenceLabels).map(([value, label]) => (
-                <option key={value} value={value}>
-                  {label}
+              {preferenciasOfrecidas.map((preferencia) => (
+                <option key={preferencia} value={preferencia}>
+                  {communicationPreferenceLabels[preferencia]}
                 </option>
               ))}
             </NativeSelect>

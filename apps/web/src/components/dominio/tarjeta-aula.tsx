@@ -1,10 +1,10 @@
 import { useId, useState, type ReactNode } from 'react';
 import {
+  type AccessibilityPreference,
   BookingStatus,
   type Classroom,
   type ClassroomListItem,
-  coincideConLaPreferencia,
-  type CommunicationPreference,
+  coincideConLaAccesibilidad,
   derivarEstadoAula,
   type EstadoAula as EstadoAulaTipo,
 } from '@academia/types';
@@ -25,24 +25,14 @@ import { useAccionCancelarReserva } from '@/features/aulas/components/accion-can
 import { useAccionEntrarAClase } from '@/features/aulas/components/accion-entrar-a-clase';
 import { useAccionesDeAula } from '@/features/aulas/components/acciones-de-aula';
 import { useAccionReservarAula } from '@/features/aulas/components/accion-reservar-aula';
-import { APOYOS_AULA } from '@/features/aulas/lib/apoyos-aula';
+import { apoyosEnOrden, etiquetaApoyo, iconoApoyo } from '@/features/aulas/lib/accesibilidad-aula';
 import { describirDuracion, describirHorarioRenglon } from '@/features/aulas/lib/horario';
-import { MODOS_COMUNICACION_EN_ORDEN } from '@/features/aulas/lib/modos-comunicacion';
 import { nivelesDeIngles } from '@/features/aulas/lib/niveles';
 import { cn } from '@/lib/utils';
 import { EstadoAula } from './estado-aula';
 import { varianteEstadoAula } from './estado-aula-variantes';
 import { IndicadorCupo } from './indicador-cupo';
-import { ModoComunicacionBadge } from './modo-comunicacion-badge';
-
-/**
- * Los modos declarados, en el orden CANÓNICO del enum — no el de inserción.
- * Así, todos los renglones muestran las etiquetas en la misma secuencia aunque
- * el servidor reciba los valores en otro orden.
- */
-function modosEnOrden(modos: CommunicationPreference[]): CommunicationPreference[] {
-  return MODOS_COMUNICACION_EN_ORDEN.filter((modo) => modos.includes(modo));
-}
+import { ModoInstruccion } from './modo-instruccion';
 
 /**
  * El aula que pinta el renglón.
@@ -75,10 +65,8 @@ export type AulaDeTarjeta = Classroom &
 export type PerspectivaTarjeta = 'catalogo' | 'profesor';
 
 /**
- * Cuántas etiquetas de modo/apoyo se ven antes de colapsar tras «+N». Es un
- * TECHO: si en la fila ya hay badges siempre visibles (`Tu clase`, `Coincide…`,
- * `Modo sin indicar`), el hueco real baja para que la fila no envuelva y el
- * renglón no crezca de alto.
+ * Cuántos apoyos se ven antes de colapsar tras «+N». Es un TECHO: si en la fila
+ * ya está `Tu clase`, el hueco real baja para que la fila no envuelva.
  */
 const MAX_ETIQUETAS_VISIBLES_POR_DEFECTO = 2;
 
@@ -88,12 +76,11 @@ type TarjetaAulaProps = {
   /** El reloj contra el que se deriva el estado. Por defecto, ahora mismo. */
   ahora?: Date;
   /**
-   * La preferencia de comunicación de quien mira (T12). Se pasa como prop y
-   * no se lee con `useAuth()` aquí dentro: mismo criterio que `ahora`, el
-   * renglón se mantiene puro y testeable sin montar el store de sesión.
-   * `undefined`/`null` (sin preferencia declarada) nunca produce una marca.
+   * La preferencia de accesibilidad de quien mira (D44), ya traducida con
+   * `preferenciaAccesibilidadDe()`. Prop y no `useAuth()`, igual que `ahora`.
+   * Sin modo de instrucción declarado nunca produce una marca.
    */
-  preferenciaEstudiante?: CommunicationPreference | null;
+  preferenciaEstudiante?: AccessibilityPreference | null;
   /**
    * `true` si el aula la imparte quien está mirando (HU-208, T1). Prop y no
    * `useAuth()` por el mismo motivo que `ahora`. **No es un permiso.**
@@ -105,9 +92,8 @@ type TarjetaAulaProps = {
    */
   puedeReservarla?: boolean;
   /**
-   * Cuántas etiquetas de modo/apoyo se ven antes de colapsar tras «+N». Tope
-   * FIJO, sin medición del DOM. El estado, «Tu clase» y «Coincide con tu
-   * preferencia» no cuentan y nunca colapsan.
+   * Cuántos apoyos se ven antes de colapsar tras «+N». Tope FIJO, sin medición
+   * del DOM. El modo de instrucción y el estado nunca colapsan.
    */
   maxEtiquetasVisibles?: number;
   className?: string;
@@ -158,8 +144,9 @@ export function TarjetaAula({
   const esVistaDelProfesor = perspectiva === 'profesor';
   const miReservaCancelada =
     !esVistaDelProfesor && classroom.myBookingStatus === BookingStatus.CANCELLED;
-  const sinModosDeclarados = classroom.communicationModes.length === 0;
-  const coincideConLaMia = coincideConLaPreferencia(classroom, preferenciaEstudiante);
+  const sinModoDeclarado = !classroom.instructionMode;
+  const coincideConLaMia =
+    !esVistaDelProfesor && coincideConLaAccesibilidad(classroom, preferenciaEstudiante);
   const marcaDePropiedad = esMia && !esVistaDelProfesor;
 
   const nombreDelProfesor =
@@ -184,33 +171,19 @@ export function TarjetaAula({
     !miReservaCancelada && (!esVistaDelProfesor || !ESTADOS_DE_CUPO.includes(estado));
   const { dia, hora, zona } = describirHorarioRenglon(classroom.scheduledAt);
 
-  // Modos y apoyos comparten una sola fila y colapsan tras «+N» cuando pasan del
-  // tope. El estado, «Tu clase» y «Coincide…» van aparte y nunca colapsan.
-  const colapsables: Etiqueta[] = [
-    ...(sinModosDeclarados
-      ? []
-      : modosEnOrden(classroom.communicationModes).map((modo) => ({
-          key: `modo-${modo}`,
-          node: <ModoComunicacionBadge key={modo} modo={modo} className="px-2 py-0.5 text-xs" />,
-        }))),
-    ...APOYOS_AULA.filter(({ clave }) => classroom[clave]).map(
-      ({ clave, etiqueta, icon: Icon }) => ({
-        key: `apoyo-${clave}`,
-        node: (
-          <Badge key={clave} tono="neutral" icon={Icon} className="px-2 py-0.5 text-xs">
-            {etiqueta}
-          </Badge>
-        ),
-      }),
+  // Solo los apoyos colapsan tras «+N». El modo de instrucción va en su propia
+  // línea (HU-507): nunca comparte fila con ellos ni se esconde.
+  const colapsables: Etiqueta[] = apoyosEnOrden(classroom.supports ?? []).map((apoyo) => ({
+    key: `apoyo-${apoyo}`,
+    node: (
+      <li key={apoyo}>
+        <Badge tono="neutral" icon={iconoApoyo[apoyo]} className="px-2 py-0.5 text-xs">
+          {etiquetaApoyo[apoyo]}
+        </Badge>
+      </li>
     ),
-  ];
-  // Cada badge siempre visible que no sea el estado se come un hueco de la fila:
-  // se descuenta del techo para que «Tu clase» + «Coincide…» no empujen tres
-  // etiquetas más a una segunda línea.
-  const badgesFijosExtra =
-    (marcaDePropiedad ? 1 : 0) +
-    (!esVistaDelProfesor && coincideConLaMia ? 1 : 0) +
-    (sinModosDeclarados ? 1 : 0);
+  }));
+  const badgesFijosExtra = marcaDePropiedad ? 1 : 0;
   const cupoColapsables = Math.max(Math.max(maxEtiquetasVisibles, 0) - badgesFijosExtra, 0);
   const visibles = colapsables.slice(0, cupoColapsables);
   const ocultas = colapsables.slice(cupoColapsables);
@@ -300,6 +273,15 @@ export function TarjetaAula({
 
           <p className="truncate text-[13px] text-muted-foreground">{lineaSecundaria}</p>
 
+          <div className="relative z-10 flex flex-wrap items-center gap-1.5 pt-0.5">
+            <ModoInstruccion modo={classroom.instructionMode} />
+            {coincideConLaMia && (
+              <Badge tono="primary" icon={UserCheck}>
+                Coincide con tu preferencia
+              </Badge>
+            )}
+          </div>
+
           {/* `whitespace-nowrap` es heredable: cada badge queda en una línea y
               es `flex-wrap` quien lo baja entero al siguiente renglón, nunca su
               texto el que crece en vertical. */}
@@ -315,21 +297,26 @@ export function TarjetaAula({
                 Tu clase
               </Badge>
             )}
-            {!esVistaDelProfesor && coincideConLaMia && (
-              <Badge tono="primary" icon={UserCheck}>
-                Coincide con tu preferencia
-              </Badge>
+            {visibles.length > 0 && (
+              <>
+                <span aria-hidden="true" className="ml-1 text-xs text-muted-foreground">
+                  Apoyos:
+                </span>
+                <ul aria-label="Apoyos de la clase" className="flex flex-wrap gap-1.5">
+                  {visibles.map((etiqueta) => etiqueta.node)}
+                </ul>
+              </>
             )}
-            {sinModosDeclarados && (
-              <ModoComunicacionBadge modo={null} className="px-2 py-0.5 text-xs" />
-            )}
-            {visibles.map((etiqueta) => etiqueta.node)}
             {ocultas.length > 0 && (
               <button
                 type="button"
                 aria-expanded={abierta}
                 aria-controls={bandaId}
-                aria-label={abierta ? 'Ver menos etiquetas' : `Ver ${ocultas.length} etiquetas más`}
+                aria-label={
+                  abierta
+                    ? 'Ver menos apoyos'
+                    : `Ver ${ocultas.length} ${ocultas.length === 1 ? 'apoyo' : 'apoyos'} más`
+                }
                 onClick={() => setEtiquetasAbiertas((v) => !v)}
                 className="relative z-10 inline-flex items-center gap-1 rounded-full border border-input bg-card px-2.5 py-0.5 text-xs font-medium text-foreground transicion-rapida hover:bg-muted"
               >
@@ -385,8 +372,8 @@ export function TarjetaAula({
             </Button>
           )}
 
-          {/* T15: la vía para que un aula «sin indicar» deje de estarlo. */}
-          {esVistaDelProfesor && sinModosDeclarados && (
+          {/* HU-507, T5: el dueño completa el modo desde el catálogo o desde «Mis aulas». */}
+          {(esVistaDelProfesor || marcaDePropiedad) && sinModoDeclarado && (
             <Button
               render={<Link to={`/mis-aulas/${classroom.id}/accesibilidad`} />}
               variant="outline"
@@ -406,8 +393,12 @@ export function TarjetaAula({
           id={bandaId}
           className="aparece relative z-10 mt-3 flex flex-wrap items-center gap-1.5 border-t border-border pt-3 whitespace-nowrap"
         >
-          <span className="text-xs text-muted-foreground">También:</span>
-          {ocultas.map((etiqueta) => etiqueta.node)}
+          <span aria-hidden="true" className="text-xs text-muted-foreground">
+            También:
+          </span>
+          <ul aria-label="Más apoyos de la clase" className="flex flex-wrap gap-1.5">
+            {ocultas.map((etiqueta) => etiqueta.node)}
+          </ul>
         </div>
       )}
 

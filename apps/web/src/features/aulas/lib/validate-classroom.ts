@@ -1,4 +1,9 @@
-import type { CommunicationPreference, EnglishLevel, MeetingProvider } from '@academia/types';
+import {
+  type ClassroomSupport,
+  type EnglishLevel,
+  esProveedorPermitido,
+  type InstructionMode,
+} from '@academia/types';
 
 import { aInstanteISO } from './horario';
 
@@ -21,12 +26,9 @@ export type ClassroomFormValues = {
   hora: string;
   durationMinutes: string;
   meetingLink: string;
-  /** Obligatorio y no vacío (HU-211, AC1): un aula nueva no puede quedar «sin indicar». */
-  communicationModes: CommunicationPreference[];
-  hasInterpreter: boolean;
-  hasLiveCaptions: boolean;
-  hasVisualMaterials: boolean;
-  meetingProvider: MeetingProvider;
+  /** Obligatorio (D42): `null` solo mientras el profesor no ha elegido. */
+  instructionMode: InstructionMode | null;
+  supports: ClassroomSupport[];
 };
 
 /**
@@ -90,21 +92,29 @@ export function validateClassroom(values: ClassroomFormValues): ClassroomFieldEr
     }
   }
 
-  if (!values.meetingLink.trim()) {
-    errors.meetingLink = 'Pega el enlace de la reunión que creaste en Zoom o Meet.';
-  } else if (!esUrlDeReunion(values.meetingLink.trim())) {
+  const enlace = values.meetingLink.trim();
+  if (!enlace) {
+    errors.meetingLink = 'Pega el enlace de la reunión que creaste en Zoom, Google Meet o Teams.';
+  } else if (!esUrlDeReunion(enlace)) {
     errors.meetingLink =
       'Pega el enlace completo, empezando por https:// (por ejemplo, https://meet.google.com/abc-defg-hij).';
+  } else if (!esProveedorPermitido(enlace)) {
+    errors.meetingLink = MENSAJE_PROVEEDOR_NO_PERMITIDO;
   }
 
-  // AC1: sin al menos un modo, el aula quedaría «sin indicar» al nacer, y eso
-  // solo se permite en las que ya existían antes de HU-211.
-  if (values.communicationModes.length === 0) {
-    errors.communicationModes = 'Elige al menos un modo en que se imparte la clase.';
+  if (!values.instructionMode) {
+    errors.instructionMode = MENSAJE_MODO_OBLIGATORIO;
   }
 
   return errors;
 }
+
+/** D45: el mismo porqué que da el servidor con `MEETING_PROVIDER_NOT_ALLOWED`. */
+export const MENSAJE_PROVEEDOR_NO_PERMITIDO =
+  'El enlace tiene que ser de Zoom, Google Meet o Microsoft Teams. Son las plataformas con subtítulos en vivo.';
+
+export const MENSAJE_MODO_OBLIGATORIO =
+  'Elige si la clase se imparte en LSC o con intérprete de LSC.';
 
 /**
  * ¿Es una URL http(s) con dominio?

@@ -5,7 +5,7 @@
 | **Sprint**          | Post-Fase 1 · Auditoría                             |
 | **Prioridad**       | 🔴 Crítica                                          |
 | **Estimación**      | 2 días                                              |
-| **Estado**          | ⬜ Pendiente                                        |
+| **Estado**          | ✅ Terminada                                        |
 | **Asignada a**      | **Dev B** — frontend                                |
 | **Rama**            | `hu-507-la-clase-dice-en-que-lengua-se-imparte-b`   |
 | **Alcance técnico** | frontend                                            |
@@ -103,4 +103,33 @@ se asegura de que no quede ni una «lengua de signos» suelta en la interfaz.
 
 ## Notas de implementación
 
-_Se rellena al cerrar._
+- **`<ModoInstruccion>`** (`components/dominio/`) es el nivel 1: tono `info` + ícono (`Hand` LSC
+  nativa, `Languages` con intérprete) + texto, en su propia línea bajo el título. Sin declarar:
+  `muted`, borde punteado, `CircleHelp` y «Modo de instrucción sin declarar». Es un
+  `role="group"` con nombre «Modo de instrucción», que es como lo encuentran los tests.
+- **Apoyos**: lista aparte (`Apoyos de la clase`), chips `neutral` en `text-xs`; son lo único que
+  colapsa tras «+N». «Coincide con tu preferencia» va en la línea del modo, porque la coincidencia
+  es sobre el modo. `patrones-dominio.md` §4 actualizado.
+- **Coincidencia**: `User` sigue guardando `communicationPreference`; el front la traduce con
+  `MIGRACION_PREFERENCIA_COMUNICACION` (`preferenciaAccesibilidadDe()`, mismo mapeo que el backend)
+  y compara con `coincideConLaAccesibilidad()`. `coincideConLaPreferencia()` ya no se usa en el web.
+- **T6**: la preferencia se pregunta como «Cómo prefieres seguir las clases», con etiquetas del
+  vocabulario nuevo. `SPOKEN_AUDIO` ya no se ofrece (D43); en el perfil se sigue mostrando si ya
+  estaba guardado, para que el `<select>` no mienta.
+- **Limitación del contrato, no de esta HU**: `CommunicationPreference` no tiene un valor que migre a
+  `INTERPRETE_LSC`, así que un estudiante no puede declarar que prefiere clases con intérprete.
+  Pedirlo requiere una columna nueva en `User` (backend).
+- **AC2, búsqueda en el código**: `grep -rni "lengua de signos" apps/web/src` fuera de los specs
+  solo encuentra un comentario de `features/landing/` que explica la regla. Cero en pantallas.
+- `RadioCardGroup` acepta `value: null` (nada elegido) y `describedBy`.
+
+### Recorrido de AC
+
+| AC  | Veredicto | Cómo se comprobó                                                                                                                                           |
+| --- | --------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| AC1 | ✅        | `tarjeta-aula.spec` y `AulaDetallePage.spec`: modo por `role="group"`, apoyos por `role="list"`, contenedores distintos; el modo nunca colapsa             |
+| AC2 | ✅        | Búsqueda en el código (arriba); etiquetas salen de `INSTRUCTION_MODE_LABELS` del contrato                                                                  |
+| AC3 | ✅        | `formulario-aula.spec`: sin modo no envía y lleva el foco al grupo; Jitsi rechazado con el porqué; Teams aceptado; `MEETING_PROVIDER_NOT_ALLOWED` al campo |
+| AC4 | ✅        | Aula `instructionMode: null` → «Modo de instrucción sin declarar» en catálogo, detalle y «Mis aulas»; el dueño ve «Completar accesibilidad»                |
+| AC5 | ✅        | Filtro «Modo de instrucción» sin valor por defecto; aula que no coincide sigue con «Reservar» activo (tarjeta y detalle)                                   |
+| AC6 | ✅        | `axe` limpio en tarjeta, formulario, detalle y completar (claro, oscuro, alto contraste); `typecheck`, `lint`, `build` y `test` en verde                   |

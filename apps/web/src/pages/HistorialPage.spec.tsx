@@ -39,10 +39,8 @@ function filaClasica() {
     meetingProvider: MeetingProvider.MANUAL,
     status: ClassroomStatus.PUBLISHED,
     isRecurring: false,
-    communicationModes: [],
-    hasInterpreter: false,
-    hasLiveCaptions: false,
-    hasVisualMaterials: false,
+    instructionMode: null,
+    supports: [],
     createdAt: '2020-08-01T10:00:00.000Z',
     updatedAt: '2020-08-01T10:00:00.000Z',
   };

@@ -17,8 +17,11 @@ import { RadioCardGroup } from '@/components/ui/radio-card-group';
 import { useAnnounce } from '@/hooks/use-announce';
 import { ApiClientError } from '@/lib/api-error';
 import {
+  AYUDA_PREFERENCIA,
   communicationPreferenceLabels,
+  ETIQUETA_PREFERENCIA,
   hearingLossLevelLabels,
+  PREFERENCIAS_OFRECIDAS,
   roleOptions,
 } from '../lib/accessibility-labels';
 import { useRegister } from '../hooks/use-register';
@@ -283,7 +286,8 @@ export function RegisterForm({ onRegistered }: { onRegistered: (user: User) => v
 
           <Field
             id="communicationPreference"
-            label="Preferencia de comunicación"
+            label={ETIQUETA_PREFERENCIA}
+            description={AYUDA_PREFERENCIA}
             error={errors.communicationPreference}
           >
             <NativeSelect
@@ -297,9 +301,9 @@ export function RegisterForm({ onRegistered }: { onRegistered: (user: User) => v
               }
             >
               <option value="">Prefiero no indicarlo</option>
-              {Object.entries(communicationPreferenceLabels).map(([value, label]) => (
-                <option key={value} value={value}>
-                  {label}
+              {PREFERENCIAS_OFRECIDAS.map((preferencia) => (
+                <option key={preferencia} value={preferencia}>
+                  {communicationPreferenceLabels[preferencia]}
                 </option>
               ))}
             </NativeSelect>
