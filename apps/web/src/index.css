@@ -338,6 +338,13 @@
        El bloque de `prefers-reduced-motion` de más abajo lo devuelve a `auto`. */
     scroll-behavior: smooth;
   }
+  /* Bajo `lg` la barra inferior fija tapaba el control que el foco llevaba al
+     borde de la pantalla (HU-508). Mismo alto que el `pb-24` de `<main>`. */
+  @media (max-width: 1023px) {
+    html {
+      scroll-padding-bottom: 6rem;
+    }
+  }
   /* Foco visible: anillo de 3px con 2px de offset. Nunca outline:none sin esto. */
   :focus-visible {
     outline: 3px solid var(--ring);

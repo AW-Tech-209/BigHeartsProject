@@ -3,7 +3,7 @@ import type { Prisma } from '@prisma/client';
 import {
   BookingStatus,
   ClassroomStatus,
-  type CommunicationPreference,
+  type InstructionMode,
   type RecuentoComunicacionGrupo,
   type ResumenPanelAdmin,
   type ResumenPanelEstudiante,
@@ -65,7 +65,7 @@ export class PanelService {
     const [perfil, proxima, reservasActivas] = await Promise.all([
       this.prisma.user.findUnique({
         where: { id: student.id },
-        select: { communicationPreference: true },
+        select: { preferredInstructionMode: true },
       }),
       this.prisma.booking.findFirst({
         where: reservaProxima,
@@ -75,12 +75,15 @@ export class PanelService {
       this.prisma.booking.count({ where: reservaProxima }),
     ]);
 
-    const preferencia = (perfil?.communicationPreference as CommunicationPreference | null) ?? null;
+    // La coincidencia es exacta sobre el modo (D44): sin modo declarado no hay ninguna.
+    const instructionMode = (perfil?.preferredInstructionMode as InstructionMode | null) ?? null;
 
     // «Con cupo» compara `currentBookings` contra `maxStudents`, dos columnas
     // que Prisma no filtra entre sí: un conteo en SQL evita traer todo el
     // catálogo futuro para descartarlo en memoria (era O(catálogo), no O(1)).
-    const clasesQueCoinciden = preferencia ? await this.contarClasesConCupo(ahora, preferencia) : 0;
+    const clasesQueCoinciden = instructionMode
+      ? await this.contarClasesConCupo(ahora, instructionMode)
+      : 0;
 
     let proximaClase = null;
     if (proxima) {
@@ -110,21 +113,21 @@ export class PanelService {
       proximaClase,
       reservasActivas,
       clasesQueCoinciden,
-      sinPreferencia: preferencia === null,
+      sinPreferencia: instructionMode === null,
     };
   }
 
   /** Cuenta en SQL, no en memoria: `current_bookings < max_students` no es filtrable en Prisma. */
   private async contarClasesConCupo(
     ahora: Date,
-    preferencia: CommunicationPreference,
+    instructionMode: InstructionMode,
   ): Promise<number> {
     const filas = await this.prisma.$queryRaw<{ count: number }[]>`
       SELECT count(*)::int AS count
         FROM classrooms
        WHERE status = 'PUBLISHED'
          AND scheduled_at > ${ahora}
-         AND ${preferencia}::"CommunicationPreference" = ANY(communication_modes)
+         AND instruction_mode = ${instructionMode}::"InstructionMode"
          AND current_bookings < max_students
     `;
     return filas[0]?.count ?? 0;
@@ -163,7 +166,7 @@ export class PanelService {
             endsAt: { gt: ahora },
           },
         },
-        select: { student: { select: { communicationPreference: true } } },
+        select: { student: { select: { preferredInstructionMode: true } } },
       }),
     ]);
 
@@ -173,7 +176,7 @@ export class PanelService {
       asistenciaSinMarcar,
       comunicacionDelGrupo: recuentoPorModo(
         inscritos.map(
-          (inscrito) => inscrito.student.communicationPreference as CommunicationPreference | null,
+          (inscrito) => inscrito.student.preferredInstructionMode as InstructionMode | null,
         ),
       ),
     };
@@ -222,19 +225,17 @@ export class PanelService {
   }
 }
 
-function recuentoPorModo(
-  preferencias: (CommunicationPreference | null)[],
-): RecuentoComunicacionGrupo {
-  const porModo: Partial<Record<CommunicationPreference, number>> = {};
+function recuentoPorModo(modos: (InstructionMode | null)[]): RecuentoComunicacionGrupo {
+  const porModo: Partial<Record<InstructionMode, number>> = {};
   let sinIndicar = 0;
 
-  for (const preferencia of preferencias) {
-    if (preferencia) {
-      porModo[preferencia] = (porModo[preferencia] ?? 0) + 1;
+  for (const modo of modos) {
+    if (modo) {
+      porModo[modo] = (porModo[modo] ?? 0) + 1;
     } else {
       sinIndicar += 1;
     }
   }
 
-  return { porModo, sinIndicar, total: preferencias.length };
+  return { porModo, sinIndicar, total: modos.length };
 }

@@ -16,12 +16,9 @@ import { NativeSelect } from '@/components/ui/native-select';
 import { RadioCardGroup } from '@/components/ui/radio-card-group';
 import { useAnnounce } from '@/hooks/use-announce';
 import { ApiClientError } from '@/lib/api-error';
-import {
-  communicationPreferenceLabels,
-  hearingLossLevelLabels,
-  roleOptions,
-} from '../lib/accessibility-labels';
+import { hearingLossLevelLabels, roleOptions } from '../lib/accessibility-labels';
 import { useRegister } from '../hooks/use-register';
+import { CamposPreferencia } from './campos-preferencia';
 import {
   type FieldErrors,
   type RegisterFormValues,
@@ -36,7 +33,8 @@ const FIELD_ORDER: (keyof RegisterFormValues)[] = [
   'lastName',
   'role',
   'hearingLossLevel',
-  'communicationPreference',
+  'preferredInstructionMode',
+  'preferredSupports',
 ];
 
 const INITIAL_VALUES: RegisterFormValues = {
@@ -46,7 +44,8 @@ const INITIAL_VALUES: RegisterFormValues = {
   lastName: '',
   role: UserRole.STUDENT,
   hearingLossLevel: '',
-  communicationPreference: '',
+  preferredInstructionMode: '',
+  preferredSupports: [],
 };
 
 function isFormField(name: string): name is keyof RegisterFormValues {
@@ -150,8 +149,9 @@ export function RegisterForm({ onRegistered }: { onRegistered: (user: User) => v
     // Los campos de accesibilidad solo aplican al estudiante y solo si los indicó.
     if (isStudent) {
       if (values.hearingLossLevel) input.hearingLossLevel = values.hearingLossLevel;
-      if (values.communicationPreference)
-        input.communicationPreference = values.communicationPreference;
+      if (values.preferredInstructionMode)
+        input.preferredInstructionMode = values.preferredInstructionMode;
+      if (values.preferredSupports.length > 0) input.preferredSupports = values.preferredSupports;
     }
 
     mutation.mutate(input, {
@@ -281,29 +281,14 @@ export function RegisterForm({ onRegistered }: { onRegistered: (user: User) => v
             </NativeSelect>
           </Field>
 
-          <Field
-            id="communicationPreference"
-            label="Preferencia de comunicación"
-            error={errors.communicationPreference}
-          >
-            <NativeSelect
-              name="communicationPreference"
-              value={values.communicationPreference}
-              onChange={(event) =>
-                updateField(
-                  'communicationPreference',
-                  event.target.value as RegisterFormValues['communicationPreference'],
-                )
-              }
-            >
-              <option value="">Prefiero no indicarlo</option>
-              {Object.entries(communicationPreferenceLabels).map(([value, label]) => (
-                <option key={value} value={value}>
-                  {label}
-                </option>
-              ))}
-            </NativeSelect>
-          </Field>
+          <CamposPreferencia
+            modo={values.preferredInstructionMode}
+            apoyos={values.preferredSupports}
+            onModo={(modo) => updateField('preferredInstructionMode', modo)}
+            onApoyos={(apoyos) => updateField('preferredSupports', apoyos)}
+            errorModo={errors.preferredInstructionMode}
+            errorApoyos={errors.preferredSupports}
+          />
         </section>
       )}
 

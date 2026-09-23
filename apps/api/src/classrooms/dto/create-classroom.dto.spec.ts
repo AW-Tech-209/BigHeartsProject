@@ -1,9 +1,9 @@
 import { type BadRequestException } from '@nestjs/common';
 import {
   ApiErrorCode,
-  CommunicationPreference,
+  ClassroomSupport,
   EnglishLevel,
-  MeetingProvider,
+  InstructionMode,
   type ValidationErrorDetail,
 } from '@academia/types';
 import { plainToInstance } from 'class-transformer';
@@ -31,8 +31,7 @@ const payloadValido = {
   scheduledAt: FUTURO,
   durationMinutes: 60,
   meetingLink: 'https://meet.google.com/abc-defg-hij',
-  communicationModes: [CommunicationPreference.WRITTEN_TEXT],
-  meetingProvider: MeetingProvider.GOOGLE_MEET,
+  instructionMode: InstructionMode.LSC_NATIVA,
 };
 
 describe('CreateClassroomDto (validación)', () => {
@@ -115,53 +114,48 @@ describe('CreateClassroomDto (validación)', () => {
     });
   });
 
-  // AC1: un aula nueva no puede quedar «sin indicar».
-  describe('communicationModes', () => {
-    it('rechaza un array vacío', async () => {
-      expect(await camposInvalidos({ ...payloadValido, communicationModes: [] })).toContain(
-        'communicationModes',
-      );
-    });
-
-    it('rechaza si falta el campo', async () => {
-      const { communicationModes: _omitido, ...sinModos } = payloadValido;
-      expect(await camposInvalidos(sinModos)).toContain('communicationModes');
+  // D42: obligatorio, pero ausente no es un VALIDATION_ERROR del DTO — es
+  // INSTRUCTION_MODE_REQUIRED, y lo decide el servicio (T4/AC1).
+  describe('instructionMode', () => {
+    it('sin el campo, el DTO por sí solo no lo rechaza', async () => {
+      const { instructionMode: _omitido, ...sinModo } = payloadValido;
+      expect(await camposInvalidos(sinModo)).not.toContain('instructionMode');
     });
 
     it('rechaza un valor que no es del catálogo', async () => {
-      expect(
-        await camposInvalidos({ ...payloadValido, communicationModes: ['TELEPATIA'] }),
-      ).toContain('communicationModes');
+      expect(await camposInvalidos({ ...payloadValido, instructionMode: 'TELEPATIA' })).toContain(
+        'instructionMode',
+      );
     });
 
-    it('acepta varios modos a la vez', async () => {
+    it.each([InstructionMode.LSC_NATIVA, InstructionMode.INTERPRETE_LSC])(
+      'acepta %s',
+      async (instructionMode) => {
+        expect(await camposInvalidos({ ...payloadValido, instructionMode })).toHaveLength(0);
+      },
+    );
+  });
+
+  describe('supports', () => {
+    it('es opcional', async () => {
+      const { supports: _s, ...sinApoyos } = payloadValido as Record<string, unknown>;
+      expect(await camposInvalidos(sinApoyos)).toHaveLength(0);
+    });
+
+    it('acepta varios apoyos a la vez', async () => {
       expect(
         await camposInvalidos({
           ...payloadValido,
-          communicationModes: [
-            CommunicationPreference.SIGN_LANGUAGE,
-            CommunicationPreference.LIP_READING,
-          ],
+          supports: [ClassroomSupport.LIP_READING, ClassroomSupport.LIVE_CAPTIONS],
         }),
       ).toHaveLength(0);
     });
-  });
 
-  // `DAILY` está reservado a Fase 1.5: no es una plataforma que el profesor
-  // pueda declarar al pegar un enlace manual.
-  describe('meetingProvider', () => {
-    it('rechaza DAILY', async () => {
-      expect(
-        await camposInvalidos({ ...payloadValido, meetingProvider: MeetingProvider.DAILY }),
-      ).toContain('meetingProvider');
+    it('rechaza un valor que no es del catálogo', async () => {
+      expect(await camposInvalidos({ ...payloadValido, supports: ['TELEPATIA'] })).toContain(
+        'supports',
+      );
     });
-
-    it.each([MeetingProvider.MANUAL, MeetingProvider.GOOGLE_MEET, MeetingProvider.ZOOM])(
-      'acepta %s',
-      async (meetingProvider) => {
-        expect(await camposInvalidos({ ...payloadValido, meetingProvider })).toHaveLength(0);
-      },
-    );
   });
 
   // AC4 y AC6

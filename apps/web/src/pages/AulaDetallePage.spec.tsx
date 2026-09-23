@@ -3,13 +3,14 @@ import {
   BookingStatus,
   type ClassroomDetail,
   ClassroomStatus,
-  CommunicationPreference,
+  ClassroomSupport,
   EnglishLevel,
   HearingLossLevel,
+  InstructionMode,
   MeetingProvider,
   UserRole,
 } from '@academia/types';
-import { screen, waitFor } from '@testing-library/react';
+import { screen, waitFor, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { AppRoutes } from '@/app/router';
@@ -22,7 +23,8 @@ import { markAttendance } from '@/features/aulas/api/mark-attendance';
 import { ApiClientError } from '@/lib/api-error';
 import { esperarSinFallosDeAccesibilidad } from '@/test/accesibilidad';
 import { renderConProviders, type Tema } from '@/test/render-con-providers';
-import { darSesion } from '@/test/sesion';
+import { darSesion, usuarioDePrueba } from '@/test/sesion';
+import { useAuthStore } from '@/stores/auth-store';
 
 vi.mock('@/features/aulas/api/get-classroom', () => ({ getClassroom: vi.fn() }));
 vi.mock('@/features/aulas/api/get-classrooms', () => ({ getClassrooms: vi.fn() }));
@@ -54,10 +56,8 @@ function aula(overrides: Partial<ClassroomDetail> = {}): ClassroomDetail {
     meetingProvider: MeetingProvider.MANUAL,
     status: ClassroomStatus.PUBLISHED,
     isRecurring: false,
-    communicationModes: [],
-    hasInterpreter: false,
-    hasLiveCaptions: false,
-    hasVisualMaterials: false,
+    instructionMode: InstructionMode.LSC_NATIVA,
+    supports: [],
     createdAt: '2026-08-01T10:00:00.000Z',
     updatedAt: '2026-08-01T10:00:00.000Z',
     teacherFirstName: 'Ana',
@@ -601,7 +601,7 @@ describe('AulaDetallePage — quién viene a la clase (HU-305)', () => {
     expect(getInscritosAula).not.toHaveBeenCalled();
   });
 
-  it('el dueño ve la lista completa con el modo de comunicación y la pérdida auditiva de cada uno (AC1, AC2)', async () => {
+  it('el dueño ve la lista completa con el modo que prefiere y la pérdida auditiva de cada uno (AC1, AC2)', async () => {
     darSesion(UserRole.TEACHER);
     vi.mocked(getInscritosAula).mockResolvedValue({
       confirmados: [
@@ -610,7 +610,7 @@ describe('AulaDetallePage — quién viene a la clase (HU-305)', () => {
           firstName: 'Ana',
           lastName: 'Estudiante',
           hearingLossLevel: HearingLossLevel.MODERATE,
-          communicationPreference: CommunicationPreference.SIGN_LANGUAGE,
+          instructionMode: InstructionMode.LSC_NATIVA,
           bookingStatus: BookingStatus.CONFIRMED,
         },
       ],
@@ -622,12 +622,13 @@ describe('AulaDetallePage — quién viene a la clase (HU-305)', () => {
     expect(screen.getByText('Confirmada')).toBeInTheDocument();
     expect(
       screen.getByRole('list', { name: 'Resumen de accesibilidad del grupo' }),
-    ).toHaveTextContent('1 lengua de signos');
+    ).toHaveTextContent('1 · Lengua de Señas Colombiana (LSC)');
 
-    // El modo de comunicación y la pérdida auditiva de cada inscrito se
-    // despliegan con «Ver detalle», no ocupan una columna propia.
+    // El modo que prefiere y la pérdida auditiva de cada inscrito se despliegan
+    // con «Ver detalle», no ocupan una columna propia.
     await user.click(screen.getByRole('button', { name: 'Ver el detalle de Ana Estudiante' }));
-    expect(await screen.findByText('Lengua de signos')).toBeInTheDocument();
+    const termino = await screen.findByText('Modo de instrucción que prefiere');
+    expect(termino.nextElementSibling).toHaveTextContent('Lengua de Señas Colombiana (LSC)');
     expect(screen.getByText('Moderada')).toBeInTheDocument();
   });
 
@@ -657,7 +658,7 @@ describe('AulaDetallePage — el profesor marca la asistencia (HU-403)', () => {
     firstName: 'Ana',
     lastName: 'Estudiante',
     hearingLossLevel: HearingLossLevel.MODERATE,
-    communicationPreference: CommunicationPreference.SIGN_LANGUAGE,
+    instructionMode: InstructionMode.LSC_NATIVA,
     bookingStatus: BookingStatus.CONFIRMED,
   };
 
@@ -712,6 +713,83 @@ describe('AulaDetallePage — el profesor marca la asistencia (HU-403)', () => {
     await screen.findByRole('rowheader', { name: 'Ana Estudiante' });
 
     expect(screen.getByText('No aplica')).toBeInTheDocument();
+  });
+});
+
+/** HU-507: cómo se imparte, con el modo arriba y destacado y los apoyos aparte. */
+describe('AulaDetallePage — modo de instrucción y apoyos (HU-507)', () => {
+  it('el modo va destacado y separado de los apoyos (T2, AC1)', async () => {
+    vi.mocked(getClassroom).mockResolvedValue({
+      classroom: aula({
+        instructionMode: InstructionMode.INTERPRETE_LSC,
+        supports: [ClassroomSupport.LIVE_CAPTIONS, ClassroomSupport.LIP_READING],
+      }),
+    });
+    montarDetalle();
+
+    const modo = await screen.findByRole('group', { name: 'Modo de instrucción' });
+    const apoyos = screen.getByRole('list', { name: 'Apoyos' });
+
+    expect(modo).toHaveTextContent('Con intérprete de Lengua de Señas Colombiana (LSC)');
+    expect(
+      within(apoyos)
+        .getAllByRole('listitem')
+        .map((li) => li.textContent),
+    ).toEqual(['Lectura labial', 'Subtítulos en vivo']);
+    expect(apoyos).not.toContainElement(modo);
+  });
+
+  it('sin modo declarado lo dice, y el estudiante no ve cómo completarlo (AC4)', async () => {
+    vi.mocked(getClassroom).mockResolvedValue({ classroom: aula({ instructionMode: null }) });
+    montarDetalle();
+
+    expect(await screen.findByRole('group', { name: 'Modo de instrucción' })).toHaveTextContent(
+      'Modo de instrucción sin declarar',
+    );
+    expect(
+      screen.queryByRole('link', { name: /completar accesibilidad/i }),
+    ).not.toBeInTheDocument();
+  });
+
+  it('al profesor dueño de un aula sin modo se le ofrece completarlo (T5, AC4)', async () => {
+    darSesion(UserRole.TEACHER);
+    vi.mocked(getClassroom).mockResolvedValue({ classroom: aula({ instructionMode: null }) });
+    montarDetalle();
+
+    expect(await screen.findByRole('link', { name: /completar accesibilidad/i })).toHaveAttribute(
+      'href',
+      `/mis-aulas/${ID}/accesibilidad`,
+    );
+  });
+
+  it('marca la coincidencia con la preferencia del estudiante, sin impedir reservar las demás (AC5)', async () => {
+    useAuthStore.setState({
+      user: {
+        ...usuarioDePrueba(UserRole.STUDENT),
+        preferredInstructionMode: InstructionMode.LSC_NATIVA,
+        preferredSupports: [],
+      },
+    });
+    montarDetalle();
+
+    expect(await screen.findByText('Coincide con tu preferencia')).toBeInTheDocument();
+  });
+
+  it('una clase con intérprete no coincide con quien prefiere LSC nativa, y se reserva igual', async () => {
+    useAuthStore.setState({
+      user: {
+        ...usuarioDePrueba(UserRole.STUDENT),
+        preferredInstructionMode: InstructionMode.LSC_NATIVA,
+        preferredSupports: [],
+      },
+    });
+    vi.mocked(getClassroom).mockResolvedValue({
+      classroom: aula({ instructionMode: InstructionMode.INTERPRETE_LSC }),
+    });
+    montarDetalle();
+
+    expect(await screen.findByRole('button', { name: /reservar/i })).toBeEnabled();
+    expect(screen.queryByText('Coincide con tu preferencia')).not.toBeInTheDocument();
   });
 });
 

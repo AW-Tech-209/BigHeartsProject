@@ -1,4 +1,4 @@
-import { CommunicationPreference, EnglishLevel, type ListClassroomsQuery } from '@academia/types';
+import { EnglishLevel, InstructionMode, type ListClassroomsQuery } from '@academia/types';
 
 /**
  * Traducción entre los filtros del catálogo y la URL (AC4): copiar el enlace
@@ -24,9 +24,9 @@ export function parseListClassroomsQuery(searchParams: URLSearchParams): ListCla
     query.level = level;
   }
 
-  const communicationMode = searchParams.get('communicationMode');
-  if (communicationMode && esModoValido(communicationMode)) {
-    query.communicationMode = communicationMode;
+  const instructionMode = searchParams.get('instructionMode');
+  if (instructionMode && esModoValido(instructionMode)) {
+    query.instructionMode = instructionMode;
   }
 
   // AC6: el filtro del profesor viaja en la URL como los demás. Solo `true` lo
@@ -56,7 +56,7 @@ export function buildSearchParams(query: ListClassroomsQuery): URLSearchParams {
   const params = new URLSearchParams();
 
   if (query.level) params.set('level', query.level);
-  if (query.communicationMode) params.set('communicationMode', query.communicationMode);
+  if (query.instructionMode) params.set('instructionMode', query.instructionMode);
   // Apagado es el default: `?mias=false` no aporta nada y ensucia el enlace que
   // el profesor comparte. Mismo criterio que `page=1`.
   if (query.mias) params.set('mias', 'true');
@@ -79,17 +79,15 @@ export function buildSearchParams(query: ListClassroomsQuery): URLSearchParams {
  * mira `mias` antes que esto (AC7).
  */
 export function hayFiltrosActivos(query: ListClassroomsQuery): boolean {
-  return Boolean(
-    query.level || query.communicationMode || query.desde || query.hasta || query.mias,
-  );
+  return Boolean(query.level || query.instructionMode || query.desde || query.hasta || query.mias);
 }
 
 function esNivelValido(value: string): value is EnglishLevel {
   return (Object.values(EnglishLevel) as string[]).includes(value);
 }
 
-function esModoValido(value: string): value is CommunicationPreference {
-  return (Object.values(CommunicationPreference) as string[]).includes(value);
+function esModoValido(value: string): value is InstructionMode {
+  return (Object.values(InstructionMode) as string[]).includes(value);
 }
 
 function enteroPositivo(value: string | null): number | undefined {

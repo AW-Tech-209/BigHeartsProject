@@ -1,8 +1,4 @@
-import {
-  type CommunicationPreference,
-  type EnglishLevel,
-  type ListClassroomsQuery,
-} from '@academia/types';
+import { type EnglishLevel, type InstructionMode, type ListClassroomsQuery } from '@academia/types';
 import { Presentation } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
@@ -10,7 +6,7 @@ import { Field } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { NativeSelect } from '@/components/ui/native-select';
 import { SwitchField } from '@/components/ui/switch';
-import { communicationPreferenceLabels } from '@/features/auth/lib/accessibility-labels';
+import { etiquetaModoInstruccion, MODOS_INSTRUCCION_EN_ORDEN } from '../lib/accesibilidad-aula';
 import { hayFiltrosActivos } from '../lib/filtros-url';
 import { nivelesDeIngles } from '../lib/niveles';
 
@@ -43,7 +39,7 @@ export function FiltrosAulas({ value, onChange, ofreceSoloMisClases = false }: F
 
   function actualizar(
     cambio: Partial<
-      Pick<ListClassroomsQuery, 'level' | 'communicationMode' | 'desde' | 'hasta' | 'mias'>
+      Pick<ListClassroomsQuery, 'level' | 'instructionMode' | 'desde' | 'hasta' | 'mias'>
     >,
   ) {
     const { page: _page, ...resto } = value;
@@ -53,7 +49,12 @@ export function FiltrosAulas({ value, onChange, ofreceSoloMisClases = false }: F
   return (
     <div className="rounded-xl border border-border bg-card p-4 sm:p-5">
       <div className="flex flex-wrap items-end gap-4">
-        <Field id="filtro-nivel" label="Nivel" labelClassName="text-accent-indigo" className="w-56">
+        <Field
+          id="filtro-nivel"
+          label="Nivel"
+          labelClassName="text-accent-indigo"
+          className="w-full sm:w-56"
+        >
           <NativeSelect
             iconClassName="text-accent-indigo"
             value={value.level ?? ''}
@@ -70,33 +71,37 @@ export function FiltrosAulas({ value, onChange, ofreceSoloMisClases = false }: F
           </NativeSelect>
         </Field>
 
-        {/* AC5: no viene puesto por defecto — «Todos los modos» es el valor inicial. */}
+        {/* Regla 1 de §4.9: no viene puesto por defecto — «Todos los modos» es el valor inicial. */}
         <Field
           id="filtro-modo"
-          label="Modo de comunicación"
+          label="Modo de instrucción"
           labelClassName="text-accent-teal"
-          className="w-56"
+          className="w-full sm:w-72"
         >
           <NativeSelect
             iconClassName="text-accent-teal"
-            value={value.communicationMode ?? ''}
+            value={value.instructionMode ?? ''}
             onChange={(event) =>
               actualizar({
-                communicationMode: (event.target.value || undefined) as
-                  CommunicationPreference | undefined,
+                instructionMode: (event.target.value || undefined) as InstructionMode | undefined,
               })
             }
           >
             <option value="">Todos los modos</option>
-            {Object.entries(communicationPreferenceLabels).map(([modo, etiqueta]) => (
+            {MODOS_INSTRUCCION_EN_ORDEN.map((modo) => (
               <option key={modo} value={modo}>
-                {etiqueta}
+                {etiquetaModoInstruccion[modo]}
               </option>
             ))}
           </NativeSelect>
         </Field>
 
-        <Field id="filtro-desde" label="Desde" labelClassName="text-primary">
+        <Field
+          id="filtro-desde"
+          label="Desde"
+          labelClassName="text-primary"
+          className="w-full min-w-0 sm:w-auto"
+        >
           <Input
             type="date"
             value={value.desde ?? ''}
@@ -104,7 +109,12 @@ export function FiltrosAulas({ value, onChange, ofreceSoloMisClases = false }: F
           />
         </Field>
 
-        <Field id="filtro-hasta" label="Hasta" labelClassName="text-accent-rose">
+        <Field
+          id="filtro-hasta"
+          label="Hasta"
+          labelClassName="text-accent-rose"
+          className="w-full min-w-0 sm:w-auto"
+        >
           <Input
             type="date"
             value={value.hasta ?? ''}

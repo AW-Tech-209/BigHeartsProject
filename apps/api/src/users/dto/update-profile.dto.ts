@@ -1,10 +1,19 @@
 import {
-  CommunicationPreference,
+  ClassroomSupport,
   HearingLossLevel,
+  InstructionMode,
   type UpdateProfileInput,
 } from '@academia/types';
 import { Transform } from 'class-transformer';
-import { IsEnum, IsNotEmpty, IsOptional, IsString, MaxLength } from 'class-validator';
+import {
+  ArrayUnique,
+  IsArray,
+  IsEnum,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  MaxLength,
+} from 'class-validator';
 
 /** Normaliza strings: recorta espacios. */
 const trim = ({ value }: { value: unknown }): unknown =>
@@ -43,6 +52,13 @@ export class UpdateProfileDto implements UpdateProfileInput {
   hearingLossLevel?: HearingLossLevel | null;
 
   @IsOptional()
-  @IsEnum(CommunicationPreference, { message: 'Preferencia de comunicación no válida.' })
-  communicationPreference?: CommunicationPreference | null;
+  @IsEnum(InstructionMode, { message: 'Modo de instrucción no válido.' })
+  preferredInstructionMode?: InstructionMode | null;
+
+  // Sin `null`: los apoyos se retiran mandando la lista vacía.
+  @IsOptional()
+  @IsArray({ message: 'Los apoyos deben ser una lista.' })
+  @ArrayUnique({ message: 'No repitas un apoyo.' })
+  @IsEnum(ClassroomSupport, { each: true, message: 'Apoyo no válido.' })
+  preferredSupports?: ClassroomSupport[];
 }

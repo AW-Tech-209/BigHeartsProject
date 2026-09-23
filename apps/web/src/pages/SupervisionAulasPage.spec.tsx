@@ -1,10 +1,10 @@
 import {
   type ClassroomListItem,
   ClassroomStatus,
-  CommunicationPreference,
   EnglishLevel,
   MeetingProvider,
   UserRole,
+  InstructionMode,
 } from '@academia/types';
 import { screen } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
@@ -42,10 +42,8 @@ function aula(overrides: Partial<ClassroomListItem> = {}): ClassroomListItem {
     meetingProvider: MeetingProvider.MANUAL,
     status: ClassroomStatus.PUBLISHED,
     isRecurring: false,
-    communicationModes: [CommunicationPreference.WRITTEN_TEXT],
-    hasInterpreter: false,
-    hasLiveCaptions: false,
-    hasVisualMaterials: false,
+    instructionMode: InstructionMode.LSC_NATIVA,
+    supports: [],
     createdAt: '2026-08-01T10:00:00.000Z',
     updatedAt: '2026-08-01T10:00:00.000Z',
     ...overrides,

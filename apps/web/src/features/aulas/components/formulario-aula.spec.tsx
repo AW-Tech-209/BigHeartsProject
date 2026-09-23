@@ -3,8 +3,9 @@ import {
   BookingStatus,
   type ClassroomDetail,
   ClassroomStatus,
-  CommunicationPreference,
+  ClassroomSupport,
   EnglishLevel,
+  InstructionMode,
   MeetingProvider,
 } from '@academia/types';
 import { screen, waitFor, within } from '@testing-library/react';
@@ -37,10 +38,8 @@ const AULA_CREADA = {
   meetingProvider: MeetingProvider.GOOGLE_MEET,
   status: ClassroomStatus.PUBLISHED,
   isRecurring: false,
-  communicationModes: [CommunicationPreference.SIGN_LANGUAGE],
-  hasInterpreter: false,
-  hasLiveCaptions: false,
-  hasVisualMaterials: false,
+  instructionMode: InstructionMode.LSC_NATIVA,
+  supports: [],
   createdAt: '2026-08-20T10:00:00.000Z',
   updatedAt: '2026-08-20T10:00:00.000Z',
 };
@@ -60,9 +59,7 @@ const AULA_ORIGEN: ClassroomDetail = {
   maxStudents: 8,
   scheduledAt: '2027-08-05T23:00:00.000Z',
   meetingLink: 'https://meet.google.com/xyz-uvwx-yz',
-  hasInterpreter: true,
-  hasLiveCaptions: false,
-  hasVisualMaterials: false,
+  supports: [ClassroomSupport.LIVE_CAPTIONS],
   teacherFirstName: 'Marta',
   teacherLastName: 'Ríos',
   myBookingStatus: null satisfies BookingStatus | null,
@@ -87,7 +84,9 @@ function montarDuplicando() {
  * Si un control dejara de ser alcanzable con Tab, o dejara de aceptar texto,
  * esta función falla.
  */
-/** Rellena todo EXCEPTO el modo de comunicación — para probar AC1 por separado. */
+/** Rellena todo EXCEPTO el modo de instrucción — para probar AC3 por separado. */
+const RADIO_LSC = { name: /^Lengua de Señas Colombiana \(LSC\)/ };
+
 async function rellenarSinModo(user: ReturnType<typeof montar>['user']) {
   await user.click(screen.getByLabelText(/nombre de la clase/i));
   await user.keyboard('Conversación cotidiana');
@@ -115,9 +114,8 @@ async function rellenarSinModo(user: ReturnType<typeof montar>['user']) {
 async function rellenarConTeclado(user: ReturnType<typeof montar>['user']) {
   await rellenarSinModo(user);
 
-  // T8: obligatorio. `Tab` desde el enlace pasa por la plataforma —que ya
-  // tiene un valor por defecto válido— y llega a las tarjetas de modo.
-  await user.click(screen.getByLabelText(/lengua de signos/i));
+  // HU-507, T3: obligatorio y sin valor por defecto.
+  await user.click(screen.getByRole('radio', RADIO_LSC));
 }
 
 /**
@@ -180,13 +178,53 @@ describe('FormularioAula — estructura accesible (AC8)', () => {
  * estudiante le escriba pidiéndolo va a mandárselo por WhatsApp — que es
  * exactamente lo que esta plataforma existe para evitar.
  */
+/** HU-507, T3: el modo de instrucción es obligatorio, explicado y aparte de los apoyos. */
+describe('FormularioAula — modo de instrucción y apoyos (HU-507)', () => {
+  it('ofrece exactamente dos modos, sin ninguno elegido de entrada', () => {
+    montar();
+
+    const grupo = screen.getByRole('radiogroup', { name: /en qué lengua se imparte la clase/i });
+    const radios = within(grupo).getAllByRole('radio');
+
+    expect(radios).toHaveLength(2);
+    for (const radio of radios) expect(radio).not.toBeChecked();
+  });
+
+  it('explica por qué solo hay dos opciones', () => {
+    montar();
+
+    expect(
+      screen.getByRole('radiogroup', { name: /en qué lengua se imparte la clase/i }),
+    ).toHaveAccessibleDescription(/solo hay dos formas de dar una clase a personas sordas/i);
+  });
+
+  it('los apoyos van en su propio grupo, fuera del modo de instrucción', () => {
+    montar();
+
+    const modos = screen.getByRole('radiogroup', { name: /en qué lengua se imparte la clase/i });
+    const apoyos = screen.getByRole('group', { name: /apoyos/i });
+
+    expect(within(apoyos).getAllByRole('checkbox')).toHaveLength(4);
+    expect(within(modos).queryByRole('checkbox')).not.toBeInTheDocument();
+    expect(within(apoyos).queryByRole('radio')).not.toBeInTheDocument();
+  });
+
+  it('ya no pregunta la plataforma: se deriva del enlace (T4)', () => {
+    montar();
+
+    expect(screen.queryByLabelText(/plataforma de la reunión/i)).not.toBeInTheDocument();
+  });
+});
+
 describe('FormularioAula — la ayuda del enlace (B3)', () => {
   it('dice de dónde sale el enlace y que solo se ve 30 minutos antes', () => {
     montar();
     const ayuda = screen.getByLabelText(/enlace de la reunión/i).getAttribute('aria-describedby');
 
     expect(ayuda).toBeTruthy();
-    expect(screen.getByText(/pega aquí el enlace de la reunión que creaste en zoom o meet/i));
+    expect(
+      screen.getByText(/que creaste en zoom, google meet o microsoft teams/i),
+    ).toBeInTheDocument();
     expect(screen.getByText(/30 minutos antes/i)).toBeInTheDocument();
     expect(screen.getByText(/se guarda cifrado/i)).toBeInTheDocument();
   });
@@ -242,7 +280,11 @@ describe('FormularioAula — envío', () => {
       maxStudents: 12,
       durationMinutes: 90,
       meetingLink: 'https://meet.google.com/abc-defg-hij',
+      instructionMode: InstructionMode.LSC_NATIVA,
+      supports: [],
     });
+    // D45: el proveedor lo deriva el servidor del enlace; el formulario no lo manda.
+    expect(enviado).not.toHaveProperty('meetingProvider');
     // El contrato viaja en UTC (§4.7), venga de la zona que venga el profesor.
     expect(enviado.scheduledAt).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/);
     expect(new Date(enviado.scheduledAt).getHours()).toBe(18);
@@ -287,17 +329,62 @@ describe('FormularioAula — errores de validación (AC4)', () => {
     expect(createClassroomMock).not.toHaveBeenCalled();
   });
 
-  // AC1: sin ningún modo de comunicación, el aula no se envía.
-  it('rechaza el envío sin ningún modo de comunicación elegido', async () => {
+  // HU-507, AC3: sin modo de instrucción, el aula no se envía.
+  it('rechaza el envío sin modo de instrucción, y lleva el foco al grupo', async () => {
     const { user } = montar();
 
     await rellenarSinModo(user);
     await user.click(screen.getByRole('button', { name: /publicar la clase/i }));
 
     expect(
-      await screen.findByText('Elige al menos un modo en que se imparte la clase.'),
+      await screen.findByText('Elige si la clase se imparte en LSC o con intérprete de LSC.'),
     ).toBeInTheDocument();
+    expect(document.getElementById('instructionMode')).toHaveFocus();
     expect(createClassroomMock).not.toHaveBeenCalled();
+  });
+
+  // HU-507, T4/AC3: el enlace se valida con `esProveedorPermitido()` antes de enviar.
+  it('rechaza un enlace que no es de Zoom, Meet ni Teams, y explica por qué', async () => {
+    const { user } = montar();
+
+    await rellenarConTeclado(user);
+    const enlace = screen.getByLabelText(/enlace de la reunión/i);
+    await user.clear(enlace);
+    await user.type(enlace, 'https://meet.jit.si/clase-de-ingles');
+    await user.click(screen.getByRole('button', { name: /publicar la clase/i }));
+
+    expect(await screen.findByText(/el enlace tiene que ser de zoom/i)).toBeInTheDocument();
+    expect(enlace).toHaveAttribute('aria-invalid', 'true');
+    expect(enlace).toHaveFocus();
+    expect(createClassroomMock).not.toHaveBeenCalled();
+  });
+
+  it('acepta un enlace de Microsoft Teams', async () => {
+    const { user } = montar();
+
+    await rellenarConTeclado(user);
+    const enlace = screen.getByLabelText(/enlace de la reunión/i);
+    await user.clear(enlace);
+    await user.type(enlace, 'https://teams.microsoft.com/l/meetup-join/123');
+    await user.click(screen.getByRole('button', { name: /publicar la clase/i }));
+
+    await waitFor(() => expect(createClassroomMock).toHaveBeenCalledTimes(1));
+  });
+
+  it('traduce MEETING_PROVIDER_NOT_ALLOWED del servidor al campo del enlace', async () => {
+    createClassroomMock.mockRejectedValue(
+      new ApiClientError(
+        { code: ApiErrorCode.MEETING_PROVIDER_NOT_ALLOWED, message: 'No permitido.' },
+        400,
+      ),
+    );
+    const { user } = montar();
+
+    await rellenarConTeclado(user);
+    await user.click(screen.getByRole('button', { name: /publicar la clase/i }));
+
+    expect(await screen.findByText(/el enlace tiene que ser de zoom/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/enlace de la reunión/i)).toHaveAttribute('aria-invalid', 'true');
   });
 
   it('rechaza un enlace que no es una URL', async () => {
@@ -717,7 +804,8 @@ describe('FormularioAula — duplicando (AC1, AC2, AC3)', () => {
     expect(screen.getByLabelText(/enlace de la reunión/i)).toHaveValue(
       'https://meet.google.com/xyz-uvwx-yz',
     );
-    expect(screen.getByLabelText(/lengua de signos/i)).toBeChecked();
+    expect(screen.getByRole('radio', RADIO_LSC)).toBeChecked();
+    expect(screen.getByRole('checkbox', { name: 'Subtítulos en vivo' })).toBeChecked();
   });
 
   it('la fecha y la hora llegan vacías', () => {

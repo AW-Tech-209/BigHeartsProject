@@ -33,8 +33,8 @@
  *   FINALIZADA_HIST fue hace 6 días · asistencia marcada (profe 1)    → finalizada (historial)
  *   FINALIZADA_HIST_2 fue hace 4 días · asistencia marcada (profe 2)  → finalizada (historial)
  *   CANCELADA       el profesor la canceló                            → cancelada
- *   SIN_MODOS       sin modos de comunicación declarados (pre-HU-211) → disponible, sin distintivos de modo
- *   ACCESIBLE       señas + texto + intérprete + subtítulos + material→ disponible, con todos los apoyos
+ *   SIN_MODOS       sin modo de instrucción declarado (pre-HU-506)    → «modo de instrucción sin declarar»
+ *   ACCESIBLE       LSC nativa + texto + subtítulos + material visual → disponible, con todos los apoyos
  *
  * Cuentas para probar el login y la cola de aprobación:
  *   demo.alumno@bighearts.local             STUDENT ACTIVE  (señas, hipoacusia severa) — dueño de las reservas
@@ -88,7 +88,6 @@ const PASSWORD = process.env.SEED_DEMO_PASSWORD?.trim() || 'Password123!';
 
 type Rol = 'STUDENT' | 'TEACHER';
 type Estado = 'ACTIVE' | 'PENDING' | 'REJECTED' | 'SUSPENDED';
-type ModoComunicacion = 'SIGN_LANGUAGE' | 'LIP_READING' | 'WRITTEN_TEXT' | 'SPOKEN_AUDIO';
 
 export type UsuarioDemo = {
   email: string;
@@ -97,7 +96,8 @@ export type UsuarioDemo = {
   role: Rol;
   status: Estado;
   hearingLossLevel?: 'MILD' | 'MODERATE' | 'SEVERE' | 'PROFOUND';
-  communicationPreference?: ModoComunicacion;
+  preferredInstructionMode?: InstructionModeDemo;
+  preferredSupports?: ClassroomSupportDemo[];
 };
 
 const PROFE = 'demo.profe@bighearts.local';
@@ -106,11 +106,14 @@ const ALUMNO = 'demo.alumno@bighearts.local';
 const ALUMNO2 = 'demo.alumno2@bighearts.local';
 const RELLENO = (n: number) => `demo.relleno${n}@bighearts.local`;
 
-/** Preferencia de cada relleno: `null` = sin declarar. */
-const PREFERENCIA_RELLENO: Record<number, ModoComunicacion | undefined> = {
-  1: 'SIGN_LANGUAGE',
-  2: 'LIP_READING',
-  3: 'WRITTEN_TEXT',
+/** Preferencia de cada relleno (D44): LSC, intérprete y solo apoyos; el resto sin declarar. */
+const PREFERENCIA_RELLENO: Record<
+  number,
+  Pick<UsuarioDemo, 'preferredInstructionMode' | 'preferredSupports'>
+> = {
+  1: { preferredInstructionMode: 'LSC_NATIVA' },
+  2: { preferredInstructionMode: 'INTERPRETE_LSC', preferredSupports: ['LIP_READING'] },
+  3: { preferredSupports: ['WRITTEN_TEXT'] },
 };
 
 export const USUARIOS: UsuarioDemo[] = [
@@ -137,7 +140,7 @@ export const USUARIOS: UsuarioDemo[] = [
     role: 'STUDENT',
     status: 'ACTIVE',
     hearingLossLevel: 'SEVERE',
-    communicationPreference: 'SIGN_LANGUAGE',
+    preferredInstructionMode: 'LSC_NATIVA',
   },
   {
     email: ALUMNO2,
@@ -146,7 +149,8 @@ export const USUARIOS: UsuarioDemo[] = [
     role: 'STUDENT',
     status: 'ACTIVE',
     hearingLossLevel: 'MODERATE',
-    communicationPreference: 'WRITTEN_TEXT',
+    preferredInstructionMode: 'INTERPRETE_LSC',
+    preferredSupports: ['WRITTEN_TEXT', 'LIVE_CAPTIONS'],
   },
   {
     email: 'demo.alumno.suspendido@bighearts.local',
@@ -161,9 +165,12 @@ export const USUARIOS: UsuarioDemo[] = [
     lastName: 'Demo',
     role: 'STUDENT',
     status: 'ACTIVE',
-    communicationPreference: PREFERENCIA_RELLENO[n],
+    ...PREFERENCIA_RELLENO[n],
   })),
 ];
+
+type InstructionModeDemo = 'LSC_NATIVA' | 'INTERPRETE_LSC';
+type ClassroomSupportDemo = 'LIP_READING' | 'WRITTEN_TEXT' | 'LIVE_CAPTIONS' | 'VISUAL_MATERIALS';
 
 export type AulaDemo = {
   id: string;
@@ -176,11 +183,10 @@ export type AulaDemo = {
   durationMinutes: number;
   meetingLink: string;
   meetingProvider: 'MANUAL' | 'GOOGLE_MEET' | 'ZOOM';
-  communicationModes: ModoComunicacion[];
+  /** `null` = sin declarar (HU-506, regla 3 de §4.9). Solo `SIN_MODOS` lo deja así. */
+  instructionMode: InstructionModeDemo | null;
+  supports?: ClassroomSupportDemo[];
   status?: 'PUBLISHED' | 'CANCELLED';
-  hasInterpreter?: boolean;
-  hasLiveCaptions?: boolean;
-  hasVisualMaterials?: boolean;
 };
 
 const idAula = (n: number) => `d0c00000-0000-4000-8000-0000000000${String(n).padStart(2, '0')}`;
@@ -213,8 +219,7 @@ export const AULAS: AulaDemo[] = [
     durationMinutes: 60,
     meetingLink: 'https://meet.google.com/demo-lejana',
     meetingProvider: 'GOOGLE_MEET',
-    communicationModes: ['SIGN_LANGUAGE'],
-    hasInterpreter: true,
+    instructionMode: 'INTERPRETE_LSC',
   },
   {
     id: AULA.ULTIMOS_CUPOS,
@@ -227,8 +232,8 @@ export const AULAS: AulaDemo[] = [
     durationMinutes: 60,
     meetingLink: 'https://zoom.us/j/demo-ultimos-cupos',
     meetingProvider: 'ZOOM',
-    communicationModes: ['WRITTEN_TEXT', 'LIP_READING'],
-    hasLiveCaptions: true,
+    instructionMode: 'LSC_NATIVA',
+    supports: ['WRITTEN_TEXT', 'LIVE_CAPTIONS'],
   },
   {
     id: AULA.LLENA,
@@ -241,8 +246,7 @@ export const AULAS: AulaDemo[] = [
     durationMinutes: 90,
     meetingLink: 'https://zoom.us/j/demo-llena',
     meetingProvider: 'ZOOM',
-    communicationModes: ['SPOKEN_AUDIO'],
-    hasInterpreter: true,
+    instructionMode: 'INTERPRETE_LSC',
   },
   {
     id: AULA.RESERVADA,
@@ -255,8 +259,7 @@ export const AULAS: AulaDemo[] = [
     durationMinutes: 60,
     meetingLink: 'https://meet.google.com/demo-reservada',
     meetingProvider: 'GOOGLE_MEET',
-    communicationModes: ['SIGN_LANGUAGE'],
-    hasInterpreter: true,
+    instructionMode: 'LSC_NATIVA',
   },
   {
     id: AULA.EMPIEZA_PRONTO,
@@ -269,9 +272,8 @@ export const AULAS: AulaDemo[] = [
     durationMinutes: 45,
     meetingLink: 'https://meet.google.com/demo-empieza-pronto',
     meetingProvider: 'GOOGLE_MEET',
-    communicationModes: ['SIGN_LANGUAGE'],
-    hasInterpreter: true,
-    hasLiveCaptions: true,
+    instructionMode: 'LSC_NATIVA',
+    supports: ['LIVE_CAPTIONS'],
   },
   {
     id: AULA.EN_CURSO,
@@ -284,8 +286,8 @@ export const AULAS: AulaDemo[] = [
     durationMinutes: 45,
     meetingLink: 'https://meet.google.com/demo-en-curso',
     meetingProvider: 'GOOGLE_MEET',
-    communicationModes: ['LIP_READING'],
-    hasLiveCaptions: true,
+    instructionMode: 'INTERPRETE_LSC',
+    supports: ['LIVE_CAPTIONS', 'LIP_READING'],
   },
   {
     id: AULA.LLEGUE_TARDE,
@@ -298,7 +300,7 @@ export const AULAS: AulaDemo[] = [
     durationMinutes: 60,
     meetingLink: 'https://meet.google.com/demo-llegue-tarde',
     meetingProvider: 'GOOGLE_MEET',
-    communicationModes: ['SIGN_LANGUAGE'],
+    instructionMode: 'LSC_NATIVA',
   },
   {
     id: AULA.FINALIZADA_HIST,
@@ -311,7 +313,8 @@ export const AULAS: AulaDemo[] = [
     durationMinutes: 60,
     meetingLink: 'https://meet.google.com/demo-finalizada-hist',
     meetingProvider: 'GOOGLE_MEET',
-    communicationModes: ['WRITTEN_TEXT'],
+    instructionMode: 'INTERPRETE_LSC',
+    supports: ['WRITTEN_TEXT'],
   },
   {
     id: AULA.FINALIZADA_HIST_2,
@@ -324,8 +327,8 @@ export const AULAS: AulaDemo[] = [
     durationMinutes: 60,
     meetingLink: 'https://zoom.us/j/demo-finalizada-hist-2',
     meetingProvider: 'ZOOM',
-    communicationModes: ['SIGN_LANGUAGE', 'WRITTEN_TEXT'],
-    hasLiveCaptions: true,
+    instructionMode: 'LSC_NATIVA',
+    supports: ['WRITTEN_TEXT', 'LIVE_CAPTIONS'],
   },
   {
     id: AULA.CANCELADA,
@@ -338,37 +341,35 @@ export const AULAS: AulaDemo[] = [
     durationMinutes: 60,
     meetingLink: 'https://zoom.us/j/demo-cancelada',
     meetingProvider: 'ZOOM',
-    communicationModes: ['SIGN_LANGUAGE'],
+    instructionMode: 'LSC_NATIVA',
     status: 'CANCELLED',
   },
   {
     id: AULA.SIN_MODOS,
     teacherEmail: PROFE,
-    title: 'Clase sin modos de comunicación indicados',
-    description: 'Aula anterior a HU-211: el profesor no declaró en qué modos se imparte.',
+    title: 'Clase sin modo de instrucción declarado',
+    description: 'Aula anterior a HU-506: el profesor no declaró en qué modo se imparte.',
     level: 'INTERMEDIATE',
     maxStudents: 10,
     scheduledInMinutes: 5 * DIA,
     durationMinutes: 60,
     meetingLink: 'https://meet.google.com/demo-sin-modos',
     meetingProvider: 'MANUAL',
-    communicationModes: [],
+    instructionMode: null,
   },
   {
     id: AULA.ACCESIBLE,
     teacherEmail: PROFE,
     title: 'Clase con todos los apoyos de accesibilidad',
-    description: 'Señas y texto, con intérprete, subtítulos en vivo y material visual.',
+    description: 'LSC nativa, con texto escrito, subtítulos en vivo y material visual.',
     level: 'BEGINNER',
     maxStudents: 12,
     scheduledInMinutes: 6 * DIA,
     durationMinutes: 60,
     meetingLink: 'https://meet.google.com/demo-accesible',
     meetingProvider: 'GOOGLE_MEET',
-    communicationModes: ['SIGN_LANGUAGE', 'WRITTEN_TEXT'],
-    hasInterpreter: true,
-    hasLiveCaptions: true,
-    hasVisualMaterials: true,
+    instructionMode: 'LSC_NATIVA',
+    supports: ['WRITTEN_TEXT', 'LIVE_CAPTIONS', 'VISUAL_MATERIALS'],
   },
 ];
 
@@ -486,7 +487,8 @@ async function main(): Promise<void> {
       role: u.role,
       status: u.status,
       hearingLossLevel: u.hearingLossLevel ?? null,
-      communicationPreference: u.communicationPreference ?? null,
+      preferredInstructionMode: u.preferredInstructionMode ?? null,
+      preferredSupports: u.preferredSupports ?? [],
     };
     await prisma.user.upsert({
       where: { email: u.email },
@@ -517,10 +519,8 @@ async function main(): Promise<void> {
       meetingLink: cipher.encrypt(aula.meetingLink),
       meetingProvider: aula.meetingProvider,
       status: aula.status ?? 'PUBLISHED',
-      communicationModes: aula.communicationModes,
-      hasInterpreter: aula.hasInterpreter ?? false,
-      hasLiveCaptions: aula.hasLiveCaptions ?? false,
-      hasVisualMaterials: aula.hasVisualMaterials ?? false,
+      instructionMode: aula.instructionMode,
+      supports: aula.supports ?? [],
       currentBookings: aula.status === 'CANCELLED' ? 0 : (cupo.get(aula.id) ?? 0),
     };
     await prisma.classroom.upsert({

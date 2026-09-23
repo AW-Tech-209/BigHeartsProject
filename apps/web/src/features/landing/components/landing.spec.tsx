@@ -67,4 +67,37 @@ describe('<Landing>', () => {
     await user.click(screen.getByRole('button', { name: /quitar filtros/i }));
     expect(screen.getByText(RESUMEN).textContent).toEqual(antes);
   });
+
+  it('dice dónde ocurre la clase, antes de la sección de profesores', () => {
+    renderConProviders(<Landing />);
+
+    const comoEsUnaClase = screen.getByRole('heading', { name: /cuatro pasos/i });
+    expect(screen.getByText(/^cómo es una clase$/i)).toBeInTheDocument();
+    expect(screen.getByText(/zoom, meet o teams/i)).toBeInTheDocument();
+
+    const profesores = screen.getByRole('heading', { name: /sabes quién viene/i });
+    expect(
+      comoEsUnaClase.compareDocumentPosition(profesores) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+  });
+
+  it('destaca el estándar de LSC o intérprete de LSC', () => {
+    renderConProviders(<Landing />);
+    expect(
+      screen.getByRole('heading', {
+        name: /toda clase se imparte en.*lengua de señas colombiana/i,
+      }),
+    ).toBeInTheDocument();
+    expect(screen.getByText(/declara.*imparte/i)).toBeInTheDocument();
+  });
+
+  it('dice qué no es BigHearts', () => {
+    renderConProviders(<Landing />);
+    expect(screen.getByRole('heading', { name: /qué no es bighearts/i })).toBeInTheDocument();
+  });
+
+  it('no dice «lengua de signos» en ningún sitio', () => {
+    const { container } = renderConProviders(<Landing />);
+    expect(container.textContent).not.toMatch(/lengua de signos/i);
+  });
 });

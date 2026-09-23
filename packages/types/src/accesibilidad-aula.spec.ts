@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest';
 
-import { coincideConLaPreferencia } from './accesibilidad-aula';
+import { ClassroomSupport, InstructionMode } from './accesibilidad-clase';
+import {
+  coincideConLaAccesibilidad,
+  coincideConLaPreferencia,
+  preferenciaDelUsuario,
+} from './accesibilidad-aula';
 import { CommunicationPreference } from './index';
 
 describe('coincideConLaPreferencia', () => {
@@ -58,5 +63,51 @@ describe('coincideConLaPreferencia', () => {
         null,
       ),
     ).toBe(false);
+  });
+});
+
+describe('coincideConLaAccesibilidad', () => {
+  it('coincidencia exacta: mismo modo de instrucción en aula y preferencia', () => {
+    expect(
+      coincideConLaAccesibilidad(
+        { instructionMode: InstructionMode.LSC_NATIVA },
+        { instructionMode: InstructionMode.LSC_NATIVA, supports: [] },
+      ),
+    ).toBe(true);
+  });
+
+  it('aula con intérprete no coincide con quien prefiere LSC nativa: son modos distintos', () => {
+    expect(
+      coincideConLaAccesibilidad(
+        { instructionMode: InstructionMode.INTERPRETE_LSC },
+        { instructionMode: InstructionMode.LSC_NATIVA, supports: [] },
+      ),
+    ).toBe(false);
+  });
+
+  it('aula sin declarar modo de instrucción, no hay coincidencia posible', () => {
+    expect(
+      coincideConLaAccesibilidad(
+        { instructionMode: null },
+        { instructionMode: InstructionMode.LSC_NATIVA, supports: [] },
+      ),
+    ).toBe(false);
+  });
+});
+
+describe('preferenciaDelUsuario', () => {
+  it('lleva el modo y los apoyos guardados a la forma con la que se compara un aula', () => {
+    const preferencia = preferenciaDelUsuario({
+      preferredInstructionMode: InstructionMode.INTERPRETE_LSC,
+      preferredSupports: [ClassroomSupport.LIVE_CAPTIONS],
+    });
+
+    expect(preferencia).toEqual({
+      instructionMode: InstructionMode.INTERPRETE_LSC,
+      supports: [ClassroomSupport.LIVE_CAPTIONS],
+    });
+    expect(
+      coincideConLaAccesibilidad({ instructionMode: InstructionMode.INTERPRETE_LSC }, preferencia),
+    ).toBe(true);
   });
 });

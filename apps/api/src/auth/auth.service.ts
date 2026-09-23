@@ -76,7 +76,8 @@ export class AuthService {
         role: dto.role,
         status: this.resolveInitialStatus(dto.role),
         hearingLossLevel: dto.hearingLossLevel ?? null,
-        communicationPreference: dto.communicationPreference ?? null,
+        preferredInstructionMode: dto.preferredInstructionMode ?? null,
+        preferredSupports: dto.preferredSupports ?? [],
       },
     });
 

@@ -6,9 +6,10 @@ import {
   CLASS_MAX_DURATION_MINUTES_DEFAULT,
   CLASS_MIN_LEAD_MINUTES_DEFAULT,
   ClassroomStatus,
-  CommunicationPreference,
+  ClassroomSupport,
   EnglishLevel,
   EstadoTemporalAula,
+  InstructionMode,
   MeetingProvider,
   UserRole,
   UserStatus,
@@ -53,8 +54,7 @@ function entrada(overrides: Partial<CreateClassroomDto> = {}): CreateClassroomDt
     scheduledAt: '2027-08-12T23:00:00.000Z',
     durationMinutes: 60,
     meetingLink: ENLACE,
-    communicationModes: [CommunicationPreference.WRITTEN_TEXT],
-    meetingProvider: MeetingProvider.GOOGLE_MEET,
+    instructionMode: InstructionMode.LSC_NATIVA,
     ...overrides,
   };
 }
@@ -200,57 +200,69 @@ describe('ClassroomsService.createClassroom', () => {
     expect(classroom.currentBookings).toBe(0);
   });
 
-  // AC1, T3: los 5 campos de accesibilidad se escriben tal y como llegan del
-  // DTO. `meetingProvider` ya no lo fija el servidor: lo elige el profesor.
-  it('escribe los modos, los apoyos y la plataforma que declaró el profesor', async () => {
+  // AC1, T3: el modo y los apoyos se escriben tal y como llegan del DTO.
+  // `meetingProvider` ya no lo elige el profesor: lo deriva el servidor del
+  // dominio del enlace (D45).
+  it('escribe el modo, los apoyos y deriva la plataforma del enlace', async () => {
     const { service, create } = setup();
 
     const classroom = await service.createClassroom(
       profesorDelToken,
       entrada({
-        communicationModes: [
-          CommunicationPreference.SIGN_LANGUAGE,
-          CommunicationPreference.LIP_READING,
-        ],
-        hasInterpreter: true,
-        meetingProvider: MeetingProvider.ZOOM,
+        instructionMode: InstructionMode.INTERPRETE_LSC,
+        supports: [ClassroomSupport.LIP_READING, ClassroomSupport.LIVE_CAPTIONS],
+        meetingLink: 'https://zoom.us/j/otra-sala',
       }),
     );
 
     expect(datosEscritos(create)).toMatchObject({
-      communicationModes: [
-        CommunicationPreference.SIGN_LANGUAGE,
-        CommunicationPreference.LIP_READING,
-      ],
-      hasInterpreter: true,
-      hasLiveCaptions: false,
-      hasVisualMaterials: false,
+      instructionMode: InstructionMode.INTERPRETE_LSC,
+      supports: [ClassroomSupport.LIP_READING, ClassroomSupport.LIVE_CAPTIONS],
       meetingProvider: MeetingProvider.ZOOM,
     });
-    expect(classroom.communicationModes).toEqual([
-      CommunicationPreference.SIGN_LANGUAGE,
-      CommunicationPreference.LIP_READING,
+    expect(classroom.instructionMode).toBe(InstructionMode.INTERPRETE_LSC);
+    expect(classroom.supports).toEqual([
+      ClassroomSupport.LIP_READING,
+      ClassroomSupport.LIVE_CAPTIONS,
     ]);
   });
 
-  // Los tres apoyos son opcionales (§4.9): omitirlos los deja en `false`, no
-  // en `undefined` — la columna es `Boolean`, no admite un tercer estado.
-  it('los apoyos omitidos se escriben en false, no en undefined', async () => {
+  // Los apoyos son opcionales (§4.9): omitirlos los deja en `[]`, no en
+  // `undefined` — la columna es un array, no admite un tercer estado.
+  it('los apoyos omitidos se escriben en un array vacío, no en undefined', async () => {
     const { service, create } = setup();
-    const {
-      hasInterpreter: _h,
-      hasLiveCaptions: _l,
-      hasVisualMaterials: _v,
-      ...sinApoyos
-    } = entrada();
 
-    await service.createClassroom(profesorDelToken, sinApoyos as CreateClassroomDto);
+    await service.createClassroom(profesorDelToken, entrada());
 
-    expect(datosEscritos(create)).toMatchObject({
-      hasInterpreter: false,
-      hasLiveCaptions: false,
-      hasVisualMaterials: false,
-    });
+    expect(datosEscritos(create)).toMatchObject({ supports: [] });
+  });
+
+  // T4: un enlace de otra plataforma se rechaza con su código, y nada se escribe.
+  it('rechaza un enlace que no es de Zoom, Meet ni Teams', async () => {
+    const { service, create } = setup();
+
+    const codigo = await codigoDe(
+      service.createClassroom(
+        profesorDelToken,
+        entrada({ meetingLink: 'https://ejemplo.com/sala' }),
+      ),
+    );
+
+    expect(codigo).toBe(ApiErrorCode.MEETING_PROVIDER_NOT_ALLOWED);
+    expect(create).not.toHaveBeenCalled();
+  });
+
+  // AC1: sin instructionMode, el servidor lo rechaza con su código propio.
+  it('rechaza crear un aula sin instructionMode', async () => {
+    const { service, create } = setup();
+    const { instructionMode: _im, ...sinModo } = entrada();
+
+    const codigo = await codigoDe(
+      service.createClassroom(profesorDelToken, sinModo as CreateClassroomDto),
+    );
+
+    expect(codigo).toBe(ApiErrorCode.INSTRUCTION_MODE_REQUIRED);
+    expect(create).not.toHaveBeenCalled();
   });
 
   /**
@@ -665,10 +677,8 @@ function filaDeAula(overrides: Record<string, unknown> = {}) {
     meetingProvider: MeetingProvider.MANUAL,
     status: ClassroomStatus.PUBLISHED,
     isRecurring: false,
-    communicationModes: [CommunicationPreference.WRITTEN_TEXT],
-    hasInterpreter: false,
-    hasLiveCaptions: false,
-    hasVisualMaterials: false,
+    instructionMode: InstructionMode.LSC_NATIVA,
+    supports: [ClassroomSupport.WRITTEN_TEXT],
     createdAt: new Date('2026-08-01T10:00:00.000Z'),
     updatedAt: new Date('2026-08-01T10:00:00.000Z'),
     teacher: { firstName: 'Paula', lastName: 'Profesora' },
@@ -754,53 +764,53 @@ describe('ClassroomsService.listClassrooms', () => {
     expect(and).toContainEqual({ scheduledAt: { gte: new Date('2099-01-01T00:00:00.000Z') } });
   });
 
-  // AC9: el filtro por modo de comunicación existe y se combina con los demás.
-  it('filtra por modo de comunicación cuando se pide', async () => {
+  // AC9: el filtro por modo de instrucción existe y se combina con los demás.
+  it('filtra por modo de instrucción cuando se pide', async () => {
     const { service, findMany } = setupParaListado();
 
     await service.listClassrooms(profesorDelToken, {
-      communicationMode: CommunicationPreference.SIGN_LANGUAGE,
+      instructionMode: InstructionMode.LSC_NATIVA,
     });
 
     expect(whereDe(findMany)).toContainEqual({
-      communicationModes: { has: CommunicationPreference.SIGN_LANGUAGE },
+      instructionMode: InstructionMode.LSC_NATIVA,
     });
   });
 
-  it('combina el modo de comunicación con nivel y rango de fechas', async () => {
+  it('combina el modo de instrucción con nivel y rango de fechas', async () => {
     const { service, findMany } = setupParaListado();
 
     await service.listClassrooms(profesorDelToken, {
       level: EnglishLevel.INTERMEDIATE,
       desde: '2099-01-01T00:00:00.000Z',
-      communicationMode: CommunicationPreference.LIP_READING,
+      instructionMode: InstructionMode.INTERPRETE_LSC,
     });
 
     const and = whereDe(findMany);
     expect(and).toContainEqual({ level: EnglishLevel.INTERMEDIATE });
     expect(and).toContainEqual({ scheduledAt: { gte: new Date('2099-01-01T00:00:00.000Z') } });
     expect(and).toContainEqual({
-      communicationModes: { has: CommunicationPreference.LIP_READING },
+      instructionMode: InstructionMode.INTERPRETE_LSC,
     });
   });
 
   // Sin el filtro, no se le añade ninguna cláusula de por sí: AC5, no se
   // filtra por defecto.
-  it('sin communicationMode no añade ninguna cláusula de modo', async () => {
+  it('sin instructionMode no añade ninguna cláusula de modo', async () => {
     const { service, findMany } = setupParaListado();
 
     await service.listClassrooms(profesorDelToken, {});
 
-    expect(whereDe(findMany).some((clausula) => 'communicationModes' in clausula)).toBe(false);
+    expect(whereDe(findMany).some((clausula) => 'instructionMode' in clausula)).toBe(false);
   });
 
-  // AC7: una aula sembrada antes de HU-211 —modos sin indicar— se sirve igual.
-  it('un aula sin modos declarados se sirve con communicationModes: [], sin romper', async () => {
-    const { service } = setupParaListado([filaDeAula({ communicationModes: [] })]);
+  // AC3: una aula sembrada antes de HU-506 —modo sin declarar— se sirve igual.
+  it('un aula sin modo declarado se sirve con instructionMode: null, sin romper', async () => {
+    const { service } = setupParaListado([filaDeAula({ instructionMode: null })]);
 
     const [item] = (await service.listClassrooms(profesorDelToken, {})).items;
 
-    expect(item).toMatchObject({ communicationModes: [] });
+    expect(item).toMatchObject({ instructionMode: null });
   });
 
   /**
@@ -1615,7 +1625,7 @@ const inscritoConfirmado = (overrides: Record<string, unknown> = {}) => ({
     firstName: 'Ana',
     lastName: 'Estudiante',
     hearingLossLevel: 'MODERATE',
-    communicationPreference: 'SIGN_LANGUAGE',
+    preferredInstructionMode: 'LSC_NATIVA',
     email: 'ana@academia.local',
     ...overrides,
   },
@@ -1635,7 +1645,7 @@ describe('ClassroomsService.getInscritos — quién viene a la clase (HU-305)', 
     expect(respuesta.confirmados[0]).toMatchObject({
       firstName: 'Ana',
       hearingLossLevel: 'MODERATE',
-      communicationPreference: 'SIGN_LANGUAGE',
+      instructionMode: InstructionMode.LSC_NATIVA,
       bookingStatus: 'CONFIRMED',
     });
   });
@@ -1815,6 +1825,68 @@ describe('ClassroomsService.editClassroom', () => {
       .meetingLink as string;
     expect(guardado).not.toContain(otroEnlace);
     expect(guardado).toMatch(/^v1\./);
+  });
+
+  // T4: al editar, si el enlace cambia, la plataforma se deriva de nuevo.
+  it('si el enlace cambia, meetingProvider se deriva del dominio nuevo', async () => {
+    const { service, update } = setupEditar({ teacherId: PROFESOR_ID });
+
+    await service.editClassroom(
+      profesorDelToken,
+      ID_DEL_AULA,
+      entradaEdicion({ meetingLink: 'https://zoom.us/j/otra-sala' }),
+    );
+
+    const data = update.mock.calls[0]?.[0].data as Record<string, unknown>;
+    expect(data.meetingProvider).toBe(MeetingProvider.ZOOM);
+  });
+
+  it('un enlace nuevo que no es de Zoom, Meet ni Teams se rechaza', async () => {
+    const { service, update } = setupEditar({ teacherId: PROFESOR_ID });
+
+    const codigo = await codigoDe(
+      service.editClassroom(
+        profesorDelToken,
+        ID_DEL_AULA,
+        entradaEdicion({ meetingLink: 'https://ejemplo.com/sala' }),
+      ),
+    );
+
+    expect(codigo).toBe(ApiErrorCode.MEETING_PROVIDER_NOT_ALLOWED);
+    expect(update).not.toHaveBeenCalled();
+  });
+
+  // T5: sin modo declarado, ningún otro cambio se acepta sin declararlo.
+  describe('aula sin modo de instrucción declarado (T5)', () => {
+    it('editar cualquier campo sin declarar instructionMode responde CLASSROOM_ACCESSIBILITY_NOT_DECLARED', async () => {
+      const { service, update } = setupEditar({
+        teacherId: PROFESOR_ID,
+        instructionMode: null,
+      });
+
+      const codigo = await codigoDe(
+        service.editClassroom(profesorDelToken, ID_DEL_AULA, entradaEdicion({ title: 'x' })),
+      );
+
+      expect(codigo).toBe(ApiErrorCode.CLASSROOM_ACCESSIBILITY_NOT_DECLARED);
+      expect(update).not.toHaveBeenCalled();
+    });
+
+    it('declarar instructionMode en la misma petición la desbloquea', async () => {
+      const { service, update } = setupEditar({
+        teacherId: PROFESOR_ID,
+        instructionMode: null,
+      });
+
+      const classroom = await service.editClassroom(
+        profesorDelToken,
+        ID_DEL_AULA,
+        entradaEdicion({ title: 'Nuevo título', instructionMode: InstructionMode.LSC_NATIVA }),
+      );
+
+      expect(update).toHaveBeenCalledOnce();
+      expect(classroom.title).toBe('Nuevo título');
+    });
   });
 
   it('otro profesor recibe CLASSROOM_FORBIDDEN, y no se escribe nada', async () => {
@@ -2158,7 +2230,7 @@ function setupAsistencia(
       firstName: 'Ana',
       lastName: 'Estudiante',
       hearingLossLevel: 'MODERATE',
-      communicationPreference: 'SIGN_LANGUAGE',
+      preferredInstructionMode: 'LSC_NATIVA',
     },
   };
   const bookingInicial = ('booking' in options ? options.booking : bookingPorDefecto) as
@@ -2249,7 +2321,7 @@ describe('ClassroomsService.markAttendance — el profesor marca asistencia (HU-
           firstName: 'Ana',
           lastName: 'Estudiante',
           hearingLossLevel: null,
-          communicationPreference: null,
+          preferredInstructionMode: null,
         },
       },
     });
@@ -2332,7 +2404,7 @@ describe('ClassroomsService.markAttendance — el profesor marca asistencia (HU-
           firstName: 'Ana',
           lastName: 'Estudiante',
           hearingLossLevel: null,
-          communicationPreference: null,
+          preferredInstructionMode: null,
         },
       },
     });
@@ -2359,7 +2431,7 @@ describe('ClassroomsService.markAttendance — el profesor marca asistencia (HU-
           firstName: 'Ana',
           lastName: 'Estudiante',
           hearingLossLevel: null,
-          communicationPreference: null,
+          preferredInstructionMode: null,
         },
       },
     });

@@ -30,7 +30,7 @@ export function FiltrosSupervision({ value, onChange }: FiltrosSupervisionProps)
 
   return (
     <div className="flex flex-wrap items-end gap-4 border-b border-border pb-6">
-      <Field id="filtro-profesor" label="Profesor" className="w-56">
+      <Field id="filtro-profesor" label="Profesor" className="w-full sm:w-56">
         <NativeSelect
           value={value.teacherId ?? ''}
           onChange={(event) => actualizar({ teacherId: event.target.value || undefined })}
@@ -49,7 +49,7 @@ export function FiltrosSupervision({ value, onChange }: FiltrosSupervisionProps)
         aula nace `PUBLISHED` y no hay flujo de `DRAFT`; `COMPLETED` no tiene
         escritor. Ofrecer las cuatro daría dos opciones que nunca devuelven nada.
       */}
-      <Field id="filtro-estado-aula" label="Estado" className="w-56">
+      <Field id="filtro-estado-aula" label="Estado" className="w-full sm:w-56">
         <NativeSelect
           value={value.status ?? ''}
           onChange={(event) =>

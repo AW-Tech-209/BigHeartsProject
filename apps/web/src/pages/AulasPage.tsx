@@ -1,4 +1,4 @@
-import { type ListClassroomsQuery, UserRole } from '@academia/types';
+import { type ListClassroomsQuery, preferenciaDelUsuario, UserRole } from '@academia/types';
 import { RotateCw } from 'lucide-react';
 import { useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
@@ -54,11 +54,10 @@ export function AulasPage() {
   const announce = useAnnounce();
   const { user } = useAuth();
 
-  // T12: solo el estudiante ve la marca de coincidencia. Un `undefined` aquí
-  // hace que `coincideConLaPreferencia()` devuelva `false` siempre — nunca una
-  // marca sobre el aula de otro rol.
+  // Solo el estudiante ve la marca de coincidencia (D44). Un `undefined` aquí
+  // hace que `coincideConLaAccesibilidad()` devuelva `false` siempre.
   const preferenciaEstudiante =
-    user?.role === UserRole.STUDENT ? user.communicationPreference : undefined;
+    user?.role === UserRole.STUDENT ? preferenciaDelUsuario(user) : undefined;
 
   /**
    * HU-208. Las dos derivaciones de presentación por rol, resueltas UNA vez
@@ -119,7 +118,7 @@ export function AulasPage() {
       />
 
       {/* T14, AC6: solo al estudiante sin preferencia, y sin insistir. */}
-      {user?.role === UserRole.STUDENT && !user.communicationPreference && (
+      {user?.role === UserRole.STUDENT && !user.preferredInstructionMode && (
         <InvitacionPreferencia userId={user.id} />
       )}
 

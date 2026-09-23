@@ -35,6 +35,12 @@ type PendingTeachersTableProps = {
  * Las acciones son `<button>` de verdad, no filas pulsables: una fila con
  * `onClick` no sale en la lista de controles de un lector de pantalla, no se
  * alcanza con Tab y no dice qué hace.
+ *
+ * **Bajo `sm` la fila se convierte en tarjeta** (HU-508, T4): tres columnas no
+ * caben en 375px y la alternativa —barrido horizontal— deja las acciones fuera
+ * de la pantalla. Se apila con CSS sobre el MISMO `<table>`, no con un segundo
+ * marcado: cambiar `display` le quita a la tabla sus roles implícitos, así que
+ * se declaran a mano para que el lector de pantalla siga leyendo lo mismo.
  */
 export function PendingTeachersTable({
   teachers,
@@ -42,7 +48,7 @@ export function PendingTeachersTable({
   onResolve,
 }: PendingTeachersTableProps) {
   return (
-    <Table>
+    <Table role="table" className="max-sm:block">
       {/* El `<caption>` es el nombre accesible de la tabla: lo primero que se
           oye al entrar en ella. Va visible porque también sirve de contexto a
           quien la ve — el número dice cuánto trabajo hay. */}
@@ -52,7 +58,7 @@ export function PendingTeachersTable({
           : `${teachers.length} profesores esperan tu aprobación, del más antiguo al más reciente.`}
       </TableCaption>
 
-      <TableHeader>
+      <TableHeader className="max-sm:hidden">
         <TableRow>
           <TableHead>Profesor</TableHead>
           <TableHead>Solicitud</TableHead>
@@ -65,24 +71,40 @@ export function PendingTeachersTable({
         </TableRow>
       </TableHeader>
 
-      <TableBody>
+      <TableBody role="rowgroup" className="max-sm:block max-sm:space-y-3 max-sm:px-4 max-sm:pb-4">
         {teachers.map((teacher) => (
-          <TableRow key={teacher.id}>
+          <TableRow
+            key={teacher.id}
+            role="row"
+            className="max-sm:block max-sm:rounded-xl max-sm:border max-sm:border-border max-sm:p-4"
+          >
             {/* `scope="row"` convierte el nombre en el encabezado de la fila:
                 al leer la celda de la fecha, el lector dice de quién es. */}
-            <TableHead scope="row" className="font-normal text-foreground">
+            <TableHead
+              scope="row"
+              role="rowheader"
+              className="font-normal text-foreground max-sm:block max-sm:px-0 max-sm:pt-0"
+            >
               <span className="block font-medium">
                 {teacher.firstName} {teacher.lastName}
               </span>
-              <span className="block text-sm text-muted-foreground">{teacher.email}</span>
+              <span className="block text-sm break-words text-muted-foreground">
+                {teacher.email}
+              </span>
             </TableHead>
 
-            <TableCell className="text-muted-foreground whitespace-nowrap">
+            <TableCell
+              role="cell"
+              className="text-muted-foreground max-sm:block max-sm:px-0 max-sm:py-1 sm:whitespace-nowrap"
+            >
+              {/* Bajo `sm` la fila de encabezados no existe —ni en pantalla ni
+                  para el lector—, así que la fecha nombra aquí de qué es. */}
+              <span className="sm:hidden">Solicitud: </span>
               {formatRequestDate(teacher.createdAt)}
             </TableCell>
 
-            <TableCell>
-              <div className="flex flex-wrap justify-end gap-2">
+            <TableCell role="cell" className="max-sm:block max-sm:px-0 max-sm:pb-0">
+              <div className="flex flex-wrap gap-2 max-sm:flex-col sm:justify-end">
                 <ResolveTeacherDialog
                   teacher={teacher}
                   resolution="approve"

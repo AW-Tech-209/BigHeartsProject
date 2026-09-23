@@ -1,4 +1,4 @@
-import { CommunicationPreference, EnglishLevel } from '@academia/types';
+import { EnglishLevel, InstructionMode } from '@academia/types';
 import { describe, expect, it } from 'vitest';
 
 import { buildSearchParams, hayFiltrosActivos, parseListClassroomsQuery } from './filtros-url';
@@ -10,12 +10,12 @@ describe('parseListClassroomsQuery', () => {
 
   it('lee nivel, modo, rango de fechas y paginación', () => {
     const params = new URLSearchParams(
-      'level=ADVANCED&communicationMode=SIGN_LANGUAGE&desde=2026-09-01&hasta=2026-09-30&page=2&pageSize=10',
+      'level=ADVANCED&instructionMode=LSC_NATIVA&desde=2026-09-01&hasta=2026-09-30&page=2&pageSize=10',
     );
 
     expect(parseListClassroomsQuery(params)).toEqual({
       level: EnglishLevel.ADVANCED,
-      communicationMode: CommunicationPreference.SIGN_LANGUAGE,
+      instructionMode: InstructionMode.LSC_NATIVA,
       desde: '2026-09-01',
       hasta: '2026-09-30',
       page: 2,
@@ -27,10 +27,8 @@ describe('parseListClassroomsQuery', () => {
     expect(parseListClassroomsQuery(new URLSearchParams('level=EXPERTO'))).toEqual({});
   });
 
-  it('ignora un modo de comunicación que no existe, en vez de romper', () => {
-    expect(parseListClassroomsQuery(new URLSearchParams('communicationMode=TELEPATIA'))).toEqual(
-      {},
-    );
+  it('ignora un modo de instrucción que no existe, en vez de romper', () => {
+    expect(parseListClassroomsQuery(new URLSearchParams('instructionMode=TELEPATIA'))).toEqual({});
   });
 
   it.each(['abc', '0', '-1', '1.5'])('ignora una página inválida: %s', (page) => {
@@ -62,7 +60,7 @@ describe('buildSearchParams — el inverso, para el enlace compartible (AC4)', (
   it('round-trip: parsear lo que se construyó devuelve el mismo query', () => {
     const original = {
       level: EnglishLevel.BEGINNER,
-      communicationMode: CommunicationPreference.WRITTEN_TEXT,
+      instructionMode: InstructionMode.INTERPRETE_LSC,
       desde: '2026-09-01',
       hasta: '2026-09-30',
       page: 2,
@@ -93,7 +91,7 @@ describe('hayFiltrosActivos', () => {
 
   it.each([
     { level: EnglishLevel.BEGINNER },
-    { communicationMode: CommunicationPreference.SIGN_LANGUAGE },
+    { instructionMode: InstructionMode.LSC_NATIVA },
     { desde: '2026-09-01' },
     { hasta: '2026-09-30' },
     // `mias` cuenta: «Quitar filtros» tiene que devolver el catálogo completo,

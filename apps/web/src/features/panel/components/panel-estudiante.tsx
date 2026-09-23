@@ -6,7 +6,7 @@ import { Link } from 'react-router-dom';
 import { EstadoAula } from '@/components/dominio/estado-aula';
 import { varianteEstadoAula } from '@/components/dominio/estado-aula-variantes';
 import { EstadoVacio } from '@/components/dominio/estado-vacio';
-import { ModoComunicacionBadge } from '@/components/dominio/modo-comunicacion-badge';
+import { ModoInstruccion } from '@/components/dominio/modo-instruccion';
 import { RejillaAulas } from '@/components/layout/rejilla-aulas';
 import { Button } from '@/components/ui/button';
 import { Callout } from '@/components/ui/callout';
@@ -14,7 +14,6 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { AccionEntrarAClase } from '@/features/aulas/components/accion-entrar-a-clase';
 import { useMisReservas } from '@/features/aulas/hooks/use-mis-reservas';
 import { describirHorarioPartes } from '@/features/aulas/lib/horario';
-import { MODOS_COMUNICACION_EN_ORDEN } from '@/features/aulas/lib/modos-comunicacion';
 import { cn } from '@/lib/utils';
 
 /** Cuántas clases próximas caben en el inicio (AC3): no duplica «Mis clases». */
@@ -118,7 +117,7 @@ export function PanelEstudiante() {
 
 /**
  * La ficha compacta de una clase en el panel: fecha, estado, modos de
- * comunicación y el acceso de HU-304. Sin reservar ni cancelar — esas
+ * instrucción y el acceso de HU-304. Sin reservar ni cancelar — esas
  * acciones viven en el detalle del aula y en «Mis clases» (fuera de alcance).
  */
 function TarjetaClaseProxima({ aula }: { aula: ClassroomListItem }) {
@@ -129,9 +128,6 @@ function TarjetaClaseProxima({ aula }: { aula: ClassroomListItem }) {
   });
   const cuposRestantes = Math.max(aula.maxStudents - aula.currentBookings, 0);
   const tituloId = `panel-clase-${aula.id}-titulo`;
-  const modos = MODOS_COMUNICACION_EN_ORDEN.filter((modo) =>
-    aula.communicationModes.includes(modo),
-  );
   const { cuando, zona } = describirHorarioPartes(aula.scheduledAt);
 
   return (
@@ -147,7 +143,7 @@ function TarjetaClaseProxima({ aula }: { aula: ClassroomListItem }) {
       <div className="flex flex-1 flex-col gap-2.5">
         <div className="flex flex-col gap-1">
           <p className="text-xs text-pretty text-muted-foreground">
-            {cuando} {zona && <span className="whitespace-nowrap">({zona})</span>}
+            {cuando} {zona && <span className="sm:whitespace-nowrap">({zona})</span>}
           </p>
 
           <h3 id={tituloId} className="text-base font-medium text-foreground">
@@ -164,15 +160,7 @@ function TarjetaClaseProxima({ aula }: { aula: ClassroomListItem }) {
           <EstadoAula estado={estado} cuposRestantes={cuposRestantes} />
         </div>
 
-        <div className="flex flex-wrap items-center gap-1" aria-label="Formas de comunicación">
-          {modos.length === 0 ? (
-            <ModoComunicacionBadge modo={null} className="px-2 py-0.5 text-xs" />
-          ) : (
-            modos.map((modo) => (
-              <ModoComunicacionBadge key={modo} modo={modo} className="px-2 py-0.5 text-xs" />
-            ))
-          )}
-        </div>
+        <ModoInstruccion modo={aula.instructionMode} className="self-start" />
 
         <AccionEntrarAClase
           aula={{

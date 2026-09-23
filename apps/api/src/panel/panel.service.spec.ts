@@ -1,8 +1,8 @@
 import {
   BookingStatus,
   ClassroomStatus,
-  CommunicationPreference,
   EnglishLevel,
+  InstructionMode,
   MeetingProvider,
   UserRole,
   UserStatus,
@@ -48,10 +48,8 @@ function filaDeAula(overrides: Record<string, unknown> = {}) {
     meetingProvider: MeetingProvider.MANUAL,
     status: ClassroomStatus.PUBLISHED,
     isRecurring: false,
-    communicationModes: [CommunicationPreference.WRITTEN_TEXT],
-    hasInterpreter: false,
-    hasLiveCaptions: false,
-    hasVisualMaterials: false,
+    instructionMode: InstructionMode.LSC_NATIVA,
+    supports: [],
     createdAt: AHORA,
     updatedAt: AHORA,
     teacher: { firstName: 'Paula', lastName: 'Profesora' },
@@ -79,7 +77,7 @@ describe('PanelService.resumen — reparto por rol (AC1, AC3)', () => {
     const count = vi.fn().mockResolvedValue(3);
     const prisma = prismaMock({
       user: {
-        findUnique: vi.fn().mockResolvedValue({ communicationPreference: null }),
+        findUnique: vi.fn().mockResolvedValue({ preferredInstructionMode: null }),
         count: vi.fn(),
       },
       booking: { findFirst, count, findMany: vi.fn() },
@@ -105,7 +103,7 @@ describe('PanelService.resumen — reparto por rol (AC1, AC3)', () => {
     const prisma = prismaMock({
       user: {
         findUnique: vi.fn().mockResolvedValue({
-          communicationPreference: CommunicationPreference.SIGN_LANGUAGE,
+          preferredInstructionMode: InstructionMode.LSC_NATIVA,
         }),
         count: vi.fn(),
       },
@@ -126,7 +124,7 @@ describe('PanelService.resumen — reparto por rol (AC1, AC3)', () => {
   it('la próxima clase del estudiante viaja sin meetingLink', async () => {
     const prisma = prismaMock({
       user: {
-        findUnique: vi.fn().mockResolvedValue({ communicationPreference: null }),
+        findUnique: vi.fn().mockResolvedValue({ preferredInstructionMode: null }),
         count: vi.fn(),
       },
       booking: {
@@ -160,9 +158,9 @@ describe('PanelService.resumen — reparto por rol (AC1, AC3)', () => {
         findMany: vi
           .fn()
           .mockResolvedValue([
-            { student: { communicationPreference: CommunicationPreference.SIGN_LANGUAGE } },
-            { student: { communicationPreference: CommunicationPreference.SIGN_LANGUAGE } },
-            { student: { communicationPreference: null } },
+            { student: { preferredInstructionMode: InstructionMode.LSC_NATIVA } },
+            { student: { preferredInstructionMode: InstructionMode.LSC_NATIVA } },
+            { student: { preferredInstructionMode: null } },
           ]),
       },
     });
@@ -173,7 +171,7 @@ describe('PanelService.resumen — reparto por rol (AC1, AC3)', () => {
       rol: UserRole.TEACHER,
       asistenciaSinMarcar: 1,
       comunicacionDelGrupo: {
-        porModo: { [CommunicationPreference.SIGN_LANGUAGE]: 2 },
+        porModo: { [InstructionMode.LSC_NATIVA]: 2 },
         sinIndicar: 1,
         total: 3,
       },

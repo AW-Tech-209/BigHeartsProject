@@ -1,5 +1,11 @@
 import { ForbiddenException, UnauthorizedException } from '@nestjs/common';
-import { ApiErrorCode, UserRole, UserStatus } from '@academia/types';
+import {
+  ApiErrorCode,
+  ClassroomSupport,
+  InstructionMode,
+  UserRole,
+  UserStatus,
+} from '@academia/types';
 import bcrypt from 'bcryptjs';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -32,7 +38,8 @@ function dbUser(overrides: Record<string, unknown> = {}) {
     role: UserRole.STUDENT,
     status: UserStatus.ACTIVE,
     hearingLossLevel: null,
-    communicationPreference: null,
+    preferredInstructionMode: null,
+    preferredSupports: [],
     createdAt: new Date('2026-01-01T00:00:00.000Z'),
     updatedAt: new Date('2026-01-01T00:00:00.000Z'),
     ...overrides,
@@ -184,16 +191,33 @@ describe('AuthService.register', () => {
     expect(create).not.toHaveBeenCalled();
   });
 
-  it('persiste las preferencias de accesibilidad', async () => {
+  it('sin preferencias declaradas, las guarda vacías: ni modo inventado ni apoyos', async () => {
     const { service, create } = setup();
 
-    await service.register(
-      baseDto({ hearingLossLevel: undefined, communicationPreference: undefined }),
-    );
+    await service.register(baseDto({ hearingLossLevel: undefined }));
 
     const created = create.mock.calls[0]![0].data;
     expect(created.hearingLossLevel).toBeNull();
-    expect(created.communicationPreference).toBeNull();
+    expect(created.preferredInstructionMode).toBeNull();
+    expect(created.preferredSupports).toEqual([]);
+  });
+
+  it('persiste el modo de instrucción y varios apoyos (D44)', async () => {
+    const { service, create } = setup();
+
+    await service.register(
+      baseDto({
+        preferredInstructionMode: InstructionMode.INTERPRETE_LSC,
+        preferredSupports: [ClassroomSupport.LIVE_CAPTIONS, ClassroomSupport.WRITTEN_TEXT],
+      }),
+    );
+
+    const created = create.mock.calls[0]![0].data;
+    expect(created.preferredInstructionMode).toBe(InstructionMode.INTERPRETE_LSC);
+    expect(created.preferredSupports).toEqual([
+      ClassroomSupport.LIVE_CAPTIONS,
+      ClassroomSupport.WRITTEN_TEXT,
+    ]);
   });
 });
 

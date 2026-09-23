@@ -5,11 +5,12 @@ import {
   type ClassroomDetail,
   type ClassroomListItem,
   type ClassroomStatus,
-  type CommunicationPreference,
+  type ClassroomSupport,
   type EnglishLevel,
   type EstadoAccesoEnlace,
   type HearingLossLevel,
   type InscritoAula,
+  type InstructionMode,
   type MeetingProvider,
 } from '@academia/types';
 
@@ -49,12 +50,10 @@ export function toPublicClassroom(classroom: PrismaClassroom): Classroom {
     meetingProvider: classroom.meetingProvider as MeetingProvider,
     status: classroom.status as ClassroomStatus,
     isRecurring: classroom.isRecurring,
-    // Array vacío = «sin indicar» (HU-211, decisión 5): las aulas de antes de
+    // `null` = «sin declarar» (HU-506, regla 3 de §4.9): las aulas de antes de
     // esta HU llegan aquí igual, sin que este mapeador les invente un modo.
-    communicationModes: classroom.communicationModes as CommunicationPreference[],
-    hasInterpreter: classroom.hasInterpreter,
-    hasLiveCaptions: classroom.hasLiveCaptions,
-    hasVisualMaterials: classroom.hasVisualMaterials,
+    instructionMode: classroom.instructionMode as InstructionMode | null,
+    supports: classroom.supports as ClassroomSupport[],
     createdAt: classroom.createdAt.toISOString(),
     updatedAt: classroom.updatedAt.toISOString(),
   };
@@ -141,7 +140,7 @@ export function toInscritoAula(booking: {
     firstName: string;
     lastName: string;
     hearingLossLevel: string | null;
-    communicationPreference: string | null;
+    preferredInstructionMode: string | null;
   };
 }): InscritoAula {
   return {
@@ -149,8 +148,7 @@ export function toInscritoAula(booking: {
     firstName: booking.student.firstName,
     lastName: booking.student.lastName,
     hearingLossLevel: booking.student.hearingLossLevel as HearingLossLevel | null,
-    communicationPreference: booking.student
-      .communicationPreference as CommunicationPreference | null,
+    instructionMode: booking.student.preferredInstructionMode as InstructionMode | null,
     bookingStatus: booking.status as BookingStatus,
   };
 }

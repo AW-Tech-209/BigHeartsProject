@@ -23,9 +23,9 @@ import { AccionEntrarAClase } from '@/features/aulas/components/accion-entrar-a-
 import { buildSearchParams } from '@/features/aulas/lib/filtros-url';
 import { describirHorario } from '@/features/aulas/lib/horario';
 import {
-  etiquetaModoComunicacion,
-  MODOS_COMUNICACION_EN_ORDEN,
-} from '@/features/aulas/lib/modos-comunicacion';
+  etiquetaModoInstruccion,
+  MODOS_INSTRUCCION_EN_ORDEN,
+} from '@/features/aulas/lib/accesibilidad-aula';
 import { useAuth } from '@/features/auth/hooks/use-auth';
 
 import { useResumenPanel } from '../hooks/use-resumen-panel';
@@ -104,10 +104,10 @@ function TarjetasEstudiante({ data }: { data: ResumenPanelEstudiante }) {
   const { user } = useAuth();
 
   // «Clases que coinciden contigo» lleva al catálogo con el filtro de modo ya
-  // puesto: es el mismo modo con el que el servidor calculó el número.
-  const preferencia = user?.communicationPreference ?? null;
-  const catalogoConMiModo = preferencia
-    ? `/aulas?${buildSearchParams({ communicationMode: preferencia })}`
+  // puesto: es el mismo modo con el que el servidor calculó el número (D44).
+  const modoPreferido = user?.preferredInstructionMode ?? null;
+  const catalogoConMiModo = modoPreferido
+    ? `/aulas?${buildSearchParams({ instructionMode: modoPreferido })}`
     : '/aulas';
 
   return (
@@ -153,7 +153,7 @@ function TarjetasEstudiante({ data }: { data: ResumenPanelEstudiante }) {
       >
         {sinPreferencia ? (
           <p className="text-sm">
-            Indica tu preferencia de comunicación y verás qué clases con cupo encajan contigo.
+            Indica cómo prefieres seguir las clases y verás cuáles con cupo encajan contigo.
           </p>
         ) : (
           <Numero
@@ -255,10 +255,10 @@ function TarjetasProfesor({ data }: { data: ResumenPanelProfesor }) {
           <p className="text-sm">Aún no hay inscritos en tus próximas clases.</p>
         ) : (
           <ul className="space-y-0.5 text-sm">
-            {MODOS_COMUNICACION_EN_ORDEN.filter((modo) => comunicacionDelGrupo.porModo[modo]).map(
+            {MODOS_INSTRUCCION_EN_ORDEN.filter((modo) => comunicacionDelGrupo.porModo[modo]).map(
               (modo) => (
                 <li key={modo}>
-                  {etiquetaModoComunicacion[modo]} · {comunicacionDelGrupo.porModo[modo]}
+                  {etiquetaModoInstruccion[modo]} · {comunicacionDelGrupo.porModo[modo]}
                 </li>
               ),
             )}

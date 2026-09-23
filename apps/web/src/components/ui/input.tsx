@@ -12,6 +12,8 @@ type InputProps = React.ComponentPropsWithoutRef<'input'> & {
  * Input de texto accesible. Alto 44px (objetivo táctil mínimo), borde con
  * contraste ≥3:1 (`--input`) y borde destructivo cuando `aria-invalid`.
  * El anillo de foco lo aplica la regla global `:focus-visible`.
+ * `min-w-0`: sin él, `date` y `time` nativos no bajan de su ancho propio y
+ * desbordan su campo con zoom al 200 % en móvil (HU-508).
  */
 export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
   { className, type = 'text', iconoInicio: Icono, ...props },
@@ -22,7 +24,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
       ref={ref}
       type={type}
       className={cn(
-        'h-11 w-full rounded-lg border border-input bg-card px-3.5 text-base text-foreground',
+        'h-11 w-full min-w-0 rounded-lg border border-input bg-card px-3.5 text-base text-foreground',
         'transicion-rapida placeholder:text-muted-foreground',
         'aria-invalid:border-destructive-border aria-invalid:bg-destructive-soft/40',
         'disabled:cursor-not-allowed disabled:opacity-50',

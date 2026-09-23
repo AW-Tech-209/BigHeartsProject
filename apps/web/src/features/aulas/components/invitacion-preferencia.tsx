@@ -21,17 +21,17 @@ export function InvitacionPreferencia({ userId }: { userId: string }) {
   if (cerrada) return null;
 
   return (
-    <Callout variant="info" title="Cuéntanos cómo prefieres comunicarte">
+    <Callout variant="info" title="Cuéntanos cómo prefieres seguir las clases">
       <div className="space-y-3">
         <p>
           Con esa preferencia destacamos las clases que puedes seguir sin depender del audio. Es
           opcional y puedes completarla cuando quieras desde tu perfil.
         </p>
         <div className="flex flex-wrap gap-3">
-          <Button render={<Link to="/perfil" />} className="h-10 px-4 text-sm">
+          <Button render={<Link to="/perfil" />} className="h-11 px-4 text-sm">
             Completar mi perfil
           </Button>
-          <Button variant="outline" onClick={cerrar} className="h-10 px-4 text-sm">
+          <Button variant="outline" onClick={cerrar} className="h-11 px-4 text-sm">
             Ahora no
           </Button>
         </div>

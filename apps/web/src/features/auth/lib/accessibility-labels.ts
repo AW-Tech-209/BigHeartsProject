@@ -1,9 +1,4 @@
-import {
-  CommunicationPreference,
-  HearingLossLevel,
-  type RegisterableRole,
-  UserRole,
-} from '@academia/types';
+import { HearingLossLevel, type RegisterableRole, UserRole } from '@academia/types';
 import { GraduationCap, Presentation } from 'lucide-react';
 
 import type { RadioCardOption } from '@/components/ui/radio-card-group';
@@ -31,14 +26,6 @@ export const hearingLossLevelLabels: Record<HearingLossLevel, string> = {
   [HearingLossLevel.MODERATE]: 'Moderada',
   [HearingLossLevel.SEVERE]: 'Severa',
   [HearingLossLevel.PROFOUND]: 'Profunda',
-};
-
-/** Etiquetas en español de la preferencia de comunicación. */
-export const communicationPreferenceLabels: Record<CommunicationPreference, string> = {
-  [CommunicationPreference.SIGN_LANGUAGE]: 'Lengua de signos',
-  [CommunicationPreference.LIP_READING]: 'Lectura labial',
-  [CommunicationPreference.WRITTEN_TEXT]: 'Texto escrito',
-  [CommunicationPreference.SPOKEN_AUDIO]: 'Audio con apoyo',
 };
 
 /** Etiqueta legible del rol, para los mensajes de confirmación. */

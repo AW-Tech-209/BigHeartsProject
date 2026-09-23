@@ -1,7 +1,7 @@
 import {
   CLASSROOMS_PAGE_SIZE_MAX,
-  CommunicationPreference,
   EnglishLevel,
+  InstructionMode,
   type ListClassroomsQuery,
 } from '@academia/types';
 import { Transform, Type } from 'class-transformer';
@@ -34,8 +34,8 @@ export class ListClassroomsDto implements ListClassroomsQuery {
   // defecto en ninguna pantalla — el catálogo destaca la coincidencia con la
   // preferencia del estudiante, nunca filtra por ella (§4.9, regla 1).
   @IsOptional()
-  @IsEnum(CommunicationPreference, { message: 'Elige un modo de comunicación válido.' })
-  communicationMode?: CommunicationPreference;
+  @IsEnum(InstructionMode, { message: 'Elige un modo de instrucción válido.' })
+  instructionMode?: InstructionMode;
 
   /**
    * AC5: solo las aulas de quien pregunta. **No lleva id** — el `teacherId` lo

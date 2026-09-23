@@ -1,50 +1,51 @@
-import { type CommunicationPreference } from '@academia/types';
+import type { ClassroomSupport, InstructionMode } from '@academia/types';
 
 import { CheckboxCardGroup, type CheckboxCardOption } from '@/components/ui/checkbox-card-group';
-import { CheckboxField } from '@/components/ui/checkbox-field';
-import { APOYOS_AULA } from '../lib/apoyos-aula';
+import { RadioCardGroup, type RadioCardOption } from '@/components/ui/radio-card-group';
 import {
-  etiquetaModoComunicacion,
-  iconoModoComunicacion,
-  MODOS_COMUNICACION_EN_ORDEN,
-} from '../lib/modos-comunicacion';
+  APOYOS_EN_ORDEN,
+  descripcionModoInstruccion,
+  etiquetaApoyo,
+  etiquetaModoInstruccion,
+  iconoApoyo,
+  iconoModoInstruccion,
+  MODOS_INSTRUCCION_EN_ORDEN,
+} from '../lib/accesibilidad-aula';
 
-const OPCIONES_MODO: CheckboxCardOption<CommunicationPreference>[] =
-  MODOS_COMUNICACION_EN_ORDEN.map((modo) => ({
+const OPCIONES_MODO: RadioCardOption<InstructionMode>[] = MODOS_INSTRUCCION_EN_ORDEN.map(
+  (modo) => ({
     value: modo,
-    label: etiquetaModoComunicacion[modo],
-    icon: iconoModoComunicacion[modo],
-  }));
+    label: etiquetaModoInstruccion[modo],
+    description: descripcionModoInstruccion[modo],
+    icon: iconoModoInstruccion[modo],
+  }),
+);
+
+const OPCIONES_APOYO: CheckboxCardOption<ClassroomSupport>[] = APOYOS_EN_ORDEN.map((apoyo) => ({
+  value: apoyo,
+  label: etiquetaApoyo[apoyo],
+  icon: iconoApoyo[apoyo],
+}));
 
 export type ValoresAccesibilidadAula = {
-  communicationModes: CommunicationPreference[];
-  hasInterpreter: boolean;
-  hasLiveCaptions: boolean;
-  hasVisualMaterials: boolean;
+  /** `null` solo mientras el profesor no ha elegido: no se puede enviar así. */
+  instructionMode: InstructionMode | null;
+  supports: ClassroomSupport[];
 };
 
 type SeccionAccesibilidadAulaProps = {
   values: ValoresAccesibilidadAula;
-  /**
-   * Un `patch` parcial, no `(campo, valor)`: así el formulario que la monta
-   * puede tipar su propio actualizador contra un objeto MÁS GRANDE
-   * (`ClassroomFormValues`) sin que la varianza de una firma genérica
-   * `<K>(field: K, value: T[K])` se lo impida — un patch es covariante donde
-   * la pareja campo/valor no lo es.
-   */
+  /** Un `patch` parcial: es covariante con el objeto más grande del formulario que la monta. */
   onChange: (patch: Partial<ValoresAccesibilidadAula>) => void;
-  /** Error de `communicationModes`, pintado bajo el grupo (AC1). */
+  /** Error de `instructionMode`, pintado bajo el grupo (AC3). */
   error?: string;
 };
 
 /**
- * Sección de accesibilidad compartida entre crear y completar un aula (T8):
- * los modos de comunicación —selección múltiple, obligatoria— y los tres
- * apoyos. Sin estado propio, para que los dos formularios no puedan
- * desincronizarse.
- *
- * El selector de plataforma de la videollamada (T9) NO vive aquí: va junto al
- * campo del enlace, que es donde lo pide la HU.
+ * Sección de accesibilidad compartida entre crear, editar y completar un aula.
+ * El modo de instrucción es obligatorio y va primero; los apoyos, aparte y
+ * opcionales (D42, D43). Sin estado propio, para que los formularios no se
+ * desincronicen.
  */
 export function SeccionAccesibilidadAula({
   values,
@@ -52,58 +53,59 @@ export function SeccionAccesibilidadAula({
   error,
 }: SeccionAccesibilidadAulaProps) {
   return (
-    <fieldset className="space-y-4 rounded-xl border border-border bg-muted/40 p-5">
+    <fieldset className="space-y-6 rounded-xl border border-border bg-muted/40 p-5">
       <legend className="px-1 text-base font-medium text-foreground">Accesibilidad</legend>
 
-      {/*
-        `id` + `tabIndex={-1}` en el bloque de modos: es lo que le da a
-        `focusFirstError()` del formulario un sitio al que llevar el foco
-        cuando el primer error es "elige al menos un modo" — el mismo patrón
-        que un `<input id="fecha">`, pero aquí el control es un grupo, no un
-        único elemento.
-      */}
+      {/* `id` + `tabIndex={-1}`: el sitio al que `focusFirstError()` lleva el foco. */}
       <div
-        id="communicationModes"
+        id="instructionMode"
         tabIndex={-1}
         className="space-y-2 rounded-lg focus:ring-3 focus:ring-ring/50 focus:outline-none"
       >
-        <p id="modos-comunicacion-heading" className="text-sm font-medium text-foreground">
-          ¿En qué modos se imparte la clase?{' '}
+        <p id="modo-instruccion-heading" className="text-sm font-medium text-foreground">
+          ¿En qué lengua se imparte la clase?{' '}
           <span className="font-normal text-muted-foreground">(obligatorio)</span>
         </p>
-        <p className="max-w-[65ch] text-sm text-muted-foreground">
-          Elige todos los que apliquen. Una clase puede darse en lengua de señas y con subtítulos en
-          vivo a la vez.
+        <p id="modo-instruccion-ayuda" className="max-w-[65ch] text-sm text-muted-foreground">
+          Solo hay dos opciones porque solo hay dos formas de dar una clase a personas sordas:
+          directamente en LSC o hablada con intérprete de LSC. Todo lo demás es un apoyo.
         </p>
 
-        <CheckboxCardGroup
-          labelledBy="modos-comunicacion-heading"
+        <RadioCardGroup
+          name="instructionMode"
+          labelledBy="modo-instruccion-heading"
+          describedBy={
+            error ? 'modo-instruccion-ayuda modo-instruccion-error' : 'modo-instruccion-ayuda'
+          }
           options={OPCIONES_MODO}
-          value={values.communicationModes}
-          onChange={(modos) => onChange({ communicationModes: modos })}
+          value={values.instructionMode}
+          onChange={(modo) => onChange({ instructionMode: modo })}
         />
 
         {error && (
-          <p role="alert" className="text-sm font-medium text-destructive">
+          <p
+            id="modo-instruccion-error"
+            role="alert"
+            className="text-sm font-medium text-destructive"
+          >
             {error}
           </p>
         )}
       </div>
 
-      <div className="space-y-2">
-        <p className="text-sm font-medium text-foreground">Apoyos disponibles</p>
-        <div className="space-y-2">
-          {APOYOS_AULA.map(({ clave, etiqueta, icon }) => (
-            <CheckboxField
-              key={clave}
-              id={clave}
-              label={etiqueta}
-              icon={icon}
-              checked={values[clave]}
-              onChange={(checked) => onChange({ [clave]: checked })}
-            />
-          ))}
-        </div>
+      <div className="space-y-2 border-t border-border pt-5">
+        <p id="apoyos-heading" className="text-sm font-medium text-foreground">
+          Apoyos <span className="font-normal text-muted-foreground">(opcionales)</span>
+        </p>
+        <p className="max-w-[65ch] text-sm text-muted-foreground">
+          Se suman al modo de instrucción, nunca lo sustituyen.
+        </p>
+        <CheckboxCardGroup
+          labelledBy="apoyos-heading"
+          options={OPCIONES_APOYO}
+          value={values.supports}
+          onChange={(supports) => onChange({ supports })}
+        />
       </div>
     </fieldset>
   );

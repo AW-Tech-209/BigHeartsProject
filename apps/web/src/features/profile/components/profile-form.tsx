@@ -13,10 +13,8 @@ import { Callout } from '@/components/ui/callout';
 import { Field } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { NativeSelect } from '@/components/ui/native-select';
-import {
-  communicationPreferenceLabels,
-  hearingLossLevelLabels,
-} from '@/features/auth/lib/accessibility-labels';
+import { CamposPreferencia } from '@/features/auth/components/campos-preferencia';
+import { hearingLossLevelLabels } from '@/features/auth/lib/accessibility-labels';
 import { useAnnounce } from '@/hooks/use-announce';
 import { ApiClientError } from '@/lib/api-error';
 import { useUpdateProfile } from '../hooks/use-update-profile';
@@ -31,7 +29,8 @@ const FIELD_ORDER: (keyof ProfileFormValues)[] = [
   'firstName',
   'lastName',
   'hearingLossLevel',
-  'communicationPreference',
+  'preferredInstructionMode',
+  'preferredSupports',
 ];
 
 function isFormField(name: string): name is keyof ProfileFormValues {
@@ -44,7 +43,8 @@ function toFormValues(user: User): ProfileFormValues {
     firstName: user.firstName,
     lastName: user.lastName,
     hearingLossLevel: user.hearingLossLevel ?? '',
-    communicationPreference: user.communicationPreference ?? '',
+    preferredInstructionMode: user.preferredInstructionMode ?? '',
+    preferredSupports: user.preferredSupports,
   };
 }
 
@@ -132,7 +132,8 @@ export function ProfileForm({ user }: { user: User }) {
       lastName: values.lastName.trim(),
       ...(isStudent && {
         hearingLossLevel: values.hearingLossLevel || null,
-        communicationPreference: values.communicationPreference || null,
+        preferredInstructionMode: values.preferredInstructionMode || null,
+        preferredSupports: values.preferredSupports,
       }),
     };
 
@@ -217,29 +218,14 @@ export function ProfileForm({ user }: { user: User }) {
             </NativeSelect>
           </Field>
 
-          <Field
-            id="communicationPreference"
-            label="Preferencia de comunicación"
-            error={errors.communicationPreference}
-          >
-            <NativeSelect
-              name="communicationPreference"
-              value={values.communicationPreference}
-              onChange={(event) =>
-                updateField(
-                  'communicationPreference',
-                  event.target.value as ProfileFormValues['communicationPreference'],
-                )
-              }
-            >
-              <option value="">Prefiero no indicarlo</option>
-              {Object.entries(communicationPreferenceLabels).map(([value, label]) => (
-                <option key={value} value={value}>
-                  {label}
-                </option>
-              ))}
-            </NativeSelect>
-          </Field>
+          <CamposPreferencia
+            modo={values.preferredInstructionMode}
+            apoyos={values.preferredSupports}
+            onModo={(modo) => updateField('preferredInstructionMode', modo)}
+            onApoyos={(apoyos) => updateField('preferredSupports', apoyos)}
+            errorModo={errors.preferredInstructionMode}
+            errorApoyos={errors.preferredSupports}
+          />
         </section>
       )}
 

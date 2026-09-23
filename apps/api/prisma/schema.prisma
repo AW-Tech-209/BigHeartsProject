@@ -58,14 +58,6 @@ enum HearingLossLevel {
   PROFOUND
 }
 
-/// Preferencia de comunicación. Coincide con `CommunicationPreference`.
-enum CommunicationPreference {
-  SIGN_LANGUAGE
-  LIP_READING
-  WRITTEN_TEXT
-  SPOKEN_AUDIO
-}
-
 /// Nivel de inglés del aula. Coincide con `EnglishLevel` de @academia/types.
 enum EnglishLevel {
   BEGINNER
@@ -113,6 +105,23 @@ enum MeetingProvider {
   DAILY
   GOOGLE_MEET
   ZOOM
+  MICROSOFT_TEAMS
+}
+
+/// Modo de instrucción de una clase. Coincide con `InstructionMode` de
+/// @academia/types (HU-506, D42).
+enum InstructionMode {
+  LSC_NATIVA
+  INTERPRETE_LSC
+}
+
+/// Apoyo opcional de una clase, nunca el método. Coincide con
+/// `ClassroomSupport` de @academia/types (HU-506, D43).
+enum ClassroomSupport {
+  LIP_READING
+  WRITTEN_TEXT
+  LIVE_CAPTIONS
+  VISUAL_MATERIALS
 }
 
 /// Usuario de la plataforma. Modelo base de la HU-001, ampliado en la HU de
@@ -129,8 +138,15 @@ model User {
   status    UserStatus @default(ACTIVE)
 
   /// Preferencias de accesibilidad. Opcionales: `null` si no se declararon.
-  hearingLossLevel        HearingLossLevel?        @map("hearing_loss_level")
-  communicationPreference CommunicationPreference? @map("communication_preference")
+  hearingLossLevel HearingLossLevel? @map("hearing_loss_level")
+
+  /// Qué modo de instrucción prefiere el estudiante (D44): el mismo vocabulario
+  /// que declara el aula, para emparejar sin tabla de conversión. Uno solo, no
+  /// una lista: son experiencias distintas. `null` = no lo declaró.
+  preferredInstructionMode InstructionMode? @map("preferred_instruction_mode")
+
+  /// Apoyos que le importan (D43). Varios a la vez; vacío si no declaró ninguno.
+  preferredSupports ClassroomSupport[] @default([]) @map("preferred_supports")
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
@@ -273,24 +289,21 @@ model Classroom {
   /// nadie construye series ni instancias a partir de esta columna.
   isRecurring Boolean @default(false) @map("is_recurring")
 
-  /// En qué modos se imparte la clase (HU-211, `ARQUITECTURA.md` §4.9). Puede
-  /// tener varios a la vez: una clase en señas con subtítulos en vivo declara
-  /// los dos.
+  /// Modo de instrucción de la clase (HU-506, D42, `ARQUITECTURA.md` §4.9).
   ///
-  /// **`@default([])` es DELIBERADO y no un placeholder.** Las aulas creadas
-  /// antes de HU-211 se migran con el array vacío — «el profesor no lo ha
-  /// indicado» — nunca con un modo inventado (decisión 5 de la HU): rellenarlo
-  /// sería mentirle al estudiante sobre algo de lo que depende para seguir la
-  /// clase. `POST /classrooms` exige que las aulas nuevas declaren al menos
-  /// uno; esta columna no lo impone, esa regla vive en el DTO.
-  communicationModes CommunicationPreference[] @default([]) @map("communication_modes")
+  /// **Nullable es DELIBERADO y no un placeholder.** Las aulas creadas antes
+  /// de HU-506 quedan `NULL` — «sin declarar» — nunca con un modo inventado
+  /// (regla 3 de §4.9): rellenarlo sería mentirle al estudiante sobre algo de
+  /// lo que depende para seguir la clase. `POST /classrooms` exige que las
+  /// aulas nuevas lo declaren; esta columna no lo impone, esa regla vive en
+  /// el DTO. Mientras sea `NULL`, `PATCH /classrooms/:id` no acepta ningún
+  /// otro cambio sin declararlo en la misma petición.
+  instructionMode InstructionMode? @map("instruction_mode")
 
-  /// Los tres apoyos son campos aparte del modo: una clase en inglés hablado
+  /// Apoyos opcionales, nunca el método (D43): una clase en inglés hablado
   /// CON intérprete de señas no es lo mismo que una impartida directamente en
-  /// señas (decisión 2 de HU-211).
-  hasInterpreter     Boolean @default(false) @map("has_interpreter")
-  hasLiveCaptions    Boolean @default(false) @map("has_live_captions")
-  hasVisualMaterials Boolean @default(false) @map("has_visual_materials")
+  /// señas.
+  supports ClassroomSupport[] @default([]) @map("supports")
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")

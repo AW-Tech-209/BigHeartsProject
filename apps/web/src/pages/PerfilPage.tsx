@@ -23,7 +23,8 @@ export function PerfilPage() {
   const withoutPreferences =
     user?.role === UserRole.STUDENT &&
     user.hearingLossLevel === null &&
-    user.communicationPreference === null;
+    user.preferredInstructionMode === null &&
+    user.preferredSupports.length === 0;
 
   return (
     <AppShell>
@@ -102,7 +103,7 @@ export function PerfilPage() {
             {withoutPreferences && (
               <Callout variant="info" title="Todavía no indicaste tus preferencias">
                 <p>
-                  Aún no elegiste tu nivel de hipoacusia ni tu preferencia de comunicación.
+                  Aún no elegiste tu nivel de hipoacusia ni cómo prefieres seguir las clases.
                   Indícalos abajo para que adaptemos la plataforma a ti.
                 </p>
               </Callout>
