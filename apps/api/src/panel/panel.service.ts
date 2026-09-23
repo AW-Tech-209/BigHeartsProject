@@ -3,7 +3,6 @@ import type { Prisma } from '@prisma/client';
 import {
   BookingStatus,
   ClassroomStatus,
-  type CommunicationPreference,
   type InstructionMode,
   type RecuentoComunicacionGrupo,
   type ResumenPanelAdmin,
@@ -18,7 +17,6 @@ import type { AuthenticatedUser } from '../auth/auth.types';
 import { puedeCancelarse } from '../bookings/cancelacion.rules';
 import { derivarAccesoAlEnlace } from '../classrooms/acceso-enlace.rules';
 import { toClassroomListItem } from '../classrooms/classroom.mapper';
-import { preferenciaAccesibilidadDe } from '../classrooms/preferencia-accesibilidad';
 import { AppConfigService } from '../config/app-config.service';
 import { PrismaService } from '../prisma/prisma.service';
 
@@ -67,7 +65,7 @@ export class PanelService {
     const [perfil, proxima, reservasActivas] = await Promise.all([
       this.prisma.user.findUnique({
         where: { id: student.id },
-        select: { communicationPreference: true },
+        select: { preferredInstructionMode: true },
       }),
       this.prisma.booking.findFirst({
         where: reservaProxima,
@@ -77,10 +75,8 @@ export class PanelService {
       this.prisma.booking.count({ where: reservaProxima }),
     ]);
 
-    const preferencia = (perfil?.communicationPreference as CommunicationPreference | null) ?? null;
-    // Migrada al vocabulario de D42 (HU-506, T2): la comparación ya no es
-    // "incluye", es exacta — coincideConLaAccesibilidad().
-    const instructionMode = preferenciaAccesibilidadDe(preferencia).instructionMode;
+    // La coincidencia es exacta sobre el modo (D44): sin modo declarado no hay ninguna.
+    const instructionMode = (perfil?.preferredInstructionMode as InstructionMode | null) ?? null;
 
     // «Con cupo» compara `currentBookings` contra `maxStudents`, dos columnas
     // que Prisma no filtra entre sí: un conteo en SQL evita traer todo el
@@ -117,7 +113,7 @@ export class PanelService {
       proximaClase,
       reservasActivas,
       clasesQueCoinciden,
-      sinPreferencia: preferencia === null,
+      sinPreferencia: instructionMode === null,
     };
   }
 
@@ -170,7 +166,7 @@ export class PanelService {
             endsAt: { gt: ahora },
           },
         },
-        select: { student: { select: { communicationPreference: true } } },
+        select: { student: { select: { preferredInstructionMode: true } } },
       }),
     ]);
 
@@ -180,10 +176,7 @@ export class PanelService {
       asistenciaSinMarcar,
       comunicacionDelGrupo: recuentoPorModo(
         inscritos.map(
-          (inscrito) =>
-            preferenciaAccesibilidadDe(
-              inscrito.student.communicationPreference as CommunicationPreference | null,
-            ).instructionMode,
+          (inscrito) => inscrito.student.preferredInstructionMode as InstructionMode | null,
         ),
       ),
     };

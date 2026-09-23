@@ -71,7 +71,13 @@ export enum HearingLossLevel {
   PROFOUND = 'PROFOUND',
 }
 
-/** Preferencia de comunicación del usuario, para adaptar la experiencia. */
+/**
+ * Vocabulario **histórico** de la preferencia del estudiante, anterior a D44.
+ * Ya no se guarda (la migración `preferencia_del_estudiante` la traspasó a
+ * `preferredInstructionMode` + `preferredSupports`) ni tiene gemelo en el
+ * esquema. Sigue aquí porque la landing y `MIGRACION_PREFERENCIA_COMUNICACION`
+ * lo nombran.
+ */
 export enum CommunicationPreference {
   SIGN_LANGUAGE = 'SIGN_LANGUAGE',
   LIP_READING = 'LIP_READING',
@@ -98,8 +104,13 @@ export interface User {
   status: UserStatus;
   /** `null` si el usuario no lo declaró. */
   hearingLossLevel: HearingLossLevel | null;
-  /** `null` si el usuario no lo declaró. */
-  communicationPreference: CommunicationPreference | null;
+  /**
+   * Modo de instrucción que prefiere (D44), el mismo vocabulario del aula.
+   * `null` si no lo declaró. Solo lo declara un `STUDENT` (HU-504).
+   */
+  preferredInstructionMode: InstructionMode | null;
+  /** Apoyos que le importan (D43). Vacío si no declaró ninguno. */
+  preferredSupports: ClassroomSupport[];
   createdAt: string;
   updatedAt: string;
 }
@@ -116,7 +127,8 @@ export interface RegisterInput {
   lastName: string;
   role: RegisterableRole;
   hearingLossLevel?: HearingLossLevel;
-  communicationPreference?: CommunicationPreference;
+  preferredInstructionMode?: InstructionMode;
+  preferredSupports?: ClassroomSupport[];
 }
 
 /** Respuesta de un registro correcto. El `status` del usuario guía el mensaje. */
@@ -135,13 +147,15 @@ export interface RegisterResponse {
  *
  * Los campos de accesibilidad son opcionales y admiten `null` explícito: es la
  * forma de RETIRAR una preferencia ya declarada. Omitir la clave significa
- * "no la toques"; mandar `null` significa "bórrala".
+ * "no la toques"; mandar `null` significa "bórrala". Los apoyos se retiran
+ * mandando la lista vacía.
  */
 export interface UpdateProfileInput {
   firstName: string;
   lastName: string;
   hearingLossLevel?: HearingLossLevel | null;
-  communicationPreference?: CommunicationPreference | null;
+  preferredInstructionMode?: InstructionMode | null;
+  preferredSupports?: ClassroomSupport[];
 }
 
 /** Respuesta de `GET /users/me` y de `PATCH /users/me`. */
@@ -1011,7 +1025,7 @@ export interface ResumenPanelEstudiante {
   reservasActivas: number;
   /** Aulas publicadas con cupo cuyos modos coinciden con su preferencia. `0` si no la ha declarado. */
   clasesQueCoinciden: number;
-  /** El estudiante no ha declarado preferencia de comunicación: la tarjeta invita a hacerlo. */
+  /** No ha declarado modo de instrucción: sin él no hay coincidencia, y la tarjeta invita a declararlo. */
   sinPreferencia: boolean;
 }
 
@@ -1119,7 +1133,7 @@ export const ApiErrorCode = {
    */
   USER_NOT_FOUND: 'USER_NOT_FOUND',
   /**
-   * `hearingLossLevel` o `communicationPreference` llegaron en un
+   * `hearingLossLevel`, `preferredInstructionMode` o `preferredSupports` llegaron en un
    * `PATCH /users/me` de un `TEACHER` o un `ADMIN` (HU-504). Son campos del rol
    * `STUDENT`: nadie más los usa para nada, así que se rechazan en vez de
    * guardarse en silencio.

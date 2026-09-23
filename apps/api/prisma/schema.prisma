@@ -58,14 +58,6 @@ enum HearingLossLevel {
   PROFOUND
 }
 
-/// Preferencia de comunicación. Coincide con `CommunicationPreference`.
-enum CommunicationPreference {
-  SIGN_LANGUAGE
-  LIP_READING
-  WRITTEN_TEXT
-  SPOKEN_AUDIO
-}
-
 /// Nivel de inglés del aula. Coincide con `EnglishLevel` de @academia/types.
 enum EnglishLevel {
   BEGINNER
@@ -146,8 +138,15 @@ model User {
   status    UserStatus @default(ACTIVE)
 
   /// Preferencias de accesibilidad. Opcionales: `null` si no se declararon.
-  hearingLossLevel        HearingLossLevel?        @map("hearing_loss_level")
-  communicationPreference CommunicationPreference? @map("communication_preference")
+  hearingLossLevel HearingLossLevel? @map("hearing_loss_level")
+
+  /// Qué modo de instrucción prefiere el estudiante (D44): el mismo vocabulario
+  /// que declara el aula, para emparejar sin tabla de conversión. Uno solo, no
+  /// una lista: son experiencias distintas. `null` = no lo declaró.
+  preferredInstructionMode InstructionMode? @map("preferred_instruction_mode")
+
+  /// Apoyos que le importan (D43). Varios a la vez; vacío si no declaró ninguno.
+  preferredSupports ClassroomSupport[] @default([]) @map("preferred_supports")
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")

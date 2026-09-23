@@ -45,9 +45,8 @@ export const CLASSROOM_SUPPORT_LABELS: Record<ClassroomSupport, string> = {
 /**
  * Preferencia de accesibilidad del estudiante (D44), reenfocada al mismo
  * vocabulario que declara el aula: qué instrucción prefiere y qué apoyos le
- * importan. Sustituye a `CommunicationPreference` como eje de emparejamiento
- * — ese enum sigue existiendo para lo que ya usa (perfil, registro), pero deja
- * de ser la vara con la que se compara un aula.
+ * importan. Es la forma de `User.preferredInstructionMode` +
+ * `User.preferredSupports` (ver `preferenciaDelUsuario()`).
  */
 export interface AccessibilityPreference {
   /** `null` si el estudiante no lo declaró. */

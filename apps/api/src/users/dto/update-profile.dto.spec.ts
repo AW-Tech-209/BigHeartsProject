@@ -1,8 +1,9 @@
 import { type ArgumentMetadata, type BadRequestException, ValidationPipe } from '@nestjs/common';
 import {
   ApiErrorCode,
-  CommunicationPreference,
+  ClassroomSupport,
   HearingLossLevel,
+  InstructionMode,
   type ValidationErrorDetail,
 } from '@academia/types';
 import { plainToInstance } from 'class-transformer';
@@ -52,7 +53,8 @@ describe('UpdateProfileDto (validación)', () => {
       await invalidFields({
         ...validPayload,
         hearingLossLevel: HearingLossLevel.SEVERE,
-        communicationPreference: CommunicationPreference.SIGN_LANGUAGE,
+        preferredInstructionMode: InstructionMode.INTERPRETE_LSC,
+        preferredSupports: [ClassroomSupport.LIP_READING, ClassroomSupport.LIVE_CAPTIONS],
       }),
     ).toHaveLength(0);
   });
@@ -62,8 +64,23 @@ describe('UpdateProfileDto (validación)', () => {
       'hearingLossLevel',
     );
     expect(
-      await invalidFields({ ...validPayload, communicationPreference: 'TELEPATIA' }),
-    ).toContain('communicationPreference');
+      await invalidFields({ ...validPayload, preferredInstructionMode: 'TELEPATIA' }),
+    ).toContain('preferredInstructionMode');
+    expect(await invalidFields({ ...validPayload, preferredSupports: ['TELEPATIA'] })).toContain(
+      'preferredSupports',
+    );
+  });
+
+  it('rechaza apoyos repetidos o que no vengan en lista', async () => {
+    expect(
+      await invalidFields({
+        ...validPayload,
+        preferredSupports: [ClassroomSupport.WRITTEN_TEXT, ClassroomSupport.WRITTEN_TEXT],
+      }),
+    ).toContain('preferredSupports');
+    expect(
+      await invalidFields({ ...validPayload, preferredSupports: ClassroomSupport.WRITTEN_TEXT }),
+    ).toContain('preferredSupports');
   });
 
   it('acepta `null` en las preferencias: es cómo se retira una ya declarada', async () => {
@@ -71,7 +88,8 @@ describe('UpdateProfileDto (validación)', () => {
       await invalidFields({
         ...validPayload,
         hearingLossLevel: null,
-        communicationPreference: null,
+        preferredInstructionMode: null,
+        preferredSupports: [],
       }),
     ).toHaveLength(0);
   });

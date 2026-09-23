@@ -25,7 +25,6 @@ import { describirHorario } from '@/features/aulas/lib/horario';
 import {
   etiquetaModoInstruccion,
   MODOS_INSTRUCCION_EN_ORDEN,
-  preferenciaAccesibilidadDe,
 } from '@/features/aulas/lib/accesibilidad-aula';
 import { useAuth } from '@/features/auth/hooks/use-auth';
 
@@ -106,7 +105,7 @@ function TarjetasEstudiante({ data }: { data: ResumenPanelEstudiante }) {
 
   // «Clases que coinciden contigo» lleva al catálogo con el filtro de modo ya
   // puesto: es el mismo modo con el que el servidor calculó el número (D44).
-  const modoPreferido = preferenciaAccesibilidadDe(user?.communicationPreference)?.instructionMode;
+  const modoPreferido = user?.preferredInstructionMode ?? null;
   const catalogoConMiModo = modoPreferido
     ? `/aulas?${buildSearchParams({ instructionMode: modoPreferido })}`
     : '/aulas';

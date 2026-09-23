@@ -121,3 +121,15 @@ frontend de esta migración y toca exactamente los campos que aquí se retiran; 
 del estudiante (T2) no ganó columnas nuevas: se deriva en caliente de `communicationPreference` con
 `MIGRACION_PREFERENCIA_COMUNICACION` en cada lectura (`preferencia-accesibilidad.ts`). La migración
 de Prisma se aplicó contra el Supabase de `apps/api/.env` con `prisma migrate deploy`.
+
+### T2 reabierta y cerrada (2026-09-22)
+
+T2 cumplía D44 al **leer** pero no al **escribir**: nada llevaba a `INTERPRETE_LSC` y solo cabía un
+apoyo. Ahora `User` guarda `preferredInstructionMode` + `preferredSupports`; la migración
+`preferencia_del_estudiante` traspasa lo declarado con `MIGRACION_PREFERENCIA_COMUNICACION` (sin
+inventar valores) y retira `communication_preference`. `RegisterInput`, `UpdateProfileInput`, sus
+DTOs, el panel y los inscritos leen las columnas nuevas; `preferencia-accesibilidad.ts` se borró.
+`sinPreferencia` del panel pasa a significar «sin modo declarado»: sin modo no hay coincidencia
+posible. El seed demo incluye estudiantes que prefieren intérprete y con varios apoyos. El enum
+`CommunicationPreference` sigue en `@academia/types` (sin gemelo en el esquema) porque la landing
+lo usa.

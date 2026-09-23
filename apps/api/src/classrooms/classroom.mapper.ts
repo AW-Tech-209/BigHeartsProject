@@ -6,7 +6,6 @@ import {
   type ClassroomListItem,
   type ClassroomStatus,
   type ClassroomSupport,
-  type CommunicationPreference,
   type EnglishLevel,
   type EstadoAccesoEnlace,
   type HearingLossLevel,
@@ -14,8 +13,6 @@ import {
   type InstructionMode,
   type MeetingProvider,
 } from '@academia/types';
-
-import { preferenciaAccesibilidadDe } from './preferencia-accesibilidad';
 
 /**
  * Convierte una entidad `Classroom` de Prisma en la vista pública de
@@ -143,7 +140,7 @@ export function toInscritoAula(booking: {
     firstName: string;
     lastName: string;
     hearingLossLevel: string | null;
-    communicationPreference: string | null;
+    preferredInstructionMode: string | null;
   };
 }): InscritoAula {
   return {
@@ -151,9 +148,7 @@ export function toInscritoAula(booking: {
     firstName: booking.student.firstName,
     lastName: booking.student.lastName,
     hearingLossLevel: booking.student.hearingLossLevel as HearingLossLevel | null,
-    instructionMode: preferenciaAccesibilidadDe(
-      booking.student.communicationPreference as CommunicationPreference | null,
-    ).instructionMode,
+    instructionMode: booking.student.preferredInstructionMode as InstructionMode | null,
     bookingStatus: booking.status as BookingStatus,
   };
 }

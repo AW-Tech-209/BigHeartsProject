@@ -1,10 +1,4 @@
-import {
-  type AccessibilityPreference,
-  ClassroomSupport,
-  type CommunicationPreference,
-  InstructionMode,
-  MIGRACION_PREFERENCIA_COMUNICACION,
-} from '@academia/types';
+import { ClassroomSupport, InstructionMode } from '@academia/types';
 import { Captions, Eye, Hand, Image, Languages, Type, type LucideIcon } from 'lucide-react';
 
 export {
@@ -46,14 +40,4 @@ export const APOYOS_EN_ORDEN: ClassroomSupport[] = [
 /** Los apoyos del aula en orden canónico, no en el que los guardó el servidor. */
 export function apoyosEnOrden(supports: ClassroomSupport[]): ClassroomSupport[] {
   return APOYOS_EN_ORDEN.filter((apoyo) => supports.includes(apoyo));
-}
-
-/**
- * La preferencia guardada del estudiante, traducida al vocabulario del aula
- * (D44). Mismo mapeo que usa el backend (`preferencia-accesibilidad.ts`).
- */
-export function preferenciaAccesibilidadDe(
-  preferencia: CommunicationPreference | null | undefined,
-): AccessibilityPreference | null {
-  return preferencia ? MIGRACION_PREFERENCIA_COMUNICACION[preferencia] : null;
 }

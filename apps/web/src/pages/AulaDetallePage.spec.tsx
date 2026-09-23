@@ -4,7 +4,6 @@ import {
   type ClassroomDetail,
   ClassroomStatus,
   ClassroomSupport,
-  CommunicationPreference,
   EnglishLevel,
   HearingLossLevel,
   InstructionMode,
@@ -767,7 +766,8 @@ describe('AulaDetallePage — modo de instrucción y apoyos (HU-507)', () => {
     useAuthStore.setState({
       user: {
         ...usuarioDePrueba(UserRole.STUDENT),
-        communicationPreference: CommunicationPreference.SIGN_LANGUAGE,
+        preferredInstructionMode: InstructionMode.LSC_NATIVA,
+        preferredSupports: [],
       },
     });
     montarDetalle();
@@ -779,7 +779,8 @@ describe('AulaDetallePage — modo de instrucción y apoyos (HU-507)', () => {
     useAuthStore.setState({
       user: {
         ...usuarioDePrueba(UserRole.STUDENT),
-        communicationPreference: CommunicationPreference.SIGN_LANGUAGE,
+        preferredInstructionMode: InstructionMode.LSC_NATIVA,
+        preferredSupports: [],
       },
     });
     vi.mocked(getClassroom).mockResolvedValue({

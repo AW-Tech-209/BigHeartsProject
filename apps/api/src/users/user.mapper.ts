@@ -1,7 +1,8 @@
 import type { User as PrismaUser } from '@prisma/client';
 import {
-  type CommunicationPreference,
+  type ClassroomSupport,
   type HearingLossLevel,
+  type InstructionMode,
   type User,
   type UserRole,
   type UserStatus,
@@ -24,7 +25,8 @@ export function toPublicUser(user: PrismaUser): User {
     role: user.role as UserRole,
     status: user.status as UserStatus,
     hearingLossLevel: user.hearingLossLevel as HearingLossLevel | null,
-    communicationPreference: user.communicationPreference as CommunicationPreference | null,
+    preferredInstructionMode: user.preferredInstructionMode as InstructionMode | null,
+    preferredSupports: user.preferredSupports as ClassroomSupport[],
     createdAt: user.createdAt.toISOString(),
     updatedAt: user.updatedAt.toISOString(),
   };

@@ -4,6 +4,7 @@ import {
   type ClassroomDetail,
   coincideConLaAccesibilidad,
   derivarEstadoAula,
+  preferenciaDelUsuario,
   UserRole,
 } from '@academia/types';
 import {
@@ -36,12 +37,7 @@ import { AccionReservarAula } from '@/features/aulas/components/accion-reservar-
 import { InscritosAula } from '@/features/aulas/components/inscritos-aula';
 import { useAccesoAlEnlace } from '@/features/aulas/hooks/use-acceso-al-enlace';
 import { esAulaNoEncontrada, useClassroom } from '@/features/aulas/hooks/use-classroom';
-import {
-  apoyosEnOrden,
-  etiquetaApoyo,
-  iconoApoyo,
-  preferenciaAccesibilidadDe,
-} from '@/features/aulas/lib/accesibilidad-aula';
+import { apoyosEnOrden, etiquetaApoyo, iconoApoyo } from '@/features/aulas/lib/accesibilidad-aula';
 import {
   describirDuracion,
   describirHorario,
@@ -152,9 +148,7 @@ export function AulaDetallePage() {
           esDueno={user?.id === aula.teacherId}
           puedeReservarla={puedeReservar(user)}
           preferenciaEstudiante={
-            user?.role === UserRole.STUDENT
-              ? preferenciaAccesibilidadDe(user.communicationPreference)
-              : undefined
+            user?.role === UserRole.STUDENT ? preferenciaDelUsuario(user) : undefined
           }
         />
       )}

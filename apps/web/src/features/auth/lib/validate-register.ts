@@ -1,4 +1,9 @@
-import type { CommunicationPreference, HearingLossLevel, RegisterableRole } from '@academia/types';
+import type {
+  ClassroomSupport,
+  HearingLossLevel,
+  InstructionMode,
+  RegisterableRole,
+} from '@academia/types';
 
 import { validatePassword } from './validate-password';
 
@@ -10,7 +15,8 @@ export type RegisterFormValues = {
   lastName: string;
   role: RegisterableRole;
   hearingLossLevel: HearingLossLevel | '';
-  communicationPreference: CommunicationPreference | '';
+  preferredInstructionMode: InstructionMode | '';
+  preferredSupports: ClassroomSupport[];
 };
 
 /** Campo → mensaje de error. Las claves coinciden con las del backend. */

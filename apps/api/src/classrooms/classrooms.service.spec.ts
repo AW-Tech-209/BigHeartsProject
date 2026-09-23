@@ -1625,7 +1625,7 @@ const inscritoConfirmado = (overrides: Record<string, unknown> = {}) => ({
     firstName: 'Ana',
     lastName: 'Estudiante',
     hearingLossLevel: 'MODERATE',
-    communicationPreference: 'SIGN_LANGUAGE',
+    preferredInstructionMode: 'LSC_NATIVA',
     email: 'ana@academia.local',
     ...overrides,
   },
@@ -2230,7 +2230,7 @@ function setupAsistencia(
       firstName: 'Ana',
       lastName: 'Estudiante',
       hearingLossLevel: 'MODERATE',
-      communicationPreference: 'SIGN_LANGUAGE',
+      preferredInstructionMode: 'LSC_NATIVA',
     },
   };
   const bookingInicial = ('booking' in options ? options.booking : bookingPorDefecto) as
@@ -2321,7 +2321,7 @@ describe('ClassroomsService.markAttendance — el profesor marca asistencia (HU-
           firstName: 'Ana',
           lastName: 'Estudiante',
           hearingLossLevel: null,
-          communicationPreference: null,
+          preferredInstructionMode: null,
         },
       },
     });
@@ -2404,7 +2404,7 @@ describe('ClassroomsService.markAttendance — el profesor marca asistencia (HU-
           firstName: 'Ana',
           lastName: 'Estudiante',
           hearingLossLevel: null,
-          communicationPreference: null,
+          preferredInstructionMode: null,
         },
       },
     });
@@ -2431,7 +2431,7 @@ describe('ClassroomsService.markAttendance — el profesor marca asistencia (HU-
           firstName: 'Ana',
           lastName: 'Estudiante',
           hearingLossLevel: null,
-          communicationPreference: null,
+          preferredInstructionMode: null,
         },
       },
     });

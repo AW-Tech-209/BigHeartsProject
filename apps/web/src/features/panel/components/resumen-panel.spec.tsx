@@ -2,7 +2,6 @@ import {
   BookingStatus,
   type ClassroomListItem,
   ClassroomStatus,
-  CommunicationPreference,
   EnglishLevel,
   InstructionMode,
   MeetingProvider,
@@ -88,7 +87,8 @@ describe('ResumenPanel — estudiante (AC1, AC5)', () => {
       status: 'authenticated',
       user: {
         ...usuarioDePrueba(UserRole.STUDENT),
-        communicationPreference: CommunicationPreference.SIGN_LANGUAGE,
+        preferredInstructionMode: InstructionMode.LSC_NATIVA,
+        preferredSupports: [],
       },
       accessToken: 'access.token.jwt',
       endReason: 'none',

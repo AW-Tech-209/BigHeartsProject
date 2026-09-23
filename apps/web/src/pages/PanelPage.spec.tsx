@@ -86,7 +86,8 @@ function profesorPendiente(): User {
     role: UserRole.TEACHER,
     status: UserStatus.PENDING,
     hearingLossLevel: null,
-    communicationPreference: null,
+    preferredInstructionMode: null,
+    preferredSupports: [],
     createdAt: '2026-08-12T15:30:00.000Z',
     updatedAt: '2026-08-12T15:30:00.000Z',
   };

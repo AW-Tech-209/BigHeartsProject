@@ -1,7 +1,8 @@
 import {
   ApiErrorCode,
-  CommunicationPreference,
+  ClassroomSupport,
   HearingLossLevel,
+  InstructionMode,
   UserRole,
   UserStatus,
 } from '@academia/types';
@@ -23,7 +24,8 @@ function dbUser(overrides: Record<string, unknown> = {}) {
     role: UserRole.STUDENT,
     status: UserStatus.ACTIVE,
     hearingLossLevel: null,
-    communicationPreference: null,
+    preferredInstructionMode: null,
+    preferredSupports: [],
     createdAt: new Date('2026-01-01T00:00:00.000Z'),
     updatedAt: new Date('2026-01-01T00:00:00.000Z'),
     ...overrides,
@@ -75,13 +77,14 @@ describe('UsersService.getProfile', () => {
     // El contrato es cerrado: exactamente estas claves, ni una más.
     expect(Object.keys(user).sort()).toEqual(
       [
-        'communicationPreference',
         'createdAt',
         'email',
         'firstName',
         'hearingLossLevel',
         'id',
         'lastName',
+        'preferredInstructionMode',
+        'preferredSupports',
         'role',
         'status',
         'updatedAt',
@@ -133,13 +136,15 @@ describe('UsersService.updateProfile', () => {
       UserRole.STUDENT,
       dto({
         hearingLossLevel: HearingLossLevel.SEVERE,
-        communicationPreference: CommunicationPreference.SIGN_LANGUAGE,
+        preferredInstructionMode: InstructionMode.INTERPRETE_LSC,
+        preferredSupports: [ClassroomSupport.LIVE_CAPTIONS, ClassroomSupport.LIP_READING],
       }),
     );
 
     expect(update.mock.calls[0]![0].data).toMatchObject({
       hearingLossLevel: HearingLossLevel.SEVERE,
-      communicationPreference: CommunicationPreference.SIGN_LANGUAGE,
+      preferredInstructionMode: InstructionMode.INTERPRETE_LSC,
+      preferredSupports: [ClassroomSupport.LIVE_CAPTIONS, ClassroomSupport.LIP_READING],
     });
     expect(user.hearingLossLevel).toBe(HearingLossLevel.SEVERE);
   });
@@ -148,7 +153,8 @@ describe('UsersService.updateProfile', () => {
     const { service, update } = setup({
       foundUser: dbUser({
         hearingLossLevel: HearingLossLevel.MILD,
-        communicationPreference: CommunicationPreference.LIP_READING,
+        preferredInstructionMode: InstructionMode.LSC_NATIVA,
+        preferredSupports: [ClassroomSupport.LIP_READING],
       }),
     });
 
@@ -156,7 +162,8 @@ describe('UsersService.updateProfile', () => {
 
     const data = update.mock.calls[0]![0].data;
     expect(data).not.toHaveProperty('hearingLossLevel');
-    expect(data).not.toHaveProperty('communicationPreference');
+    expect(data).not.toHaveProperty('preferredInstructionMode');
+    expect(data).not.toHaveProperty('preferredSupports');
   });
 
   it('`null` explícito SÍ retira una preferencia ya declarada', async () => {
@@ -246,20 +253,20 @@ describe('UsersService.updateProfile', () => {
     },
   );
 
-  it.each([UserRole.TEACHER, UserRole.ADMIN])(
-    'rechaza `communicationPreference` de un %s con ACCESSIBILITY_FIELDS_NOT_ALLOWED (AC3)',
-    async (role) => {
-      const { service } = setup();
+  it.each([
+    [UserRole.TEACHER, { preferredInstructionMode: InstructionMode.LSC_NATIVA }],
+    [UserRole.ADMIN, { preferredInstructionMode: InstructionMode.LSC_NATIVA }],
+    [UserRole.TEACHER, { preferredSupports: [ClassroomSupport.WRITTEN_TEXT] }],
+    [UserRole.ADMIN, { preferredSupports: [] }],
+  ])(
+    'rechaza la preferencia de accesibilidad de un %s con ACCESSIBILITY_FIELDS_NOT_ALLOWED (AC3)',
+    async (role, campos) => {
+      const { service, update } = setup();
 
-      await expect(
-        service.updateProfile(
-          'user-id',
-          role,
-          dto({ communicationPreference: CommunicationPreference.SIGN_LANGUAGE }),
-        ),
-      ).rejects.toMatchObject({
+      await expect(service.updateProfile('user-id', role, dto(campos))).rejects.toMatchObject({
         response: { code: ApiErrorCode.ACCESSIBILITY_FIELDS_NOT_ALLOWED },
       });
+      expect(update).not.toHaveBeenCalled();
     },
   );
 
