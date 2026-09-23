@@ -49,7 +49,12 @@ export function FiltrosAulas({ value, onChange, ofreceSoloMisClases = false }: F
   return (
     <div className="rounded-xl border border-border bg-card p-4 sm:p-5">
       <div className="flex flex-wrap items-end gap-4">
-        <Field id="filtro-nivel" label="Nivel" labelClassName="text-accent-indigo" className="w-56">
+        <Field
+          id="filtro-nivel"
+          label="Nivel"
+          labelClassName="text-accent-indigo"
+          className="w-full sm:w-56"
+        >
           <NativeSelect
             iconClassName="text-accent-indigo"
             value={value.level ?? ''}
@@ -91,7 +96,12 @@ export function FiltrosAulas({ value, onChange, ofreceSoloMisClases = false }: F
           </NativeSelect>
         </Field>
 
-        <Field id="filtro-desde" label="Desde" labelClassName="text-primary">
+        <Field
+          id="filtro-desde"
+          label="Desde"
+          labelClassName="text-primary"
+          className="w-full min-w-0 sm:w-auto"
+        >
           <Input
             type="date"
             value={value.desde ?? ''}
@@ -99,7 +109,12 @@ export function FiltrosAulas({ value, onChange, ofreceSoloMisClases = false }: F
           />
         </Field>
 
-        <Field id="filtro-hasta" label="Hasta" labelClassName="text-accent-rose">
+        <Field
+          id="filtro-hasta"
+          label="Hasta"
+          labelClassName="text-accent-rose"
+          className="w-full min-w-0 sm:w-auto"
+        >
           <Input
             type="date"
             value={value.hasta ?? ''}

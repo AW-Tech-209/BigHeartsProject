@@ -76,7 +76,7 @@ export function InscritosAula({
   return (
     <section
       aria-labelledby="aula-inscritos"
-      className="space-y-5 rounded-xl border border-border bg-card p-6 sm:p-7"
+      className="space-y-5 rounded-xl border border-border bg-card p-4 sm:p-7"
     >
       <div className="flex items-center gap-3">
         <span className="rounded-lg bg-primary-soft p-2 text-primary">
@@ -133,13 +133,13 @@ export function InscritosAula({
             </Callout>
           )}
 
-          <Table className="table-fixed min-w-160">
+          <Table role="table" className="max-sm:block sm:table-fixed sm:min-w-160">
             <TableCaption>
               {data.confirmados.length === 1
                 ? '1 inscrito con cupo confirmado.'
                 : `${data.confirmados.length} inscritos con cupo confirmado.`}
             </TableCaption>
-            <TableHeader>
+            <TableHeader className="max-sm:hidden">
               <TableRow>
                 <TableHead className={claseTerminada ? 'w-[26%]' : 'w-[40%]'}>Estudiante</TableHead>
                 <TableHead className={cn('text-center', claseTerminada ? 'w-[20%]' : 'w-[30%]')}>
@@ -153,7 +153,10 @@ export function InscritosAula({
                 </TableHead>
               </TableRow>
             </TableHeader>
-            <TableBody>
+            <TableBody
+              role="rowgroup"
+              className="max-sm:block max-sm:space-y-3 max-sm:px-3 max-sm:pb-3"
+            >
               {[...data.confirmados, ...data.cancelados].map((inscrito) => (
                 <FilaInscrito
                   key={inscrito.bookingId}
@@ -223,15 +226,28 @@ function FilaInscrito({
 
   return (
     <>
-      <TableRow className={abierto ? 'border-b-0 hover:bg-transparent' : undefined}>
-        <TableHead scope="row" className="truncate font-normal text-foreground">
+      <TableRow
+        role="row"
+        className={cn(
+          'max-sm:block max-sm:rounded-xl max-sm:border max-sm:border-border max-sm:p-3',
+          abierto ? 'border-b-0 hover:bg-transparent max-sm:pb-2' : undefined,
+        )}
+      >
+        <TableHead
+          scope="row"
+          role="rowheader"
+          className="font-normal text-foreground max-sm:block max-sm:px-0 max-sm:pt-0 sm:truncate"
+        >
           {nombre}
         </TableHead>
-        <TableCell className="text-center">
+        <TableCell role="cell" className="max-sm:block max-sm:px-0 max-sm:py-1.5 sm:text-center">
+          {/* Bajo `sm` no hay fila de encabezados, así que cada dato se nombra. */}
+          <span className="mr-2 text-sm text-muted-foreground sm:hidden">Reserva:</span>
           <BadgeDeReserva estado={inscrito.bookingStatus} />
         </TableCell>
         {claseTerminada && (
-          <TableCell className="text-center">
+          <TableCell role="cell" className="max-sm:block max-sm:px-0 max-sm:py-1.5 sm:text-center">
+            <span className="mr-2 text-sm text-muted-foreground sm:hidden">Asistencia:</span>
             {inscrito.bookingStatus === BookingStatus.CANCELLED ? (
               <span className="text-sm text-muted-foreground">No aplica</span>
             ) : (
@@ -244,14 +260,14 @@ function FilaInscrito({
             )}
           </TableCell>
         )}
-        <TableCell className="text-center">
+        <TableCell role="cell" className="max-sm:block max-sm:px-0 max-sm:pb-0 sm:text-center">
           <button
             type="button"
             aria-expanded={abierto}
             aria-controls={detalleId}
             aria-label={abierto ? `Ocultar el detalle de ${nombre}` : `Ver el detalle de ${nombre}`}
             onClick={() => setAbierto((v) => !v)}
-            className="inline-flex items-center gap-1 rounded-full border border-input bg-card px-2.5 py-1 text-xs font-medium text-foreground transicion-rapida hover:bg-muted"
+            className="inline-flex min-h-11 items-center gap-1 rounded-full border border-input bg-card px-3.5 py-2 text-sm font-medium text-foreground transicion-rapida hover:bg-muted max-sm:w-full max-sm:justify-center"
           >
             {abierto ? (
               <>
@@ -269,8 +285,11 @@ function FilaInscrito({
       </TableRow>
 
       {abierto && (
-        <TableRow className="hover:bg-transparent">
-          <TableCell colSpan={columnas} className="pt-0 pb-4">
+        <TableRow
+          role="row"
+          className="hover:bg-transparent max-sm:block max-sm:rounded-xl max-sm:border max-sm:border-t-0 max-sm:border-border max-sm:px-4"
+        >
+          <TableCell role="cell" colSpan={columnas} className="pt-0 pb-4 max-sm:block max-sm:px-0">
             <dl
               id={detalleId}
               className="aparece grid grid-cols-1 gap-x-6 gap-y-3 border-t border-border pt-3 text-center sm:grid-cols-2"
@@ -362,15 +381,14 @@ function ControlAsistencia({
     );
   }
 
-  // Excepción consciente al objetivo táctil de 44px: los dos botones van juntos
-  // en una celda estrecha que solo ve el profesor. Se prioriza el orden visual
-  // de la tabla; siguen teniendo color + ícono + texto y foco visible.
+  // Excepción al objetivo táctil de 44px solo desde `sm`, en la celda estrecha de
+  // la tabla. En móvil la fila es tarjeta a todo el ancho: 48px y envuelven (HU-508).
   return (
     <div className="space-y-2">
       <div
         role="group"
         aria-label={`Asistencia de ${nombre}`}
-        className="flex flex-nowrap justify-center gap-2"
+        className="flex flex-wrap justify-center gap-2 sm:flex-nowrap"
       >
         <Button
           type="button"
@@ -379,7 +397,7 @@ function ControlAsistencia({
           disabled={mutation.isPending}
           onClick={() => marcar(BookingStatus.ATTENDED)}
           className={cn(
-            'h-9 gap-1.5 px-3 text-xs transition-colors',
+            'h-9 gap-1.5 px-3 text-xs transition-colors max-sm:h-12 max-sm:flex-1 max-sm:text-sm',
             estadoActual === BookingStatus.ATTENDED
               ? 'border-success bg-success-soft font-medium text-success-soft-foreground shadow-xs hover:bg-success-soft'
               : 'text-muted-foreground',
@@ -395,7 +413,7 @@ function ControlAsistencia({
           disabled={mutation.isPending}
           onClick={() => marcar(BookingStatus.NO_SHOW)}
           className={cn(
-            'h-9 gap-1.5 px-3 text-xs transition-colors',
+            'h-9 gap-1.5 px-3 text-xs transition-colors max-sm:h-12 max-sm:flex-1 max-sm:text-sm',
             estadoActual === BookingStatus.NO_SHOW
               ? 'border-destructive bg-destructive-soft font-medium text-destructive-soft-foreground shadow-xs hover:bg-destructive-soft'
               : 'text-muted-foreground',

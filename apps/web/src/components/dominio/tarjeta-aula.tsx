@@ -245,7 +245,7 @@ export function TarjetaAula({
           navega con lector de pantalla se entera de CUÁNDO es la clase antes de
           CÓMO se llama. La zona se nombra siempre (B6), en su propia línea.
         */}
-        <div className="w-29 shrink-0 overflow-hidden border-r border-border pr-4">
+        <div className="w-29 shrink-0 overflow-hidden border-r border-border pr-4 max-sm:flex max-sm:w-full max-sm:flex-wrap max-sm:items-baseline max-sm:gap-x-2 max-sm:border-r-0 max-sm:border-b max-sm:pr-0 max-sm:pb-2">
           <p className="text-xs text-muted-foreground">{dia}</p>
           {hora && <p className="text-[17px] font-medium tabular-nums">{hora}</p>}
           {zona && (
@@ -261,7 +261,7 @@ export function TarjetaAula({
           */}
           <h3
             id={tituloId}
-            className="relative z-10 truncate text-base font-medium text-foreground"
+            className="relative z-10 text-base font-medium text-foreground max-sm:line-clamp-2 sm:truncate"
           >
             <Link
               to={`/aulas/${classroom.id}`}
@@ -318,7 +318,7 @@ export function TarjetaAula({
                     : `Ver ${ocultas.length} ${ocultas.length === 1 ? 'apoyo' : 'apoyos'} más`
                 }
                 onClick={() => setEtiquetasAbiertas((v) => !v)}
-                className="relative z-10 inline-flex items-center gap-1 rounded-full border border-input bg-card px-2.5 py-0.5 text-xs font-medium text-foreground transicion-rapida hover:bg-muted"
+                className="relative z-10 inline-flex min-h-11 items-center gap-1 rounded-full border border-input bg-card px-3 py-2 text-xs font-medium text-foreground transicion-rapida hover:bg-muted"
               >
                 {abierta ? (
                   <>
@@ -355,7 +355,7 @@ export function TarjetaAula({
           la fila en vez de colgar del borde superior cuando la zona «qué» es más
           alta por los badges.
         */}
-        <div className="relative z-10 flex w-49 shrink-0 flex-col gap-2 self-center">
+        <div className="relative z-10 flex w-49 shrink-0 flex-col gap-2 self-center max-sm:w-full">
           {reservar.boton}
           {cancelar.boton}
           {entrar.boton}

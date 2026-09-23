@@ -102,7 +102,7 @@ export function AccionesDeAula({ aula, esDueno }: AccionesDeAulaProps) {
           <>
             <Button
               render={<Link to={`/mis-aulas/${aula.id}/editar`} />}
-              className="h-11 gap-2 px-5 text-base"
+              className="h-auto min-h-11 gap-2 px-5 text-base max-sm:w-full max-sm:shrink max-sm:whitespace-normal"
             >
               <Pencil aria-hidden="true" strokeWidth={2} className="size-4" />
               Editar clase
@@ -115,7 +115,7 @@ export function AccionesDeAula({ aula, esDueno }: AccionesDeAulaProps) {
         <Button
           render={<Link to={`/mis-aulas/nueva?desde=${aula.id}`} />}
           variant="outline"
-          className="h-11 gap-2 px-5 text-base"
+          className="h-auto min-h-11 gap-2 px-5 text-base max-sm:w-full max-sm:shrink max-sm:whitespace-normal"
         >
           <Copy aria-hidden="true" strokeWidth={2} className="size-4" />
           Duplicar clase
@@ -160,7 +160,11 @@ function DialogoCancelarAula({ aula, compact }: { aula: AulaGestionable; compact
         render={
           <Button
             variant="destructive"
-            className={compact ? 'h-11 gap-2 px-3.5' : 'h-11 gap-2 px-5 text-base'}
+            className={
+              compact
+                ? 'h-11 gap-2 px-3.5'
+                : 'h-auto min-h-11 gap-2 px-5 text-base max-sm:w-full max-sm:shrink max-sm:whitespace-normal'
+            }
           />
         }
       >

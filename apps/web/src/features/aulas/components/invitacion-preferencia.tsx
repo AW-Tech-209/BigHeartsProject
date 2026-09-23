@@ -28,10 +28,10 @@ export function InvitacionPreferencia({ userId }: { userId: string }) {
           opcional y puedes completarla cuando quieras desde tu perfil.
         </p>
         <div className="flex flex-wrap gap-3">
-          <Button render={<Link to="/perfil" />} className="h-10 px-4 text-sm">
+          <Button render={<Link to="/perfil" />} className="h-11 px-4 text-sm">
             Completar mi perfil
           </Button>
-          <Button variant="outline" onClick={cerrar} className="h-10 px-4 text-sm">
+          <Button variant="outline" onClick={cerrar} className="h-11 px-4 text-sm">
             Ahora no
           </Button>
         </div>
