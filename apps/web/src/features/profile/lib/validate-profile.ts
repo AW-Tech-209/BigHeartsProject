@@ -1,11 +1,12 @@
-import type { CommunicationPreference, HearingLossLevel } from '@academia/types';
+import type { ClassroomSupport, HearingLossLevel, InstructionMode } from '@academia/types';
 
 /** Estado del formulario de perfil. Los enums usan '' = "sin indicar". */
 export type ProfileFormValues = {
   firstName: string;
   lastName: string;
   hearingLossLevel: HearingLossLevel | '';
-  communicationPreference: CommunicationPreference | '';
+  preferredInstructionMode: InstructionMode | '';
+  preferredSupports: ClassroomSupport[];
 };
 
 /** Campo → mensaje de error. Las claves coinciden con las del backend. */

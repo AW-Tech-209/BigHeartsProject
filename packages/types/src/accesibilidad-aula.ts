@@ -1,4 +1,8 @@
-import type { AccessibilityPreference, InstructionMode } from './accesibilidad-clase';
+import type {
+  AccessibilityPreference,
+  ClassroomSupport,
+  InstructionMode,
+} from './accesibilidad-clase';
 import type { CommunicationPreference } from './index';
 
 /**
@@ -35,4 +39,18 @@ export function coincideConLaAccesibilidad(
 ): boolean {
   if (!preferencia?.instructionMode || !aula.instructionMode) return false;
   return aula.instructionMode === preferencia.instructionMode;
+}
+
+/**
+ * La preferencia guardada de un usuario, en la forma con la que se compara un
+ * aula (D44). Estructural a propósito: la usan el backend y el frontend.
+ */
+export function preferenciaDelUsuario(usuario: {
+  preferredInstructionMode: InstructionMode | null;
+  preferredSupports: ClassroomSupport[];
+}): AccessibilityPreference {
+  return {
+    instructionMode: usuario.preferredInstructionMode,
+    supports: usuario.preferredSupports,
+  };
 }

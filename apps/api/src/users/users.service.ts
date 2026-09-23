@@ -43,7 +43,9 @@ export class UsersService {
    */
   async updateProfile(userId: string, role: UserRole, dto: UpdateProfileDto): Promise<User> {
     const sendsAccessibilityField =
-      dto.hearingLossLevel !== undefined || dto.communicationPreference !== undefined;
+      dto.hearingLossLevel !== undefined ||
+      dto.preferredInstructionMode !== undefined ||
+      dto.preferredSupports !== undefined;
     if (role !== UserRole.STUDENT && sendsAccessibilityField) {
       throw accessibilityFieldsNotAllowed();
     }
@@ -56,8 +58,11 @@ export class UsersService {
     if (dto.hearingLossLevel !== undefined) {
       data.hearingLossLevel = dto.hearingLossLevel;
     }
-    if (dto.communicationPreference !== undefined) {
-      data.communicationPreference = dto.communicationPreference;
+    if (dto.preferredInstructionMode !== undefined) {
+      data.preferredInstructionMode = dto.preferredInstructionMode;
+    }
+    if (dto.preferredSupports !== undefined) {
+      data.preferredSupports = dto.preferredSupports;
     }
 
     try {

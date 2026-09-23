@@ -219,7 +219,7 @@ declara los campos editables, así que `email`, `role` e `id` en el cuerpo los r
 `whitelist` del ValidationPipe con `VALIDATION_ERROR`. Si algún día hace falta editar el perfil de
 otra persona, va en `AdminModule` con su propia autorización de rol, no aflojando esto.
 
-**`hearingLossLevel` y `communicationPreference` son del rol `STUDENT` (HU-504).** Un `TEACHER` o
+**`hearingLossLevel`, `preferredInstructionMode` y `preferredSupports` son del rol `STUDENT` (HU-504).** Un `TEACHER` o
 un `ADMIN` que los mande en el `PATCH` recibe `ACCESSIBILITY_FIELDS_NOT_ALLOWED` (403); el resto del
 cuerpo (nombre, apellidos) se sigue aceptando igual. Se decide en `UsersService`, con el rol que
 trae el propio token — no hace falta ir a la BD.

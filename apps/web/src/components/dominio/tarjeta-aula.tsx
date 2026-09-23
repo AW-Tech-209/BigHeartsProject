@@ -77,7 +77,7 @@ type TarjetaAulaProps = {
   ahora?: Date;
   /**
    * La preferencia de accesibilidad de quien mira (D44), ya traducida con
-   * `preferenciaAccesibilidadDe()`. Prop y no `useAuth()`, igual que `ahora`.
+   * `preferenciaDelUsuario()`. Prop y no `useAuth()`, igual que `ahora`.
    * Sin modo de instrucción declarado nunca produce una marca.
    */
   preferenciaEstudiante?: AccessibilityPreference | null;

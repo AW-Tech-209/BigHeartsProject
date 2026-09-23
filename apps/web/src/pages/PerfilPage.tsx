@@ -23,7 +23,8 @@ export function PerfilPage() {
   const withoutPreferences =
     user?.role === UserRole.STUDENT &&
     user.hearingLossLevel === null &&
-    user.communicationPreference === null;
+    user.preferredInstructionMode === null &&
+    user.preferredSupports.length === 0;
 
   return (
     <AppShell>

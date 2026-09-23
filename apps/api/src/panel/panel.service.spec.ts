@@ -1,7 +1,6 @@
 import {
   BookingStatus,
   ClassroomStatus,
-  CommunicationPreference,
   EnglishLevel,
   InstructionMode,
   MeetingProvider,
@@ -78,7 +77,7 @@ describe('PanelService.resumen — reparto por rol (AC1, AC3)', () => {
     const count = vi.fn().mockResolvedValue(3);
     const prisma = prismaMock({
       user: {
-        findUnique: vi.fn().mockResolvedValue({ communicationPreference: null }),
+        findUnique: vi.fn().mockResolvedValue({ preferredInstructionMode: null }),
         count: vi.fn(),
       },
       booking: { findFirst, count, findMany: vi.fn() },
@@ -104,7 +103,7 @@ describe('PanelService.resumen — reparto por rol (AC1, AC3)', () => {
     const prisma = prismaMock({
       user: {
         findUnique: vi.fn().mockResolvedValue({
-          communicationPreference: CommunicationPreference.SIGN_LANGUAGE,
+          preferredInstructionMode: InstructionMode.LSC_NATIVA,
         }),
         count: vi.fn(),
       },
@@ -125,7 +124,7 @@ describe('PanelService.resumen — reparto por rol (AC1, AC3)', () => {
   it('la próxima clase del estudiante viaja sin meetingLink', async () => {
     const prisma = prismaMock({
       user: {
-        findUnique: vi.fn().mockResolvedValue({ communicationPreference: null }),
+        findUnique: vi.fn().mockResolvedValue({ preferredInstructionMode: null }),
         count: vi.fn(),
       },
       booking: {
@@ -159,9 +158,9 @@ describe('PanelService.resumen — reparto por rol (AC1, AC3)', () => {
         findMany: vi
           .fn()
           .mockResolvedValue([
-            { student: { communicationPreference: CommunicationPreference.SIGN_LANGUAGE } },
-            { student: { communicationPreference: CommunicationPreference.SIGN_LANGUAGE } },
-            { student: { communicationPreference: null } },
+            { student: { preferredInstructionMode: InstructionMode.LSC_NATIVA } },
+            { student: { preferredInstructionMode: InstructionMode.LSC_NATIVA } },
+            { student: { preferredInstructionMode: null } },
           ]),
       },
     });

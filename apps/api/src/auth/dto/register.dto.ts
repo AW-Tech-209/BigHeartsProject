@@ -1,12 +1,15 @@
 import {
-  CommunicationPreference,
+  ClassroomSupport,
   HearingLossLevel,
+  InstructionMode,
   type RegisterableRole,
   type RegisterInput,
   UserRole,
 } from '@academia/types';
 import { Transform } from 'class-transformer';
 import {
+  ArrayUnique,
+  IsArray,
   IsEmail,
   IsEnum,
   IsIn,
@@ -65,6 +68,12 @@ export class RegisterDto implements RegisterInput {
   hearingLossLevel?: HearingLossLevel;
 
   @IsOptional()
-  @IsEnum(CommunicationPreference, { message: 'Preferencia de comunicación no válida.' })
-  communicationPreference?: CommunicationPreference;
+  @IsEnum(InstructionMode, { message: 'Modo de instrucción no válido.' })
+  preferredInstructionMode?: InstructionMode;
+
+  @IsOptional()
+  @IsArray({ message: 'Los apoyos deben ser una lista.' })
+  @ArrayUnique({ message: 'No repitas un apoyo.' })
+  @IsEnum(ClassroomSupport, { each: true, message: 'Apoyo no válido.' })
+  preferredSupports?: ClassroomSupport[];
 }

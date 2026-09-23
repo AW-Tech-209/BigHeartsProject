@@ -133,11 +133,15 @@ describe('seed-demo — invariantes del seed', () => {
     expect(aulasPasadasSinMarcar.length).toBeGreaterThan(0);
   });
 
-  it('el panel del profesor tiene modos que resumir: varios rellenos con preferencia', () => {
-    const conPreferencia = USUARIOS.filter(
-      (u) => u.role === 'STUDENT' && u.communicationPreference,
-    );
-    expect(conPreferencia.length).toBeGreaterThanOrEqual(3);
+  it('el panel del profesor tiene modos que resumir: varios estudiantes con modo declarado', () => {
+    const conModo = USUARIOS.filter((u) => u.role === 'STUDENT' && u.preferredInstructionMode);
+    expect(conModo.length).toBeGreaterThanOrEqual(3);
+  });
+
+  it('D44: al menos un estudiante prefiere intérprete y alguno declara varios apoyos', () => {
+    const estudiantes = USUARIOS.filter((u) => u.role === 'STUDENT');
+    expect(estudiantes.some((u) => u.preferredInstructionMode === 'INTERPRETE_LSC')).toBe(true);
+    expect(estudiantes.some((u) => (u.preferredSupports?.length ?? 0) > 1)).toBe(true);
   });
 
   it('HU-506 T8: al menos un aula queda sin modo de instrucción declarado', () => {

@@ -419,6 +419,12 @@ método.
 > en `@academia/types` (`MIGRACION_PREFERENCIA_COMUNICACION`) para que HU-506 migre sin inventar
 > reglas nuevas.
 >
+> _(Actualizado el 2026-09-22, cierre de HU-506 T2.)_ La preferencia se **guarda** con ese
+> vocabulario: `User.preferredInstructionMode` (uno solo, `null` = sin declarar) y
+> `User.preferredSupports` (varios). La migración `preferencia_del_estudiante` traspasó los valores
+> viejos con el mapeo de arriba y retiró la columna `communication_preference`. Registro y perfil
+> los piden así, y la regla 5 (solo `STUDENT`) cubre los dos campos.
+>
 > **Decisión D45 (2026-09-21, HU-505).** Solo se aceptan enlaces de Zoom, Google Meet y Microsoft
 > Teams — son los tres que ofrecen subtítulos en vivo. `esProveedorPermitido()`, en
 > `@academia/types`, es la única fuente de esta regla: la comparten el DTO del backend y el
@@ -588,7 +594,7 @@ Convenciones: `id` UUID v4, nombres de tabla en plural, columnas mapeadas a `sna
 ### 7.1 Implementado
 
 **`User`** — `id`, `email` (único), `password` (hash bcrypt, **nunca** sale por la API), `firstName`,
-`lastName`, `role`, `status`, `hearingLossLevel?`, `communicationPreference?`, timestamps.
+`lastName`, `role`, `status`, `hearingLossLevel?`, `preferredInstructionMode?`, `preferredSupports[]`, timestamps.
 
 **`RefreshToken`** — `id`, `tokenHash` (SHA-256, único), `userId`, `expiresAt`, `revokedAt?`,
 `createdAt`. Solo se guarda el hash: si se filtra la BD, los tokens no son reutilizables.

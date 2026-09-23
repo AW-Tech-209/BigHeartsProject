@@ -1,4 +1,4 @@
-import { type ListClassroomsQuery, UserRole } from '@academia/types';
+import { type ListClassroomsQuery, preferenciaDelUsuario, UserRole } from '@academia/types';
 import { RotateCw } from 'lucide-react';
 import { useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
@@ -14,7 +14,6 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { FiltrosAulas } from '@/features/aulas/components/filtros-aulas';
 import { InvitacionPreferencia } from '@/features/aulas/components/invitacion-preferencia';
 import { useClassrooms } from '@/features/aulas/hooks/use-classrooms';
-import { preferenciaAccesibilidadDe } from '@/features/aulas/lib/accesibilidad-aula';
 import {
   buildSearchParams,
   hayFiltrosActivos,
@@ -58,9 +57,7 @@ export function AulasPage() {
   // Solo el estudiante ve la marca de coincidencia (D44). Un `undefined` aquí
   // hace que `coincideConLaAccesibilidad()` devuelva `false` siempre.
   const preferenciaEstudiante =
-    user?.role === UserRole.STUDENT
-      ? preferenciaAccesibilidadDe(user.communicationPreference)
-      : undefined;
+    user?.role === UserRole.STUDENT ? preferenciaDelUsuario(user) : undefined;
 
   /**
    * HU-208. Las dos derivaciones de presentación por rol, resueltas UNA vez
@@ -121,7 +118,7 @@ export function AulasPage() {
       />
 
       {/* T14, AC6: solo al estudiante sin preferencia, y sin insistir. */}
-      {user?.role === UserRole.STUDENT && !user.communicationPreference && (
+      {user?.role === UserRole.STUDENT && !user.preferredInstructionMode && (
         <InvitacionPreferencia userId={user.id} />
       )}
 

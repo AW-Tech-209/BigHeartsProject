@@ -88,7 +88,6 @@ const PASSWORD = process.env.SEED_DEMO_PASSWORD?.trim() || 'Password123!';
 
 type Rol = 'STUDENT' | 'TEACHER';
 type Estado = 'ACTIVE' | 'PENDING' | 'REJECTED' | 'SUSPENDED';
-type ModoComunicacion = 'SIGN_LANGUAGE' | 'LIP_READING' | 'WRITTEN_TEXT' | 'SPOKEN_AUDIO';
 
 export type UsuarioDemo = {
   email: string;
@@ -97,7 +96,8 @@ export type UsuarioDemo = {
   role: Rol;
   status: Estado;
   hearingLossLevel?: 'MILD' | 'MODERATE' | 'SEVERE' | 'PROFOUND';
-  communicationPreference?: ModoComunicacion;
+  preferredInstructionMode?: InstructionModeDemo;
+  preferredSupports?: ClassroomSupportDemo[];
 };
 
 const PROFE = 'demo.profe@bighearts.local';
@@ -106,11 +106,14 @@ const ALUMNO = 'demo.alumno@bighearts.local';
 const ALUMNO2 = 'demo.alumno2@bighearts.local';
 const RELLENO = (n: number) => `demo.relleno${n}@bighearts.local`;
 
-/** Preferencia de cada relleno: `null` = sin declarar. */
-const PREFERENCIA_RELLENO: Record<number, ModoComunicacion | undefined> = {
-  1: 'SIGN_LANGUAGE',
-  2: 'LIP_READING',
-  3: 'WRITTEN_TEXT',
+/** Preferencia de cada relleno (D44): LSC, intérprete y solo apoyos; el resto sin declarar. */
+const PREFERENCIA_RELLENO: Record<
+  number,
+  Pick<UsuarioDemo, 'preferredInstructionMode' | 'preferredSupports'>
+> = {
+  1: { preferredInstructionMode: 'LSC_NATIVA' },
+  2: { preferredInstructionMode: 'INTERPRETE_LSC', preferredSupports: ['LIP_READING'] },
+  3: { preferredSupports: ['WRITTEN_TEXT'] },
 };
 
 export const USUARIOS: UsuarioDemo[] = [
@@ -137,7 +140,7 @@ export const USUARIOS: UsuarioDemo[] = [
     role: 'STUDENT',
     status: 'ACTIVE',
     hearingLossLevel: 'SEVERE',
-    communicationPreference: 'SIGN_LANGUAGE',
+    preferredInstructionMode: 'LSC_NATIVA',
   },
   {
     email: ALUMNO2,
@@ -146,7 +149,8 @@ export const USUARIOS: UsuarioDemo[] = [
     role: 'STUDENT',
     status: 'ACTIVE',
     hearingLossLevel: 'MODERATE',
-    communicationPreference: 'WRITTEN_TEXT',
+    preferredInstructionMode: 'INTERPRETE_LSC',
+    preferredSupports: ['WRITTEN_TEXT', 'LIVE_CAPTIONS'],
   },
   {
     email: 'demo.alumno.suspendido@bighearts.local',
@@ -161,7 +165,7 @@ export const USUARIOS: UsuarioDemo[] = [
     lastName: 'Demo',
     role: 'STUDENT',
     status: 'ACTIVE',
-    communicationPreference: PREFERENCIA_RELLENO[n],
+    ...PREFERENCIA_RELLENO[n],
   })),
 ];
 
@@ -483,7 +487,8 @@ async function main(): Promise<void> {
       role: u.role,
       status: u.status,
       hearingLossLevel: u.hearingLossLevel ?? null,
-      communicationPreference: u.communicationPreference ?? null,
+      preferredInstructionMode: u.preferredInstructionMode ?? null,
+      preferredSupports: u.preferredSupports ?? [],
     };
     await prisma.user.upsert({
       where: { email: u.email },

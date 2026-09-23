@@ -27,5 +27,5 @@ export const profileNotFound = (): NotFoundException =>
 export const accessibilityFieldsNotAllowed = (): ForbiddenException =>
   new ForbiddenException({
     code: ApiErrorCode.ACCESSIBILITY_FIELDS_NOT_ALLOWED,
-    message: 'El nivel de hipoacusia y la preferencia de comunicación son solo del estudiante.',
+    message: 'El nivel de hipoacusia y la preferencia de accesibilidad son solo del estudiante.',
   });

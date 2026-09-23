@@ -1,7 +1,11 @@
 import { describe, expect, it } from 'vitest';
 
-import { InstructionMode } from './accesibilidad-clase';
-import { coincideConLaAccesibilidad, coincideConLaPreferencia } from './accesibilidad-aula';
+import { ClassroomSupport, InstructionMode } from './accesibilidad-clase';
+import {
+  coincideConLaAccesibilidad,
+  coincideConLaPreferencia,
+  preferenciaDelUsuario,
+} from './accesibilidad-aula';
 import { CommunicationPreference } from './index';
 
 describe('coincideConLaPreferencia', () => {
@@ -88,5 +92,22 @@ describe('coincideConLaAccesibilidad', () => {
         { instructionMode: InstructionMode.LSC_NATIVA, supports: [] },
       ),
     ).toBe(false);
+  });
+});
+
+describe('preferenciaDelUsuario', () => {
+  it('lleva el modo y los apoyos guardados a la forma con la que se compara un aula', () => {
+    const preferencia = preferenciaDelUsuario({
+      preferredInstructionMode: InstructionMode.INTERPRETE_LSC,
+      preferredSupports: [ClassroomSupport.LIVE_CAPTIONS],
+    });
+
+    expect(preferencia).toEqual({
+      instructionMode: InstructionMode.INTERPRETE_LSC,
+      supports: [ClassroomSupport.LIVE_CAPTIONS],
+    });
+    expect(
+      coincideConLaAccesibilidad({ instructionMode: InstructionMode.INTERPRETE_LSC }, preferencia),
+    ).toBe(true);
   });
 });

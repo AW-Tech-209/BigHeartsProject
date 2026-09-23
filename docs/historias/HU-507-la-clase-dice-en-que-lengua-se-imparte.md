@@ -116,9 +116,9 @@ se asegura de que no quede ni una «lengua de signos» suelta en la interfaz.
 - **T6**: la preferencia se pregunta como «Cómo prefieres seguir las clases», con etiquetas del
   vocabulario nuevo. `SPOKEN_AUDIO` ya no se ofrece (D43); en el perfil se sigue mostrando si ya
   estaba guardado, para que el `<select>` no mienta.
-- **Limitación del contrato, no de esta HU**: `CommunicationPreference` no tiene un valor que migre a
-  `INTERPRETE_LSC`, así que un estudiante no puede declarar que prefiere clases con intérprete.
-  Pedirlo requiere una columna nueva en `User` (backend).
+- **Limitación del contrato, ya resuelta**: `CommunicationPreference` no tenía un valor que llevara
+  a `INTERPRETE_LSC`. Se cerró con HU-506 T2 (2026-09-22): `User` guarda modo y apoyos, y registro
+  y perfil los preguntan con `<CamposPreferencia>`.
 - **AC2, búsqueda en el código**: `grep -rni "lengua de signos" apps/web/src` fuera de los specs
   solo encuentra un comentario de `features/landing/` que explica la regla. Cero en pantallas.
 - `RadioCardGroup` acepta `value: null` (nada elegido) y `describedBy`.
