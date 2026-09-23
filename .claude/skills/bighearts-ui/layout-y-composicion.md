@@ -52,6 +52,13 @@
 
 - **Uso:** Renglón de aula (`<TarjetaAula>`) para explorar/elegir una clase; Tarjeta de
   resumen para el panel; Fila para administrar/listas largas (>15 items).
+- **Tabla en móvil (HU-508):** bajo `sm` una `<table>` no se barre en horizontal: cada fila se
+  apila como tarjeta con `max-sm:block`, se oculta el `<thead>` y cada dato lleva su etiqueta
+  (`<span className="sm:hidden">Solicitud: </span>`). Como `display: block` borra los roles
+  implícitos, van explícitos (`role="table" | "row" | "rowheader" | "cell"`). Mismo marcado para
+  los dos tamaños, nunca uno duplicado. Lo usan la cola de aprobación y los inscritos.
+- **Renglón de aula en móvil (HU-508):** bajo `sm` la zona «cuándo» ocupa su propia línea y el
+  título recibe el ancho entero (hasta dos líneas); la zona de acción va a ancho completo.
 - **Anatomía del renglón de aula (`<TarjetaAula>`, HU-414):** una fila horizontal a todo el
   ancho, de alto modular. `<article aria-labelledby="title-id">` sobre
   `flex flex-col overflow-hidden rounded-xl border border-border bg-card p-4 pl-5 shadow-xs`

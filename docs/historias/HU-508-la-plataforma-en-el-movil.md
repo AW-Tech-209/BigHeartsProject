@@ -5,7 +5,7 @@
 | **Sprint**          | Post-Fase 1 · Auditoría                                                  |
 | **Prioridad**       | 🟠 Alta                                                                  |
 | **Estimación**      | 1.5 días                                                                 |
-| **Estado**          | ⬜ Pendiente                                                             |
+| **Estado**          | 🟨 Casi terminada — falta la landing (HU-510) y un teléfono real         |
 | **Asignada a**      | **Dev B** — frontend · va **después** de HU-507                          |
 | **Rama**            | `hu-508-la-plataforma-en-el-movil-b`                                     |
 | **Alcance técnico** | frontend · QA                                                            |
@@ -100,4 +100,60 @@ Es la lista de lo que hay que buscar a propósito, porque no salta solo:
 
 ## Notas de implementación
 
-_Se rellena al cerrar, con la tabla de las quince pantallas y su veredicto._
+Recorrido con el navegador emulando 375×812 sobre `docker compose` + `db:seed:demo`. Cada
+veredicto sale de **medir el DOM**, no de mirar: ancho de `<main>` contra
+`documentElement.clientWidth`, tablas contra su contenedor y alto de cada control. El zoom al
+200 % se probó emulando 188 px de ancho, que es lo que queda de 375 px al 200 %.
+
+> **Ojo con el emulador.** A mitad del recorrido la pestaña dejó de aplicar el tamaño a los
+> elementos `position: fixed` (la barra inferior llegó a medir 703 px con la página a 375), y
+> `innerWidth` dejó de ser fiable. Todas las medidas de esta tabla se tomaron con
+> `clientWidth`. Lo que depende de la barra fija no se pudo verificar: ver «Pendiente».
+
+### Las quince pantallas
+
+| Pantalla               | Veredicto | Hallazgo → corrección                                                                                                     |
+| ---------------------- | --------- | ------------------------------------------------------------------------------------------------------------------------- |
+| Landing                | ❌        | «Iniciar sesión» de la cabecera queda fuera (página a 529 px). **No corregido: es de HU-510**, ver abajo                  |
+| Registro               | ✅        | Sin desborde. La pregunta nueva de HU-507 cabe                                                                            |
+| Login                  | ✅        | Sin desborde                                                                                                              |
+| Recuperar contraseña   | ✅        | Sin desborde                                                                                                              |
+| Panel · estudiante     | ✅        | Títulos de aula recortados → corregido (ver catálogo)                                                                     |
+| Panel · profesor       | ✅        | Ídem                                                                                                                      |
+| Panel · admin          | ✅        | Tabla de profesores pendientes con barrido interno (702 px en 341) → fila convertida en tarjeta bajo `sm`                 |
+| Catálogo con filtros   | ✅        | Títulos recortados (6/6, 173 px útiles) → fecha en su línea y título a todo el ancho. «+N» de 20 → 44 px. Filtros a 200 % |
+| Detalle de aula        | ✅        | Página a 708 px por la rejilla (columna sin `min-w-0`) → `grid-cols-1` + `min-w-0`. Zona horaria que no partía a 200 %    |
+| Crear aula             | ✅        | Sin desborde; tarjetas de modo 301×139. Envío cubierto por `formulario-aula.spec`, no recorrido a mano                    |
+| Editar aula            | ✅        | Sin desborde; precarga el modo                                                                                            |
+| Mis aulas              | ✅        | Títulos recortados (7/7) → corregido                                                                                      |
+| Mis clases             | ✅        | Títulos recortados (3/3) → corregido                                                                                      |
+| Historial              | ✅        | Sin desborde (usa `FilaLista`)                                                                                            |
+| Inscritos y asistencia | ✅        | `min-w-160` fijaba 640 px → tarjeta bajo `sm`. «Ver detalle» 30 → 44 px. «Asistió/No asistió» 36 → 48 px y envuelven      |
+| Supervisión del admin  | ✅        | Filtros de 224 px fijos → ancho completo bajo `sm`                                                                        |
+| Perfil                 | ✅        | Sin desborde                                                                                                              |
+
+### Los tres recorridos (T2), completos desde móvil
+
+- **Estudiante:** reservó «Inglés B1 para el trabajo» («Tienes tu cupo») y, en la clase dentro de
+  la ventana, vio «Ya puedes entrar» con el enlace real de Meet — a 200 %.
+- **Profesor:** vio inscritos y marcó «Asistió» a 200 % (anunciado por `aria-live`). **Crear aula
+  no se recorrió a mano**: se midió que el formulario cabe y el envío lo cubren los tests.
+- **Admin:** aprobó al profesor pendiente desde la tarjeta (anunciado) y abrió la supervisión.
+
+### Decisiones
+
+- Las tablas se apilan con CSS sobre **el mismo** `<table>` y con roles ARIA explícitos: un segundo
+  marcado para móvil habría duplicado cada botón y roto los tests que los buscan por nombre.
+- La excepción documentada de 36 px en los botones de asistencia se mantiene **solo desde `sm`**:
+  su justificación era la celda estrecha de la tabla, que en móvil ya no existe.
+- `Input` lleva `min-w-0`: los `date`/`time` nativos no bajan de su ancho propio.
+
+### Pendiente
+
+1. **Landing (HU-510, Dev A).** En la cabecera, el grupo de acciones es `shrink-0` y suma el
+   selector de tema (44 px), «Crear cuenta» (153 px) e «Iniciar sesión» (154 px). A 375 px,
+   «Iniciar sesión» empieza en 375 y termina en 529: fuera de la pantalla. Se corrige en HU-510.
+2. **`scroll-padding-bottom` en `index.css`**: evita que la barra inferior tape el control que el
+   foco lleva al borde. Es la solución estándar, pero **no se pudo verificar** por el fallo del
+   emulador con `position: fixed`. Comprobar en un teléfono real antes de cerrar la HU.
+3. **Tablet (768 px)** fuera de alcance, como dice la HU: la excepción de 36 px sigue ahí.

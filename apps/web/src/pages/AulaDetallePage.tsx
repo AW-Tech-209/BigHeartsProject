@@ -200,8 +200,10 @@ function DetalleDelAula({
 
   return (
     <div className="subir-suave space-y-8">
-      <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1.35fr)_minmax(18rem,0.65fr)]">
-        <div className="space-y-6">
+      <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-[minmax(0,1.35fr)_minmax(18rem,0.65fr)]">
+        {/* `min-w-0`: sin él la columna crece hasta el contenido más ancho que
+            contenga —la tabla de inscritos— y empuja la página en móvil. */}
+        <div className="min-w-0 space-y-6">
           <section
             aria-labelledby="aula-descripcion"
             className="rounded-xl border border-border bg-card p-6 shadow-xs sm:p-7"
@@ -302,7 +304,7 @@ function DetalleDelAula({
           />
         </div>
 
-        <aside className="space-y-6" aria-label="Resumen de la clase">
+        <aside className="min-w-0 space-y-6" aria-label="Resumen de la clase">
           {/* HU-304, T6. `sin-acceso` no pinta nada: ni cuenta atrás ni botón. */}
           {accesoAlEnlace === 'abierto' && aula.meetingLink && (
             <EnlaceDeLaClase url={aula.meetingLink} />
@@ -325,7 +327,7 @@ function DetalleDelAula({
               <dl className="divide-y divide-border">
                 <Dato termino="Fecha y hora" icon={CalendarClock}>
                   {horario.cuando}{' '}
-                  {horario.zona && <span className="whitespace-nowrap">({horario.zona})</span>}
+                  {horario.zona && <span className="sm:whitespace-nowrap">({horario.zona})</span>}
                 </Dato>
                 <Dato termino="Duración">{describirDuracion(aula.durationMinutes)}</Dato>
                 <Dato termino="Cupo" className="pt-4">

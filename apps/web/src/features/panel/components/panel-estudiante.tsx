@@ -143,7 +143,7 @@ function TarjetaClaseProxima({ aula }: { aula: ClassroomListItem }) {
       <div className="flex flex-1 flex-col gap-2.5">
         <div className="flex flex-col gap-1">
           <p className="text-xs text-pretty text-muted-foreground">
-            {cuando} {zona && <span className="whitespace-nowrap">({zona})</span>}
+            {cuando} {zona && <span className="sm:whitespace-nowrap">({zona})</span>}
           </p>
 
           <h3 id={tituloId} className="text-base font-medium text-foreground">
