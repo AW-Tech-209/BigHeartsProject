@@ -883,7 +883,7 @@ npm run test:watch --workspace @academia/web # en watch, mientras escribes
 ### 10.2 Tests del frontend y de tipos — implementado en HU-205
 
 **Estado hoy:** implementado. `apps/web` y `packages/types` tienen runner, el CI los ejecuta en
-cada PR, y el skill `bighearts-dod` **ya exige** tests de frontend (§5 de ese skill).
+cada PR, y `/hu` exige tests de frontend donde protegen algo (invariantes, autorización, funciones puras, `axe`).
 
 Lo que existe en el repo:
 
@@ -910,14 +910,14 @@ Lo que existe en el repo:
 > mano sobre código recién escrito, se degrada — y en un producto para personas sordas una
 > regresión de accesibilidad no la reporta nadie: el usuario simplemente no consigue reservar.
 >
-> | Aspecto       | Decisión                                                                                                                                                                                                                                                     |
-> | ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-> | Runner        | **Vitest** en `apps/web` y en `packages/types`. Mismo runner que `@academia/api`; no se introduce Jest.                                                                                                                                                      |
-> | Componentes   | **Testing Library sobre jsdom**, consultando por **rol accesible y texto visible**. Prohibido `data-testid`: si un elemento no se encuentra por su rol, el problema es el componente.                                                                        |
-> | Accesibilidad | **`axe-core`** en los tests de componentes. Automatiza lo mecánico (roles, labels, `aria-*`, encabezados); **no sustituye** la pasada manual de teclado y lector de pantalla, la reduce.                                                                     |
-> | CI            | El paso `test` **bloquea el merge**. Un test que no bloquea no existe.                                                                                                                                                                                       |
-> | Cobertura     | **Sin umbral numérico.** Un porcentaje mínimo produce tests escritos para subir el porcentaje. Regla cualitativa en `bighearts-dod`: toda lógica de dominio del frontend tiene test, y todo componente de `components/dominio/` tiene test de accesibilidad. |
-> | Alcance       | **No retroactivo.** `features/auth` y `features/profile` se cubren cuando se toquen.                                                                                                                                                                         |
+> | Aspecto       | Decisión                                                                                                                                                                                                       |
+> | ------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+> | Runner        | **Vitest** en `apps/web` y en `packages/types`. Mismo runner que `@academia/api`; no se introduce Jest.                                                                                                        |
+> | Componentes   | **Testing Library sobre jsdom**, consultando por **rol accesible y texto visible**. Prohibido `data-testid`: si un elemento no se encuentra por su rol, el problema es el componente.                          |
+> | Accesibilidad | **`axe-core`** en los tests de componentes. Automatiza lo mecánico (roles, labels, `aria-*`, encabezados); **no sustituye** la pasada manual de teclado y lector de pantalla, la reduce.                       |
+> | CI            | El paso `test` **bloquea el merge**. Un test que no bloquea no existe.                                                                                                                                         |
+> | Cobertura     | **Sin umbral numérico.** Un porcentaje mínimo produce tests escritos para subir el porcentaje. Regla cualitativa: se testean invariantes, autorización, funciones puras y `axe` en pantalla nueva (ver `/hu`). |
+> | Alcance       | **No retroactivo.** `features/auth` y `features/profile` se cubren cuando se toquen.                                                                                                                           |
 >
 > `packages/types` era la parte urgente: `derivarEstadoAula()` vive ahí y la T0 de HU-203 pide
 > tests unitarios que antes no tenían dónde ejecutarse. **Ya los tienen.**
@@ -930,7 +930,7 @@ Lo que existe en el repo:
   de punta a punta.
 - **Regresión visual y contraste calculado.** jsdom no aplica las hojas de Tailwind, así que la
   regla `color-contrast` de axe está desactivada en el helper: automatizarla ahí daría un falso
-  verde. El contraste se verifica en `tokens.css` del skill `bighearts-ui` y a mano.
+  verde. El contraste se verifica sobre los tokens de `apps/web/src/index.css` y a mano.
 - **Umbral numérico de cobertura.** D17: un porcentaje mínimo produce tests escritos para subir el
   porcentaje.
 

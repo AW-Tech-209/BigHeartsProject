@@ -1,210 +1,85 @@
 ---
 name: bighearts-ui
-description: Convenciones de UI/UX, color, tipografía, accesibilidad y patrones de componentes para BigHearts (academia de inglés para personas hipoacúsicas y sordomudas). Úsalo siempre que se cree, edite o revise cualquier componente, pantalla, estilo Tailwind, formulario, estado de aula/reserva/cupo, o copy de la interfaz. Dispara con: componente, pantalla, UI, estilo, color, tarjeta, botón, formulario, accesibilidad, contraste, tema claro/oscuro, Tailwind, shadcn.
+description: Convenciones de UI de BigHearts (academia de inglés para personas sordas) — color con significado, tipografía, accesibilidad, movimiento y patrones de componentes. Úsalo al crear o editar componentes, pantallas, estilos Tailwind, formularios o copy de interfaz.
 license: Proprietary
 ---
 
-# BigHearts — UI/UX
+# BigHearts — UI
 
-Academia de inglés **para personas hipoacúsicas y sordomudas**. La videollamada ocurre fuera
-(Zoom/Meet); esta plataforma gestiona acceso, cupos, reservas, recordatorios e historial.
+El usuario no recibe **nada** por sonido: todo lo que otro producto diría con un «ding» lo dice la
+pantalla. Tres reglas que no se negocian:
 
-> **Prueba definitiva del producto:** si un estudiante sordo entra, encuentra su clase, reserva
-> y llega a la videollamada sin pedirle ayuda a nadie, el diseño funcionó. Ante la duda entre dos
-> opciones, esa es la pregunta que decide.
+1. **Nada de color decorativo.** Todo color no neutro significa algo (diccionario abajo).
+2. **Codificación triple.** Ningún estado solo con color: siempre color + ícono + texto.
+3. **Cero audio.** Nunca `<audio>`, nunca video sin subtítulos.
 
-- No hagas comentarios en el código a menos que sea exclusivamente necesario, y si se agregan comentarios, que sean breves, al punto.
+**Stack:** Tailwind v4 (config en CSS, sin `tailwind.config.js`) · shadcn sobre **Base UI**
+(`base-nova`, prop `render`, **no** `asChild`) · `lucide-react` · CVA + `cn()` · React Query para
+datos de servidor · Zustand solo UI/sesión.
 
-## Por qué el diseño es así (léelo antes de improvisar)
+## Color
 
-En una interfaz para usuarios oyentes el color decora y el audio avisa. Aquí el usuario no recibe
-**nada** por sonido, así que todo lo que un producto normal delegaría a un "ding" lo tiene que
-decir la pantalla. Esto se traduce en 3 reglas que no se negocian:
+| Token               | Significa                                       | Nunca para          |
+| ------------------- | ----------------------------------------------- | ------------------- |
+| `primary`           | Acción principal, lo tuyo                       | Decoración          |
+| `attention` (ámbar) | **Tiempo**: urgencia, ventana, escasez de cupos | Marca, adorno       |
+| `success`           | Confirmado, disponible, completado              | —                   |
+| `destructive`       | Pérdida o error                                 | —                   |
+| `info`              | Contexto neutro, ayuda                          | —                   |
+| `muted`             | Inactivo, pasado, sin acción                    | —                   |
+| `--brand`           | Identidad: barras del shell, panel de acceso    | Contenido, acciones |
+| `--accent-*`        | Categórico sin estado (etiquetas de filtros)    | Badges de estado    |
 
-1. **Nada de color decorativo.** Todo color no neutro significa algo (ver diccionario abajo).
-2. **Codificación triple.** Ningún estado se comunica solo con color: siempre color + ícono + texto.
-3. **Cero dependencia del audio.** Nunca `<audio>`, nunca "escucha el aviso", nunca video sin subtítulos.
+Cero colores literales en `.tsx`. Contraste: texto ≥ 7:1 cuando se pueda, mínimo 4.5:1; bordes con
+significado ≥ 3:1. Los valores viven en `apps/web/src/index.css`. **Temas: claro y oscuro** (`.hc` está retirado del producto; sus
+restos en CSS no se mantienen ni se verifican).
 
-## Stack (no negociable)
+## Tipografía y forma
 
-Tailwind v4 (config en CSS, sin `tailwind.config.js`) · shadcn sobre **Base UI** (`style: "base-nova"`,
-usa prop `render`, **no** `asChild`) · `lucide-react` · CVA para variantes · `cn()` (clsx + tailwind-merge)
-· React Query para estado de servidor (aulas, cupos, reservas) · Zustand solo para UI/preferencias
-· `@fontsource-variable/geist`.
-
-## Color — diccionario de significado
-
-| Token               | Significa                                                | Nunca usar para        |
-| ------------------- | -------------------------------------------------------- | ---------------------- |
-| `primary`           | Acción principal, lo tuyo                                | Decoración             |
-| `attention` (ámbar) | **Tiempo**: urgencia, ventana temporal, escasez de cupos | Marca, headers, adorno |
-| `success`           | Confirmado, disponible, completado                       | —                      |
-| `destructive`       | Pérdida o error                                          | —                      |
-| `info`              | Contexto neutro, ayuda                                   | —                      |
-| `muted`             | Inactivo, pasado, sin acción posible                     | —                      |
-
-Todos los tokens (hex/oklch, modo claro, oscuro y alto contraste, ya verificados en contraste WCAG)
-están en `tokens.css` de este skill. **No lo abras para escribir un componente**: el diccionario de
-arriba ya te dice qué token usar, y `tokens.css` es el archivo más pesado de este skill. Ábrelo
-**solo si vas a editar `apps/web/src/index.css`**, que es donde viven de verdad.
-
-Cero colores literales en `.tsx` (`bg-primary`, nunca `#054DAE` ni `blue-600`).
-
-Reglas de contraste: texto ≥ 7:1 (AAA) cuando sea posible, mínimo 4.5:1. Bordes/gráficos con
-significado ≥ 3:1.
-
-**`--brand` (azul marino) — identidad, no estado (HU-415).** Es la superficie de la marca: la
-barra superior y la inferior de móvil de `<AppShell>`, y el panel de las pantallas de acceso.
-Igual en los tres modos (no se invierte). No lo uses como fondo de contenido ni como acción.
-
-**`--accent-indigo` · `--accent-teal` · `--accent-rose` — categórico decorativo (HU-415).** Solo
-para distinguir etiquetas de campos que **no** tienen estado (cada filtro del catálogo). A
-propósito lejos de verde/ámbar/rojo: esos ya significan éxito/tiempo/error, y reusar esos tonos
-como adorno le mentiría al usuario que lee el resto de la app por color. No entran en un badge de
-estado ni sustituyen a `primary`.
-
-## Tipografía
-
-Cuerpo base **17px** (no 16 — se lee español como puente al inglés). `text-justify` prohibido.
-Ancho máximo de párrafo `max-w-[65ch]`. Jerarquía por peso y tamaño, nunca por color. Nunca
-`uppercase` en frases (solo en etiquetas de una palabra). Todo texto en inglés envuelto en un
-componente `<Ingles>` con `lang="en"` — es una academia de inglés, el contenido enseñado necesita
-esa marca semántica para lectores de pantalla y correctores.
-
-**`font-serif` (Instrument Serif, token `--font-serif`) — display, en dos sitios:**
-
-- **Landing pública (`features/landing/`):** acentos de display en titulares y citas.
-- **El `<h1>` de cada pantalla (HU-415):** `<PaginaCabecera>` lo pinta en `font-serif font-normal`;
-  también el titular de `<EstadoVacio>` y de `<AlertDialogTitle>`. Son los momentos de «enunciado».
-
-Todo lo demás —cuerpo, labels, `<h2>` de sección, botones— sigue en Geist. El serif es tipográfico,
-no color; la jerarquía la siguen marcando el peso y el tamaño.
-
-## Espaciado y forma
-
-Escala de 4/8. Radios `rounded-lg` (controles), `rounded-xl` (tarjetas), `rounded-full` (chips/avatares).
-Elevación **por borde primero** (`border border-border`); `<Card>`, `<Table>` y el botón sólido
-llevan además una `shadow-xs` de reposo mínima que las despega del lienzo sin volverlas capa
-flotante (HU-415). La sombra de verdad (`shadow-lg`) sigue reservada a lo que flota: modales,
-popovers. Objetivos táctiles ≥ 44px, 48px en acciones primarias y en móvil.
-
-**Excepción D40 — solo las tarjetas de resumen del panel (`features/panel/`, HU-503):** llevan
-borde + `shadow-sm`, y `shadow-md` al pasar el cursor si la tarjeta entera es enlazable. No abre la
-puerta a sombras en el resto: las tarjetas de aula, formularios y listados siguen con borde a secas.
+- Cuerpo **17px** · párrafos `max-w-[65ch]` · jerarquía por peso y tamaño, nunca por color · sin
+  `text-justify` · `uppercase` solo en etiquetas de una palabra · pesos ≥ 400.
+- Texto en inglés dentro de `<Ingles>` (`lang="en"`).
+- `font-serif` solo en: acentos de la landing, el `<h1>` de `<PaginaCabecera>`, y titulares de
+  `<EstadoVacio>` y `<AlertDialogTitle>`. Todo lo demás, Geist.
+- Escala 4/8 · radios `rounded-lg` controles, `rounded-xl` tarjetas, `rounded-full` chips.
+- Elevación por **borde**; `<Card>`, `<Table>` y botón sólido con `shadow-xs`; `shadow-lg` solo en
+  lo que flota. Táctiles ≥ 44px (48px en primarias y móvil).
 
 ## Movimiento
 
-Un cambio visible sin movimiento se lee como un salto; el movimiento existe para que un cambio de
-estado, una lista que llega o un hover se sientan como una transición y no como un parpadeo. Nunca
-al revés: el movimiento **nunca** es la única señal de un estado (sigue siendo color + ícono +
-texto) y **nunca** esconde contenido — toda entrada usa `both`, así que si la animación no corre
-(motor viejo, `prefers-reduced-motion`) el contenido queda en su sitio, visible.
+Curva `--ease-suave`, duraciones `--duracion-rapida|normal|lenta`. Interacción: `transicion-rapida`
+(lo que se toca) y `transicion-suave` (lo que se lee), no `transition-*` sueltos. Entradas:
+`subir-suave`, `entra-escalonada`, `aparece`, `riel-entra`, `revelar`. `alerta-visual` es el
+reemplazo del «ding»: una vez, en la transición real a un estado urgente. Prohibido: animación
+infinita, parallax, transición de ruta, animar el `<h1>` que recibe foco. El movimiento nunca es la
+única señal; `prefers-reduced-motion` ya está cubierto en `index.css`.
 
-**La escala** (`index.css`): `--ease-suave` (una sola curva, `cubic-bezier(0.22, 1, 0.36, 1)`) y tres
-duraciones — `--duracion-rapida` (150ms), `--duracion-normal` (220ms), `--duracion-lenta` (320ms,
-reservada a entradas de bloque, no de interacción).
+## Accesibilidad
 
-**Las dos utilidades de interacción**, sobre esa escala — úsalas en vez de `transition-colors` o
-`transition-all` sueltos:
+Foco visible siempre (anillo 3px + offset 2px) · `<button>` para acciones, `<a>` para navegar · un
+`<h1>` por página · `<label>` visible siempre; error junto al campo con `aria-invalid` +
+`aria-describedby` + ícono · cambios dinámicos con `aria-live` · 4 estados: cargando, vacío, error,
+éxito.
 
-- `transicion-rapida` — lo que el dedo toca: botones, inputs, switches, checkboxes. La respuesta
-  tiene que sentirse inmediata.
-- `transicion-suave` — lo que el ojo lee: renglones de aula, filas de lista, badges de estado,
-  rieles, enlaces de navegación.
+## Dónde está el detalle
 
-**Las clases nombradas de entrada** (`index.css`, todas con `both` y todas ya cubiertas por
-`prefers-reduced-motion`):
+Solo si la tarea entra en ese terreno:
 
-| Clase                      | Para qué                                                                                                                                                                                                                                                                                                                                                    |
-| -------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `subir-suave`              | Un bloque entero al montar (una rejilla, un detalle). Una sola vez.                                                                                                                                                                                                                                                                                         |
-| `entra-escalonada`         | Lo mismo, pero hijo a hijo — listas y rejillas de resultados. Se detiene en el 6.º hijo.                                                                                                                                                                                                                                                                    |
-| `aparece`                  | Algo que llega a una página ya montada: un callout, el error de un campo, una banda que se despliega.                                                                                                                                                                                                                                                       |
-| `alerta-visual`            | El pulso de `box-shadow` en `--attention`, 900ms, 2 iteraciones — **el reemplazo accesible del "ding"**. Se dispara UNA VEZ en la transición real a un estado que exige atención inmediata (la ventana de acceso que se abre), nunca al montar ya en ese estado. Es la única animación con iteración fija >1; ninguna otra puede repetirse ni ser infinita. |
-| `riel-entra`               | El riel de 4px creciendo desde arriba al aparecer una tarjeta (demo de la landing).                                                                                                                                                                                                                                                                         |
-| `revelar` (+ `useRevelar`) | Aparición al entrar en el viewport (landing, vía `IntersectionObserver`).                                                                                                                                                                                                                                                                                   |
+- `layout-y-composicion.md` — shell, navegación por rol, rejilla 1/2/3, anatomía de página y
+  tarjeta, regla del sólido.
+- `patrones-dominio.md` — `<EstadoAula>` (9 estados), riel de estado, `<VentanaDeAcceso>`,
+  `<IndicadorCupo>`, confirmaciones.
+- `voz-microcopy.md` — antes de escribir copy nuevo. Español neutro, literal, voz activa, errores
+  que explican.
 
-**Prohibido:** animación infinita o parpadeante fuera de `alerta-visual` · parallax · transición de
-cambio de ruta · animar un elemento que acaba de recibir el foco (`<PaginaCabecera>` mueve el foco al
-`<h1>` en cada navegación; no se anima). Cero colores literales también aquí: se anima interpolando
-tokens, nunca introduciendo un tono nuevo.
+## Prohibido
 
-**El cambio de tema (`use-tema.ts`) es un caso aparte, por rendimiento.** Transicionar cada nodo del
-DOM (`.cambiando-tema *`) cuesta proporcional al tamaño de la página: en una lista larga se siente
-lag porque el navegador repinta cientos de filas en cada fotograma. Donde el navegador soporta
-`document.startViewTransition` (y no hay movimiento reducido), `use-tema.ts` la usa: cambia la clase
-`dark` de un tirón y funde dos capturas de pantalla por compositor — costo fijo en GPU, no crece con
-el DOM. `.cambiando-tema` sigue existiendo como resguardo (navegador sin la API, o con movimiento
-reducido — la API no la respeta por su cuenta, hay que comprobarla a mano antes de llamarla). El
-resultado final es idéntico en ambos caminos; solo cambia cómo se llega a él.
+Sonido como señal · placeholder como única etiqueta · texto sobre imagen o degradado · ámbar
+decorativo · modales anidados · deshabilitar sin explicar por qué · mutaciones optimistas en
+reservas · porcentajes o gráficas circulares para cupos.
 
-**Movimiento reducido:** el único mecanismo hoy es `prefers-reduced-motion` del sistema — el bloque
-`@media` de `index.css` lo cubre de forma global (`useMovimientoReducido` en `src/hooks/` para JS que
-decide si dispara un pulso o arranca una demo en autoplay). **No existe** una preferencia de
-movimiento guardada en la cuenta ni en el perfil; sería una HU propia.
+## Excepciones registradas (solo `features/panel/`, tarjetas de resumen)
 
-## Accesibilidad — no negociable en cada componente
-
-- Foco visible siempre: anillo 3px + 2px de offset. **Jamás** `outline: none` sin reemplazo.
-- `<button>` para acciones, `<a>` para navegación. Nunca `<div onClick>`.
-- Un solo `<h1>` por página; al navegar, mover el foco al `<h1>` (`tabIndex={-1}`).
-- Formularios: `<label>` visible siempre (placeholder no sustituye label), error junto al campo
-  con `aria-invalid` + `aria-describedby` + ícono, nunca solo borde rojo.
-- Cambios dinámicos (cupos, confirmaciones) → `aria-live="polite"`; errores bloqueantes → `assertive`.
-- Respeta `prefers-reduced-motion` del sistema (ver «Movimiento» arriba; no hay preferencia propia
-  guardada en la cuenta).
-- Todo componente necesita sus 4 estados: cargando, vacío, error, éxito. No se da por terminado sin ellos.
-
-## Layout y composición
-
-`SKILL.md` da las restricciones; **`layout-y-composicion.md` de este skill dice cómo se ve una
-página**. Léelo antes de montar cualquier pantalla, shell o rejilla. Contiene: el ancla visual
-(The Art Center — qué se roba y qué no), la navegación superior por rol, el contenedor y la rejilla
-de 1/2/3 columnas, la anatomía de página y de tarjeta con sus valores, el ritmo vertical, **la
-regla del sólido** (solo `acceso-abierto` y `en-curso` van en color pleno) y el estilo de
-ilustración.
-
-## Patrones del dominio — dónde buscar cada uno
-
-Antes de reinventar cualquiera de estos, lee `patrones-dominio.md` de este skill:
-
-- **`<EstadoAula>`** — el diccionario completo de 9 estados (disponible, últimos cupos, llena,
-  reservada, acceso abierto, en curso, finalizada, cancelada, pendiente) con su color/ícono/texto exactos.
-- **El riel de estado** — franja de 4px en el borde izquierdo de cada tarjeta de aula; es la firma
-  visual del producto, permite escanear una lista con visión periférica.
-- **`<VentanaDeAcceso>`** — el componente de la regla de negocio central (enlace se revela 30 min
-  antes), con sus 5 fases y la animación `alerta-visual` (el reemplazo accesible de un "ding").
-- **`<IndicadorCupo>`** — conteo literal, nunca porcentajes ni gráficas circulares.
-- Acciones destructivas (cancelar reserva/aula) — siempre `AlertDialog` con verbos, nunca Sí/No.
-
-## Voz y microcopy
-
-Antes de escribir copy nuevo (botones, errores, vacíos, toasts) lee `voz-microcopy.md` de este skill.
-Resumen: español neutro, literal (nunca figurado — muchos usuarios tienen la lengua de señas como
-primer idioma), voz activa, mismo verbo en todo el flujo, los errores explican y no se disculpan.
-
-## Prohibido siempre
-
-Sonido como señal · video sin subtítulos/autoplay · placeholder como única etiqueta · texto sobre
-imagen/gradiente · ámbar decorativo · `text-justify` · modales anidados · deshabilitar sin explicar
-por qué · pesos tipográficos < 400 · mutaciones optimistas en reservas (el cupo tiene concurrencia
-real; no se muestra "reservado" antes de que el servidor confirme).
-
-**Excepción D41 — solo las tarjetas de resumen del panel (`features/panel/`, HU-503):** se permite
-un velo de color muy tenue detrás de la tarjeta, saliendo de la esquina del ícono (token `*-soft`
-del tono, muy difuminado). El texto nunca cae encima —se sitúa sobre la zona plana— y su contraste
-se verifica igual (≥ 4,5:1). No aplica a ninguna otra superficie.
-
-## Registro de decisiones de diseño
-
-- **D39** (HU-502) — El ámbar en las tarjetas de resumen del panel solo en «Asistencia sin marcar»
-  y «Profesores pendientes de aprobar», y solo con la cifra > 0; ese mismo cero va en `success`.
-- **D40** (HU-503) — Borde + sombra sutil en las tarjetas de resumen del panel. Ver «Espaciado y forma».
-- **D41** (HU-503) — Velo de color tenue tras la tarjeta de resumen del panel. Ver «Prohibido siempre».
-
-## Checklist antes de dar un componente por terminado
-
-Teclado completo con foco visible · cada estado legible sin color · contraste ≥ 7:1 (o ≥4.5:1
-justificado) · objetivos táctiles ≥ 44px · funciona en `.dark` y `.hc` · respeta reduced-motion ·
-4 estados (cargando/vacío/error/éxito) · cero color literal · zoom 200% sin romperse · cambios
-dinámicos anunciados por `aria-live`.
+- **D39** — ámbar solo en «Asistencia sin marcar» y «Profesores pendientes», con cifra > 0.
+- **D40** — borde + `shadow-sm`, `shadow-md` al hover si la tarjeta entera es enlazable.
+- **D41** — velo tenue del tono `*-soft` detrás; el texto nunca encima, contraste ≥ 4.5:1.

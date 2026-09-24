@@ -113,22 +113,26 @@ la sesión de 5 h; sin partir, HU-208 gastó el 32%.
 
 Del mismo dato salió que **los skills son solo 3,1K de 166K de contexto**: recortarlos no sirve de
 nada. El gasto vive en `Messages` —135K en la capa de backend—, y lo llenan los comentarios largos,
-los tests de más, los AC de más y las explicaciones al cerrar. Por eso `CLAUDE.md` §11–13 y
-`bighearts-dod` §2.1–2.2 ponen topes duros a esas cuatro cosas.
+los tests de más, los AC de más, las explicaciones al cerrar — y leer documentos largos enteros.
 
-**Si una HU no cabe en una sesión, el problema es la HU.** Máximo 7 tasks y 6 AC; si necesita más,
+> **Aligerado el 2026-09-24.** `/hu` ahora: lee `ARQUITECTURA.md` y
+> `DEFINICION_PROYECTO.md` solo por la sección que cita la HU (con `grep`), nunca enteros; no
+> verifica a mano temas, zoom ni móvil salvo que un AC lo pida; y verifica **una vez** al final con
+> `lint`, `build` y `test`, repitiendo solo el comando que falle. La plantilla de HU quedó en 5
+> líneas de contexto, 6 tasks y 5 AC, sin AC de «verificación» ni de «checklist».
+
+**Si una HU no cabe en una sesión, el problema es la HU.** Máximo 6 tasks y 5 AC; si necesita más,
 son dos HUs.
 
 ### Qué se carga y qué no
 
-|                                                                                                  | Cuándo                                                                                                  |
-| ------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------- |
-| `CLAUDE.md`                                                                                      | **Siempre.** Comandos, estructura, stack, trampas conocidas y los no-negociables en una línea cada uno. |
-| `bighearts-ui`                                                                                   | Solo si la tarea toca pantalla, estilos o copy.                                                         |
-| `bighearts-backend`                                                                              | Solo si la tarea toca servidor, endpoints, Prisma o reservas.                                           |
-| `bighearts-dod`                                                                                  | Al cerrar una task o revisar un PR.                                                                     |
-| `reglas-reservas.md`, `contrato-api.md`, `patrones-dominio.md`, `tokens.css`, `voz-microcopy.md` | Solo cuando el skill los pide, dentro de su dominio.                                                    |
-| `docs/ARQUITECTURA.md`, `docs/DEFINICION_PROYECTO.md`                                            | Solo cuando la HU lo requiere. No están en contexto por defecto.                                        |
+|                                                                                                               | Cuándo                                                                                                  |
+| ------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| `CLAUDE.md`                                                                                                   | **Siempre.** Comandos, estructura, stack, trampas conocidas y los no-negociables en una línea cada uno. |
+| `bighearts-ui`                                                                                                | Solo si la tarea toca pantalla, estilos o copy.                                                         |
+| `bighearts-backend`                                                                                           | Solo si la tarea toca servidor, endpoints, Prisma o reservas.                                           |
+| `reglas-reservas.md`, `contrato-api.md`, `patrones-dominio.md`, `layout-y-composicion.md`, `voz-microcopy.md` | Solo cuando el skill los pide, dentro de su dominio.                                                    |
+| `docs/ARQUITECTURA.md`, `docs/DEFINICION_PROYECTO.md`                                                         | Solo la sección que cita la HU, por `grep`. **Nunca enteros**: `ARQUITECTURA.md` son ~30K tokens.       |
 
 Ese es todo el truco del gasto de tokens: **`CLAUDE.md` es corto y enuncia; el detalle vive en
 archivos que solo se abren cuando hacen falta.** Por eso `apps/web/UI_GUIDELINES.md` ya no tiene
@@ -149,16 +153,15 @@ que hacerla.
 
 ## 4. Verificar que está terminada
 
-La fase 4 de `/hu` recorre **cada acceptance criteria uno por uno**, citándolo, diciendo cómo lo
+El cierre de `/hu` recorre **cada acceptance criteria uno por uno**, citándolo, diciendo cómo lo
 comprobó y dando un veredicto. Eso es lo que sustituye al "sí, ya está".
 
-El checklist completo (comandos, tests, documentación) está en el skill `bighearts-dod`. Lo que
-conviene recordar de él:
+**Terminado = los AC de la HU se cumplen y la verificación pasa.** No hay un checklist aparte:
+el skill `bighearts-dod` se retiró el 2026-09-24 porque duplicaba lo que ya hacen los AC y `/hu`.
 
-- `npm run test --workspace @academia/api` — **no hay tests de frontend**, no hay runner instalado.
-  La verificación de UI es manual contra el checklist de `bighearts-ui`.
+- `npm run lint && npm run build && npm run test`, una vez. Si falla, se repite solo lo que falló.
 - Si la HU tocó `bookings`, **tiene que haber un test de concurrencia**.
-- **Cambio de código ⇒ cambio de documentación, en el mismo PR.**
+- Documentación solo si la HU lo pide o si cambiaste algo que un documento describe.
 
 ### Cuándo delegar la verificación a un subagente
 
@@ -179,7 +182,8 @@ ellos. Un año después decían TypeORM en un proyecto con Prisma, y apuntaban a
 existía.
 
 **La regla:** si tocas una convención que un documento o un skill describe, lo actualizas **en el
-mismo PR**. La tabla de qué actualizar según qué tocaste está en `bighearts-dod` §6.
+mismo PR** — `CLAUDE.md` para comandos y stack, `ARQUITECTURA.md` para decisiones y modelo, el
+skill correspondiente para una convención de UI o de servidor.
 
 Y si te encuentras algo ya desactualizado que no es de tu task, **arréglalo igual** y menciónalo en
 el PR. Cuesta cinco minutos ahora y una auditoría entera después.
@@ -214,6 +218,5 @@ Al cerrar un sprint, cinco minutos:
 | `docs/historias/`                            | Backlog vivo            | En cada HU nueva                                        |
 | `.claude/skills/bighearts-ui/`               | Convenciones de UI      | Al fijar un patrón de interfaz                          |
 | `.claude/skills/bighearts-backend/`          | Invariantes de servidor | Al fijar una regla de dominio                           |
-| `.claude/skills/bighearts-dod/`              | Definición de terminado | Al cambiar cómo se verifica                             |
 | `.claude/commands/hu.md`                     | El comando `/hu`        | Al cambiar el proceso de implementación                 |
 | `README.md`, `AUTH_FLOW.md`, `DEPLOYMENT.md` | Operación técnica       | Como hasta ahora                                        |
