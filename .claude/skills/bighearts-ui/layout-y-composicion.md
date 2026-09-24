@@ -1,150 +1,41 @@
-# Layout y Composición — BigHearts
+# Layout y composición
 
-## 1. Navigation & Shell
+El código es la fuente de verdad de clases y medidas: **reutiliza el componente existente** en vez
+de copiar valores de aquí.
 
-- **Posición:** SIEMPRE barra superior (58px). NUNCA barra lateral. Superficie **`bg-brand`** (azul
-  marino, HU-415) con marca, navegación, cuenta y `SelectorTema` en `brand-foreground`; la barra
-  inferior de móvil, igual. Es la superficie de identidad, la misma en los tres modos.
-- **Elementos:** Lockup marca (glifo `<MarcaBigHearts>` + palabra, `text-brand-foreground`) a la
-  izq, ficha de cuenta + `Cerrar sesión` a la der.
-- **Ficha de cuenta = enlace al perfil:** el avatar de 30px + nombre + rol es un `<NavLink to="/perfil">`
-  con `hover` y `aria-current` propios (`sr-only` «Tu perfil» lo nombra). El perfil **no** es un
-  destino de la navegación: la ficha ya se lee como «lo tuyo».
-- **Destinos por rol (`text-sm`):**
-  - `STUDENT`: Panel · Aulas · Mis clases · Historial
-  - `TEACHER`: Panel · Aulas · Mis aulas · Historial
-  - `ADMIN`: Panel · Aulas
-- **Estado activo:** Borde de 2px en `border-brand-foreground` (blanco sobre la barra), no solo
-  cambio de color.
-- **Escritorio (≥ `lg`):** Todos los enlaces visibles. **PROHIBIDO menú hamburguesa.**
-- **Móvil / tablet (< `lg`, 1024px):** Barra inferior fija con Ícono + Texto siempre visible (sin
-  drawers/toggles). El corte es `lg` y no `sm` (HU-415): entre 640 y 1024 la barra superior no cabe
-  sin apretarse. Lo decide `useEsMovil`.
-- **Accesibilidad:** `<SkipLink>` al inicio del shell apuntando al `<main id="...">`.
+## Shell (`<AppShell>`, `components/layout/`)
 
-## 2. Contenedor, Lista y Rejilla
+- Barra superior sobre `bg-brand`; **nunca** barra lateral ni hamburguesa en escritorio.
+- Destinos: estudiante Panel · Aulas · Mis clases · Historial — profesor Panel · Aulas · Mis aulas ·
+  Historial — admin Panel · Aulas. El perfil se abre desde la ficha de cuenta, no es un destino.
+- Activo con borde de 2px, no solo color. Bajo `lg` (1024px): barra inferior fija con ícono + texto.
+- `<SkipLink>` primero, `<main id="contenido" tabIndex={-1}>` como destino.
+- Sin sesión (login, registro, recuperación): `<LayoutAutenticacion>` con `<PanelDeMarca>`, sin shell.
 
-- **Contenedor:** `mx-auto max-w-6xl px-4 sm:px-6` (Max 1152px).
-- **Lista de aulas (`<ListaAulas>`, HU-414):** las pantallas de aulas —catálogo, «Mis
-  clases», «Mis aulas», panel del profesor— apilan un **renglón por aula** en una sola
-  columna a todo el ancho (`flex flex-col gap-2.5`). No usan rejilla: un renglón de alto
-  modular con zonas de ancho fijo se escanea mejor que una tarjeta que cambia de alto según
-  cuántas etiquetas tenga cada clase. La anatomía del renglón está en §4.
-- **Rejilla (`<RejillaAulas>`):** `grid gap-3` → 1 col (<640px) | 2 cols (≥640px) | 3 cols
-  (≥1024px). Queda para **tableros** donde el aula se pinta compacta (las próximas clases
-  del panel del estudiante).
-- **Límite de la rejilla:** MAX 3 columnas (NUNCA 4).
+## Página
 
-## 3. Anatomía de Página (Orden vertical estricto)
+1. `<PaginaCabecera>`: único `<h1>` (serif), línea de contexto, acción principal opcional.
+2. Controles: filtros siempre visibles, nunca dentro de desplegables.
+3. Contenido. Contenedor `mx-auto max-w-6xl px-4 sm:px-6`. Ritmo: 32px entre bloques, 16px dentro.
 
-1. **Cabecera:** Único `<h1>` en **`font-serif font-normal`** (`text-3xl … sm:text-4xl`, HU-415),
-   línea de contexto (`text-base text-muted-foreground max-w-[46ch]`), acción principal a la
-   derecha (opcional). Usar `usePageTitle`. Filigrana de marca decorativa opcional (`aria-hidden`,
-   `<MarcaBigHearts>` al 7 % en neutro).
-2. **Controles:** Filtros/búsqueda persistentes (NUNCA en desplegables). Van en un panel contenido
-   (`rounded-xl border bg-card`), no una línea suelta.
-3. **Contenido:** Rejilla, lista o formulario. Una rejilla/lista de resultados puede entrar con
-   `subir-suave` (`index.css`) — una sola vez, respeta `prefers-reduced-motion`.
+Una sola acción primaria por pantalla.
 
-- **Ritmo Vertical:** 30px aire superior en cabecera; 32px (`space-y-8`) entre bloques principales; 16px dentro de bloques. Sin valores arbitrarios.
+## Qué componente usar
 
-## 4. Renglón de aula, Tarjeta y Fila
+| Necesitas…                         | Usa                                                                                             |
+| ---------------------------------- | ----------------------------------------------------------------------------------------------- |
+| Lista de aulas para elegir         | `<ListaAulas>` + `<TarjetaAula>` (renglón ancho)                                                |
+| Aulas compactas en un tablero      | `<RejillaAulas>` (1/2/3 columnas, nunca 4)                                                      |
+| Lista para administrar o consultar | `<FilaLista>` (historial, supervisión)                                                          |
+| Tabla que debe verse en móvil      | Filas que se apilan como tarjeta bajo `sm`, con roles ARIA explícitos. Nunca barrido horizontal |
+| Vacío                              | `<EstadoVacio>`: ilustración → titular → ayuda → botón                                          |
 
-- **Uso:** Renglón de aula (`<TarjetaAula>`) para explorar/elegir una clase; Tarjeta de
-  resumen para el panel; Fila para administrar/listas largas (>15 items).
-- **Tabla en móvil (HU-508):** bajo `sm` una `<table>` no se barre en horizontal: cada fila se
-  apila como tarjeta con `max-sm:block`, se oculta el `<thead>` y cada dato lleva su etiqueta
-  (`<span className="sm:hidden">Solicitud: </span>`). Como `display: block` borra los roles
-  implícitos, van explícitos (`role="table" | "row" | "rowheader" | "cell"`). Mismo marcado para
-  los dos tamaños, nunca uno duplicado. Lo usan la cola de aprobación y los inscritos.
-- **Renglón de aula en móvil (HU-508):** bajo `sm` la zona «cuándo» ocupa su propia línea y el
-  título recibe el ancho entero (hasta dos líneas); la zona de acción va a ancho completo.
-- **Anatomía del renglón de aula (`<TarjetaAula>`, HU-414):** una fila horizontal a todo el
-  ancho, de alto modular. `<article aria-labelledby="title-id">` sobre
-  `flex flex-col overflow-hidden rounded-xl border border-border bg-card p-4 pl-5 shadow-xs`
-  - `focus-within:ring-2 focus-within:ring-ring` (el anillo va en el renglón, aunque el foco
-    lo reciba el enlace del título).
-  * **Riel lateral:** `absolute inset-y-0 left-0 w-1` con color de estado (sin border-radius
-    propio), en las dos perspectivas.
-  * **Cuatro zonas** (`flex flex-wrap items-start gap-4`; bajo ~720px se apilan solas):
-    1. **Cuándo** `w-29 shrink-0 overflow-hidden border-r`: día abreviado
-       (`describirHorarioRenglon`), hora `tabular-nums`, y la zona horaria envuelta dentro de
-       la columna (`text-xs leading-tight text-pretty`, nunca `whitespace-nowrap`: se
-       desbordaría sobre la zona «qué»).
-    2. **Qué** `min-w-0 flex-1`: `<h3>` con el `<Link>` al detalle (único enlace, con el
-       `after:absolute after:inset-0` de overlay), subtítulo, y **una sola fila** de badges:
-       `<EstadoAula>` + `Tu clase` + `Coincide con tu preferencia` (siempre visibles) seguidos
-       de los modos de comunicación y apoyos. El hueco para estos últimos es un techo
-       (`maxEtiquetasVisibles`, default **2**) del que se **descuenta** cada badge fijo extra
-       que ya ocupe la fila (`Tu clase`, `Coincide…`, `Modo sin indicar`), para que la fila
-       nunca envuelva y el renglón no crezca de alto; el resto colapsa tras un
-       `<button aria-expanded aria-controls>` `+N`.
-    3. **Cupo** `w-44 self-center`: `<IndicadorCupo variante="inscritos">` solo en la perspectiva
-       del profesor; en el catálogo el badge de estado ya dice el cupo y la zona va vacía. Se
-       centra en vertical igual que la acción.
-    4. **Qué hago** `w-49 self-center`: una acción primaria, siempre un `<Button>` de ancho
-       completo (reservar / entrar / cancelar / gestionar / completar accesibilidad — nunca un
-       enlace suelto subrayado). `self-center` la alinea al centro vertical de la fila en vez de
-       colgarla del borde superior cuando la zona «qué» es más alta. El profesor dueño ve
-       «Ingresa a la clase» aquí mientras su clase está **en curso** (lleva al detalle, donde
-       está el enlace), igual que el estudiante con el acceso abierto.
-  * **Orden DOM estricto:** cuándo → `<h3>` → subtítulo → fila de badges → cupo → acción →
-    banda «También:» → banda de aviso.
-  * **Banda «También:»** (`border-t`, `+N` abierto): las etiquetas colapsadas, precedidas de
-    `<span>También:</span>`.
-  * **Banda de aviso** (`border-t`): **solo reubica** mensajes que la acción ya pintaba
-    —cuenta atrás de acceso, «ya no se puede cancelar», error de reserva—. No entra ningún
-    aviso nuevo.
-- **Anatomía Fila (`<FilaLista>`, `components/dominio/`):** Chip de ícono a la izq + título
-  (`<Link>` al detalle) + subtítulo; a la derecha, **en fila**, badge de estado/resultado + cifras
-  - botón de acción (si lo hay, al extremo derecho). `border-b` entre filas, sin `rounded-xl`. El
-    chip toma el tono suave de su resultado (mismo tono que el badge de al lado — refuerzo, no señal
-    nueva). Bajo `sm` la fila apila: cabecera arriba, bloque derecho debajo sangrado (`pl-14`) y
-    envolviendo. La usan el historial (HU-415) y la supervisión de aulas del admin (HU-210) — ambas
-    dejaron de ser `<table>`.
+`<TarjetaAula>`: riel de estado de 4px a la izquierda, zonas cuándo · qué · cupo · acción, una sola
+acción como `<Button>`. Las etiquetas que no caben colapsan tras un botón `+N`.
 
-## 5. Regla de Estados (Sólido vs. Suave)
+## Reglas
 
-- **Sólidos (Highlight alto):** ÚNICAMENTE `acceso-abierto` (ámbar) y `en-curso` (verde). Indican acción inmediata.
-- **Suaves (Soft):** Los 7 estados restantes. NUNCA elevar otro estado a sólido.
-
-## 6. Ilustraciones y Estados Vacíos
-
-- **Ubicación:** SOLO en estados vacíos y onboarding. NUNCA en tarjetas o junto a datos.
-- **Estilo:** Geométrica (construida con rectángulos de tarjeta/rieles). Solo tokens de color (cero degradados, sombras o hex hardcodeados). `role="img"` + `aria-label`. No añade info que no esté en texto.
-- **Orden Estado Vacío:** Ilustración → Titular (`font-serif text-2xl`) → Ayuda (`text-base text-muted-foreground max-w-[38ch]`) → Botón con verbo de acción. El bloque se apoya en un panel de borde discontinuo (`border-dashed bg-muted/30`), no flota en el vacío (HU-415).
-
-## 7. Reglas Prohibidas (Strict Constraints)
-
-- Barra lateral de navegación.
-- Menú hamburguesa en escritorio.
-- Más de 3 columnas en la rejilla (no aplica a `<ListaAulas>`: es una sola columna).
-- Filtros ocultos dentro de desplegables.
-- Más de 1 acción primaria por pantalla.
-- Estados sólidos distintos de `acceso-abierto` o `en-curso`.
-- Más de un tag `<h1>` por página.
-- Espaciados fuera del estándar (16px / 32px).
-- Ilustraciones con información exclusiva no presente en texto.
-
-## 8. Pantallas sin sesión (login, registro, recuperación) — HU-408 / HU-409
-
-- **No usan `<AppShell>`.** No hay rol, así que no hay navegación que ofrecer. Usan
-  `<LayoutAutenticacion>` (`components/layout/`).
-- **Dos columnas en `≥ lg`:** formulario a la izquierda; `<PanelDeMarca>` a la derecha sobre la
-  superficie **`--brand`** (marca + un titular + tres propuestas de valor + sello «Entorno de
-  pruebas · Fase 1»). Debajo de `lg` el panel se reduce a una barra superior con solo la marca.
-- **`--brand` / `--brand-foreground`** es un par de tokens de **identidad**: azul marino con
-  texto blanco, **el mismo en los tres modos** (no se invierte como `--primary`). Único uso: este
-  panel. No es color de estado ni de acción.
-- **El logotipo** es `<MarcaBigHearts>` de `components/dominio/` (solo el trazo, `currentColor`),
-  compartido con la landing. El lockup marca + palabra «BigHearts» se compone **en línea**, en
-  `text-lg font-medium` — igual que en `cabecera-landing.tsx`, para no divergir de la app.
-- Conserva el contrato del shell: `<SkipLink>` primero, `<main id="contenido" tabIndex={-1}>` como
-  destino, y el único `<h1>` lo pone `<PaginaCabecera>`. El `SelectorTema` va arriba a la derecha
-  del área del formulario.
-- **Campos (HU-409):** email y contraseña llevan un **ícono guía** a la izquierda del control
-  (`<Input iconoInicio={...}>`, `aria-hidden`, no sustituye a la etiqueta). En login, «¿Olvidaste tu
-  contraseña?» va como enlace a la derecha de la etiqueta «Contraseña» (`<Field labelAside={...}>`).
-- **Recuperación (HU-411):** `/recuperar-contrasena` lleva un enlace «Volver a iniciar sesión»
-  arriba de la cabecera; su éxito es un `<Callout success>` que **no revela** si el email existe.
-  `/nueva-contrasena` lee `?token=`; sin token, un `<Callout destructive>` enlaza a pedir otro.
+- **Regla del sólido:** solo `acceso-abierto` (ámbar) y `en-curso` (verde) van en color pleno.
+- Ilustraciones solo en vacíos y onboarding, geométricas, con tokens, `role="img"` + `aria-label`,
+  sin información que no esté en texto.
+- Espaciados de la escala, nunca arbitrarios.

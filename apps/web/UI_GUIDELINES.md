@@ -4,12 +4,12 @@
 
 La fuente de verdad del diseño vive en **`.claude/skills/bighearts-ui/`**:
 
-| Archivo               | Qué contiene                                                                                           |
-| --------------------- | ------------------------------------------------------------------------------------------------------ |
-| `SKILL.md`            | Principios, stack de UI, diccionario de color, tipografía, accesibilidad y prohibiciones.              |
-| `tokens.css`          | Todos los tokens de color en modo claro, oscuro y alto contraste, con sus contrastes WCAG verificados. |
-| `patrones-dominio.md` | `<EstadoAula>`, el riel de estado, `<VentanaDeAcceso>`, `<IndicadorCupo>` y acciones destructivas.     |
-| `voz-microcopy.md`    | Voz, microcopy, toasts y estados de carga.                                                             |
+| Archivo                   | Qué contiene                                                                                       |
+| ------------------------- | -------------------------------------------------------------------------------------------------- |
+| `SKILL.md`                | Principios, stack de UI, diccionario de color, tipografía, accesibilidad y prohibiciones.          |
+| `layout-y-composicion.md` | Shell, anatomía de página y qué componente usar para cada lista.                                   |
+| `patrones-dominio.md`     | `<EstadoAula>`, el riel de estado, `<VentanaDeAcceso>`, `<IndicadorCupo>` y acciones destructivas. |
+| `voz-microcopy.md`        | Voz, microcopy, toasts y estados de carga.                                                         |
 
 **No añadas `@UI_GUIDELINES.md` a `CLAUDE.md`.** El skill se carga solo cuando la tarea toca UI —
 que es justo lo que hace falta. Cargarlo en cada sesión gastaba contexto en el 100 % de las

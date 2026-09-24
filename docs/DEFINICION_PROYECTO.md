@@ -368,8 +368,8 @@ Criterios de éxito para la Fase 1, en orden de importancia:
 `GUIA_FLUJO.md` → la HU que vaya a implementar.
 
 La "Guía de Polish y Hardening" que mencionaba el `.docx` original **no existe en el repo**. Si se
-necesita, se crea como documento propio; hasta entonces, la definición de terminado vive en el
-skill `bighearts-dod`.
+necesita, se crea como documento propio; hasta entonces, «terminado» son los AC de
+cada HU más la verificación de `/hu`.
 
 ---
 

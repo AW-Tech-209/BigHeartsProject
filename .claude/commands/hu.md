@@ -3,61 +3,39 @@ description: Implementa una Historia de Usuario del repo y verifica sus acceptan
 argument-hint: <ruta a docs/historias/HU-XXX-*.md>
 ---
 
-Implementa la HU de **$ARGUMENTS**.
+Implementa la HU de **$ARGUMENTS**, en una sola sesión.
 
-**Una sola sesión, de principio a fin.** No la partas en capas.
+## Cómo gastar poco
 
-## Reglas de gasto — obedécelas
+- **Lee solo lo necesario.** La HU, los archivos que vas a tocar y los que ella nombra. Localiza con
+  `grep`/`glob`; no explores el repo.
+- **Docs largos, nunca enteros.** Si la HU cita `ARQUITECTURA.md §X` o `DEFINICION_PROYECTO.md §X`,
+  busca el encabezado con `grep -n` y lee solo esa sección. No abras `README.md` ni `GUIA_FLUJO.md`.
+- **Skills:** `bighearts-backend` si tocas servidor, `bighearts-ui` si tocas pantalla — solo su
+  `SKILL.md`. Sus archivos de referencia, solo si la HU los nombra.
+- No releas un archivo que ya leíste salvo que lo hayas editado.
+- No expliques lo que vas a hacer: hazlo.
 
-- No hagas comentarios a menos que sea exclusivamente necesario, y si se agregan comentarios, que sean breves, al punto.
-- **Verifica UNA vez, al final.** Durante la implementación, como mucho el spec concreto que
-  acabas de escribir (`npx vitest run <ruta>`). Nada de suites completas, `lint`, `build` ni
-  `format:check` a mitad.
-- **Nunca formatees ni lintes archivos `.md`.**
-- **No releas un archivo que ya leíste** en esta sesión salvo que lo hayas editado tú.
-- **No expliques lo que vas a hacer antes de hacerlo.** Hazlo y reporta al final.
+## Implementar
 
-## Fase 1 — Orientarse (breve)
+Orden: contrato (`packages/types` → `npm run build:types`) → backend → frontend.
 
-Lee la HU. Carga **solo** los skills que necesites: `bighearts-backend` si tocas servidor,
-`bighearts-ui` si tocas pantalla. Sus archivos de referencia, solo si entras en su territorio.
+- **Tests, solo:** invariantes de negocio, autorización, funciones puras compartidas, y una línea de
+  `axe` si hay pantalla nueva. Nada más. Si un test existente se rompe por tu cambio, arréglalo.
+- **Comentarios:** solo si el porqué no se deduce del código, máximo 2 líneas, sin números de HU.
+- Mientras implementas, como mucho `npx vitest run <spec que escribiste>`. **Nada de** `lint`,
+  `build`, `typecheck`, suite completa ni `prettier` a mitad.
+- **No verifiques a mano en el navegador** (temas, zoom, móvil, teclado) salvo que un AC lo pida
+  literalmente.
+- Si la HU contradice un skill, `ARQUITECTURA.md` o el código, o da por hecho algo que no existe:
+  **para y pregunta**.
 
-Si la HU depende de algo sin decidir (`ARQUITECTURA.md` §14.6) o da por hecho algo que no existe en
-el repo, **para y pregunta**.
+## Cerrar
 
-Si algo contradice `ARQUITECTURA.md`, un skill o el código: pregunta y espera.
+1. **Una vez:** `npm run lint && npm run build && npm run test`.
+   Si algo falla: arregla y vuelve a correr **solo el comando que falló**. No repitas la cadena.
+2. Marca `[x]` tasks y AC cumplidos. Notas de implementación: máx. 3 líneas o «Sin desviaciones».
+3. Respuesta final, **máx. 10 líneas**: tabla `| AC | ✅/❌ | cómo |`, lo pendiente si hay, y el
+   mensaje de commit (Conventional Commits). Nada más.
 
-**No resumas la HU.** Empieza a trabajar.
-
-## Fase 2 — Implementar
-
-Tasks en orden: contrato → backend → frontend. Si tocaste `packages/types`, `npm run build:types`
-antes de seguir.
-
-**Comentarios en el código — límite duro:**
-
-- Solo cuando el _porqué_ no se deduce del código.
-- **Máximo 2 líneas.** Si necesitas más, el código está mal escrito o la razón va en la HU.
-- Cero comentarios que repitan lo que hace la línea de al lado.
-- Cero encabezados decorativos, cero bloques narrativos, cero referencias a números de HU.
-
-**Tests — lo mínimo que protege:**
-
-- Invariantes de negocio y autorización: **sí, siempre**.
-- Funciones puras compartidas: sí.
-- `axe` en pantalla nueva: sí, una línea.
-- Todo lo demás: **no**. Es un MVP.
-
-## Fase 3 — Cerrar
-
-1. `npm run typecheck && npm run lint && npm run build && npm run test`. Una vez. Si falla, arregla
-   y repite solo eso.
-2. Marca `[x]` las tasks y los AC cumplidos en la HU.
-3. **Recorre los AC en una tabla compacta**, una línea por AC:
-   `| AC | veredicto | cómo se comprobó |`. Sin prosa.
-4. **Notas de implementación: máximo 5 líneas**, y solo si hubo una decisión que no estaba en la
-   HU. Si no la hubo, escribe «Sin desviaciones» y ya. El historial de git es el registro; la HU no.
-
-**Tu respuesta final: máximo 15 líneas.** La tabla de AC, lo que quedó pendiente, y el mensaje de
-commit en Conventional Commits. Nada más — ni resumen de lo implementado, ni explicación de las
-decisiones, ni recorrido de archivos tocados. Todo eso ya está en el diff.
+No formatees ni lintes `.md`. No toques documentación que la HU no pida.
