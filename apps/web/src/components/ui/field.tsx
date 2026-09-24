@@ -57,7 +57,7 @@ export function Field({
 
   return (
     <div className={cn('grid gap-2', className)}>
-      <div className="flex items-center justify-between gap-3">
+      <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
         <Label htmlFor={id} className={labelClassName}>
           {label}
           {required && <span className="font-normal text-muted-foreground"> (obligatorio)</span>}
