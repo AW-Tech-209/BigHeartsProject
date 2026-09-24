@@ -132,7 +132,7 @@ export function LoginForm({ onLoggedIn }: { onLoggedIn: (session: AuthSession) =
         labelAside={
           <Link
             to="/recuperar-contrasena"
-            className="text-sm font-medium text-primary underline-offset-4 hover:underline"
+            className="whitespace-nowrap text-sm font-medium text-primary underline-offset-4 hover:underline"
           >
             ¿Olvidaste tu contraseña?
           </Link>

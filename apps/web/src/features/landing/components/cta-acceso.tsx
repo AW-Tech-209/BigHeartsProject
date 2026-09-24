@@ -41,7 +41,10 @@ export function CtaAcceso({ compacto = false, className }: CtaAccesoProps) {
 
   return (
     <div className={cn('flex flex-wrap gap-3', className)}>
-      <Button render={<Link to="/registro" />} className={cn('gap-2', alto)}>
+      <Button
+        render={<Link to="/registro" />}
+        className={cn('gap-2', alto, compacto && 'hidden sm:inline-flex')}
+      >
         <UserPlus aria-hidden="true" strokeWidth={2} className="size-5" />
         {compacto ? 'Crear cuenta' : 'Crear una cuenta'}
       </Button>
