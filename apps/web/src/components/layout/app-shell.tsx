@@ -13,6 +13,7 @@ import { roleDisplay } from '@/features/auth/lib/role-labels';
 import { useAnnounce } from '@/hooks/use-announce';
 import { useEsMovil } from '@/hooks/use-es-movil';
 import { cn } from '@/lib/utils';
+import { BotonAyuda } from './boton-ayuda';
 import { Contenedor } from './contenedor';
 import { destinosPorRol, type Destino } from './destinos-por-rol';
 import { SelectorTema } from './selector-tema';
@@ -77,6 +78,9 @@ export function AppShell({ children, conNavegacion = true }: AppShellProps) {
           )}
 
           <div className="flex shrink-0 items-center gap-3">
+            {!navegacionAbajo && (
+              <BotonAyuda className="border-brand-foreground/30 bg-transparent text-brand-foreground hover:bg-brand-foreground/10 hover:text-brand-foreground dark:border-brand-foreground/30 dark:bg-transparent dark:hover:bg-brand-foreground/10" />
+            )}
             {user && <CuentaDelShell user={user} />}
             <SelectorTema className="border-brand-foreground/30 bg-transparent text-brand-foreground hover:bg-brand-foreground/10 hover:text-brand-foreground dark:bg-transparent" />
           </div>
@@ -91,13 +95,17 @@ export function AppShell({ children, conNavegacion = true }: AppShellProps) {
       <main
         id="contenido"
         tabIndex={-1}
-        className={cn('flex-1 outline-none', navegacionAbajo && 'pb-24')}
+        className={cn('flex-1 outline-none', navegacionAbajo && 'pb-40')}
       >
         <Contenedor className="space-y-8 py-8">
           {user?.role === UserRole.STUDENT && <AvisoAperturaDeClase />}
           {children}
         </Contenedor>
       </main>
+
+      {navegacionAbajo && (
+        <BotonAyuda className="fixed right-4 bottom-[calc(4.5rem+env(safe-area-inset-bottom))] z-40 h-12 bg-background shadow-lg" />
+      )}
 
       {navegacionAbajo && (
         <nav

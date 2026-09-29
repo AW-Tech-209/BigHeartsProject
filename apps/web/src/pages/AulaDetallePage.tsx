@@ -28,6 +28,7 @@ import { EstadoVacio } from '@/components/dominio/estado-vacio';
 import { IndicadorCupo } from '@/components/dominio/indicador-cupo';
 import { ModoInstruccion } from '@/components/dominio/modo-instruccion';
 import { AppShell } from '@/components/layout/app-shell';
+import { useClaseParaAyuda } from '@/stores/contexto-ayuda-store';
 import { PaginaCabecera } from '@/components/layout/pagina-cabecera';
 import { Button } from '@/components/ui/button';
 import { Callout } from '@/components/ui/callout';
@@ -72,6 +73,7 @@ export function AulaDetallePage() {
   const { data, isPending, isError, error, refetch, isRefetching } = useClassroom(id);
 
   const aula = data?.classroom;
+  useClaseParaAyuda(aula?.title);
   const noEncontrada = isError && esAulaNoEncontrada(error);
 
   /*

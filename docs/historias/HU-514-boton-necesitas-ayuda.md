@@ -5,7 +5,7 @@
 | **Sprint**          | Post-Fase 1 · UX                                 |
 | **Prioridad**       | 🟠 Alta                                          |
 | **Estimación**      | 0.5 días                                         |
-| **Estado**          | ⬜ Pendiente                                     |
+| **Estado**          | ✅ Hecha                                         |
 | **Asignada a**      | **Dev B** — frontend                             |
 | **Rama**            | `hu-514-boton-necesitas-ayuda-b`                 |
 | **Alcance técnico** | frontend                                         |
@@ -35,31 +35,31 @@ video en señas). El botón abre un panel con WhatsApp y correo. El mensaje de W
 
 ## Tasks
 
-- [ ] **T1** — Entorno: `VITE_SUPPORT_WHATSAPP` (solo dígitos con indicativo, p. ej. `573001234567`)
+- [x] **T1** — Entorno: `VITE_SUPPORT_WHATSAPP` (solo dígitos con indicativo, p. ej. `573001234567`)
       y `VITE_SUPPORT_EMAIL`, las dos opcionales y validadas en el esquema Zod. Si no hay ninguna, el
       botón no se renderiza (nunca un botón que no lleva a ningún sitio).
-- [ ] **T2** — `<BotonAyuda>`: botón con ícono `LifeBuoy` y el texto «¿Necesitas ayuda?», en la barra
+- [x] **T2** — `<BotonAyuda>`: botón con ícono `LifeBuoy` y el texto «¿Necesitas ayuda?», en la barra
       del shell (en móvil, dentro del menú y también fijo al pie del panel) y en el layout de
       autenticación (login, registro, recuperación).
-- [ ] **T3** — Al pulsarlo se abre un diálogo con: «Escríbenos por WhatsApp» (enlace `wa.me`),
+- [x] **T3** — Al pulsarlo se abre un diálogo con: «Escríbenos por WhatsApp» (enlace `wa.me`),
       «Escríbenos un correo» (`mailto:`) y una línea que diga en qué horario se responde (texto
       fijo, en constante).
-- [ ] **T4** — Mensaje prellenado (`?text=`): «Hola, necesito ayuda en BigHearts. Estoy en: {nombre
+- [x] **T4** — Mensaje prellenado (`?text=`): «Hola, necesito ayuda en BigHearts. Estoy en: {nombre
       de la pantalla}{ · Clase: título, si la hay}». Sin correo, sin id ni datos de accesibilidad.
-- [ ] **T5** — Tests: sin variables no hay botón; con WhatsApp el enlace lleva el texto codificado
+- [x] **T5** — Tests: sin variables no hay botón; con WhatsApp el enlace lleva el texto codificado
       con el nombre de la pantalla; el diálogo se abre y cierra con teclado; `axe` limpio.
 
 ## Criterios de aceptación
 
-- [ ] **AC1** — El botón es visible en todas las pantallas con sesión y en las de autenticación,
+- [x] **AC1** — El botón es visible en todas las pantallas con sesión y en las de autenticación,
       en escritorio y a 375 px, con área táctil ≥ 44 px.
-- [ ] **AC2** — El enlace de WhatsApp es `https://wa.me/<número>?text=<texto>` con el nombre de la
+- [x] **AC2** — El enlace de WhatsApp es `https://wa.me/<número>?text=<texto>` con el nombre de la
       pantalla actual, y en el detalle de un aula incluye el título de la clase.
-- [ ] **AC3** — El mensaje prellenado **no incluye** correo, id de usuario, nivel de hipoacusia ni
+- [x] **AC3** — El mensaje prellenado **no incluye** correo, id de usuario, nivel de hipoacusia ni
       preferencias (verificado en el test sobre el `href`).
-- [ ] **AC4** — Sin `VITE_SUPPORT_WHATSAPP` ni `VITE_SUPPORT_EMAIL` el botón no aparece. Con solo una,
+- [x] **AC4** — Sin `VITE_SUPPORT_WHATSAPP` ni `VITE_SUPPORT_EMAIL` el botón no aparece. Con solo una,
       el diálogo muestra solo esa opción.
-- [ ] **AC5** — Los enlaces externos abren en pestaña nueva con `rel="noopener noreferrer"` y lo
+- [x] **AC5** — Los enlaces externos abren en pestaña nueva con `rel="noopener noreferrer"` y lo
       dicen en su nombre accesible («se abre en otra pestaña»).
 
 ## Fuera de alcance
@@ -69,4 +69,5 @@ video en señas). El botón abre un panel con WhatsApp y correo. El mensaje de W
 
 ## Notas de implementación
 
-_Se rellena al cerrar. Recordar definir las dos variables en Vercel (staging y prod)._
+- No existía esquema Zod en el web: T1 se resolvió con `lib/soporte.ts` (validación manual, valor inválido = ausente).
+- Móvil: sin menú (el shell no tiene cajón), el botón va fijo sobre la barra inferior. Horario en `HORARIO_DE_SOPORTE` es provisional: confirmar con quien atiende. Definir las dos variables en Vercel.
