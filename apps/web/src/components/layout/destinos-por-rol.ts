@@ -1,5 +1,12 @@
 import { UserRole } from '@academia/types';
-import { BookOpen, CalendarCheck, History, LayoutDashboard, type LucideIcon } from 'lucide-react';
+import {
+  BookOpen,
+  CalendarCheck,
+  ChartColumn,
+  History,
+  LayoutDashboard,
+  type LucideIcon,
+} from 'lucide-react';
 
 export type Destino = {
   to: string;
@@ -42,5 +49,9 @@ export const destinosPorRol: Record<UserRole, Destino[]> = {
   ],
   // Para el admin «Aulas» ES la supervisión (HU-210): todas las aulas de la
   // academia, no el catálogo público. No hay una vista aparte que ofrecer.
-  [UserRole.ADMIN]: [PANEL, { to: '/admin/aulas', label: 'Aulas', icon: BookOpen }],
+  [UserRole.ADMIN]: [
+    PANEL,
+    { to: '/admin/aulas', label: 'Aulas', icon: BookOpen },
+    { to: '/admin/metricas', label: 'Métricas', icon: ChartColumn },
+  ],
 };

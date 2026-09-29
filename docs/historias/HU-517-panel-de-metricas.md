@@ -5,7 +5,7 @@
 | **Sprint**          | Post-Fase 1 · UX                                  |
 | **Prioridad**       | 🟡 Media                                          |
 | **Estimación**      | 1.5 días                                          |
-| **Estado**          | ⬜ Pendiente                                      |
+| **Estado**          | ✅ Hecha                                          |
 | **Asignada a**      | **Dev B** — frontend                              |
 | **Rama**            | `hu-517-panel-de-metricas-b`                      |
 | **Alcance técnico** | frontend                                          |
@@ -35,36 +35,36 @@ tabla equivalente. No se añade librería de gráficas.
 
 ## Tasks
 
-- [ ] **T1** — Ruta `/admin/metricas` con `<RequireAuth roles={[ADMIN]}>` y destino «Métricas» (ícono
+- [x] **T1** — Ruta `/admin/metricas` con `<RequireAuth roles={[ADMIN]}>` y destino «Métricas» (ícono
       `ChartColumn`) en la barra del admin. Selector de rango: «Últimos 7 / 30 / 90 días» y
       «Personalizado» (dos fechas), guardado en la URL.
-- [ ] **T2** — Fila de indicadores (`<TarjetaResumen>` del panel): clases impartidas, ocupación,
+- [x] **T2** — Fila de indicadores (`<TarjetaResumen>` del panel): clases impartidas, ocupación,
       asistencia, estudiantes activos. Cada uno con su número y una línea de contexto («de 42
       cupos»). «Clases sin asistencia marcada» en `attention` si es > 0, con un enlace a supervisión.
-- [ ] **T3** — Desgloses por nivel, modo de instrucción y profesor: barras horizontales con el valor
+- [x] **T3** — Desgloses por nivel, modo de instrucción y profesor: barras horizontales con el valor
       escrito al final de cada barra y un botón «Ver como tabla» que alterna con un `<table>`
       semántico.
-- [ ] **T4** — Franjas: tabla día × hora (solo las horas con clases), cada celda con el número de
+- [x] **T4** — Franjas: tabla día × hora (solo las horas con clases), cada celda con el número de
       clases y la ocupación escrita. La intensidad del fondo usa **un solo token** en escalones, y
       **nunca** es la única señal.
-- [ ] **T5** — Bloque de valoraciones (conteos y problemas más citados, en texto) y lista de
+- [x] **T5** — Bloque de valoraciones (conteos y problemas más citados, en texto) y lista de
       comentarios. Botón «Exportar CSV» que genera un archivo por desglose en el cliente
       (`metricas-AAAA-MM-DD_AAAA-MM-DD.csv`).
-- [ ] **T6** — Los 4 estados (cargando con texto, vacío «No hubo clases en este rango», error con
+- [x] **T6** — Los 4 estados (cargando con texto, vacío «No hubo clases en este rango», error con
       reintento, éxito). Tests: el profesor no ve el destino ni la ruta; cambiar el rango cambia la
       query; «Ver como tabla» muestra los mismos números; `axe` limpio.
 
 ## Criterios de aceptación
 
-- [ ] **AC1** — Solo el admin ve «Métricas» en la barra. `/admin/metricas` con otro rol muestra
+- [x] **AC1** — Solo el admin ve «Métricas» en la barra. `/admin/metricas` con otro rol muestra
       acceso denegado.
-- [ ] **AC2** — Cada valor representado en una barra o en una celda de la franja está **escrito como
+- [x] **AC2** — Cada valor representado en una barra o en una celda de la franja está **escrito como
       número** junto a ella (verificable por texto en el test).
-- [ ] **AC3** — No hay gráficas circulares ni colores literales en `.tsx`; la intensidad de la
+- [x] **AC3** — No hay gráficas circulares ni colores literales en `.tsx`; la intensidad de la
       franja usa un único token.
-- [ ] **AC4** — El rango sobrevive a recargar la página (está en la URL) y el CSV exportado contiene
+- [x] **AC4** — El rango sobrevive a recargar la página (está en la URL) y el CSV exportado contiene
       las mismas cifras que la pantalla para ese rango.
-- [ ] **AC5** — A 375 px no hay scroll horizontal en la página. La tabla de franjas puede
+- [x] **AC5** — A 375 px no hay scroll horizontal en la página. La tabla de franjas puede
       desplazarse dentro de su propio contenedor, que es enfocable y tiene nombre accesible.
 
 ## Fuera de alcance
@@ -74,4 +74,6 @@ tabla equivalente. No se añade librería de gráficas.
 
 ## Notas de implementación
 
-_Se rellena al cerrar: máximo 3 líneas o «Sin desviaciones»._
+El contrato no trae cupos totales: la ocupación se escribe como «72 %» con «de los cupos ofrecidos», no «de 42 cupos».
+El CSV sale en un archivo por desglose: `metricas-AAAA-MM-DD_AAAA-MM-DD-<desglose>.csv`.
+`npm run build` del API falla por tipos de HU-516 (`admin-metricas.service.ts`), previo a este cambio.
