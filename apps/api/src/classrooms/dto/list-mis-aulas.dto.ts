@@ -1,6 +1,6 @@
 import { CLASSROOMS_PAGE_SIZE_MAX, EstadoTemporalAula, type MisAulasQuery } from '@academia/types';
 import { Type } from 'class-transformer';
-import { IsEnum, IsInt, IsOptional, Max, Min } from 'class-validator';
+import { IsEnum, IsInt, IsISO8601, IsOptional, Max, Min } from 'class-validator';
 
 /**
  * DTO de `GET /classrooms/mias`. Implementa `MisAulasQuery` de
@@ -38,4 +38,12 @@ export class ListMisAulasDto implements MisAulasQuery {
     message: `El tamaño de página no puede superar ${CLASSROOMS_PAGE_SIZE_MAX}.`,
   })
   pageSize?: number;
+
+  @IsOptional()
+  @IsISO8601({ strict: true }, { message: 'La fecha «desde» debe ser un instante ISO 8601.' })
+  desde?: string;
+
+  @IsOptional()
+  @IsISO8601({ strict: true }, { message: 'La fecha «hasta» debe ser un instante ISO 8601.' })
+  hasta?: string;
 }

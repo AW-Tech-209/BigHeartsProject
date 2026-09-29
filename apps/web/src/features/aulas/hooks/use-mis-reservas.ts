@@ -14,10 +14,11 @@ export const misReservasQueryKey = (query: MisReservasQuery) =>
  * cambiar de filtro o de página se sigue mostrando la respuesta anterior real
  * mientras llega la nueva, nunca un dato inventado.
  */
-export function useMisReservas(query: MisReservasQuery) {
+export function useMisReservas(query: MisReservasQuery, opciones: { enabled?: boolean } = {}) {
   return useQuery({
     queryKey: misReservasQueryKey(query),
     queryFn: () => getMisReservas(query),
     placeholderData: keepPreviousData,
+    enabled: opciones.enabled ?? true,
   });
 }

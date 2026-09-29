@@ -822,6 +822,12 @@ export const ESTADO_TEMPORAL_POR_DEFECTO = EstadoTemporalAula.TODAS;
  * (`ARQUITECTURA.md` §4.8, regla 3). Es la misma decisión que en `/users/me`.
  */
 export interface MisAulasQuery {
+  /**
+   * Instantes ISO, siempre juntos y con un rango <= `AGENDA_RANGO_MAX_DIAS`: devuelven
+   * TODO lo que empieza en `[desde, hasta)`, sin paginar y por `scheduledAt`.
+   */
+  desde?: string;
+  hasta?: string;
   /** Por defecto, `todas`: es el registro del profesor, no su agenda. */
   estado?: EstadoTemporalAula;
   page?: number;
@@ -888,6 +894,12 @@ export interface AdminClassroomsResponse {
  * comparte el mismo filtro temporal disjunto (D24).
  */
 export interface MisReservasQuery {
+  /**
+   * Instantes ISO, siempre juntos y con un rango <= `AGENDA_RANGO_MAX_DIAS`: devuelven
+   * TODO lo que empieza en `[desde, hasta)`, sin paginar y por `scheduledAt`.
+   */
+  desde?: string;
+  hasta?: string;
   /** Por defecto, `todas`: la primera vez que llega, quiere ver todo lo suyo. */
   estado?: EstadoTemporalAula;
   page?: number;
@@ -956,6 +968,9 @@ export interface ValoracionAgregada {
   no: number;
   problemas: Record<ProblemaClase, number>;
 }
+
+/** Máximo de días que abarca una consulta por rango de «Mis clases» y «Mis aulas». */
+export const AGENDA_RANGO_MAX_DIAS = 42;
 
 /** Máximo de días que abarca una consulta de métricas (HU-516). */
 export const METRICAS_RANGO_MAX_DIAS = 366;

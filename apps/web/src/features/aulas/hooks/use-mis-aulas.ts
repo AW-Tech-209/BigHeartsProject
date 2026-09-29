@@ -17,10 +17,11 @@ export const misAulasQueryKey = (query: MisAulasQuery) => ['aulas', 'mias', quer
  * cambiar de filtro o de página: mientras llega la respuesta nueva se sigue
  * mostrando la anterior REAL, nunca un dato inventado.
  */
-export function useMisAulas(query: MisAulasQuery) {
+export function useMisAulas(query: MisAulasQuery, opciones: { enabled?: boolean } = {}) {
   return useQuery({
     queryKey: misAulasQueryKey(query),
     queryFn: () => getMisAulas(query),
     placeholderData: keepPreviousData,
+    enabled: opciones.enabled ?? true,
   });
 }

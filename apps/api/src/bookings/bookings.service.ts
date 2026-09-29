@@ -23,6 +23,7 @@ import {
 } from '../notifications/notification.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { assertCuentaActiva } from '../common/assert-cuenta-activa';
+import { leerRangoAgenda } from '../common/rango-agenda';
 import { seSolapan } from '../classrooms/coherencia-temporal.rules';
 import { classroomNotFound } from '../classrooms/classrooms.errors';
 import { derivarAccesoAlEnlace } from '../classrooms/acceso-enlace.rules';
@@ -365,10 +366,30 @@ export class BookingsService {
     student: AuthenticatedUser,
     query: ListMisReservasDto,
   ): Promise<MisReservasResponse> {
+    const ahora = new Date();
+    const rango = leerRangoAgenda(query);
+
+    if (rango) {
+      // Calendario: todo lo que empieza en el rango (también canceladas), sin paginar.
+      const rows = await this.prisma.booking.findMany({
+        where: {
+          studentId: student.id,
+          classroom: { scheduledAt: { gte: rango.desde, lt: rango.hasta } },
+        },
+        orderBy: { classroom: { scheduledAt: 'asc' } },
+        include: BOOKING_CLASSROOM_INCLUDE,
+      });
+      return {
+        items: this.aItemsDeReserva(rows, ahora),
+        total: rows.length,
+        page: 1,
+        pageSize: rows.length,
+      };
+    }
+
     const page = query.page ?? 1;
     const pageSize = query.pageSize ?? CLASSROOMS_PAGE_SIZE_DEFAULT;
     const estado = query.estado ?? ESTADO_TEMPORAL_POR_DEFECTO;
-    const ahora = new Date();
     const skip = (page - 1) * pageSize;
 
     const { rows, total } =
@@ -376,42 +397,44 @@ export class BookingsService {
         ? await this.leerTodasMisReservas(student.id, ahora, skip, pageSize)
         : await this.leerMisReservasPorEstado(student.id, estado, ahora, skip, pageSize);
 
-    return {
-      items: rows.map((booking) => {
-        // HU-304: mismo cálculo que el detalle, vía la regla compartida —
-        // aquí solo para pintar la cuenta atrás, nunca para revelar el
-        // enlace: `toClassroomListItem` no lo copia.
-        const acceso =
-          booking.status === 'CONFIRMED'
-            ? derivarAccesoAlEnlace(booking.classroom, {
-                esDueno: false,
-                tieneReservaConfirmada: true,
-                ahora,
-                accessWindowMinutes: this.config.accessWindowMinutes,
-              })
-            : { estado: 'sin-acceso' as const, abreEn: null };
+    return { items: this.aItemsDeReserva(rows, ahora), total, page, pageSize };
+  }
 
-        return toClassroomListItem(
-          booking.classroom,
-          booking.classroom.teacher,
-          booking.status as BookingStatus,
-          booking.id,
-          booking.status === 'CONFIRMED'
-            ? puedeCancelarse(
-                booking.classroom.scheduledAt,
-                ahora,
-                this.config.cancellationWindowMinutes,
-              )
-            : null,
-          acceso.estado,
-          acceso.abreEn?.toISOString() ?? null,
-          puedeValorarReserva(booking, ahora),
-        );
-      }),
-      total,
-      page,
-      pageSize,
-    };
+  private aItemsDeReserva(
+    rows: Prisma.BookingGetPayload<{ include: typeof BOOKING_CLASSROOM_INCLUDE }>[],
+    ahora: Date,
+  ) {
+    return rows.map((booking) => {
+      // HU-304: mismo cálculo que el detalle, vía la regla compartida —
+      // aquí solo para pintar la cuenta atrás, nunca para revelar el
+      // enlace: `toClassroomListItem` no lo copia.
+      const acceso =
+        booking.status === 'CONFIRMED'
+          ? derivarAccesoAlEnlace(booking.classroom, {
+              esDueno: false,
+              tieneReservaConfirmada: true,
+              ahora,
+              accessWindowMinutes: this.config.accessWindowMinutes,
+            })
+          : { estado: 'sin-acceso' as const, abreEn: null };
+
+      return toClassroomListItem(
+        booking.classroom,
+        booking.classroom.teacher,
+        booking.status as BookingStatus,
+        booking.id,
+        booking.status === 'CONFIRMED'
+          ? puedeCancelarse(
+              booking.classroom.scheduledAt,
+              ahora,
+              this.config.cancellationWindowMinutes,
+            )
+          : null,
+        acceso.estado,
+        acceso.abreEn?.toISOString() ?? null,
+        puedeValorarReserva(booking, ahora),
+      );
+    });
   }
 
   private async leerMisReservasPorEstado(

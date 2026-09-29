@@ -22,6 +22,7 @@ import type { AuthenticatedUser } from '../auth/auth.types';
 import { insufficientRole } from '../auth/auth.errors';
 import { AppConfigService } from '../config/app-config.service';
 import { assertCuentaActiva } from '../common/assert-cuenta-activa';
+import { leerRangoAgenda } from '../common/rango-agenda';
 import { puedeCancelarse } from '../bookings/cancelacion.rules';
 import {
   type Notification,
@@ -769,6 +770,21 @@ export class ClassroomsService {
     teacher: AuthenticatedUser,
     query: ListMisAulasDto,
   ): Promise<MisAulasResponse> {
+    const rango = leerRangoAgenda(query);
+    if (rango) {
+      // Calendario: todo lo que empieza en el rango (también canceladas), sin paginar.
+      const rows = await this.prisma.classroom.findMany({
+        where: { teacherId: teacher.id, scheduledAt: { gte: rango.desde, lt: rango.hasta } },
+        orderBy: { scheduledAt: 'asc' },
+      });
+      return {
+        items: rows.map(toPublicClassroom),
+        total: rows.length,
+        page: 1,
+        pageSize: rows.length,
+      };
+    }
+
     const page = query.page ?? 1;
     const pageSize = query.pageSize ?? CLASSROOMS_PAGE_SIZE_DEFAULT;
     const estado = query.estado ?? ESTADO_TEMPORAL_POR_DEFECTO;

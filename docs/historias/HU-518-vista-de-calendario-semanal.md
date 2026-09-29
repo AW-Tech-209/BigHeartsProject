@@ -5,7 +5,7 @@
 | **Sprint**          | Post-Fase 1 · UX                                   |
 | **Prioridad**       | 🟡 Media                                           |
 | **Estimación**      | 2 días                                             |
-| **Estado**          | ⬜ Pendiente                                       |
+| **Estado**          | ✅ Hecha                                           |
 | **Asignada a**      | **Dev A** (T1) · **Dev B** (T2–T6)                 |
 | **Rama**            | `hu-518-vista-de-calendario-semanal-a` / `-b`      |
 | **Alcance técnico** | fullstack (backend mínimo)                         |
@@ -36,36 +36,36 @@ no se lee: allí la semana se muestra como agenda día por día.
 
 ## Tasks
 
-- [ ] **T1** — API: `desde` y `hasta` (ISO, opcionales, juntos, rango ≤ 42 días) en
+- [x] **T1** — API: `desde` y `hasta` (ISO, opcionales, juntos, rango ≤ 42 días) en
       `GET /bookings/mias` y en el listado de «Mis aulas». Con rango, devuelven **todo** lo que
       empieza dentro de él, sin paginar, ordenado por `scheduledAt`. Sin rango, el comportamiento
       actual no cambia.
-- [ ] **T2** — Selector de vista «Lista | Semana» en «Mis clases» y «Mis aulas», con la vista y la
+- [x] **T2** — Selector de vista «Lista | Semana» en «Mis clases» y «Mis aulas», con la vista y la
       semana en la URL (`?vista=semana&semana=2026-09-28`). Por defecto, la lista (no cambia lo que ya
       conocen).
-- [ ] **T3** — `<CalendarioSemana>` en escritorio: 7 columnas (lunes a domingo) con las horas que
+- [x] **T3** — `<CalendarioSemana>` en escritorio: 7 columnas (lunes a domingo) con las horas que
       tienen clases. Cada clase es un **enlace** al detalle con hora, título, riel de estado y
       `<ModoInstruccion>` compacto. «Hoy» se marca con texto, no solo con color.
-- [ ] **T4** — En móvil (`useEsMovil`): agenda por día, con los días sin clases plegados en «Sin
+- [x] **T4** — En móvil (`useEsMovil`): agenda por día, con los días sin clases plegados en «Sin
       clases». Mismo componente de evento.
-- [ ] **T5** — Navegación: «Semana anterior», «Esta semana», «Semana siguiente», y encabezado con el
+- [x] **T5** — Navegación: «Semana anterior», «Esta semana», «Semana siguiente», y encabezado con el
       rango y la zona («del 28 de sep. al 4 de oct. · hora de Colombia»). Al cambiar de semana, se
       anuncia el nuevo rango (`aria-live`) sin mover el foco.
-- [ ] **T6** — Tests: la API filtra por rango y sin rango pagina como antes; el evento es un enlace
+- [x] **T6** — Tests: la API filtra por rango y sin rango pagina como antes; el evento es un enlace
       con la hora y el título en su nombre; la navegación cambia la URL; en móvil se ve la agenda;
       `axe` limpio.
 
 ## Criterios de aceptación
 
-- [ ] **AC1** — `GET /bookings/mias?desde=…&hasta=…` devuelve solo las reservas del estudiante que
+- [x] **AC1** — `GET /bookings/mias?desde=…&hasta=…` devuelve solo las reservas del estudiante que
       empiezan en el rango, sin paginar. Un rango > 42 días o con solo uno de los dos extremos → 400.
-- [ ] **AC2** — En la vista Semana, cada clase aparece en el día y la hora locales correctos (una
+- [x] **AC2** — En la vista Semana, cada clase aparece en el día y la hora locales correctos (una
       clase a las 00:30 UTC del martes aparece el lunes a las 19:30 en hora de Colombia).
-- [ ] **AC3** — Cada clase del calendario se alcanza con Tab y su nombre accesible incluye día, hora
+- [x] **AC3** — Cada clase del calendario se alcanza con Tab y su nombre accesible incluye día, hora
       y título. Enter lleva al detalle.
-- [ ] **AC4** — Vista y semana sobreviven a recargar la página, y el botón «atrás» vuelve a la semana
+- [x] **AC4** — Vista y semana sobreviven a recargar la página, y el botón «atrás» vuelve a la semana
       anterior que se estaba viendo.
-- [ ] **AC5** — A 375 px se muestra la agenda por días y no hay scroll horizontal.
+- [x] **AC5** — A 375 px se muestra la agenda por días y no hay scroll horizontal.
 
 ## Fuera de alcance
 
@@ -76,4 +76,6 @@ no se lee: allí la semana se muestra como agenda día por día.
 
 ## Notas de implementación
 
-_Se rellena al cerrar: máximo 3 líneas o «Sin desviaciones»._
+Las reservas canceladas llegan en el rango pero la vista Semana no las pinta (como «Mis clases»).
+La semana se agrupa por hora del navegador; el rótulo «hora de Colombia» sale de `Intl`, no está fijo.
+`npm run build` del API sigue fallando por tipos previos de `admin-metricas.service.ts`.
