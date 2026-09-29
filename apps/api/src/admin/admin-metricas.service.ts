@@ -66,9 +66,10 @@ export class AdminMetricasService {
     const { desde, hasta } = await this.resolverRango(query, tz);
 
     // Límites en UTC de los días locales de la academia, ambos inclusivos.
-    const [{ lo, hi }] = await this.prisma.$queryRaw<{ lo: Date; hi: Date }[]>`
+    const [limites] = await this.prisma.$queryRaw<{ lo: Date; hi: Date }[]>`
       SELECT (${desde}::date)::timestamp AT TIME ZONE ${tz} AS lo,
              ((${hasta}::date) + 1)::timestamp AT TIME ZONE ${tz} AS hi`;
+    const { lo, hi } = limites!;
 
     // Una fila por aula del rango, con sus reservas ya agregadas.
     const aulas = Prisma.sql`
@@ -96,8 +97,8 @@ export class AdminMetricasService {
       COALESCE(SUM(marcadas), 0) AS marcadas`;
 
     const [
-      [resumen],
-      [personas],
+      [resumenFila],
+      [personasFila],
       franjas,
       niveles,
       modos,
@@ -173,6 +174,10 @@ export class AdminMetricasService {
       }),
     ]);
 
+    // Ambos son agregados sin GROUP BY: siempre devuelven una fila.
+    const resumen = resumenFila!;
+    const personas = personasFila!;
+
     const porSeguimiento = new Map(seguimiento.map((s) => [s.seguimiento, Number(s.total)]));
     const si = porSeguimiento.get('SI') ?? 0;
     const aMedias = porSeguimiento.get('A_MEDIAS') ?? 0;
@@ -225,9 +230,9 @@ export class AdminMetricasService {
   private async resolverRango(query: MetricasQuery, tz: string) {
     let hasta = query.hasta;
     if (!hasta) {
-      const [{ hoy }] = await this.prisma.$queryRaw<{ hoy: string }[]>`
+      const [fila] = await this.prisma.$queryRaw<{ hoy: string }[]>`
         SELECT to_char(now() AT TIME ZONE ${tz}, 'YYYY-MM-DD') AS hoy`;
-      hasta = hoy;
+      hasta = fila!.hoy;
     }
     const finMs = diaUtc(hasta);
     if (finMs === null) throw rangoInvalido('La fecha de fin no es válida.');
