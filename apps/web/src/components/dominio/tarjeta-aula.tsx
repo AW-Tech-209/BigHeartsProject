@@ -247,7 +247,7 @@ export function TarjetaAula({
         */}
         <div className="w-29 shrink-0 overflow-hidden border-r border-border pr-4 max-sm:flex max-sm:w-full max-sm:flex-wrap max-sm:items-baseline max-sm:gap-x-2 max-sm:border-r-0 max-sm:border-b max-sm:pr-0 max-sm:pb-2">
           <p className="text-xs text-muted-foreground">{dia}</p>
-          {hora && <p className="text-[17px] font-medium tabular-nums">{hora}</p>}
+          {hora && <p className="text-[1.0625rem] font-medium tabular-nums">{hora}</p>}
           {zona && (
             <p className="text-xs leading-tight text-pretty text-muted-foreground">({zona})</p>
           )}
@@ -271,7 +271,7 @@ export function TarjetaAula({
             </Link>
           </h3>
 
-          <p className="truncate text-[13px] text-muted-foreground">{lineaSecundaria}</p>
+          <p className="truncate text-[0.8125rem] text-muted-foreground">{lineaSecundaria}</p>
 
           <div className="relative z-10 flex flex-wrap items-center gap-1.5 pt-0.5">
             <ModoInstruccion modo={classroom.instructionMode} />

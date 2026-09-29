@@ -11,6 +11,11 @@
           document.documentElement.classList.add('dark');
         }
       } catch (e) {}
+      try {
+        var t = localStorage.getItem('bighearts:tamano-texto');
+        if (t === 'grande') document.documentElement.classList.add('texto-grande');
+        if (t === 'muy-grande') document.documentElement.classList.add('texto-muy-grande');
+      } catch (e) {}
     </script>
   </head>
   <body>

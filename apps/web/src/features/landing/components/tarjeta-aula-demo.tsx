@@ -66,7 +66,7 @@ export function TarjetaAulaDemo({
         <h3 id={tituloId} className="text-base font-medium text-foreground">
           {aula.titulo}
         </h3>
-        <p className="text-[13px] text-muted-foreground">
+        <p className="text-[0.8125rem] text-muted-foreground">
           {aula.profesor} · {nivelesDeIngles[aula.nivel].nombre}
         </p>
 

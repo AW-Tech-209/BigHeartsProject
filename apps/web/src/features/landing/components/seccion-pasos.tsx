@@ -44,7 +44,7 @@ export function SeccionPasos() {
               key={n}
               className="border-b border-border p-7 last:border-b-0 md:border-r md:border-b-0 md:last:border-r-0"
             >
-              <p className="font-mono text-[13px] tracking-widest text-primary">{n}</p>
+              <p className="font-mono text-[0.8125rem] tracking-widest text-primary">{n}</p>
               <h3 className="mt-4 flex items-center gap-2.5 text-xl font-medium tracking-tight">
                 <Icono aria-hidden="true" strokeWidth={2} className="size-5 text-primary" />
                 {titulo}

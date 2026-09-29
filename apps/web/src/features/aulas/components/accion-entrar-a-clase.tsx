@@ -67,7 +67,7 @@ export function useAccionEntrarAClase({
     return {
       boton: null,
       aviso: aula.accessOpensAt ? (
-        <p className="text-[13px] text-muted-foreground">
+        <p className="text-[0.8125rem] text-muted-foreground">
           Podrás entrar el {describirHorario(aula.accessOpensAt)}.
         </p>
       ) : null,

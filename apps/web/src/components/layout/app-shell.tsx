@@ -16,6 +16,7 @@ import { cn } from '@/lib/utils';
 import { BotonAyuda } from './boton-ayuda';
 import { Contenedor } from './contenedor';
 import { destinosPorRol, type Destino } from './destinos-por-rol';
+import { SelectorTamanoTexto } from './selector-tamano-texto';
 import { SelectorTema } from './selector-tema';
 
 type AppShellProps = {
@@ -58,7 +59,7 @@ export function AppShell({ children, conNavegacion = true }: AppShellProps) {
       <SkipLink />
 
       <header className="sticky top-0 z-40 border-b border-brand-foreground/10 bg-brand text-brand-foreground shadow-sm">
-        <Contenedor className="flex h-[58px] items-center justify-between gap-4">
+        <Contenedor className="flex min-h-[3.625rem] flex-wrap items-center justify-between gap-x-4 gap-y-2 py-1">
           <Link
             to={isAuthenticated ? '/panel' : '/'}
             className="flex shrink-0 items-center gap-2.5 rounded-lg text-lg font-medium text-brand-foreground hover:underline"
@@ -77,11 +78,15 @@ export function AppShell({ children, conNavegacion = true }: AppShellProps) {
             </nav>
           )}
 
-          <div className="flex shrink-0 items-center gap-3">
+          <div className="flex flex-wrap items-center gap-2 sm:gap-3">
             {!navegacionAbajo && (
               <BotonAyuda className="border-brand-foreground/30 bg-transparent text-brand-foreground hover:bg-brand-foreground/10 hover:text-brand-foreground dark:border-brand-foreground/30 dark:bg-transparent dark:hover:bg-brand-foreground/10" />
             )}
             {user && <CuentaDelShell user={user} />}
+            <SelectorTamanoTexto
+              compacto
+              className="border-brand-foreground/30 bg-transparent text-brand-foreground hover:bg-brand-foreground/10 hover:text-brand-foreground dark:bg-transparent"
+            />
             <SelectorTema className="border-brand-foreground/30 bg-transparent text-brand-foreground hover:bg-brand-foreground/10 hover:text-brand-foreground dark:bg-transparent" />
           </div>
         </Contenedor>
@@ -139,7 +144,7 @@ function EnlaceSuperior({ destino }: { destino: Destino }) {
       to={destino.to}
       className={({ isActive }) =>
         cn(
-          'inline-flex h-[58px] items-center gap-2 border-b-2 px-3 text-sm transicion-suave',
+          'inline-flex min-h-[3.625rem] items-center gap-2 border-b-2 px-3 text-sm transicion-suave',
           isActive
             ? 'border-brand-foreground font-medium text-brand-foreground'
             : 'border-transparent text-brand-foreground/70 hover:text-brand-foreground',
@@ -226,7 +231,7 @@ function CuentaDelShell({ user }: { user: User }) {
         <span className="sr-only">Tu perfil:</span>
         <span
           aria-hidden="true"
-          className="flex size-[30px] shrink-0 items-center justify-center rounded-full bg-brand-foreground/15 text-xs font-medium text-brand-foreground"
+          className="flex size-[1.875rem] shrink-0 items-center justify-center rounded-full bg-brand-foreground/15 text-xs font-medium text-brand-foreground"
         >
           {iniciales}
         </span>

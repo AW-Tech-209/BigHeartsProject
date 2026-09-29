@@ -382,7 +382,7 @@ function Dato({
         className,
       )}
     >
-      <dt className="flex items-center gap-2 text-[13px] text-muted-foreground">
+      <dt className="flex items-center gap-2 text-[0.8125rem] text-muted-foreground">
         {Icon && <Icon aria-hidden="true" strokeWidth={2} className="size-4" />}
         {termino}
       </dt>
