@@ -133,6 +133,7 @@ function TarjetasEstudiante({ data }: { data: ResumenPanelEstudiante }) {
                 id: proximaClase.id,
                 accessState: proximaClase.accessState,
                 accessOpensAt: proximaClase.accessOpensAt,
+                instructionMode: proximaClase.instructionMode,
               }}
             />
           </>

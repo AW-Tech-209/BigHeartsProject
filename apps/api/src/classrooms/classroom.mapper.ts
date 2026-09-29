@@ -81,6 +81,7 @@ export function toClassroomListItem(
   // calculan de verdad este par — el catálogo y «mis aulas» no lo necesitan.
   accessState: EstadoAccesoEnlace = 'sin-acceso',
   accessOpensAt: string | null = null,
+  puedeValorar = false,
 ): ClassroomListItem {
   return {
     ...toPublicClassroom(classroom),
@@ -91,6 +92,7 @@ export function toClassroomListItem(
     myBookingCancelable,
     accessState,
     accessOpensAt,
+    puedeValorar,
   };
 }
 

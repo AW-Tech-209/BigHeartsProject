@@ -613,6 +613,13 @@ export interface ClassroomListItem extends Classroom {
    * con el que configuró el servidor.
    */
   accessOpensAt: string | null;
+  /**
+   * Si quien pide todavía puede valorar esta clase (HU-515), ya decidido por el
+   * servidor: reserva propia terminada, dentro de 7 días y sin valoración
+   * previa. Ausente equivale a `false`; solo `GET /bookings/mias` y
+   * `GET /historial` (estudiante) lo calculan.
+   */
+  puedeValorar?: boolean;
 }
 
 /**
@@ -815,6 +822,12 @@ export const ESTADO_TEMPORAL_POR_DEFECTO = EstadoTemporalAula.TODAS;
  * (`ARQUITECTURA.md` §4.8, regla 3). Es la misma decisión que en `/users/me`.
  */
 export interface MisAulasQuery {
+  /**
+   * Instantes ISO, siempre juntos y con un rango <= `AGENDA_RANGO_MAX_DIAS`: devuelven
+   * TODO lo que empieza en `[desde, hasta)`, sin paginar y por `scheduledAt`.
+   */
+  desde?: string;
+  hasta?: string;
   /** Por defecto, `todas`: es el registro del profesor, no su agenda. */
   estado?: EstadoTemporalAula;
   page?: number;
@@ -881,6 +894,12 @@ export interface AdminClassroomsResponse {
  * comparte el mismo filtro temporal disjunto (D24).
  */
 export interface MisReservasQuery {
+  /**
+   * Instantes ISO, siempre juntos y con un rango <= `AGENDA_RANGO_MAX_DIAS`: devuelven
+   * TODO lo que empieza en `[desde, hasta)`, sin paginar y por `scheduledAt`.
+   */
+  desde?: string;
+  hasta?: string;
   /** Por defecto, `todas`: la primera vez que llega, quiere ver todo lo suyo. */
   estado?: EstadoTemporalAula;
   page?: number;
@@ -898,6 +917,139 @@ export interface MisReservasResponse {
   total: number;
   page: number;
   pageSize: number;
+}
+
+/** Ventana para valorar una clase tras su fin, en días (HU-515). */
+export const VALORACION_VENTANA_DIAS = 7;
+
+/** Longitud máxima del comentario de una valoración (HU-515). */
+export const VALORACION_COMENTARIO_MAX = 500;
+
+/** Mínimo de respuestas para que el profesor vea el agregado (D47). */
+export const VALORACION_MINIMO_RESPUESTAS = 3;
+
+/** ¿Pudo el estudiante seguir la clase? (HU-515). */
+export enum SeguimientoClase {
+  SI = 'SI',
+  A_MEDIAS = 'A_MEDIAS',
+  NO = 'NO',
+}
+
+/** Qué falló, cuando no pudo seguirla del todo (HU-515). */
+export enum ProblemaClase {
+  INTERPRETE = 'INTERPRETE',
+  SUBTITULOS = 'SUBTITULOS',
+  CONEXION = 'CONEXION',
+  RITMO = 'RITMO',
+  OTRO = 'OTRO',
+}
+
+/** Cuerpo de `POST /bookings/:id/valoracion` (HU-515). La reserva sale de la ruta. */
+export interface CrearValoracionInput {
+  seguimiento: SeguimientoClase;
+  /** Solo se acepta si `seguimiento` no es `SI`. */
+  problemas?: ProblemaClase[];
+  comentario?: string;
+}
+
+/** Respuesta de `POST /bookings/:id/valoracion`. Confirma el envío sin devolver nada más. */
+export interface CrearValoracionResponse {
+  enviada: true;
+}
+
+/**
+ * Agregado anónimo de las valoraciones de una clase que ve el profesor dueño
+ * (HU-515, D47). Nunca incluye quién respondió ni el comentario.
+ */
+export interface ValoracionAgregada {
+  respuestas: number;
+  si: number;
+  aMedias: number;
+  no: number;
+  problemas: Record<ProblemaClase, number>;
+}
+
+/** Máximo de días que abarca una consulta por rango de «Mis clases» y «Mis aulas». */
+export const AGENDA_RANGO_MAX_DIAS = 42;
+
+/** Máximo de días que abarca una consulta de métricas (HU-516). */
+export const METRICAS_RANGO_MAX_DIAS = 366;
+
+/** Zona horaria de la academia por defecto (HU-516, `ACADEMY_TIMEZONE`). */
+export const ACADEMY_TIMEZONE_DEFAULT = 'America/Bogota';
+
+/** Query de `GET /admin/metricas`. Fechas `YYYY-MM-DD` locales de la academia, inclusivas. */
+export interface MetricasQuery {
+  desde?: string;
+  hasta?: string;
+}
+
+/** `ocupacion` y `asistencia` son razones 0-1, o `null` si el denominador es 0. */
+export interface MetricasIndicadores {
+  clases: number;
+  ocupacion: number | null;
+  asistencia: number | null;
+}
+
+export interface MetricasResumen {
+  clasesPublicadas: number;
+  clasesCanceladas: number;
+  clasesImpartidas: number;
+  ocupacion: number | null;
+  asistencia: number | null;
+  clasesSinAsistenciaMarcada: number;
+  cancelacionesDeEstudiantes: number;
+  estudiantesActivos: number;
+  estudiantesNuevos: number;
+}
+
+export interface MetricasFranja extends MetricasIndicadores {
+  /** 1 = lunes … 7 = domingo, en la zona de la academia. */
+  diaSemana: number;
+  /** 0-23, en la zona de la academia. */
+  hora: number;
+}
+
+export interface MetricasPorNivel extends MetricasIndicadores {
+  nivel: EnglishLevel;
+}
+
+export interface MetricasPorModo extends MetricasIndicadores {
+  /** `null` = sin declarar. */
+  modo: InstructionMode | null;
+}
+
+export interface MetricasPorProfesor extends MetricasIndicadores {
+  profesorId: string;
+  nombre: string;
+}
+
+export interface MetricasComentario {
+  comentario: string;
+  claseTitulo: string;
+  claseFecha: string;
+}
+
+export interface MetricasValoraciones {
+  respuestas: number;
+  si: number;
+  aMedias: number;
+  no: number;
+  problemas: Record<ProblemaClase, number>;
+  comentarios: MetricasComentario[];
+}
+
+/** Respuesta de `GET /admin/metricas`. Nada identifica a un estudiante. */
+export interface MetricasAcademia {
+  desde: string;
+  hasta: string;
+  zonaHoraria: string;
+  resumen: MetricasResumen;
+  porFranja: MetricasFranja[];
+  porNivel: MetricasPorNivel[];
+  porModo: MetricasPorModo[];
+  porProfesor: MetricasPorProfesor[];
+  valoraciones: MetricasValoraciones;
 }
 
 /**
@@ -989,6 +1141,8 @@ export interface AulaImpartida extends Classroom {
   totalAsistieron: number;
   /** Reservas `CONFIRMED` todavía sin marcar `ATTENDED`/`NO_SHOW` (D33: sin límite para hacerlo). */
   asistenciaPendiente: number;
+  /** Agregado anónimo (D47). `null` con menos de `VALORACION_MINIMO_RESPUESTAS` respuestas. */
+  valoracion: ValoracionAgregada | null;
 }
 
 /** Respuesta de `GET /historial` para un `TEACHER`: sus aulas ya impartidas. */
@@ -1272,6 +1426,10 @@ export const ApiErrorCode = {
   MEETING_PROVIDER_NOT_ALLOWED: 'MEETING_PROVIDER_NOT_ALLOWED',
   /** El aula no declaró su modo de instrucción y la operación lo exige (HU-506). */
   CLASSROOM_ACCESSIBILITY_NOT_DECLARED: 'CLASSROOM_ACCESSIBILITY_NOT_DECLARED',
+  /** La reserva ya tiene valoración (HU-515). */
+  FEEDBACK_ALREADY_SENT: 'FEEDBACK_ALREADY_SENT',
+  /** Fuera de la ventana para valorar: la clase no terminó o pasaron más de 7 días (HU-515). */
+  FEEDBACK_WINDOW_CLOSED: 'FEEDBACK_WINDOW_CLOSED',
   /** Se superó el límite de peticiones (rate limiting). */
   TOO_MANY_REQUESTS: 'TOO_MANY_REQUESTS',
   DATABASE_UNAVAILABLE: 'DATABASE_UNAVAILABLE',

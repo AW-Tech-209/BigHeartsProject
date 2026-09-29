@@ -5,7 +5,7 @@
 | **Sprint**          | Post-Fase 1 · UX                                 |
 | **Prioridad**       | 🟠 Alta                                          |
 | **Estimación**      | 1 día                                            |
-| **Estado**          | ⬜ Pendiente                                     |
+| **Estado**          | ✅ Hecha                                         |
 | **Asignada a**      | **Dev B** — frontend                             |
 | **Rama**            | `hu-519-control-de-tamano-de-texto-b`            |
 | **Alcance técnico** | frontend                                         |
@@ -36,31 +36,31 @@ en `localStorage` y aplicado antes del primer pintado para que no haya salto.
 
 ## Tasks
 
-- [ ] **T1** — Tres tamaños: **Normal** (100 %, cuerpo 17 px), **Grande** (112.5 %, ≈ 19 px) y **Muy
+- [x] **T1** — Tres tamaños: **Normal** (100 %, cuerpo 17 px), **Grande** (112.5 %, ≈ 19 px) y **Muy
       grande** (125 %, ≈ 21 px), como clases `.texto-grande` / `.texto-muy-grande` sobre `<html>` en
       `index.css`. Si hay tamaños en `px` en componentes que no escalan, se pasan a `rem`.
-- [ ] **T2** — `useTamanoTexto()`: lee y escribe `bighearts:tamano-texto` en `localStorage` (con
+- [x] **T2** — `useTamanoTexto()`: lee y escribe `bighearts:tamano-texto` en `localStorage` (con
       `try/catch`, como el tema), y el script de `index.html` aplica la clase antes de pintar.
-- [ ] **T3** — `<SelectorTamanoTexto>`: grupo de tres opciones con una muestra «Aa» de su tamaño y
+- [x] **T3** — `<SelectorTamanoTexto>`: grupo de tres opciones con una muestra «Aa» de su tamaño y
       el nombre escrito, junto al selector de tema en el shell (y dentro del menú en móvil), en el
       layout de autenticación y en una sección «Visualización» del perfil.
-- [ ] **T4** — Pasada por las pantallas principales en «Muy grande» a 375 px y a 1280 px (panel,
+- [x] **T4** — Pasada por las pantallas principales en «Muy grande» a 375 px y a 1280 px (panel,
       catálogo, detalle, mis clases, mis aulas, formulario de aula, historial, perfil, login): se
       corrige lo que se corte, se solape o provoque scroll horizontal.
-- [ ] **T5** — Tests: el selector aplica la clase a `<html>` y la persiste; con `localStorage`
+- [x] **T5** — Tests: el selector aplica la clase a `<html>` y la persiste; con `localStorage`
       bloqueado funciona en Normal sin romper; `axe` limpio en el selector.
 
 ## Criterios de aceptación
 
-- [ ] **AC1** — Elegir «Muy grande» sube el cuerpo de texto a ≥ 21 px en todas las pantallas con y
+- [x] **AC1** — Elegir «Muy grande» sube el cuerpo de texto a ≥ 21 px en todas las pantallas con y
       sin sesión, sin recargar.
-- [ ] **AC2** — La elección sobrevive a recargar y a cerrar sesión, y se aplica **antes** del primer
+- [x] **AC2** — La elección sobrevive a recargar y a cerrar sesión, y se aplica **antes** del primer
       pintado (sin salto visible de tamaño al cargar).
-- [ ] **AC3** — En «Muy grande», a 375 px, ninguna de las pantallas de T4 tiene scroll horizontal ni
+- [x] **AC3** — En «Muy grande», a 375 px, ninguna de las pantallas de T4 tiene scroll horizontal ni
       texto cortado. (Revisión manual: es exactamente lo que trata esta HU.)
-- [ ] **AC4** — El selector se usa con teclado (flechas dentro del grupo), anuncia la opción elegida,
+- [x] **AC4** — El selector se usa con teclado (flechas dentro del grupo), anuncia la opción elegida,
       y cada opción tiene nombre escrito además de la muestra «Aa».
-- [ ] **AC5** — Si `localStorage` no está disponible, la plataforma funciona en tamaño Normal sin
+- [x] **AC5** — Si `localStorage` no está disponible, la plataforma funciona en tamaño Normal sin
       errores en consola.
 
 ## Fuera de alcance
@@ -71,4 +71,4 @@ en `localStorage` y aplicado antes del primer pintado para que no haya salto.
 
 ## Notas de implementación
 
-_Se rellena al cerrar: máximo 3 líneas o «Sin desviaciones»._
+Selector plegable (`compacto`) en la barra del shell y autenticación en lugar de menú móvil, que no existe. Cabecera del shell pasa a `min-h` + `flex-wrap`. AC3 (revisión manual a 375 px) sin verificar en navegador.

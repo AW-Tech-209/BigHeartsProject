@@ -101,7 +101,15 @@ describe('HistorialPage — profesor (AC2)', () => {
 
   it('muestra el aula impartida con inscritos, asistentes y enlace al detalle', async () => {
     vi.mocked(getHistorial).mockResolvedValue({
-      items: [{ ...filaClasica(), totalInscritos: 4, totalAsistieron: 3, asistenciaPendiente: 0 }],
+      items: [
+        {
+          ...filaClasica(),
+          totalInscritos: 4,
+          totalAsistieron: 3,
+          asistenciaPendiente: 0,
+          valoracion: null,
+        },
+      ],
       total: 1,
       page: 1,
       pageSize: 20,
@@ -119,7 +127,15 @@ describe('HistorialPage — profesor (AC2)', () => {
 
   it('avisa en la fila cuando no hay ninguna asistencia marcada', async () => {
     vi.mocked(getHistorial).mockResolvedValue({
-      items: [{ ...filaClasica(), totalInscritos: 4, totalAsistieron: 0, asistenciaPendiente: 4 }],
+      items: [
+        {
+          ...filaClasica(),
+          totalInscritos: 4,
+          totalAsistieron: 0,
+          asistenciaPendiente: 4,
+          valoracion: null,
+        },
+      ],
       total: 1,
       page: 1,
       pageSize: 20,
@@ -138,7 +154,15 @@ describe('HistorialPage — profesor (AC2)', () => {
 
   it('con la asistencia cerrada, el botón de la fila es solo «Ver detalle»', async () => {
     vi.mocked(getHistorial).mockResolvedValue({
-      items: [{ ...filaClasica(), totalInscritos: 4, totalAsistieron: 3, asistenciaPendiente: 0 }],
+      items: [
+        {
+          ...filaClasica(),
+          totalInscritos: 4,
+          totalAsistieron: 3,
+          asistenciaPendiente: 0,
+          valoracion: null,
+        },
+      ],
       total: 1,
       page: 1,
       pageSize: 20,
@@ -155,7 +179,15 @@ describe('HistorialPage — profesor (AC2)', () => {
 
   it('muestra el estado parcial cuando falta marcar solo a algunos', async () => {
     vi.mocked(getHistorial).mockResolvedValue({
-      items: [{ ...filaClasica(), totalInscritos: 5, totalAsistieron: 2, asistenciaPendiente: 2 }],
+      items: [
+        {
+          ...filaClasica(),
+          totalInscritos: 5,
+          totalAsistieron: 2,
+          asistenciaPendiente: 2,
+          valoracion: null,
+        },
+      ],
       total: 1,
       page: 1,
       pageSize: 20,
@@ -217,7 +249,15 @@ describe('HistorialPage — accesibilidad (AC6)', () => {
   it.each(TEMAS)('el historial del profesor sale limpio en el tema %s', async (tema) => {
     darSesion(UserRole.TEACHER);
     vi.mocked(getHistorial).mockResolvedValue({
-      items: [{ ...filaClasica(), totalInscritos: 4, totalAsistieron: 2, asistenciaPendiente: 2 }],
+      items: [
+        {
+          ...filaClasica(),
+          totalInscritos: 4,
+          totalAsistieron: 2,
+          asistenciaPendiente: 2,
+          valoracion: null,
+        },
+      ],
       total: 1,
       page: 1,
       pageSize: 20,

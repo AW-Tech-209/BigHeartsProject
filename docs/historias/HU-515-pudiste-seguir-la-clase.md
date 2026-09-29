@@ -5,7 +5,7 @@
 | **Sprint**          | Post-Fase 1 · UX                                            |
 | **Prioridad**       | 🟡 Media                                                    |
 | **Estimación**      | 2 días                                                      |
-| **Estado**          | ⬜ Pendiente                                                |
+| **Estado**          | ✅ Hecha                                                    |
 | **Asignada a**      | **Dev A** (T1–T3) · **Dev B** (T4–T5)                       |
 | **Rama**            | `hu-515-pudiste-seguir-la-clase-a` / `-b`                   |
 | **Alcance técnico** | fullstack                                                   |
@@ -37,39 +37,39 @@ respondió qué. Con grupos pequeños la anonimidad es débil, por eso el agrega
 
 ## Tasks
 
-- [ ] **T1** — Contrato y modelo: enums `SeguimientoClase` (`SI`, `A_MEDIAS`, `NO`) y
+- [x] **T1** — Contrato y modelo: enums `SeguimientoClase` (`SI`, `A_MEDIAS`, `NO`) y
       `ProblemaClase` (`INTERPRETE`, `SUBTITULOS`, `CONEXION`, `RITMO`, `OTRO`). Tabla
       `class_feedback` (`bookingId` **único**, `seguimiento`, `problemas[]`, `comentario?` ≤ 500,
       `createdAt`). Sin `studentId` propio: sale de la reserva.
-- [ ] **T2** — `POST /bookings/:id/valoracion` (`@Roles(STUDENT)`): solo el dueño de la reserva,
+- [x] **T2** — `POST /bookings/:id/valoracion` (`@Roles(STUDENT)`): solo el dueño de la reserva,
       reserva `CONFIRMED` o `ATTENDED`, con `now ≥ endsAt` y hasta 7 días después, una sola vez
       (409 `FEEDBACK_ALREADY_SENT`). `problemas` solo se acepta si `seguimiento ≠ SI`. La reserva que
       devuelve `GET /bookings/mias` trae `puedeValorar: boolean`.
-- [ ] **T3** — Agregado para el profesor dueño en su historial (`GET /historial`, fila de cada aula):
+- [x] **T3** — Agregado para el profesor dueño en su historial (`GET /historial`, fila de cada aula):
       `valoracion: { respuestas, si, aMedias, no, problemas: Record<ProblemaClase, number> } | null`.
       `null` con menos de 3 respuestas. Los comentarios **no** viajan al profesor en esta HU.
-- [ ] **T4** — Estudiante: en el panel, una tarjeta «¿Pudiste seguir la clase {título}?» para la
+- [x] **T4** — Estudiante: en el panel, una tarjeta «¿Pudiste seguir la clase {título}?» para la
       reserva más reciente con `puedeValorar`, con tres opciones grandes (ícono + texto: «Sí», «A
       medias», «No»). Si no es «Sí», se ofrecen los problemas en chips y un comentario opcional. En
       el historial, la misma acción en la fila. Tras enviar: «Gracias. Se lo contamos al profesor sin
       decir tu nombre».
-- [ ] **T5** — Profesor: en su historial, por aula, «8 respuestas · 6 sí · 2 a medias» y los problemas
+- [x] **T5** — Profesor: en su historial, por aula, «8 respuestas · 6 sí · 2 a medias» y los problemas
       más citados, con texto (sin gráficas circulares). Con `null`: «Aún no hay suficientes respuestas
       para mostrar».
-- [ ] **T6** — Tests: autorización (otro estudiante → 404, profesor → 403), ventana de 7 días, doble
+- [x] **T6** — Tests: autorización (otro estudiante → 404, profesor → 403), ventana de 7 días, doble
       envío → 409, agregado `null` con 2 respuestas y con valores con 3; `axe` en la tarjeta.
 
 ## Criterios de aceptación
 
-- [ ] **AC1** — Un estudiante puede valorar su reserva solo entre el fin de la clase y 7 días
+- [x] **AC1** — Un estudiante puede valorar su reserva solo entre el fin de la clase y 7 días
       después, y una sola vez. El segundo intento responde 409 `FEEDBACK_ALREADY_SENT`.
-- [ ] **AC2** — Ninguna respuesta de la API al profesor incluye nombre, id ni correo de quien valoró,
+- [x] **AC2** — Ninguna respuesta de la API al profesor incluye nombre, id ni correo de quien valoró,
       ni el comentario (verificado en el test del mapper).
-- [ ] **AC3** — Con 2 respuestas, el profesor ve «Aún no hay suficientes respuestas». Con 3, ve los
+- [x] **AC3** — Con 2 respuestas, el profesor ve «Aún no hay suficientes respuestas». Con 3, ve los
       conteos correctos.
-- [ ] **AC4** — Elegir «Sí» envía en un solo paso. «A medias» y «No» muestran los problemas, que son
+- [x] **AC4** — Elegir «Sí» envía en un solo paso. «A medias» y «No» muestran los problemas, que son
       opcionales.
-- [ ] **AC5** — La tarjeta del panel desaparece al enviar y no vuelve para esa reserva.
+- [x] **AC5** — La tarjeta del panel desaparece al enviar y no vuelve para esa reserva.
 
 ## Fuera de alcance
 
@@ -79,4 +79,5 @@ respondió qué. Con grupos pequeños la anonimidad es débil, por eso el agrega
 
 ## Notas de implementación
 
-_Se rellena al cerrar: máximo 3 líneas o «Sin desviaciones»._
+- Añadido `FEEDBACK_WINDOW_CLOSED` (409) para fuera de ventana o reserva no valorable; `puedeValorar` es opcional en `ClassroomListItem`.
+- `FilaLista` gana la prop `detalle` para el resumen del profesor.

@@ -11,11 +11,13 @@ import {
 
 import type { AuthenticatedUser } from '../auth/auth.types';
 import { toClassroomListItem, toPublicClassroom } from '../classrooms/classroom.mapper';
+import { agregarValoraciones, puedeValorarReserva } from '../bookings/valoracion.rules';
 import { PrismaService } from '../prisma/prisma.service';
 import type { ListHistorialDto } from './dto/list-historial.dto';
 
 const HISTORIAL_CLASSROOM_INCLUDE = {
   classroom: { include: { teacher: { select: { firstName: true, lastName: true } } } },
+  feedback: { select: { id: true } },
 } satisfies Prisma.BookingInclude;
 
 /** Reservas que cuentan como "inscrito de verdad": llegaron a tener cupo confirmado. */
@@ -86,6 +88,11 @@ export class HistorialService {
           booking.classroom,
           booking.classroom.teacher,
           booking.status as BookingStatus,
+          booking.id,
+          null,
+          'sin-acceso',
+          null,
+          puedeValorarReserva(booking, ahora),
         ),
       ),
       total,
@@ -132,6 +139,19 @@ export class HistorialService {
       this.prisma.classroom.count({ where }),
     ]);
 
+    // Solo salen los campos del agregado: nunca el comentario ni la reserva (D47).
+    const feedback =
+      rows.length > 0
+        ? await this.prisma.classFeedback.findMany({
+            where: { booking: { classroomId: { in: rows.map((row) => row.id) } } },
+            select: {
+              seguimiento: true,
+              problemas: true,
+              booking: { select: { classroomId: true } },
+            },
+          })
+        : [];
+
     const conteos =
       rows.length > 0
         ? await this.prisma.booking.groupBy({
@@ -155,6 +175,7 @@ export class HistorialService {
         asistenciaPendiente: conteos
           .filter((c) => c.classroomId === row.id && c.status === BookingStatus.CONFIRMED)
           .reduce((suma, c) => suma + c._count._all, 0),
+        valoracion: agregarValoraciones(feedback.filter((f) => f.booking.classroomId === row.id)),
       })),
       total,
       page,

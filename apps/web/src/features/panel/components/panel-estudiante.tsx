@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/button';
 import { Callout } from '@/components/ui/callout';
 import { Skeleton } from '@/components/ui/skeleton';
 import { AccionEntrarAClase } from '@/features/aulas/components/accion-entrar-a-clase';
+import { TarjetaValoracion } from '@/features/valoracion/components/tarjeta-valoracion';
 import { useMisReservas } from '@/features/aulas/hooks/use-mis-reservas';
 import { describirHorarioPartes } from '@/features/aulas/lib/horario';
 import { cn } from '@/lib/utils';
@@ -37,81 +38,84 @@ export function PanelEstudiante() {
   const proximas = data?.items ?? [];
 
   return (
-    <section aria-labelledby="panel-estudiante" className="space-y-4">
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <h2
-          id="panel-estudiante"
-          className="flex items-center gap-3 text-xl font-medium text-foreground"
-        >
-          <span className="rounded-lg bg-primary-soft p-2 text-primary">
-            <CalendarCheck aria-hidden="true" strokeWidth={2} className="size-5" />
-          </span>
-          Tus clases
-        </h2>
-
-        {proximas.length > 0 && (
-          <Button
-            render={<Link to="/mis-clases" />}
-            variant="outline"
-            className="h-11 px-5 text-base"
+    <div className="space-y-8">
+      <TarjetaValoracion />
+      <section aria-labelledby="panel-estudiante" className="space-y-4">
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <h2
+            id="panel-estudiante"
+            className="flex items-center gap-3 text-xl font-medium text-foreground"
           >
-            Ver todas mis clases
-          </Button>
-        )}
-      </div>
+            <span className="rounded-lg bg-primary-soft p-2 text-primary">
+              <CalendarCheck aria-hidden="true" strokeWidth={2} className="size-5" />
+            </span>
+            Tus clases
+          </h2>
 
-      {isPending && (
-        <div role="status">
-          <span className="sr-only">Cargando tus clases…</span>
-          <RejillaAulas aria-hidden="true">
-            {Array.from({ length: PROXIMAS_VISIBLES }, (_, indice) => (
-              <Skeleton key={indice} className="h-32" />
+          {proximas.length > 0 && (
+            <Button
+              render={<Link to="/mis-clases" />}
+              variant="outline"
+              className="h-11 px-5 text-base"
+            >
+              Ver todas mis clases
+            </Button>
+          )}
+        </div>
+
+        {isPending && (
+          <div role="status">
+            <span className="sr-only">Cargando tus clases…</span>
+            <RejillaAulas aria-hidden="true">
+              {Array.from({ length: PROXIMAS_VISIBLES }, (_, indice) => (
+                <Skeleton key={indice} className="h-32" />
+              ))}
+            </RejillaAulas>
+          </div>
+        )}
+
+        {isError && (
+          <Callout variant="destructive" live="assertive" title="No pudimos cargar tus clases">
+            <div className="space-y-4">
+              <p>Revisa tu conexión e inténtalo otra vez.</p>
+              <Button
+                variant="outline"
+                onClick={() => void refetch()}
+                disabled={isRefetching}
+                className="h-11 gap-2 px-5 text-base"
+              >
+                <RotateCw
+                  aria-hidden="true"
+                  strokeWidth={2}
+                  className={isRefetching ? 'size-5 animate-spin' : 'size-5'}
+                />
+                {isRefetching ? 'Cargando tus clases…' : 'Volver a cargar'}
+              </Button>
+            </div>
+          </Callout>
+        )}
+
+        {!isPending && !isError && proximas.length === 0 && (
+          <EstadoVacio
+            titular="No tienes clases reservadas"
+            ayuda="En el catálogo están las clases de la academia, cada una con su horario, su nivel y los cupos que quedan."
+            accion={
+              <Button render={<Link to="/aulas" />} className="h-12 px-6 text-base">
+                Explorar clases
+              </Button>
+            }
+          />
+        )}
+
+        {!isPending && !isError && proximas.length > 0 && (
+          <RejillaAulas className="entra-escalonada">
+            {proximas.map((aula) => (
+              <TarjetaClaseProxima key={aula.id} aula={aula} />
             ))}
           </RejillaAulas>
-        </div>
-      )}
-
-      {isError && (
-        <Callout variant="destructive" live="assertive" title="No pudimos cargar tus clases">
-          <div className="space-y-4">
-            <p>Revisa tu conexión e inténtalo otra vez.</p>
-            <Button
-              variant="outline"
-              onClick={() => void refetch()}
-              disabled={isRefetching}
-              className="h-11 gap-2 px-5 text-base"
-            >
-              <RotateCw
-                aria-hidden="true"
-                strokeWidth={2}
-                className={isRefetching ? 'size-5 animate-spin' : 'size-5'}
-              />
-              {isRefetching ? 'Cargando tus clases…' : 'Volver a cargar'}
-            </Button>
-          </div>
-        </Callout>
-      )}
-
-      {!isPending && !isError && proximas.length === 0 && (
-        <EstadoVacio
-          titular="No tienes clases reservadas"
-          ayuda="En el catálogo están las clases de la academia, cada una con su horario, su nivel y los cupos que quedan."
-          accion={
-            <Button render={<Link to="/aulas" />} className="h-12 px-6 text-base">
-              Explorar clases
-            </Button>
-          }
-        />
-      )}
-
-      {!isPending && !isError && proximas.length > 0 && (
-        <RejillaAulas className="entra-escalonada">
-          {proximas.map((aula) => (
-            <TarjetaClaseProxima key={aula.id} aula={aula} />
-          ))}
-        </RejillaAulas>
-      )}
-    </section>
+        )}
+      </section>
+    </div>
   );
 }
 
@@ -167,6 +171,7 @@ function TarjetaClaseProxima({ aula }: { aula: ClassroomListItem }) {
             id: aula.id,
             accessState: aula.accessState ?? 'sin-acceso',
             accessOpensAt: aula.accessOpensAt ?? null,
+            instructionMode: aula.instructionMode,
           }}
         />
       </div>

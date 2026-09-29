@@ -169,6 +169,7 @@ describe('HistorialService.listHistorial — profesor (AC2)', () => {
     const prisma = {
       classroom: { findMany, count },
       booking: { groupBy: vi.fn().mockResolvedValue([]) },
+      classFeedback: { findMany: vi.fn().mockResolvedValue([]) },
     } as unknown as PrismaService;
     const service = new HistorialService(prisma);
     const conIntruso = { teacherId: PROFESOR_ID } as unknown as ListHistorialDto;
@@ -184,6 +185,7 @@ describe('HistorialService.listHistorial — profesor (AC2)', () => {
     const prisma = {
       classroom: { findMany, count: vi.fn().mockResolvedValue(0) },
       booking: { groupBy: vi.fn().mockResolvedValue([]) },
+      classFeedback: { findMany: vi.fn().mockResolvedValue([]) },
     } as unknown as PrismaService;
 
     await new HistorialService(prisma).listHistorial(profesorDelToken, {});
@@ -207,6 +209,7 @@ describe('HistorialService.listHistorial — profesor (AC2)', () => {
           { classroomId: 'aula-1', status: BookingStatus.CANCELLED, _count: { _all: 2 } },
         ]),
       },
+      classFeedback: { findMany: vi.fn().mockResolvedValue([]) },
     } as unknown as PrismaService;
     const service = new HistorialService(prisma);
 
@@ -230,6 +233,7 @@ describe('HistorialService.listHistorial — profesor (AC2)', () => {
         count: vi.fn().mockResolvedValue(1),
       },
       booking: { groupBy: vi.fn().mockResolvedValue([]) },
+      classFeedback: { findMany: vi.fn().mockResolvedValue([]) },
     } as unknown as PrismaService;
     const service = new HistorialService(prisma);
 
@@ -243,6 +247,7 @@ describe('HistorialService.listHistorial — profesor (AC2)', () => {
     const prisma = {
       classroom: { findMany, count: vi.fn().mockResolvedValue(0) },
       booking: { groupBy: vi.fn().mockResolvedValue([]) },
+      classFeedback: { findMany: vi.fn().mockResolvedValue([]) },
     } as unknown as PrismaService;
     const service = new HistorialService(prisma);
 

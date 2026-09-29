@@ -14,7 +14,9 @@ export function PieLanding() {
             </p>
           </div>
         </div>
-        <p className="font-mono text-[13px] text-muted-foreground">Fase 1 · entorno de pruebas</p>
+        <p className="font-mono text-[0.8125rem] text-muted-foreground">
+          Fase 1 · entorno de pruebas
+        </p>
       </Contenedor>
     </footer>
   );

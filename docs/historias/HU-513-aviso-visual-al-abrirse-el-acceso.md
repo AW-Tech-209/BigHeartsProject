@@ -35,35 +35,35 @@ acceso está abierto.
 
 ## Tasks
 
-- [ ] **T1** — `useAvisoApertura()`, montado en `<AppShell>` solo para `STUDENT`: toma la próxima
+- [x] **T1** — `useAvisoApertura()`, montado en `<AppShell>` solo para `STUDENT`: toma la próxima
       reserva (`useMisReservas({ estado: PROXIMAS, pageSize: 1 })`). Si `accessOpensAt` cae dentro
       de las próximas 2 h, programa **un** `setTimeout` a esa hora que invalida la query. Nada de
       polling.
-- [ ] **T2** — Cuando el servidor devuelve `accessState` abierto (y antes no lo estaba): el título
+- [x] **T2** — Cuando el servidor devuelve `accessState` abierto (y antes no lo estaba): el título
       de la pestaña pasa a «● Ya puedes entrar · {título de la clase}» y el favicon cambia a su
       variante con marca. Los dos vuelven a la normalidad al entrar al detalle de esa clase o
       cuando la clase termina.
-- [ ] **T3** — Notificación del navegador **opcional**: en el perfil, un interruptor «Avisarme en el
+- [x] **T3** — Notificación del navegador **opcional**: en el perfil, un interruptor «Avisarme en el
       navegador cuando se abra mi clase». El permiso **solo se pide al activarlo**, nunca al cargar.
       Si el navegador lo deniega, se explica cómo reactivarlo. Al hacer clic, la notificación lleva
       al detalle del aula.
-- [ ] **T4** — Dentro de la app, un `<Callout>` con `alerta-visual` (una sola vez) y `aria-live`:
+- [x] **T4** — Dentro de la app, un `<Callout>` con `alerta-visual` (una sola vez) y `aria-live`:
       «Tu clase {título} ya abrió» con el botón «Ir a la clase». No sale si el estudiante ya está en
       el detalle de esa clase.
-- [ ] **T5** — Tests con timers falsos: sin respuesta abierta del servidor no hay aviso aunque pase
+- [x] **T5** — Tests con timers falsos: sin respuesta abierta del servidor no hay aviso aunque pase
       la hora; con ella cambian el título y el callout; el permiso no se pide al montar.
 
 ## Criterios de aceptación
 
-- [ ] **AC1** — Con la pestaña abierta en cualquier pantalla con sesión, a la hora de apertura el
+- [x] **AC1** — Con la pestaña abierta en cualquier pantalla con sesión, a la hora de apertura el
       título del documento empieza por «● Ya puedes entrar» en menos de 5 segundos, sin recargar.
-- [ ] **AC2** — Si el servidor todavía responde `accessState` cerrado (cliente con el reloj
+- [x] **AC2** — Si el servidor todavía responde `accessState` cerrado (cliente con el reloj
       adelantado), **no hay aviso**.
-- [ ] **AC3** — `Notification.requestPermission` no se llama nunca sin el gesto del usuario en el
+- [x] **AC3** — `Notification.requestPermission` no se llama nunca sin el gesto del usuario en el
       interruptor del perfil (verificado con un espía).
-- [ ] **AC4** — Con la notificación activada y el permiso concedido, se muestra una notificación
+- [x] **AC4** — Con la notificación activada y el permiso concedido, se muestra una notificación
       por apertura (no una por pantalla visitada), y hacer clic en ella lleva a `/aulas/:id`.
-- [ ] **AC5** — El callout interno se anima una sola vez y respeta `prefers-reduced-motion`.
+- [x] **AC5** — El callout interno se anima una sola vez y respeta `prefers-reduced-motion`.
 
 ## Fuera de alcance
 
@@ -73,4 +73,5 @@ acceso está abierto.
 
 ## Notas de implementación
 
-_Se rellena al cerrar: máximo 3 líneas o «Sin desviaciones»._
+Estado en `stores/aviso-apertura-store.ts` (el shell se remonta en cada pantalla). El temporizador dispara 1 s después de `accessOpensAt`, para que el servidor ya esté abierto.
+El aviso solo sale si la clase se vio «aún no» antes; una ya abierta al cargar no avisa. No verifiqué el favicon ni la notificación real en el navegador.

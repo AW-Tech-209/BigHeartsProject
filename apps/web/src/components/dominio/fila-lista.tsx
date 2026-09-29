@@ -38,6 +38,8 @@ type FilaListaProps = {
   tono?: Tono;
   titulo: string;
   subtitulo: ReactNode;
+  /** Información secundaria bajo el subtítulo, con varias líneas si hace falta. */
+  detalle?: ReactNode;
   /** El resultado, el estado o las cifras de la fila, a la derecha (o debajo en móvil). */
   children: ReactNode;
 };
@@ -48,6 +50,7 @@ export function FilaLista({
   tono = 'neutral',
   titulo,
   subtitulo,
+  detalle,
   children,
 }: FilaListaProps) {
   return (
@@ -73,6 +76,7 @@ export function FilaLista({
             </Link>
           </p>
           <p className="truncate text-sm text-muted-foreground">{subtitulo}</p>
+          {detalle}
         </div>
       </div>
 

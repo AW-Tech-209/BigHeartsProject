@@ -58,7 +58,7 @@ export function RotuloSeccion({
   return (
     <p
       className={cn(
-        'flex items-center gap-3 font-mono text-[13px] tracking-wide text-muted-foreground',
+        'flex items-center gap-3 font-mono text-[0.8125rem] tracking-wide text-muted-foreground',
         className,
       )}
     >

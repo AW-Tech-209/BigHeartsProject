@@ -129,6 +129,11 @@ export class AppConfigService {
     return this.config.get('EMAIL_FROM', { infer: true });
   }
 
+  /** Zona IANA de la academia, para agrupar las métricas. */
+  get academyTimezone(): string {
+    return this.config.get('ACADEMY_TIMEZONE', { infer: true });
+  }
+
   /** URL del frontend, para enlazar a la pantalla del aula en el recordatorio de apertura del acceso. */
   get frontendUrl(): string {
     return this.config.get('FRONTEND_URL', { infer: true });

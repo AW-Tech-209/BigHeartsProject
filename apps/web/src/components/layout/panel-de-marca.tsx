@@ -44,7 +44,7 @@ export function PanelDeMarca() {
           </ul>
         </div>
 
-        <p className="flex items-center gap-2 border-t border-brand-foreground/20 pt-6 font-mono text-[13px] tracking-wide text-brand-foreground/85">
+        <p className="flex items-center gap-2 border-t border-brand-foreground/20 pt-6 font-mono text-[0.8125rem] tracking-wide text-brand-foreground/85">
           <FlaskConical aria-hidden="true" strokeWidth={2} className="size-4 shrink-0" />
           Entorno de pruebas · Fase 1
         </p>

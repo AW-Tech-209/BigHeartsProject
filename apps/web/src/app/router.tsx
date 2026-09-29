@@ -12,6 +12,7 @@ import { EditarAulaPage } from '@/pages/EditarAulaPage';
 import { HistorialPage } from '@/pages/HistorialPage';
 import { HomePage } from '@/pages/HomePage';
 import { LoginPage } from '@/pages/LoginPage';
+import { MetricasPage } from '@/pages/MetricasPage';
 import { MisAulasPage } from '@/pages/MisAulasPage';
 import { MisClasesPage } from '@/pages/MisClasesPage';
 import { NotFoundPage } from '@/pages/NotFoundPage';
@@ -128,6 +129,15 @@ export function AppRoutes() {
         element={
           <RequireAuth roles={[UserRole.ADMIN]}>
             <SupervisionAulasPage />
+          </RequireAuth>
+        }
+      />
+
+      <Route
+        path="/admin/metricas"
+        element={
+          <RequireAuth roles={[UserRole.ADMIN]}>
+            <MetricasPage />
           </RequireAuth>
         }
       />

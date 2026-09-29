@@ -28,6 +28,7 @@ import { EstadoVacio } from '@/components/dominio/estado-vacio';
 import { IndicadorCupo } from '@/components/dominio/indicador-cupo';
 import { ModoInstruccion } from '@/components/dominio/modo-instruccion';
 import { AppShell } from '@/components/layout/app-shell';
+import { useClaseParaAyuda } from '@/stores/contexto-ayuda-store';
 import { PaginaCabecera } from '@/components/layout/pagina-cabecera';
 import { Button } from '@/components/ui/button';
 import { Callout } from '@/components/ui/callout';
@@ -35,6 +36,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { AccionCancelarReserva } from '@/features/aulas/components/accion-cancelar-reserva';
 import { AccionesDeAula } from '@/features/aulas/components/acciones-de-aula';
 import { AccionReservarAula } from '@/features/aulas/components/accion-reservar-aula';
+import { GuiaAntesDeEntrar } from '@/features/aulas/components/guia-antes-de-entrar';
 import { InscritosAula } from '@/features/aulas/components/inscritos-aula';
 import { useAccesoAlEnlace } from '@/features/aulas/hooks/use-acceso-al-enlace';
 import { esAulaNoEncontrada, useClassroom } from '@/features/aulas/hooks/use-classroom';
@@ -44,6 +46,7 @@ import {
   describirHorario,
   describirHorarioPartes,
 } from '@/features/aulas/lib/horario';
+import { debeMostrarGuia } from '@/features/aulas/lib/guia-plataforma';
 import { nivelesDeIngles } from '@/features/aulas/lib/niveles';
 import { etiquetaPlataformaReunion } from '@/features/aulas/lib/plataforma-reunion';
 import { puedeReservar } from '@/features/aulas/lib/puede-reservar';
@@ -70,6 +73,7 @@ export function AulaDetallePage() {
   const { data, isPending, isError, error, refetch, isRefetching } = useClassroom(id);
 
   const aula = data?.classroom;
+  useClaseParaAyuda(aula?.title);
   const noEncontrada = isError && esAulaNoEncontrada(error);
 
   /*
@@ -289,6 +293,15 @@ function DetalleDelAula({
             </div>
           </section>
 
+          {debeMostrarGuia(aula.myBookingStatus, estado === 'finalizada') && (
+            <GuiaAntesDeEntrar
+              proveedor={aula.meetingProvider}
+              modo={aula.instructionMode}
+              apoyos={aula.supports}
+              abiertaPorDefecto={accesoAlEnlace === 'abierto'}
+            />
+          )}
+
           <InscritosAula
             classroomId={aula.id}
             esDueno={esDueno}
@@ -369,7 +382,7 @@ function Dato({
         className,
       )}
     >
-      <dt className="flex items-center gap-2 text-[13px] text-muted-foreground">
+      <dt className="flex items-center gap-2 text-[0.8125rem] text-muted-foreground">
         {Icon && <Icon aria-hidden="true" strokeWidth={2} className="size-4" />}
         {termino}
       </dt>

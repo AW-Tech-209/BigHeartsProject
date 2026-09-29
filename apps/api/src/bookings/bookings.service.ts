@@ -1,14 +1,17 @@
-import { Injectable, Logger } from '@nestjs/common';
-import type { Prisma } from '@prisma/client';
+import { BadRequestException, Injectable, Logger } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import {
+  ApiErrorCode,
   type BookingStatus,
   type CancelBookingResponse,
   CLASSROOMS_PAGE_SIZE_DEFAULT,
   ClassroomStatus,
   type CreateBookingResponse,
+  type CrearValoracionResponse,
   ESTADO_TEMPORAL_POR_DEFECTO,
   EstadoTemporalAula,
   type MisReservasResponse,
+  SeguimientoClase,
 } from '@academia/types';
 
 import type { AuthenticatedUser } from '../auth/auth.types';
@@ -20,6 +23,7 @@ import {
 } from '../notifications/notification.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { assertCuentaActiva } from '../common/assert-cuenta-activa';
+import { leerRangoAgenda } from '../common/rango-agenda';
 import { seSolapan } from '../classrooms/coherencia-temporal.rules';
 import { classroomNotFound } from '../classrooms/classrooms.errors';
 import { derivarAccesoAlEnlace } from '../classrooms/acceso-enlace.rules';
@@ -27,14 +31,22 @@ import { toClassroomListItem } from '../classrooms/classroom.mapper';
 import { toPublicBooking } from './booking.mapper';
 import { puedeCancelarse } from './cancelacion.rules';
 import {
+  dentroDeVentanaDeValoracion,
+  estadoValorable,
+  puedeValorarReserva,
+} from './valoracion.rules';
+import {
   bookingAlreadyExists,
   bookingNotFound,
   bookingOverlap,
   cancellationWindowClosed,
   classroomFull,
   classroomNotBookable,
+  feedbackAlreadySent,
+  feedbackWindowClosed,
 } from './bookings.errors';
 import type { CreateBookingDto } from './dto/create-booking.dto';
+import type { CrearValoracionDto } from './dto/crear-valoracion.dto';
 import type { ListMisReservasDto } from './dto/list-mis-reservas.dto';
 
 /** La fila del aula tal y como sale del `SELECT … FOR UPDATE` (§4.2). */
@@ -267,6 +279,69 @@ export class BookingsService {
     }
   }
 
+  /**
+   * `POST /bookings/:id/valoracion` (HU-515, D47). Solo el dueño (404 si no),
+   * con la clase terminada y dentro de la ventana; una sola vez por reserva.
+   */
+  async crearValoracion(
+    student: AuthenticatedUser,
+    bookingId: string,
+    dto: CrearValoracionDto,
+  ): Promise<CrearValoracionResponse> {
+    const booking = await this.prisma.booking.findUnique({
+      where: { id: bookingId },
+      include: { classroom: { select: { endsAt: true } }, feedback: { select: { id: true } } },
+    });
+
+    if (!booking || booking.studentId !== student.id) {
+      throw bookingNotFound();
+    }
+
+    if (dto.seguimiento === SeguimientoClase.SI && dto.problemas?.length) {
+      throw new BadRequestException({
+        code: ApiErrorCode.VALIDATION_ERROR,
+        message: 'Los datos enviados no son válidos.',
+        fields: [
+          {
+            field: 'problemas',
+            message: 'Los problemas solo aplican si no pudiste seguir la clase.',
+          },
+        ],
+      });
+    }
+
+    if (booking.feedback) {
+      throw feedbackAlreadySent();
+    }
+
+    if (
+      !estadoValorable(booking.status) ||
+      !dentroDeVentanaDeValoracion(booking.classroom.endsAt, new Date())
+    ) {
+      throw feedbackWindowClosed();
+    }
+
+    try {
+      await this.prisma.classFeedback.create({
+        data: {
+          bookingId,
+          seguimiento: dto.seguimiento,
+          problemas: dto.problemas ?? [],
+          comentario: dto.comentario?.trim() || null,
+        },
+      });
+    } catch (error) {
+      // Dos envíos simultáneos: el índice único de `bookingId` deja pasar uno.
+      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
+        throw feedbackAlreadySent();
+      }
+
+      throw error;
+    }
+
+    return { enviada: true };
+  }
+
   private async firstNameDe(studentId: string): Promise<string> {
     const student = await this.prisma.user.findUnique({
       where: { id: studentId },
@@ -291,10 +366,30 @@ export class BookingsService {
     student: AuthenticatedUser,
     query: ListMisReservasDto,
   ): Promise<MisReservasResponse> {
+    const ahora = new Date();
+    const rango = leerRangoAgenda(query);
+
+    if (rango) {
+      // Calendario: todo lo que empieza en el rango (también canceladas), sin paginar.
+      const rows = await this.prisma.booking.findMany({
+        where: {
+          studentId: student.id,
+          classroom: { scheduledAt: { gte: rango.desde, lt: rango.hasta } },
+        },
+        orderBy: { classroom: { scheduledAt: 'asc' } },
+        include: BOOKING_CLASSROOM_INCLUDE,
+      });
+      return {
+        items: this.aItemsDeReserva(rows, ahora),
+        total: rows.length,
+        page: 1,
+        pageSize: rows.length,
+      };
+    }
+
     const page = query.page ?? 1;
     const pageSize = query.pageSize ?? CLASSROOMS_PAGE_SIZE_DEFAULT;
     const estado = query.estado ?? ESTADO_TEMPORAL_POR_DEFECTO;
-    const ahora = new Date();
     const skip = (page - 1) * pageSize;
 
     const { rows, total } =
@@ -302,41 +397,44 @@ export class BookingsService {
         ? await this.leerTodasMisReservas(student.id, ahora, skip, pageSize)
         : await this.leerMisReservasPorEstado(student.id, estado, ahora, skip, pageSize);
 
-    return {
-      items: rows.map((booking) => {
-        // HU-304: mismo cálculo que el detalle, vía la regla compartida —
-        // aquí solo para pintar la cuenta atrás, nunca para revelar el
-        // enlace: `toClassroomListItem` no lo copia.
-        const acceso =
-          booking.status === 'CONFIRMED'
-            ? derivarAccesoAlEnlace(booking.classroom, {
-                esDueno: false,
-                tieneReservaConfirmada: true,
-                ahora,
-                accessWindowMinutes: this.config.accessWindowMinutes,
-              })
-            : { estado: 'sin-acceso' as const, abreEn: null };
+    return { items: this.aItemsDeReserva(rows, ahora), total, page, pageSize };
+  }
 
-        return toClassroomListItem(
-          booking.classroom,
-          booking.classroom.teacher,
-          booking.status as BookingStatus,
-          booking.id,
-          booking.status === 'CONFIRMED'
-            ? puedeCancelarse(
-                booking.classroom.scheduledAt,
-                ahora,
-                this.config.cancellationWindowMinutes,
-              )
-            : null,
-          acceso.estado,
-          acceso.abreEn?.toISOString() ?? null,
-        );
-      }),
-      total,
-      page,
-      pageSize,
-    };
+  private aItemsDeReserva(
+    rows: Prisma.BookingGetPayload<{ include: typeof BOOKING_CLASSROOM_INCLUDE }>[],
+    ahora: Date,
+  ) {
+    return rows.map((booking) => {
+      // HU-304: mismo cálculo que el detalle, vía la regla compartida —
+      // aquí solo para pintar la cuenta atrás, nunca para revelar el
+      // enlace: `toClassroomListItem` no lo copia.
+      const acceso =
+        booking.status === 'CONFIRMED'
+          ? derivarAccesoAlEnlace(booking.classroom, {
+              esDueno: false,
+              tieneReservaConfirmada: true,
+              ahora,
+              accessWindowMinutes: this.config.accessWindowMinutes,
+            })
+          : { estado: 'sin-acceso' as const, abreEn: null };
+
+      return toClassroomListItem(
+        booking.classroom,
+        booking.classroom.teacher,
+        booking.status as BookingStatus,
+        booking.id,
+        booking.status === 'CONFIRMED'
+          ? puedeCancelarse(
+              booking.classroom.scheduledAt,
+              ahora,
+              this.config.cancellationWindowMinutes,
+            )
+          : null,
+        acceso.estado,
+        acceso.abreEn?.toISOString() ?? null,
+        puedeValorarReserva(booking, ahora),
+      );
+    });
   }
 
   private async leerMisReservasPorEstado(
@@ -408,6 +506,7 @@ export class BookingsService {
 
 const BOOKING_CLASSROOM_INCLUDE = {
   classroom: { include: { teacher: { select: { firstName: true, lastName: true } } } },
+  feedback: { select: { id: true } },
 } satisfies Prisma.BookingInclude;
 
 /**

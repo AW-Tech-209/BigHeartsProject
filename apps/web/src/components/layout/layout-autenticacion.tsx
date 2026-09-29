@@ -2,6 +2,8 @@ import type { ReactNode } from 'react';
 
 import { MarcaBigHearts } from '@/components/dominio/marca-bighearts';
 import { SkipLink } from '@/components/skip-link';
+import { BotonAyuda } from './boton-ayuda';
+import { SelectorTamanoTexto } from './selector-tamano-texto';
 import { SelectorTema } from './selector-tema';
 import { PanelDeMarca } from './panel-de-marca';
 
@@ -26,7 +28,9 @@ export function LayoutAutenticacion({ children }: { children: ReactNode }) {
               <MarcaBigHearts className="size-6 text-brand-foreground" />
               BigHearts
             </div>
-            <div className="flex justify-end px-4 pt-4 sm:px-6 lg:px-8">
+            <div className="flex flex-wrap items-center justify-end gap-3 px-4 pt-4 sm:px-6 lg:px-8">
+              <BotonAyuda />
+              <SelectorTamanoTexto compacto />
               <SelectorTema />
             </div>
           </header>

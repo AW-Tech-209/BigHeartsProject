@@ -16,6 +16,9 @@ import {
   buildMisAulasSearchParams,
   parseMisAulasQuery,
 } from '@/features/aulas/lib/filtros-mis-aulas';
+import { SelectorVista, type Vista } from '@/features/calendario/components/selector-vista';
+import { VistaSemana } from '@/features/calendario/components/vista-semana';
+import { aClaveDia, lunesDe } from '@/features/calendario/lib/semana';
 import { useAnnounce } from '@/hooks/use-announce';
 
 /** Cuántos renglones fantasma se pintan mientras carga. */
@@ -40,13 +43,16 @@ export function MisClasesPage() {
     ...parseMisAulasQuery(searchParams),
     estado: EstadoTemporalAula.PROXIMAS,
   };
-  const { data, isPending, isError, refetch, isRefetching } = useMisReservas(query);
+  const vista: Vista = searchParams.get('vista') === 'semana' ? 'semana' : 'lista';
+  const { data, isPending, isError, refetch, isRefetching } = useMisReservas(query, {
+    enabled: vista === 'lista',
+  });
   const announce = useAnnounce();
 
   const hayLista = Boolean(data && data.items.length > 0);
 
   useEffect(() => {
-    if (!data) return;
+    if (!data || vista !== 'lista') return;
 
     if (data.total === 0) {
       announce('Todavía no tienes clases reservadas.');
@@ -54,7 +60,15 @@ export function MisClasesPage() {
     }
 
     announce(`Se encontraron ${data.total} clase${data.total === 1 ? '' : 's'}.`);
-  }, [data, announce]);
+  }, [data, announce, vista]);
+
+  function cambiarVista(siguiente: Vista) {
+    setSearchParams(
+      siguiente === 'semana'
+        ? { vista: 'semana', semana: aClaveDia(lunesDe(new Date())) }
+        : buildMisAulasSearchParams({ ...query, page: undefined }),
+    );
+  }
 
   function irAPagina(pagina: number) {
     setSearchParams(buildMisAulasSearchParams({ ...query, page: pagina }));
@@ -85,83 +99,93 @@ export function MisClasesPage() {
         }
       />
 
-      {/* Estado 1 — cargando. Con texto, nunca un spinner mudo. */}
-      {isPending && (
-        <div role="status">
-          <span className="sr-only">Cargando tus clases…</span>
-          <ListaAulas aria-hidden="true">
-            {Array.from({ length: TARJETAS_FANTASMA }, (_, indice) => (
-              <Skeleton key={indice} className={ALTURA_RENGLON_AULA} />
-            ))}
-          </ListaAulas>
-        </div>
+      <SelectorVista vista={vista} onChange={cambiarVista} />
+
+      {vista === 'semana' && (
+        <VistaSemana useConsulta={useMisReservas} textoVacio="No tienes clases esta semana" />
       )}
 
-      {/* Estado 2 — error de lectura. */}
-      {isError && (
-        <Callout variant="destructive" live="assertive" title="No pudimos cargar tus clases">
-          <div className="space-y-4">
-            <p>Revisa tu conexión e inténtalo otra vez.</p>
-            <Button
-              variant="outline"
-              onClick={() => void refetch()}
-              disabled={isRefetching}
-              className="h-11 gap-2 px-5 text-base"
-            >
-              <RotateCw
-                aria-hidden="true"
-                strokeWidth={2}
-                className={isRefetching ? 'size-5 animate-spin' : 'size-5'}
-              />
-              {isRefetching ? 'Cargando tus clases…' : 'Volver a cargar'}
-            </Button>
-          </div>
-        </Callout>
-      )}
-
-      {/* Estado 3 — vacío. */}
-      {!isPending && !isError && data && data.items.length === 0 && (
-        <EstadoVacio
-          titular="Todavía no tienes clases reservadas"
-          ayuda="Cuando reserves tu cupo en un aula, la verás aquí con su fecha y su enlace de acceso."
-          accion={explorarElCatalogo}
-        />
-      )}
-
-      {/* Estado 4 — la lista. */}
-      {!isPending && !isError && hayLista && data && (
+      {vista === 'lista' && (
         <>
-          <h2 className="sr-only">Tus clases</h2>
+          {/* Estado 1 — cargando. Con texto, nunca un spinner mudo. */}
+          {isPending && (
+            <div role="status">
+              <span className="sr-only">Cargando tus clases…</span>
+              <ListaAulas aria-hidden="true">
+                {Array.from({ length: TARJETAS_FANTASMA }, (_, indice) => (
+                  <Skeleton key={indice} className={ALTURA_RENGLON_AULA} />
+                ))}
+              </ListaAulas>
+            </div>
+          )}
 
-          <ListaAulas className="entra-escalonada">
-            {data.items.map((aula) => (
-              <TarjetaAula key={aula.id} classroom={aula} perspectiva="catalogo" />
-            ))}
-          </ListaAulas>
+          {/* Estado 2 — error de lectura. */}
+          {isError && (
+            <Callout variant="destructive" live="assertive" title="No pudimos cargar tus clases">
+              <div className="space-y-4">
+                <p>Revisa tu conexión e inténtalo otra vez.</p>
+                <Button
+                  variant="outline"
+                  onClick={() => void refetch()}
+                  disabled={isRefetching}
+                  className="h-11 gap-2 px-5 text-base"
+                >
+                  <RotateCw
+                    aria-hidden="true"
+                    strokeWidth={2}
+                    className={isRefetching ? 'size-5 animate-spin' : 'size-5'}
+                  />
+                  {isRefetching ? 'Cargando tus clases…' : 'Volver a cargar'}
+                </Button>
+              </div>
+            </Callout>
+          )}
 
-          {totalPaginas > 1 && (
-            <nav
-              aria-label="Paginación de mis clases"
-              className="flex items-center justify-center gap-4 border-t border-border pt-6"
-            >
-              <Button
-                variant="outline"
-                disabled={paginaActual <= 1}
-                onClick={() => irAPagina(paginaActual - 1)}
-              >
-                Anterior
-              </Button>
-              <p className="text-sm text-muted-foreground">
-                Página {paginaActual} de {totalPaginas}
-              </p>
-              <Button
-                variant="outline"
-                disabled={paginaActual >= totalPaginas}
-                onClick={() => irAPagina(paginaActual + 1)}
-              >
-                Siguiente
-              </Button>
-            </nav>
+          {/* Estado 3 — vacío. */}
+          {!isPending && !isError && data && data.items.length === 0 && (
+            <EstadoVacio
+              titular="Todavía no tienes clases reservadas"
+              ayuda="Cuando reserves tu cupo en un aula, la verás aquí con su fecha y su enlace de acceso."
+              accion={explorarElCatalogo}
+            />
+          )}
+
+          {/* Estado 4 — la lista. */}
+          {!isPending && !isError && hayLista && data && (
+            <>
+              <h2 className="sr-only">Tus clases</h2>
+
+              <ListaAulas className="entra-escalonada">
+                {data.items.map((aula) => (
+                  <TarjetaAula key={aula.id} classroom={aula} perspectiva="catalogo" />
+                ))}
+              </ListaAulas>
+
+              {totalPaginas > 1 && (
+                <nav
+                  aria-label="Paginación de mis clases"
+                  className="flex items-center justify-center gap-4 border-t border-border pt-6"
+                >
+                  <Button
+                    variant="outline"
+                    disabled={paginaActual <= 1}
+                    onClick={() => irAPagina(paginaActual - 1)}
+                  >
+                    Anterior
+                  </Button>
+                  <p className="text-sm text-muted-foreground">
+                    Página {paginaActual} de {totalPaginas}
+                  </p>
+                  <Button
+                    variant="outline"
+                    disabled={paginaActual >= totalPaginas}
+                    onClick={() => irAPagina(paginaActual + 1)}
+                  >
+                    Siguiente
+                  </Button>
+                </nav>
+              )}
+            </>
           )}
         </>
       )}

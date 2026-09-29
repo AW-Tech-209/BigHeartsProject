@@ -1,10 +1,11 @@
 import { type ReactNode, useEffect, useRef, useState } from 'react';
-import type { ClassroomListItem, EstadoAccesoEnlace } from '@academia/types';
+import type { ClassroomListItem, EstadoAccesoEnlace, InstructionMode } from '@academia/types';
 import { DoorOpen } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 import { Button } from '@/components/ui/button';
 import { useAccesoAlEnlace } from '@/features/aulas/hooks/use-acceso-al-enlace';
+import { ID_GUIA_ANTES_DE_ENTRAR, personaQueSigna } from '@/features/aulas/lib/guia-plataforma';
 import { describirHorario } from '@/features/aulas/lib/horario';
 import { useMovimientoReducido } from '@/hooks/use-movimiento-reducido';
 
@@ -66,7 +67,7 @@ export function useAccionEntrarAClase({
     return {
       boton: null,
       aviso: aula.accessOpensAt ? (
-        <p className="text-[13px] text-muted-foreground">
+        <p className="text-[0.8125rem] text-muted-foreground">
           Podrás entrar el {describirHorario(aula.accessOpensAt)}.
         </p>
       ) : null,
@@ -110,7 +111,11 @@ function BotonIngresarAClase({ aulaId, pulso }: { aulaId: string; pulso: number 
   );
 }
 
-export function AccionEntrarAClase({ aula }: { aula: AulaConAcceso }) {
+export function AccionEntrarAClase({
+  aula,
+}: {
+  aula: AulaConAcceso & { instructionMode?: InstructionMode | null };
+}) {
   const { boton, aviso } = useAccionEntrarAClase({ aula });
 
   if (!boton && !aviso) {
@@ -120,6 +125,14 @@ export function AccionEntrarAClase({ aula }: { aula: AulaConAcceso }) {
   return (
     <div className="mt-1">
       {boton}
+      {boton && (
+        <Link
+          to={`/aulas/${aula.id}#${ID_GUIA_ANTES_DE_ENTRAR}`}
+          className="mt-1 inline-flex min-h-11 items-center rounded-sm text-sm text-primary underline underline-offset-4 outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+        >
+          Cómo ver bien {personaQueSigna(aula.instructionMode).a}
+        </Link>
+      )}
       {aviso}
     </div>
   );

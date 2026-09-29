@@ -42,27 +42,27 @@ si es `INTERPRETE_LSC`, al profesor si es `LSC_NATIVA`).
       según `instructionMode`, vista de galería o de orador, y probar la cámara. Los nombres de los
       botones se escriben **como aparecen hoy en la interfaz en español** de cada plataforma
       (verificado a mano en las tres, y la fecha de verificación queda en un comentario).
-- [ ] **T2** — `<GuiaAntesDeEntrar>`: pasos numerados (`<ol>`), cada uno con ícono y texto, dentro
+- [x] **T2** — `<GuiaAntesDeEntrar>`: pasos numerados (`<ol>`), cada uno con ícono y texto, dentro
       de un bloque desplegable con título «Antes de entrar a {plataforma}». Los nombres de los
       botones de la plataforma van en `<strong>`.
-- [ ] **T3** — Detalle del aula: se muestra al estudiante con reserva `CONFIRMED` **siempre**, no
+- [x] **T3** — Detalle del aula: se muestra al estudiante con reserva `CONFIRMED` **siempre**, no
       solo en la ventana, para que pueda prepararse. **Abierto por defecto** cuando el acceso ya se
       abrió; cerrado antes de eso.
-- [ ] **T4** — `<AccionEntrarAClase>`: junto al botón de entrar, un enlace «Cómo ver bien al
+- [x] **T4** — `<AccionEntrarAClase>`: junto al botón de entrar, un enlace «Cómo ver bien al
       intérprete» (o «al profesor») que lleva al bloque del detalle.
-- [ ] **T5** — Tests: la guía de un aula de Zoom con intérprete habla de fijar al intérprete; la de
+- [x] **T5** — Tests: la guía de un aula de Zoom con intérprete habla de fijar al intérprete; la de
       Meet con LSC nativa habla de fijar al profesor; sin reserva no aparece; `axe` limpio.
 
 ## Criterios de aceptación
 
-- [ ] **AC1** — Para cada uno de los 4 valores de `meetingProvider` la guía tiene contenido propio,
+- [x] **AC1** — Para cada uno de los 4 valores de `meetingProvider` la guía tiene contenido propio,
       y el título nombra la plataforma («Antes de entrar a Zoom»). `MANUAL` dice «tu plataforma».
-- [ ] **AC2** — Con `INTERPRETE_LSC` el paso de fijar video dice «intérprete»; con `LSC_NATIVA` dice
+- [x] **AC2** — Con `INTERPRETE_LSC` el paso de fijar video dice «intérprete»; con `LSC_NATIVA` dice
       «profesor». Con modo sin declarar dice «la persona que signa».
-- [ ] **AC3** — Un estudiante sin reserva, el profesor y el admin **no** ven la guía.
-- [ ] **AC4** — Con el acceso abierto el bloque llega desplegado; antes llega plegado y se abre con
+- [x] **AC3** — Un estudiante sin reserva, el profesor y el admin **no** ven la guía.
+- [x] **AC4** — Con el acceso abierto el bloque llega desplegado; antes llega plegado y se abre con
       teclado (Enter/Espacio) y se anuncia su estado (`aria-expanded`).
-- [ ] **AC5** — Si el aula declara el apoyo `LIVE_CAPTIONS`, el paso de subtítulos va **primero**.
+- [x] **AC5** — Si el aula declara el apoyo `LIVE_CAPTIONS`, el paso de subtítulos va **primero**.
 
 ## Fuera de alcance
 
@@ -71,4 +71,5 @@ si es `INTERPRETE_LSC`, al profesor si es `LSC_NATIVA`).
 
 ## Notas de implementación
 
-_Se rellena al cerrar: máximo 3 líneas o «Sin desviaciones»._
+T1 abierta: los nombres de los botones están escritos de memoria; falta verificarlos a mano en Zoom, Meet y Teams y anotar la fecha en `guia-plataforma.ts`.
+La guía no se pinta en clases finalizadas. `DAILY` (heredado) usa la guía genérica de `MANUAL`.

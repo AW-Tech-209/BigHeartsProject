@@ -19,7 +19,7 @@ const TEMAS: Tema[] = ['light', 'dark', 'hc'];
 const DESTINOS_ESPERADOS: Record<UserRole, string[]> = {
   [UserRole.STUDENT]: ['Panel', 'Aulas', 'Mis clases', 'Historial'],
   [UserRole.TEACHER]: ['Panel', 'Aulas', 'Mis aulas', 'Historial'],
-  [UserRole.ADMIN]: ['Panel', 'Aulas'],
+  [UserRole.ADMIN]: ['Panel', 'Aulas', 'Métricas'],
 };
 
 /**

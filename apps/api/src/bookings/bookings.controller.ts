@@ -13,6 +13,7 @@ import { Throttle } from '@nestjs/throttler';
 import {
   type CancelBookingResponse,
   type CreateBookingResponse,
+  type CrearValoracionResponse,
   type MisReservasResponse,
   UserRole,
 } from '@academia/types';
@@ -24,6 +25,7 @@ import { API_THROTTLE } from '../common/api-throttle';
 import { bookingNotFound } from './bookings.errors';
 import { BookingsService } from './bookings.service';
 import { CreateBookingDto } from './dto/create-booking.dto';
+import { CrearValoracionDto } from './dto/crear-valoracion.dto';
 import { ListMisReservasDto } from './dto/list-mis-reservas.dto';
 
 /** Un `:id` con forma inválida es, de puertas afuera, igual que uno que no existe. */
@@ -67,5 +69,16 @@ export class BookingsController {
     @Param('id', idDeReserva) id: string,
   ): Promise<CancelBookingResponse> {
     return this.bookingsService.cancelBooking(student, id);
+  }
+
+  /** POST /bookings/:id/valoracion — «¿Pudiste seguir la clase?», anónima para el profesor (HU-515). */
+  @Post(':id/valoracion')
+  @HttpCode(HttpStatus.CREATED)
+  async valorar(
+    @CurrentUser() student: AuthenticatedUser,
+    @Param('id', idDeReserva) id: string,
+    @Body() dto: CrearValoracionDto,
+  ): Promise<CrearValoracionResponse> {
+    return this.bookingsService.crearValoracion(student, id, dto);
   }
 }
