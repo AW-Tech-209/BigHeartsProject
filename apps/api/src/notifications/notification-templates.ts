@@ -1,3 +1,5 @@
+import { ACCESS_WINDOW_MINUTES_DEFAULT } from '@academia/types';
+
 import { type Notification, NotificationType } from './notification.service';
 
 export interface EmailContent {
@@ -129,17 +131,17 @@ export function buildEmail(notification: Notification): EmailContent {
         ]),
       };
 
-    case NotificationType.BOOKING_REMINDER_30M:
+    case NotificationType.BOOKING_REMINDER_ACCESO:
       return {
-        subject: 'Tu clase empieza en 30 minutos',
+        subject: `Tu clase empieza en ${ACCESS_WINDOW_MINUTES_DEFAULT} minutos. Ya puedes entrar`,
         html: html([
           `Hola ${nombreHtml},`,
-          `Tu clase «${aulaHtml}» empieza en 30 minutos (${cuando}).`,
+          `Tu clase «${aulaHtml}» empieza en ${ACCESS_WINDOW_MINUTES_DEFAULT} minutos (${cuando}). Ya puedes entrar.`,
           `Entra a la plataforma para ver el enlace: <a href="${enlaceReminderHtml}">${enlaceReminderHtml}</a>.`,
         ]),
         text: text([
           `Hola ${nombre},`,
-          `Tu clase «${aula}» empieza en 30 minutos (${cuando}).`,
+          `Tu clase «${aula}» empieza en ${ACCESS_WINDOW_MINUTES_DEFAULT} minutos (${cuando}). Ya puedes entrar.`,
           `Entra a la plataforma para ver el enlace: ${classroom?.url}`,
         ]),
       };

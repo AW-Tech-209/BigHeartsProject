@@ -25,9 +25,9 @@ LSC nativa o con intérprete, en su propia línea bajo el título, **nunca junto
 nunca colapsado. Sin declarar: `muted`, borde punteado, «Modo de instrucción sin declarar». Los
 apoyos van en una lista aparte y son lo único que colapsa tras `+N`.
 
-## `<VentanaDeAcceso>` — el enlace se revela 30 min antes
+## `<VentanaDeAcceso>` — el enlace se revela 10 min antes
 
-Fases: sin reserva → faltan > 30 min (hora exacta) → faltan < 30 min (cuenta atrás) → abierto
+Fases: sin reserva → faltan > 10 min (hora exacta) → faltan < 10 min (cuenta atrás) → abierto
 (`attention` sólido, botón «Entrar a la clase», dispara `alerta-visual` una vez) → terminada.
 `aria-live` solo en hitos. Pintar «abierto» no da acceso: lo decide el servidor.
 

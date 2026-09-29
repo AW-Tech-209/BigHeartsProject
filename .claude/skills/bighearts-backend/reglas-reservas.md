@@ -43,7 +43,7 @@ abierto a la derecha: una clase que acaba a las 18:00 y otra que empieza a las 1
 ## Enlace
 
 Cifrado AES-256-GCM (`MEETING_LINK_KEY`). Lo ve el profesor dueño siempre; el estudiante con
-reserva `CONFIRMED` desde `scheduledAt − 30 min` hasta el final. Fuera de eso **la clave no se
+reserva `CONFIRMED` desde `scheduledAt − 10 min` hasta el final. Fuera de eso **la clave no se
 añade al objeto** (ni vacía ni cifrada). Aula `CANCELLED`: nadie. Solo lo devuelve
 `GET /classrooms/:id`, decidido en un único método (`revelarElEnlace()`). Se descifra solo al
 serializar para quien tiene derecho.

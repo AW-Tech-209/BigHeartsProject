@@ -36,9 +36,9 @@ describe('buildEmail', () => {
     }
   });
 
-  it('BOOKING_REMINDER_30M enlaza a la pantalla del aula, no a la videollamada', () => {
+  it('BOOKING_REMINDER_ACCESO enlaza a la pantalla del aula, no a la videollamada', () => {
     const email = buildEmail({
-      type: NotificationType.BOOKING_REMINDER_30M,
+      type: NotificationType.BOOKING_REMINDER_ACCESO,
       recipient: { email: 'ana@academia.local', firstName: 'Ana' },
       classroom: {
         title: 'Inglés A1',
@@ -51,5 +51,6 @@ describe('buildEmail', () => {
     expect(email.html).toContain('https://academia-web.vercel.app/aulas/aula-1');
     expect(email.text).toContain('https://academia-web.vercel.app/aulas/aula-1');
     expect(email.html).not.toMatch(/zoom\.us|meet\.google\.com/);
+    expect(email.subject).toContain('10 minutos');
   });
 });

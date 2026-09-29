@@ -331,7 +331,7 @@ export enum MeetingProvider {
  * patrón que `User` sin `password`, pero por un motivo distinto: aquí el campo
  * a veces sí puede viajar. La regla la decide el servidor (`ARQUITECTURA.md`
  * §4.1) —el profesor dueño lo ve siempre; un estudiante solo con reserva
- * `CONFIRMED` y dentro de los 30 minutos previos— y cuando no aplica, la clave
+ * `CONFIRMED` y dentro de la ventana `ACCESS_WINDOW_MINUTES`— y cuando no aplica, la clave
  * no aparece en el JSON. Ni cifrada, ni en `null`, ni escondida en otro campo:
  * el frontend nunca debe recibir algo que no puede mostrar.
  *
@@ -444,7 +444,7 @@ export interface CreateClassroomInput {
  * cada respuesta viaja en `ClassroomLeadTimeWarningDetails.minimoMinutos`, y ese
  * es el que se muestra cuando existe.
  *
- * No baja de `ACCESS_WINDOW_MINUTES` (30) por construcción: por debajo de la
+ * No baja de `ACCESS_WINDOW_MINUTES` por construcción: por debajo de la
  * ventana de acceso de §4.1, el enlace se revelaría en el mismo instante en que
  * se publica la clase.
  */

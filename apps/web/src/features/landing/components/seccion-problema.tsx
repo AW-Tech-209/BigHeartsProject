@@ -1,3 +1,4 @@
+import { ACCESS_WINDOW_MINUTES_DEFAULT } from '@academia/types';
 import { CircleCheck, CircleX, MessageSquare } from 'lucide-react';
 
 import { MarcaBigHearts } from '@/components/dominio/marca-bighearts';
@@ -14,7 +15,7 @@ const CON_WHATSAPP = [
 ];
 
 const CON_BIGHEARTS = [
-  'Solo entra quien reservó, y solo 30 minutos antes.',
+  `Solo entra quien reservó, y solo ${ACCESS_WINDOW_MINUTES_DEFAULT} minutos antes.`,
   'El profesor ve su lista de inscritos antes de la clase.',
   'Cada clase deja historial para estudiante y profesor.',
   'Recibe confirmación y recordatorios por correo.',

@@ -18,8 +18,8 @@ export const NotificationType = {
   CLASSROOM_CANCELLED: 'CLASSROOM_CANCELLED',
   /** Recordatorio 24 h antes de la clase (HU-402, §4.6). */
   BOOKING_REMINDER_24H: 'BOOKING_REMINDER_24H',
-  /** Recordatorio 30 min antes: mismo instante que la apertura del enlace (§4.1, §4.6). */
-  BOOKING_REMINDER_30M: 'BOOKING_REMINDER_30M',
+  /** Recordatorio en el mismo instante en que se abre el acceso al enlace (§4.1, §4.6). */
+  BOOKING_REMINDER_ACCESO: 'BOOKING_REMINDER_ACCESO',
   /** Alguien pidió recuperar su contraseña: lleva el enlace de un solo uso (HU-410). */
   PASSWORD_RESET: 'PASSWORD_RESET',
 } as const;
@@ -37,7 +37,7 @@ export interface NotificationClassroom {
   title: string;
   scheduledAt: Date;
   durationMinutes: number;
-  /** Solo lo usa BOOKING_REMINDER_30M, para enlazar a la pantalla del aula (§4.6). */
+  /** Solo lo usa BOOKING_REMINDER_ACCESO, para enlazar a la pantalla del aula (§4.6). */
   url?: string;
 }
 

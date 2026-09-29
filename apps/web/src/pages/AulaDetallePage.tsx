@@ -1,4 +1,5 @@
 import {
+  ACCESS_WINDOW_MINUTES_DEFAULT,
   type AccessibilityPreference,
   BookingStatus,
   type ClassroomDetail,
@@ -425,7 +426,8 @@ function EnlaceDeLaClase({ url }: { url: string }) {
             Entra a la clase
           </h2>
           <p className="text-sm text-primary-soft-foreground">
-            Solo tú lo ves. Los estudiantes con cupo podrán entrar 30 minutos antes.
+            Solo tú lo ves. Los estudiantes con cupo podrán entrar {ACCESS_WINDOW_MINUTES_DEFAULT}{' '}
+            minutos antes.
           </p>
         </div>
       </div>

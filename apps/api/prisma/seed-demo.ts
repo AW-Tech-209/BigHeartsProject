@@ -27,9 +27,9 @@
  *   ULTIMOS_CUPOS   empieza en +3 días · 5/6 ocupado                  → últimos-cupos
  *   LLENA           empieza en +2 días · 3/3 ocupado                  → llena
  *   RESERVADA       empieza en +2 días · el alumno demo ya reservó    → reservada (enlace aún-no)
- *   EMPIEZA_PRONTO  empieza en +25 min · dentro de la ventana de 30   → acceso-abierto (enlace visible)
- *   EN_CURSO        empezó hace 30 min, dura 45 · aún en marcha       → en-curso (enlace visible)
- *   LLEGUE_TARDE    empezó hace 90 min, terminó hace 30               → finalizada (enlace sin-acceso)
+ *   EMPIEZA_PRONTO  empieza en +9 min · dentro de la ventana de 10    → acceso-abierto (enlace visible)
+ *   EN_CURSO        empezó hace 37 min, dura 45 · acaba antes de +9  → en-curso (enlace visible)
+ *   LLEGUE_TARDE    empezó hace 100 min, terminó hace 40             → finalizada (enlace sin-acceso)
  *   FINALIZADA_HIST fue hace 6 días · asistencia marcada (profe 1)    → finalizada (historial)
  *   FINALIZADA_HIST_2 fue hace 4 días · asistencia marcada (profe 2)  → finalizada (historial)
  *   CANCELADA       el profesor la canceló                            → cancelada
@@ -46,7 +46,7 @@
  *                                                             para que el panel del profesor resuma modos
  *
  * NOTA sobre «llegar tarde»: el enlace de una clase es visible para quien tiene
- * reserva desde 30 min antes y hasta que la clase TERMINA (`scheduledAt +
+ * reserva desde ACCESS_WINDOW_MINUTES antes y hasta que la clase TERMINA (`scheduledAt +
  * durationMinutes`), no solo hasta que empieza. El caso de «ya no puedo entrar»
  * es, por tanto, una clase ya terminada — que es lo que monta `LLEGUE_TARDE`.
  */
@@ -268,7 +268,7 @@ export const AULAS: AulaDemo[] = [
     description: 'Empieza en minutos: quien tiene reserva ya ve el enlace.',
     level: 'INTERMEDIATE',
     maxStudents: 6,
-    scheduledInMinutes: 25 * MIN,
+    scheduledInMinutes: 9 * MIN,
     durationMinutes: 45,
     meetingLink: 'https://meet.google.com/demo-empieza-pronto',
     meetingProvider: 'GOOGLE_MEET',
@@ -279,10 +279,10 @@ export const AULAS: AulaDemo[] = [
     id: AULA.EN_CURSO,
     teacherEmail: PROFE,
     title: 'Clase en curso ahora mismo',
-    description: 'Empezó hace media hora y sigue en marcha. El enlace está abierto.',
+    description: 'Empezó hace más de media hora y sigue en marcha. El enlace está abierto.',
     level: 'INTERMEDIATE',
     maxStudents: 6,
-    scheduledInMinutes: -30 * MIN,
+    scheduledInMinutes: -37 * MIN,
     durationMinutes: 45,
     meetingLink: 'https://meet.google.com/demo-en-curso',
     meetingProvider: 'GOOGLE_MEET',
@@ -293,10 +293,11 @@ export const AULAS: AulaDemo[] = [
     id: AULA.LLEGUE_TARDE,
     teacherEmail: PROFE,
     title: 'Clase a la que llegué tarde',
-    description: 'Empezó hace 90 minutos y ya terminó: el enlace dejó de estar disponible.',
+    description:
+      'Empezó hace más de hora y media y ya terminó: el enlace dejó de estar disponible.',
     level: 'BEGINNER',
     maxStudents: 6,
-    scheduledInMinutes: -90 * MIN,
+    scheduledInMinutes: -100 * MIN,
     durationMinutes: 60,
     meetingLink: 'https://meet.google.com/demo-llegue-tarde',
     meetingProvider: 'GOOGLE_MEET',

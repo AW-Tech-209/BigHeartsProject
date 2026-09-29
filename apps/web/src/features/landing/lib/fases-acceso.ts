@@ -1,10 +1,11 @@
+import { ACCESS_WINDOW_MINUTES_DEFAULT as VENTANA } from '@academia/types';
 import { CircleCheckBig, Clock, DoorOpen, Lock, type LucideIcon } from 'lucide-react';
 
 /**
  * Las cinco fases de la ventana de acceso (`bighearts-ui`, «El componente que
  * sostiene el producto»), con el copy exacto que ve el estudiante en cada una.
  * La landing las reproduce —con el contador corriendo— para enseñar la regla
- * central del producto: el enlace se revela 30 minutos antes y solo a quien
+ * central del producto: el enlace se revela `VENTANA` minutos antes, solo a quien
  * reservó.
  */
 export type TonoFase = 'muted' | 'info' | 'attention' | 'attention-solido';
@@ -18,7 +19,7 @@ export type FaseAcceso = {
   /** Etiqueta corta para la lista de fases de la izquierda. */
   nombre: string;
   icon: LucideIcon;
-  /** Encabezado del panel: «Fase 3 · faltan menos de 30 minutos». */
+  /** Encabezado del panel: «Fase 3 · faltan menos de 10 minutos». */
   fase: string;
   titular: string;
   cuerpo: string;
@@ -45,25 +46,24 @@ export const FASES_ACCESO: FaseAcceso[] = [
     pulsa: false,
   },
   {
-    id: 'faltan-mas-30',
+    id: 'faltan-mas',
     paso: '02',
-    nombre: 'Faltan más de 30 minutos',
+    nombre: `Faltan más de ${VENTANA} minutos`,
     icon: Clock,
-    fase: 'Fase 2 · faltan más de 30 minutos',
-    titular: 'El acceso abre 30 minutos antes',
-    cuerpo:
-      'Tu clase empieza el martes 12 de agosto a las 6:00 p. m. (hora de Colombia). El enlace aparecerá aquí a las 5:30 p. m.',
+    fase: `Fase 2 · faltan más de ${VENTANA} minutos`,
+    titular: `El acceso abre ${VENTANA} minutos antes`,
+    cuerpo: `Tu clase empieza el martes 12 de agosto a las 6:00 p. m. (hora de Colombia). El enlace aparecerá aquí a las 5:${String(60 - VENTANA).padStart(2, '0')} p. m.`,
     tono: 'info',
     reloj: 'cuenta-larga',
     durMs: 5200,
     pulsa: false,
   },
   {
-    id: 'faltan-menos-30',
+    id: 'faltan-menos',
     paso: '03',
-    nombre: 'Faltan menos de 30 minutos',
+    nombre: `Faltan menos de ${VENTANA} minutos`,
     icon: Clock,
-    fase: 'Fase 3 · faltan menos de 30 minutos',
+    fase: `Fase 3 · faltan menos de ${VENTANA} minutos`,
     titular: 'El acceso abre en',
     cuerpo:
       'Quédate en esta pantalla o vuelve más tarde. El enlace aparece aquí solo, sin recargar.',
@@ -125,12 +125,15 @@ export function formatearCuenta(segundos: number): string {
  */
 export function relojDeFase(fase: FaseAcceso, transcurridoMs: number) {
   if (fase.reloj === 'cuenta-larga') {
-    const segundos = Math.max(1808, 9660 - (transcurridoMs / 1000) * 21);
+    const segundos = Math.max(VENTANA * 60 + 8, 9660 - (transcurridoMs / 1000) * 21);
     return { cuenta: formatearCuenta(segundos), progreso: 0 };
   }
   if (fase.reloj === 'cuenta-corta') {
     const p = Math.min(transcurridoMs / fase.durMs, 1);
-    return { cuenta: formatearCuenta(1750 * (1 - p)), progreso: Math.round(p * 100) };
+    return {
+      cuenta: formatearCuenta((VENTANA * 60 - 50) * (1 - p)),
+      progreso: Math.round(p * 100),
+    };
   }
   return { cuenta: '', progreso: 0 };
 }

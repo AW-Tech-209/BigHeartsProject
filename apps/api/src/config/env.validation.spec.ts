@@ -94,16 +94,16 @@ describe('validateEnv — coherencia temporal del aula', () => {
   });
 
   // El suelo no es un número elegido a ojo: por debajo de la ventana de acceso
-  // (30 min, §4.1) el enlace se revelaría en el mismo instante en que se publica
-  // la clase. Un despliegue con 15 aquí no puede arrancar.
+  // (§4.1) el enlace se revelaría en el mismo instante en que se publica la
+  // clase. Un despliegue con 5 aquí no puede arrancar.
   it('no arranca con una antelación mínima por debajo de la ventana de acceso', () => {
-    expect(() => validateEnv(entornoValido({ CLASS_MIN_LEAD_MINUTES: '15' }))).toThrow(
+    expect(() => validateEnv(entornoValido({ CLASS_MIN_LEAD_MINUTES: '5' }))).toThrow(
       /CLASS_MIN_LEAD_MINUTES/,
     );
 
     expect(
-      validateEnv(entornoValido({ CLASS_MIN_LEAD_MINUTES: '30' })).CLASS_MIN_LEAD_MINUTES,
-    ).toBe(30);
+      validateEnv(entornoValido({ CLASS_MIN_LEAD_MINUTES: '10' })).CLASS_MIN_LEAD_MINUTES,
+    ).toBe(10);
   });
 
   it('no arranca con una duración máxima de más de un día, ni con una negativa', () => {

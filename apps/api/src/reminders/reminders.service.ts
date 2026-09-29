@@ -70,7 +70,7 @@ export class RemindersService implements OnModuleInit, OnModuleDestroy {
     this.barriendo = true;
     try {
       await this.barrer24h(new Date());
-      await this.barrer30m(new Date());
+      await this.barrerAcceso(new Date());
       await this.limpiarTokensCaducados(new Date());
     } finally {
       this.barriendo = false;
@@ -99,13 +99,13 @@ export class RemindersService implements OnModuleInit, OnModuleDestroy {
     );
   }
 
-  private async barrer30m(ahora: Date): Promise<void> {
+  private async barrerAcceso(ahora: Date): Promise<void> {
     const limite = new Date(ahora.getTime() + this.config.accessWindowMinutes * 60_000);
     await this.barrerVentana(
       ahora,
       limite,
-      'reminder30mSentAt',
-      NotificationType.BOOKING_REMINDER_30M,
+      'reminderAccesoSentAt',
+      NotificationType.BOOKING_REMINDER_ACCESO,
     );
   }
 
@@ -118,9 +118,10 @@ export class RemindersService implements OnModuleInit, OnModuleDestroy {
   private async barrerVentana(
     ahora: Date,
     limite: Date,
-    marca: 'reminder24hSentAt' | 'reminder30mSentAt',
+    marca: 'reminder24hSentAt' | 'reminderAccesoSentAt',
     tipo:
-      typeof NotificationType.BOOKING_REMINDER_24H | typeof NotificationType.BOOKING_REMINDER_30M,
+      | typeof NotificationType.BOOKING_REMINDER_24H
+      | typeof NotificationType.BOOKING_REMINDER_ACCESO,
   ): Promise<void> {
     const reservas = await this.prisma.booking.findMany({
       where: {
@@ -154,7 +155,8 @@ export class RemindersService implements OnModuleInit, OnModuleDestroy {
   private async enviar(
     reserva: ReservaParaRecordar,
     tipo:
-      typeof NotificationType.BOOKING_REMINDER_24H | typeof NotificationType.BOOKING_REMINDER_30M,
+      | typeof NotificationType.BOOKING_REMINDER_24H
+      | typeof NotificationType.BOOKING_REMINDER_ACCESO,
   ): Promise<boolean> {
     const notification: Notification = {
       type: tipo,

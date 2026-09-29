@@ -736,7 +736,7 @@ describe('<TarjetaAula /> — la acción de reservar (T3, AC4, HU-301)', () => {
           id: 'aula-7',
           myBookingStatus: BookingStatus.CONFIRMED,
           accessState: 'abierto',
-          scheduledAt: new Date(AHORA.getTime() + 15 * 60_000).toISOString(),
+          scheduledAt: new Date(AHORA.getTime() + 5 * 60_000).toISOString(),
         })}
         puedeReservarla
         ahora={AHORA}

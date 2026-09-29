@@ -1,10 +1,14 @@
+import { ACCESS_WINDOW_MINUTES_DEFAULT } from '@academia/types';
 import { Bookmark, DoorOpen, FlaskConical, VolumeX } from 'lucide-react';
 
 import { MarcaBigHearts } from '@/components/dominio/marca-bighearts';
 
 const PROPUESTAS = [
   { icono: Bookmark, texto: 'Reservas tu cupo y sabes que es tuyo.' },
-  { icono: DoorOpen, texto: 'El enlace aparece 30 minutos antes, solo en tu pantalla.' },
+  {
+    icono: DoorOpen,
+    texto: `El enlace aparece ${ACCESS_WINDOW_MINUTES_DEFAULT} minutos antes, solo en tu pantalla.`,
+  },
   { icono: VolumeX, texto: 'Hecho para no depender del sonido, no adaptado después.' },
 ];
 

@@ -1508,9 +1508,9 @@ describe('ClassroomsService.getClassroomDetail — quién ve el enlace (A2, AC2)
 describe('ClassroomsService.getClassroomDetail — ventana de acceso del estudiante (AC1, AC2)', () => {
   const dentroDe = (minutos: number) => new Date(Date.now() + minutos * 60_000);
 
-  it('a 31 minutos del inicio, el enlace no viaja y el estado es "aun-no"', async () => {
+  it('a 11 minutos del inicio, el enlace no viaja y el estado es "aun-no"', async () => {
     const { service } = setupDetalle(
-      { scheduledAt: dentroDe(31) },
+      { scheduledAt: dentroDe(11) },
       { miReserva: { id: 'reserva-1', status: 'CONFIRMED' } },
     );
 
@@ -1521,9 +1521,9 @@ describe('ClassroomsService.getClassroomDetail — ventana de acceso del estudia
     expect(classroom.accessOpensAt).not.toBeNull();
   });
 
-  it('a 29 minutos del inicio, el enlace viaja descifrado y el estado es "abierto"', async () => {
+  it('a 10 minutos del inicio, el enlace viaja descifrado y el estado es "abierto"', async () => {
     const { service } = setupDetalle(
-      { scheduledAt: dentroDe(29) },
+      { scheduledAt: dentroDe(10) },
       { miReserva: { id: 'reserva-1', status: 'CONFIRMED' } },
     );
 

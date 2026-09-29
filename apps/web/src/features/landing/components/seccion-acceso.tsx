@@ -1,3 +1,4 @@
+import { ACCESS_WINDOW_MINUTES_DEFAULT } from '@academia/types';
 import { ExternalLink, Pause, Play } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 
@@ -81,7 +82,7 @@ export function SeccionAcceso() {
       <Revelar className="max-w-[44ch]">
         <RotuloSeccion color="attention">La regla del producto, hecha interfaz</RotuloSeccion>
         <h2 className="mt-5 text-3xl font-medium tracking-tight text-balance">
-          El enlace aparece 30 minutos antes. Solo en tu pantalla.
+          El enlace aparece {ACCESS_WINDOW_MINUTES_DEFAULT} minutos antes. Solo en tu pantalla.
         </h2>
         <p className="mt-5 text-lg text-muted-foreground text-pretty">
           La ventana de acceso tiene cinco fases. Esto es lo que ve el estudiante en cada una.

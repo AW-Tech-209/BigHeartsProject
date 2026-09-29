@@ -42,7 +42,7 @@ type AulaConAcceso = Pick<ClassroomListItem, 'id' | 'accessState' | 'accessOpens
  * reserva, ni cuenta atrás ni botón.
  *
  * `forzarEntrada` es para el profesor dueño mirando su clase EN CURSO: no tiene
- * reserva ni ventana de 30 min, pero el botón al detalle (donde está el enlace)
+ * reserva ni ventana de acceso, pero el botón al detalle (donde está el enlace)
  * le sirve igual que al estudiante.
  */
 export function useAccionEntrarAClase({

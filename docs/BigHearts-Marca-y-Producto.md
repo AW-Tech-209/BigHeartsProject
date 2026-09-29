@@ -350,14 +350,14 @@ reserva de quien mira.
 ## El componente que sostiene el producto
 
 La **ventana de acceso** es la regla de negocio central hecha interfaz: el enlace de la clase se
-revela 30 minutos antes, y solo a quien tiene reserva. Tiene cinco fases, y la transición a
+revela 10 minutos antes, y solo a quien tiene reserva. Tiene cinco fases, y la transición a
 «abierto» dispara una **alerta visual** — que es el reemplazo accesible de un sonido de aviso.
 
 | Fase                   | Qué ve el usuario                                                          |
 | ---------------------- | -------------------------------------------------------------------------- |
 | Sin reserva            | **Reserva para acceder** — «El enlace solo se muestra a quien tiene cupo.» |
-| Faltan más de 30 min   | **El acceso abre 30 minutos antes** — cuenta atrás y hora exacta.          |
-| Faltan menos de 30 min | **El acceso abre en {mm}:{ss}** — barra de progreso.                       |
+| Faltan más de 10 min   | **El acceso abre 10 minutos antes** — cuenta atrás y hora exacta.          |
+| Faltan menos de 10 min | **El acceso abre en {mm}:{ss}** — barra de progreso.                       |
 | Abierto                | **Ya puedes entrar** — botón grande de entrar a la clase.                  |
 | Terminada              | **Esta clase ya terminó** — enlace al historial.                           |
 
@@ -389,8 +389,8 @@ Esta parte es el inventario de lo que el producto hace **de verdad**, con la Fas
 - Reserva su cupo, con la garantía de que nadie puede ocuparlo por encima del aforo.
 - Ve sus próximas clases en su panel de inicio y en su listado propio.
 - Cancela hasta una hora antes, liberando el cupo para otra persona.
-- Recibe correo al reservar, al cancelar, si su clase se cancela, 24 horas antes y 30 minutos antes.
-- Accede al enlace de la videollamada cuando se habilita, 30 minutos antes.
+- Recibe correo al reservar, al cancelar, si su clase se cancela, 24 horas antes y 10 minutos antes.
+- Accede al enlace de la videollamada cuando se habilita, 10 minutos antes.
 - Consulta su historial: a qué asistió, a qué no y qué canceló.
 
 ## Para el profesor
@@ -419,7 +419,7 @@ Concentran el valor del producto. Son las que se pueden contar en una landing si
 
 | Regla                           | Qué significa para el usuario                                                                                  |
 | ------------------------------- | -------------------------------------------------------------------------------------------------------------- |
-| El enlace es privado y temporal | Se guarda cifrado y solo se revela a quien tiene reserva confirmada, dentro de los 30 minutos previos.         |
+| El enlace es privado y temporal | Se guarda cifrado y solo se revela a quien tiene reserva confirmada, dentro de los 10 minutos previos.         |
 | El cupo es real                 | Si dos estudiantes intentan tomar el último lugar a la vez, exactamente uno lo obtiene. Nunca se vende de más. |
 | Cancelar libera el cupo         | Cancelar hasta una hora antes devuelve ese lugar al catálogo de inmediato.                                     |
 | Sin clases solapadas            | Nadie puede reservar dos clases a la misma hora, así que el historial refleja algo que pudo ocurrir de verdad. |
@@ -485,7 +485,7 @@ directamente al hallazgo #1 de la auditoría.
 >
 > **2. Tú reservas.** Tu cupo queda confirmado al instante, o no queda.
 >
-> **3. El enlace aparece 30 minutos antes.** Solo en tu pantalla, solo si reservaste.
+> **3. El enlace aparece 10 minutos antes.** Solo en tu pantalla, solo si reservaste.
 >
 > **4. La clase ocurre en Zoom, Meet o Teams.** BigHearts no aloja la videollamada: gestiona el
 > acceso a ella.
@@ -509,7 +509,7 @@ Es el bloque que más convence porque no vende: describe.
 
 | Hoy, con WhatsApp                              | Con BigHearts                                           |
 | ---------------------------------------------- | ------------------------------------------------------- |
-| El enlace circula libre; entra quien lo tenga. | Solo entra quien reservó, y solo 30 minutos antes.      |
+| El enlace circula libre; entra quien lo tenga. | Solo entra quien reservó, y solo 10 minutos antes.      |
 | El profesor no sabe cuántos vendrán.           | El profesor ve su lista de inscritos antes de la clase. |
 | No queda registro de asistencia.               | Cada clase deja historial para estudiante y profesor.   |
 | El estudiante depende de revisar el chat.      | Recibe confirmación y recordatorios por correo.         |
@@ -523,7 +523,7 @@ Es el bloque que más convence porque no vende: describe.
 > **2. Reservas tu cupo.** Si aparece disponible, es porque lo está. Nunca se reservan más lugares
 > de los que hay.
 >
-> **3. Entras a la clase.** El enlace aparece 30 minutos antes, en tu pantalla, sin que tengas que
+> **3. Entras a la clase.** El enlace aparece 10 minutos antes, en tu pantalla, sin que tengas que
 > pedírselo a nadie.
 
 ### 6 · Cada clase dice cómo se imparte
@@ -547,7 +547,7 @@ Las cuatro reglas, en lenguaje de persona:
 
 - **Tu cupo es tuyo.** Si dos personas piden el último lugar a la vez, solo una lo obtiene. Nunca
   hay más reservas que sillas.
-- **El enlace no circula.** Se guarda cifrado y solo lo ve quien reservó, 30 minutos antes de
+- **El enlace no circula.** Se guarda cifrado y solo lo ve quien reservó, 10 minutos antes de
   empezar.
 - **Si no puedes ir, avisas.** Cancelas hasta una hora antes y tu lugar queda libre para alguien
   más.
@@ -623,12 +623,12 @@ la landing sin abrir el código.
 
 | Afirmación                                                     | Respaldo                                                                                                                                                             |
 | -------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| «Solo entra quien reservó, 30 minutos antes»                   | El enlace se guarda cifrado con AES-256-GCM y se revela solo con reserva confirmada, dentro de la ventana. Decidido en el servidor.                                  |
+| «Solo entra quien reservó, 10 minutos antes»                   | El enlace se guarda cifrado con AES-256-GCM y se revela solo con reserva confirmada, dentro de la ventana. Decidido en el servidor.                                  |
 | «Nunca hay más reservas que sillas»                            | Transacción con bloqueo de fila sobre el aula. Verificado con pruebas de dos reservas simultáneas por el último cupo.                                                |
 | «Cancelas hasta una hora antes y tu lugar queda libre»         | La cancelación libera el cupo en la misma transacción. Ventana configurable, una hora por defecto.                                                                   |
 | «No puedes reservar dos clases a la misma hora»                | Validación de solapamiento dentro de la transacción de reserva.                                                                                                      |
 | «Cada clase declara cómo se imparte»                           | El aula registra modos de comunicación, intérprete, subtítulos en vivo y materiales visuales. El catálogo marca las coincidencias con la preferencia del estudiante. |
-| «Recibes confirmación y recordatorios por correo»              | Cinco avisos transaccionales más recordatorios de 24 horas y 30 minutos, con marcas que impiden duplicados.                                                          |
+| «Recibes confirmación y recordatorios por correo»              | Cinco avisos transaccionales más recordatorios de 24 horas y 10 minutos, con marcas que impiden duplicados.                                                          |
 | «Ves tu lista de inscritos con su preferencia de comunicación» | Listado de inscritos por aula, restringido al profesor dueño, con resumen de accesibilidad del grupo. Sin correo del estudiante.                                     |
 | «Cada clase deja historial»                                    | Asistencia marcada manualmente por el profesor al terminar, consultable por estudiante y profesor.                                                                   |
 | «Se recorre con teclado y funciona en claro y oscuro»          | Recorrido completo verificado sin ratón en la pasada de cierre de la Fase 1.                                                                                         |

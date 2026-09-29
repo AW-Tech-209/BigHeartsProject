@@ -217,7 +217,7 @@ describe('FormularioAula — modo de instrucción y apoyos (HU-507)', () => {
 });
 
 describe('FormularioAula — la ayuda del enlace (B3)', () => {
-  it('dice de dónde sale el enlace y que solo se ve 30 minutos antes', () => {
+  it('dice de dónde sale el enlace y que solo se ve 10 minutos antes', () => {
     montar();
     const ayuda = screen.getByLabelText(/enlace de la reunión/i).getAttribute('aria-describedby');
 
@@ -225,7 +225,7 @@ describe('FormularioAula — la ayuda del enlace (B3)', () => {
     expect(
       screen.getByText(/que creaste en zoom, google meet o microsoft teams/i),
     ).toBeInTheDocument();
-    expect(screen.getByText(/30 minutos antes/i)).toBeInTheDocument();
+    expect(screen.getByText(/10 minutos antes/i)).toBeInTheDocument();
     expect(screen.getByText(/se guarda cifrado/i)).toBeInTheDocument();
   });
 });
