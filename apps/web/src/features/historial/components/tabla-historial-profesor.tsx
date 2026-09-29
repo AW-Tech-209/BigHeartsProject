@@ -2,6 +2,7 @@ import type { AulaImpartida } from '@academia/types';
 
 import { FilaLista } from '@/components/dominio/fila-lista';
 import { describirFechaCompacta } from '@/features/aulas/lib/horario';
+import { ResumenValoracion } from '@/features/valoracion/components/resumen-valoracion';
 import { AccionFilaHistorial } from './accion-fila-historial';
 import { BadgeAsistenciaAula, estadoAsistenciaAula } from './badge-asistencia-aula';
 
@@ -33,6 +34,7 @@ export function TablaHistorialProfesor({ items, total }: TablaHistorialProfesorP
               tono={asistencia.tono}
               titulo={item.title}
               subtitulo={describirFechaCompacta(item.scheduledAt)}
+              detalle={<ResumenValoracion valoracion={item.valoracion} />}
             >
               {asistencia.completa && (
                 <span className="text-sm text-muted-foreground tabular-nums">

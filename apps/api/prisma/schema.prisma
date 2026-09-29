@@ -90,6 +90,22 @@ enum BookingStatus {
   NO_SHOW
 }
 
+/// ¿Pudo el estudiante seguir la clase? (HU-515). Gemelo de `SeguimientoClase`.
+enum SeguimientoClase {
+  SI
+  A_MEDIAS
+  NO
+}
+
+/// Qué falló (HU-515). Gemelo de `ProblemaClase`.
+enum ProblemaClase {
+  INTERPRETE
+  SUBTITULOS
+  CONEXION
+  RITMO
+  OTRO
+}
+
 /// A qué plataforma apunta el enlace de la reunión. Coincide con
 /// `MeetingProvider` de @academia/types.
 ///
@@ -349,6 +365,8 @@ model Booking {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
+  feedback ClassFeedback?
+
   /// El índice único PARCIAL vive solo en SQL (`bookings_active_uniq`,
   /// migración `20260826120000_add_bookings`): Prisma no modela `WHERE` en
   /// `@@unique`, y declararlo aquí generaría uno TOTAL que rompería §4.3
@@ -356,4 +374,21 @@ model Booking {
   @@index([studentId])
   @@index([classroomId])
   @@map("bookings")
+}
+
+/// Valoración anónima de una clase (HU-515, D47). Sin `studentId` propio: sale
+/// de la reserva, y ninguna respuesta al profesor la expone.
+model ClassFeedback {
+  id String @id @default(uuid()) @db.Uuid
+
+  bookingId String  @unique @map("booking_id") @db.Uuid
+  booking   Booking @relation(fields: [bookingId], references: [id], onDelete: Restrict)
+
+  seguimiento SeguimientoClase
+  problemas   ProblemaClase[]  @default([])
+  comentario  String?          @db.VarChar(500)
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("class_feedback")
 }

@@ -613,6 +613,13 @@ export interface ClassroomListItem extends Classroom {
    * con el que configuró el servidor.
    */
   accessOpensAt: string | null;
+  /**
+   * Si quien pide todavía puede valorar esta clase (HU-515), ya decidido por el
+   * servidor: reserva propia terminada, dentro de 7 días y sin valoración
+   * previa. Ausente equivale a `false`; solo `GET /bookings/mias` y
+   * `GET /historial` (estudiante) lo calculan.
+   */
+  puedeValorar?: boolean;
 }
 
 /**
@@ -900,6 +907,56 @@ export interface MisReservasResponse {
   pageSize: number;
 }
 
+/** Ventana para valorar una clase tras su fin, en días (HU-515). */
+export const VALORACION_VENTANA_DIAS = 7;
+
+/** Longitud máxima del comentario de una valoración (HU-515). */
+export const VALORACION_COMENTARIO_MAX = 500;
+
+/** Mínimo de respuestas para que el profesor vea el agregado (D47). */
+export const VALORACION_MINIMO_RESPUESTAS = 3;
+
+/** ¿Pudo el estudiante seguir la clase? (HU-515). */
+export enum SeguimientoClase {
+  SI = 'SI',
+  A_MEDIAS = 'A_MEDIAS',
+  NO = 'NO',
+}
+
+/** Qué falló, cuando no pudo seguirla del todo (HU-515). */
+export enum ProblemaClase {
+  INTERPRETE = 'INTERPRETE',
+  SUBTITULOS = 'SUBTITULOS',
+  CONEXION = 'CONEXION',
+  RITMO = 'RITMO',
+  OTRO = 'OTRO',
+}
+
+/** Cuerpo de `POST /bookings/:id/valoracion` (HU-515). La reserva sale de la ruta. */
+export interface CrearValoracionInput {
+  seguimiento: SeguimientoClase;
+  /** Solo se acepta si `seguimiento` no es `SI`. */
+  problemas?: ProblemaClase[];
+  comentario?: string;
+}
+
+/** Respuesta de `POST /bookings/:id/valoracion`. Confirma el envío sin devolver nada más. */
+export interface CrearValoracionResponse {
+  enviada: true;
+}
+
+/**
+ * Agregado anónimo de las valoraciones de una clase que ve el profesor dueño
+ * (HU-515, D47). Nunca incluye quién respondió ni el comentario.
+ */
+export interface ValoracionAgregada {
+  respuestas: number;
+  si: number;
+  aMedias: number;
+  no: number;
+  problemas: Record<ProblemaClase, number>;
+}
+
 /**
  * Un inscrito en un aula, tal y como lo ve el profesor dueño (HU-305).
  *
@@ -989,6 +1046,8 @@ export interface AulaImpartida extends Classroom {
   totalAsistieron: number;
   /** Reservas `CONFIRMED` todavía sin marcar `ATTENDED`/`NO_SHOW` (D33: sin límite para hacerlo). */
   asistenciaPendiente: number;
+  /** Agregado anónimo (D47). `null` con menos de `VALORACION_MINIMO_RESPUESTAS` respuestas. */
+  valoracion: ValoracionAgregada | null;
 }
 
 /** Respuesta de `GET /historial` para un `TEACHER`: sus aulas ya impartidas. */
@@ -1272,6 +1331,10 @@ export const ApiErrorCode = {
   MEETING_PROVIDER_NOT_ALLOWED: 'MEETING_PROVIDER_NOT_ALLOWED',
   /** El aula no declaró su modo de instrucción y la operación lo exige (HU-506). */
   CLASSROOM_ACCESSIBILITY_NOT_DECLARED: 'CLASSROOM_ACCESSIBILITY_NOT_DECLARED',
+  /** La reserva ya tiene valoración (HU-515). */
+  FEEDBACK_ALREADY_SENT: 'FEEDBACK_ALREADY_SENT',
+  /** Fuera de la ventana para valorar: la clase no terminó o pasaron más de 7 días (HU-515). */
+  FEEDBACK_WINDOW_CLOSED: 'FEEDBACK_WINDOW_CLOSED',
   /** Se superó el límite de peticiones (rate limiting). */
   TOO_MANY_REQUESTS: 'TOO_MANY_REQUESTS',
   DATABASE_UNAVAILABLE: 'DATABASE_UNAVAILABLE',

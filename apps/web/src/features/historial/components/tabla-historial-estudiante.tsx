@@ -2,6 +2,7 @@ import type { ClassroomListItem } from '@academia/types';
 
 import { FilaLista } from '@/components/dominio/fila-lista';
 import { describirFechaCompacta } from '@/features/aulas/lib/horario';
+import { AccionValorarFila } from '@/features/valoracion/components/accion-valorar-fila';
 import { AccionFilaHistorial } from './accion-fila-historial';
 import { BadgeResultadoHistorial, resultadoHistorial } from './badge-resultado-historial';
 
@@ -29,6 +30,9 @@ export function TablaHistorialEstudiante({ items, total }: TablaHistorialEstudia
             subtitulo={`${describirFechaCompacta(item.scheduledAt)} · ${item.teacherFirstName} ${item.teacherLastName}`}
           >
             <BadgeResultadoHistorial estado={item.myBookingStatus} />
+            {item.puedeValorar && item.myBookingId && (
+              <AccionValorarFila bookingId={item.myBookingId} titulo={item.title} />
+            )}
             <AccionFilaHistorial aulaId={item.id} />
           </FilaLista>
         ))}

@@ -60,3 +60,17 @@ export const cancellationWindowClosed = (): ConflictException =>
     code: ApiErrorCode.CANCELLATION_WINDOW_CLOSED,
     message: 'Ya no se puede cancelar esta clase: falta menos del tiempo mínimo permitido.',
   });
+
+/** La reserva ya tiene valoración (HU-515, AC1). */
+export const feedbackAlreadySent = (): ConflictException =>
+  new ConflictException({
+    code: ApiErrorCode.FEEDBACK_ALREADY_SENT,
+    message: 'Ya valoraste esta clase.',
+  });
+
+/** La clase no ha terminado, pasaron más de 7 días, o la reserva no llegó a ocurrir (HU-515, AC1). */
+export const feedbackWindowClosed = (): ConflictException =>
+  new ConflictException({
+    code: ApiErrorCode.FEEDBACK_WINDOW_CLOSED,
+    message: 'Solo puedes valorar una clase desde que termina y hasta 7 días después.',
+  });
