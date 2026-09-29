@@ -1,4 +1,5 @@
 import {
+  ACADEMY_TIMEZONE_DEFAULT,
   ACCESS_WINDOW_MINUTES_DEFAULT,
   CANCELLATION_WINDOW_MINUTES_DEFAULT,
   CLASS_MAX_DURATION_MINUTES_DEFAULT,
@@ -220,6 +221,26 @@ const camposEnv = z.object({
    * Opcional: por defecto 30. El enlace en sí lo arma con `FRONTEND_URL`.
    */
   PASSWORD_RESET_EXPIRY_MINUTES: z.coerce.number().int().positive().default(30),
+
+  /**
+   * Zona IANA de la academia. Agrupa las franjas y los días de las métricas
+   * (§4.7); `scheduledAt` sigue guardándose en UTC. Opcional: por defecto
+   * `America/Bogota`. Una zona inexistente impide arrancar.
+   */
+  ACADEMY_TIMEZONE: z
+    .string()
+    .default(ACADEMY_TIMEZONE_DEFAULT)
+    .refine(
+      (zona) => {
+        try {
+          new Intl.DateTimeFormat('en', { timeZone: zona });
+          return true;
+        } catch {
+          return false;
+        }
+      },
+      { message: 'debe ser una zona horaria IANA válida, p. ej. America/Bogota' },
+    ),
 });
 
 /**

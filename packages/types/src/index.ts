@@ -957,6 +957,86 @@ export interface ValoracionAgregada {
   problemas: Record<ProblemaClase, number>;
 }
 
+/** Máximo de días que abarca una consulta de métricas (HU-516). */
+export const METRICAS_RANGO_MAX_DIAS = 366;
+
+/** Zona horaria de la academia por defecto (HU-516, `ACADEMY_TIMEZONE`). */
+export const ACADEMY_TIMEZONE_DEFAULT = 'America/Bogota';
+
+/** Query de `GET /admin/metricas`. Fechas `YYYY-MM-DD` locales de la academia, inclusivas. */
+export interface MetricasQuery {
+  desde?: string;
+  hasta?: string;
+}
+
+/** `ocupacion` y `asistencia` son razones 0-1, o `null` si el denominador es 0. */
+export interface MetricasIndicadores {
+  clases: number;
+  ocupacion: number | null;
+  asistencia: number | null;
+}
+
+export interface MetricasResumen {
+  clasesPublicadas: number;
+  clasesCanceladas: number;
+  clasesImpartidas: number;
+  ocupacion: number | null;
+  asistencia: number | null;
+  clasesSinAsistenciaMarcada: number;
+  cancelacionesDeEstudiantes: number;
+  estudiantesActivos: number;
+  estudiantesNuevos: number;
+}
+
+export interface MetricasFranja extends MetricasIndicadores {
+  /** 1 = lunes … 7 = domingo, en la zona de la academia. */
+  diaSemana: number;
+  /** 0-23, en la zona de la academia. */
+  hora: number;
+}
+
+export interface MetricasPorNivel extends MetricasIndicadores {
+  nivel: EnglishLevel;
+}
+
+export interface MetricasPorModo extends MetricasIndicadores {
+  /** `null` = sin declarar. */
+  modo: InstructionMode | null;
+}
+
+export interface MetricasPorProfesor extends MetricasIndicadores {
+  profesorId: string;
+  nombre: string;
+}
+
+export interface MetricasComentario {
+  comentario: string;
+  claseTitulo: string;
+  claseFecha: string;
+}
+
+export interface MetricasValoraciones {
+  respuestas: number;
+  si: number;
+  aMedias: number;
+  no: number;
+  problemas: Record<ProblemaClase, number>;
+  comentarios: MetricasComentario[];
+}
+
+/** Respuesta de `GET /admin/metricas`. Nada identifica a un estudiante. */
+export interface MetricasAcademia {
+  desde: string;
+  hasta: string;
+  zonaHoraria: string;
+  resumen: MetricasResumen;
+  porFranja: MetricasFranja[];
+  porNivel: MetricasPorNivel[];
+  porModo: MetricasPorModo[];
+  porProfesor: MetricasPorProfesor[];
+  valoraciones: MetricasValoraciones;
+}
+
 /**
  * Un inscrito en un aula, tal y como lo ve el profesor dueño (HU-305).
  *

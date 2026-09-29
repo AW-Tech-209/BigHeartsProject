@@ -3,6 +3,8 @@ import { Module } from '@nestjs/common';
 import { NotificationsModule } from '../notifications/notifications.module';
 import { AdminClassroomsController } from './admin-classrooms.controller';
 import { AdminClassroomsService } from './admin-classrooms.service';
+import { AdminMetricasController } from './admin-metricas.controller';
+import { AdminMetricasService } from './admin-metricas.service';
 import { AdminController } from './admin.controller';
 import { AdminService } from './admin.service';
 
@@ -18,7 +20,7 @@ import { AdminService } from './admin.service';
  */
 @Module({
   imports: [NotificationsModule],
-  controllers: [AdminController, AdminClassroomsController],
-  providers: [AdminService, AdminClassroomsService],
+  controllers: [AdminController, AdminClassroomsController, AdminMetricasController],
+  providers: [AdminService, AdminClassroomsService, AdminMetricasService],
 })
 export class AdminModule {}
