@@ -17,7 +17,7 @@ permiso, un cupo o una ventana temporal.
 Si una HU parece pedir romper una, **para y dilo**.
 
 1. **Enlace.** `meetingLink` cifrado (AES-256-GCM). Se revela solo con `Booking` `CONFIRMED` y desde
-   `scheduledAt − 30 min`; el profesor dueño lo ve siempre. Fuera de eso **el campo no viaja**. Nunca
+   `scheduledAt − 10 min`; el profesor dueño lo ve siempre. Fuera de eso **el campo no viaja**. Nunca
    en listados. Aula `CANCELLED`: no se revela a nadie.
 2. **Cupos.** Toda mutación de reserva, en transacción que empieza con `SELECT … FOR UPDATE` sobre el
    aula. `currentBookings` solo se toca ahí.
@@ -39,7 +39,7 @@ o la lógica de cupos de `classrooms/`.
   `contrato-api.md` — solo si creas un endpoint, DTO o modelo nuevo.
 - Entorno: solo en `config/env.schema.ts` (+ `.env.example`). Falta una obligatoria → no arranca.
 - Seguridad y tokens ya resueltos (`AUTH_FLOW.md`): no se reimplementan.
-- Recordatorios por cron idempotente con las marcas `reminder24hSentAt` / `reminder30mSentAt`.
+- Recordatorios por cron idempotente con las marcas `reminder24hSentAt` / `reminderAccesoSentAt`.
 
 ## Prohibido
 

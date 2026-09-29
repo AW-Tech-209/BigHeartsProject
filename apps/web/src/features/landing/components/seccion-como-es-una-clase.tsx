@@ -1,3 +1,4 @@
+import { ACCESS_WINDOW_MINUTES_DEFAULT } from '@academia/types';
 import { BookmarkCheck, Clock, PenSquare, Video, type LucideIcon } from 'lucide-react';
 
 import { RotuloSeccion, SeccionLanding } from './primitivos-landing';
@@ -16,7 +17,7 @@ const PASOS: { icon: LucideIcon; titulo: string; cuerpo: string }[] = [
   },
   {
     icon: Clock,
-    titulo: 'El enlace aparece 30 minutos antes',
+    titulo: `El enlace aparece ${ACCESS_WINDOW_MINUTES_DEFAULT} minutos antes`,
     cuerpo: 'Solo en tu pantalla, solo si reservaste.',
   },
   {

@@ -80,7 +80,7 @@ de problemas concretos.
 
 | Hoy — WhatsApp y enlaces sueltos               | Con BigHearts                                                 |
 | ---------------------------------------------- | ------------------------------------------------------------- |
-| El enlace circula libre; entra quien lo tenga. | Solo entra quien reservó, y solo 30 minutos antes.            |
+| El enlace circula libre; entra quien lo tenga. | Solo entra quien reservó, y solo 10 minutos antes.            |
 | El profesor no sabe cuántos vendrán.           | El profesor ve su lista de inscritos antes de la clase.       |
 | No queda registro de asistencia.               | Cada sesión deja historial para estudiante y profesor.        |
 | El estudiante depende de revisar el chat.      | Recibe confirmaciones y recordatorios por email.              |
@@ -131,8 +131,8 @@ a punta.
 2. Explora las clases disponibles filtrando por nivel de inglés y horario.
 3. Reserva su cupo, con la garantía de que ese lugar es suyo y de que nadie puede ocuparlo por
    encima del aforo.
-4. Recibe confirmación y recordatorios por email: al reservar, 24 horas antes y 30 minutos antes.
-5. Accede a la clase cuando el enlace se habilita, 30 minutos antes del inicio.
+4. Recibe confirmación y recordatorios por email: al reservar, 24 horas antes y 10 minutos antes, cuando se abre el acceso.
+5. Accede a la clase cuando el enlace se habilita, 10 minutos antes del inicio.
 6. Consulta su historial de clases reservadas, asistidas y canceladas.
 
 ### 4.2 El recorrido del profesor
@@ -155,7 +155,7 @@ Cuatro reglas de negocio concentran el valor diferencial del producto. Su especi
 está en [`ARQUITECTURA.md` §4](./ARQUITECTURA.md#4-reglas-de-negocio--fase-1).
 
 1. **El enlace es privado y temporal.** Se guarda cifrado y solo se revela a estudiantes con
-   reserva confirmada, dentro de los **30 minutos** previos a la clase. Es el corazón del control
+   reserva confirmada, dentro de los **10 minutos** previos a la clase. Es el corazón del control
    de acceso.
 2. **El cupo es real y se respeta bajo concurrencia.** Si dos estudiantes intentan tomar el último
    lugar al mismo tiempo, exactamente uno lo obtiene. Nunca se vende de más.
@@ -196,7 +196,7 @@ objetivo es que la academia pueda dejar de operar por WhatsApp desde el primer d
   liberación automática del cupo, y **bloqueo de reservas con horario solapado**.
 - Acceso controlado al enlace de videollamada (solo con reserva y dentro de la ventana de 30
   minutos), con el enlace **cifrado en reposo**.
-- Notificaciones por email: confirmación, cancelación y recordatorios (24 h y 30 min antes).
+- Notificaciones por email: confirmación, cancelación y recordatorios (24 h y 10 min antes).
 - Historial de clases para estudiante y profesor, y **marcado manual de asistencia por el profesor**.
 - **Cada aula declara cómo se imparte:** en qué modos de comunicación (lengua de señas, lectura
   labial, texto escrito, audio), si hay intérprete, subtítulos en vivo o materiales visuales, y a

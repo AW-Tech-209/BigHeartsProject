@@ -1,3 +1,4 @@
+import { ACCESS_WINDOW_MINUTES_DEFAULT } from '@academia/types';
 import { BookmarkCheck, DoorOpen, Search, type LucideIcon } from 'lucide-react';
 
 import { RotuloSeccion, SeccionLanding } from './primitivos-landing';
@@ -22,8 +23,7 @@ const PASOS: { n: string; icon: LucideIcon; titulo: string; cuerpo: string }[] =
     n: '03',
     icon: DoorOpen,
     titulo: 'Entras a la clase',
-    cuerpo:
-      'El enlace aparece 30 minutos antes, en tu pantalla, sin que tengas que pedírselo a nadie.',
+    cuerpo: `El enlace aparece ${ACCESS_WINDOW_MINUTES_DEFAULT} minutos antes, en tu pantalla, sin que tengas que pedírselo a nadie.`,
   },
 ];
 

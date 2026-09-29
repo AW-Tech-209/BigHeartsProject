@@ -54,20 +54,21 @@ lo importan. Ver [§5.3](#53-el-paquete-de-tipos-compartidos).
 Cada decisión con su alternativa descartada y su motivo. El análisis largo de las que lo tuvieron
 está en los anexos ([§13](#13-anexos-de-referencia)).
 
-| #   | Decisión                                                              | Alternativa descartada                         | Motivo                                                                                                                                                                                                          |
-| --- | --------------------------------------------------------------------- | ---------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| D1  | **Monolito modular** con NestJS                                       | Microservicios                                 | Equipo de dos personas. Módulos bien encapsulados permiten extraer uno más adelante si la carga lo pide. Ver [§13.1](#131-monolito-modular-vs-microservicios).                                                  |
-| D2  | **Monorepo npm workspaces** (`apps/*` + `packages/*`)                 | Dos repos separados                            | Un solo lockfile, un solo CI, y el contrato de tipos enlazado por symlink en vez de publicado.                                                                                                                  |
-| D3  | **PostgreSQL**                                                        | MongoDB u otro documental                      | Relaciones densas (usuario ↔ aula ↔ reserva) y, sobre todo, **transacciones ACID**: sin ellas la regla de cupos no se puede garantizar.                                                                         |
-| D4  | **Prisma 6** como ORM, fijado a la major 6                            | TypeORM, Prisma 7                              | Tipado end-to-end y migraciones versionadas. La 7 elimina `url`/`directUrl` del schema y rompe la configuración de Supabase: subir es trabajo propio, no un `npm update` (ver `README.md` → Trampas conocidas). |
-| D5  | **JWT de vida corta en memoria + refresh opaco en cookie `httpOnly`** | Solo JWT, o sesión en servidor                 | Un XSS no puede leer ni el refresh (es `httpOnly`) ni robar un access token del disco (nunca toca `localStorage`). Detalle en [`AUTH_FLOW.md`](../AUTH_FLOW.md).                                                |
-| D6  | **Enlace de videollamada manual en Fase 1**                           | Daily.co, Google Meet API                      | El valor diferencial es el control de acceso, no generar la sala. Ver [§13.2](#132-videollamadas-por-qué-enlace-manual-en-fase-1).                                                                              |
-| D7  | **Vite + React 19 SPA**                                               | Next.js                                        | No hay necesidad de SSR ni SEO: todo el producto vive tras autenticación.                                                                                                                                       |
-| D8  | **Tailwind v4 con config en CSS**                                     | Tailwind v3 con `tailwind.config.js`           | Un solo lugar para tokens y tema. **No se crea `tailwind.config.js`.**                                                                                                                                          |
-| D9  | **Contador `currentBookings` + `SELECT … FOR UPDATE`**                | `COUNT` en la transacción, o restricción en BD | Una sola fila que bloquear y lectura de cupo O(1) en el listado. Ver [§4.2](#42-cupos-y-concurrencia).                                                                                                          |
-| D10 | **Asistencia manual marcada por el profesor**                         | Registro automático al revelar el enlace       | Con enlace manual de Zoom/Meet, "vio el enlace" no es "asistió".                                                                                                                                                |
-| D11 | **`@nestjs/schedule` con cron interno** para recordatorios            | BullMQ + Redis, cron externo                   | Suficiente para el volumen de Fase 1 con una instancia. No mete Redis en el stack todavía.                                                                                                                      |
-| D12 | **AES-256-GCM en aplicación** para el enlace                          | `pgcrypto`, o no cifrar                        | Cifrado autenticado del módulo `crypto` de Node, sin dependencias nuevas ni extensiones de PostgreSQL que compliquen los tests locales.                                                                         |
+| #   | Decisión                                                                                                                            | Alternativa descartada                         | Motivo                                                                                                                                                                                                          |
+| --- | ----------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| D1  | **Monolito modular** con NestJS                                                                                                     | Microservicios                                 | Equipo de dos personas. Módulos bien encapsulados permiten extraer uno más adelante si la carga lo pide. Ver [§13.1](#131-monolito-modular-vs-microservicios).                                                  |
+| D2  | **Monorepo npm workspaces** (`apps/*` + `packages/*`)                                                                               | Dos repos separados                            | Un solo lockfile, un solo CI, y el contrato de tipos enlazado por symlink en vez de publicado.                                                                                                                  |
+| D3  | **PostgreSQL**                                                                                                                      | MongoDB u otro documental                      | Relaciones densas (usuario ↔ aula ↔ reserva) y, sobre todo, **transacciones ACID**: sin ellas la regla de cupos no se puede garantizar.                                                                         |
+| D4  | **Prisma 6** como ORM, fijado a la major 6                                                                                          | TypeORM, Prisma 7                              | Tipado end-to-end y migraciones versionadas. La 7 elimina `url`/`directUrl` del schema y rompe la configuración de Supabase: subir es trabajo propio, no un `npm update` (ver `README.md` → Trampas conocidas). |
+| D5  | **JWT de vida corta en memoria + refresh opaco en cookie `httpOnly`**                                                               | Solo JWT, o sesión en servidor                 | Un XSS no puede leer ni el refresh (es `httpOnly`) ni robar un access token del disco (nunca toca `localStorage`). Detalle en [`AUTH_FLOW.md`](../AUTH_FLOW.md).                                                |
+| D6  | **Enlace de videollamada manual en Fase 1**                                                                                         | Daily.co, Google Meet API                      | El valor diferencial es el control de acceso, no generar la sala. Ver [§13.2](#132-videollamadas-por-qué-enlace-manual-en-fase-1).                                                                              |
+| D7  | **Vite + React 19 SPA**                                                                                                             | Next.js                                        | No hay necesidad de SSR ni SEO: todo el producto vive tras autenticación.                                                                                                                                       |
+| D8  | **Tailwind v4 con config en CSS**                                                                                                   | Tailwind v3 con `tailwind.config.js`           | Un solo lugar para tokens y tema. **No se crea `tailwind.config.js`.**                                                                                                                                          |
+| D9  | **Contador `currentBookings` + `SELECT … FOR UPDATE`**                                                                              | `COUNT` en la transacción, o restricción en BD | Una sola fila que bloquear y lectura de cupo O(1) en el listado. Ver [§4.2](#42-cupos-y-concurrencia).                                                                                                          |
+| D10 | **Asistencia manual marcada por el profesor**                                                                                       | Registro automático al revelar el enlace       | Con enlace manual de Zoom/Meet, "vio el enlace" no es "asistió".                                                                                                                                                |
+| D11 | **`@nestjs/schedule` con cron interno** para recordatorios                                                                          | BullMQ + Redis, cron externo                   | Suficiente para el volumen de Fase 1 con una instancia. No mete Redis en el stack todavía.                                                                                                                      |
+| D12 | **AES-256-GCM en aplicación** para el enlace                                                                                        | `pgcrypto`, o no cifrar                        | Cifrado autenticado del módulo `crypto` de Node, sin dependencias nuevas ni extensiones de PostgreSQL que compliquen los tests locales.                                                                         |
+| D46 | **El enlace se abre 10 min antes** (`ACCESS_WINDOW_MINUTES=10`); el recordatorio se mueve con él y pasa a `BOOKING_REMINDER_ACCESO` | Ventana de 30 min                              | Con 30 min el estudiante entraba a una sala vacía y creía que se había equivocado de sala. 10 min alcanzan para acomodarse y encender la cámara.                                                                |
 
 ---
 
@@ -129,7 +130,7 @@ Aquí está su especificación técnica.
 | ------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Almacenamiento      | `Classroom.meetingLink` cifrado con **AES-256-GCM**; clave en `MEETING_LINK_KEY` (env, validada por Zod como `JWT_SECRET`). Nunca en claro en la BD ni en logs. |
 | Quién puede verlo   | El profesor dueño del aula, **siempre**. Un estudiante, **solo** con `Booking.status = CONFIRMED`.                                                              |
-| Cuándo se revela    | Desde `scheduledAt − ACCESS_WINDOW_MINUTES` (por defecto **30**) hasta el final de la clase.                                                                    |
+| Cuándo se revela    | Desde `scheduledAt − ACCESS_WINDOW_MINUTES` (por defecto **10**, D46) hasta el final de la clase.                                                               |
 | Fuera de la ventana | El campo **no viaja en la respuesta**. No se envía cifrado ni vacío: se omite. El frontend nunca debe recibir algo que no puede mostrar.                        |
 | Dónde se decide     | En el **servidor**, siempre. El frontend replica la lógica solo para pintar el estado, nunca como control de acceso.                                            |
 
@@ -254,14 +255,14 @@ con poca antelación solo perjudica al propio profesor. El solapamiento sí bloq
 ### 4.6 Notificaciones
 
 Emails transaccionales en: reserva confirmada, cancelación por el estudiante, cancelación del aula
-por el profesor, y recordatorios **24 h** y **30 min** antes.
+por el profesor, y recordatorios **24 h** antes y **al abrirse el acceso** (10 min antes, `BOOKING_REMINDER_ACCESO`).
 
 Los recordatorios los dispara un cron interno de `@nestjs/schedule` que barre periódicamente las
 reservas `CONFIRMED` con aviso pendiente. Implicaciones:
 
-- Cada reserva necesita marcas de "aviso 24 h enviado" y "aviso 30 min enviado" para que el barrido
+- Cada reserva necesita marcas de "aviso 24 h enviado" y "aviso de acceso enviado" (`reminderAccesoSentAt`) para que el barrido
   sea idempotente y no duplique correos al reiniciar el proceso.
-- El recordatorio de 30 min y la apertura de la ventana de acceso (§4.1) son **el mismo instante**,
+- El recordatorio de acceso y la apertura de la ventana de acceso (§4.1) son **el mismo instante**,
   a propósito: el correo llega justo cuando el enlace ya se puede ver.
 - Con más de una instancia de la API, este diseño duplicaría envíos. Hoy Render corre una sola. Si
   eso cambia, hay que migrar a BullMQ (D11) o poner un lock en BD.
@@ -562,7 +563,7 @@ Variables que introdujo esta auditoría:
 | Variable                      | Por defecto     | Estado                                                                  |
 | ----------------------------- | --------------- | ----------------------------------------------------------------------- |
 | `MEETING_LINK_KEY`            | — (obligatoria) | ✅ **En el esquema desde HU-201.** Clave AES-256-GCM del enlace (§4.1). |
-| `ACCESS_WINDOW_MINUTES`       | `30`            | ✅ **En el esquema desde HU-304.** Ventana de acceso al enlace (§4.1).  |
+| `ACCESS_WINDOW_MINUTES`       | `10`            | ✅ **En el esquema desde HU-304.** Ventana de acceso al enlace (§4.1).  |
 | `CANCELLATION_WINDOW_MINUTES` | `60`            | ⬜ Pendiente. La introduce el Sprint 3 (§4.3).                          |
 | `CLASS_MIN_LEAD_MINUTES`      | `60`            | ✅ **En el esquema desde HU-212.** Antelación mínima (§4.4).            |
 | `CLASS_MAX_DURATION_MINUTES`  | `240`           | ✅ **En el esquema desde HU-212.** Duración máxima (§4.4).              |
@@ -678,14 +679,14 @@ de implementación están en §7.1.
 
 **`Booking`**
 
-| Campo                                      | Tipo                                                 | Nota                                                            |
-| ------------------------------------------ | ---------------------------------------------------- | --------------------------------------------------------------- |
-| `id`                                       | UUID                                                 |                                                                 |
-| `studentId`                                | UUID → `User`                                        |                                                                 |
-| `classroomId`                              | UUID → `Classroom`                                   |                                                                 |
-| `status`                                   | enum `CONFIRMED \| CANCELLED \| ATTENDED \| NO_SHOW` | `ATTENDED`/`NO_SHOW` los fija el profesor al marcar asistencia. |
-| `bookedAt`, `cancelledAt?`                 | `timestamptz`                                        |                                                                 |
-| `reminder24hSentAt?`, `reminder30mSentAt?` | `timestamptz`                                        | Idempotencia del cron (§4.6).                                   |
+| Campo                                         | Tipo                                                 | Nota                                                            |
+| --------------------------------------------- | ---------------------------------------------------- | --------------------------------------------------------------- |
+| `id`                                          | UUID                                                 |                                                                 |
+| `studentId`                                   | UUID → `User`                                        |                                                                 |
+| `classroomId`                                 | UUID → `Classroom`                                   |                                                                 |
+| `status`                                      | enum `CONFIRMED \| CANCELLED \| ATTENDED \| NO_SHOW` | `ATTENDED`/`NO_SHOW` los fija el profesor al marcar asistencia. |
+| `bookedAt`, `cancelledAt?`                    | `timestamptz`                                        |                                                                 |
+| `reminder24hSentAt?`, `reminderAccesoSentAt?` | `timestamptz`                                        | Idempotencia del cron (§4.6).                                   |
 
 Índices: el único parcial de §4.3, más `(classroomId)` y `(studentId, status)` para el historial.
 

@@ -183,3 +183,31 @@ carpeta; su texto original está en GitHub Projects. No se reconstruyen aquí.
 
 Las de Sprint 3 y 4 se convierten **justo antes de empezar cada sprint**, no ahora: dependen de
 decisiones que aún no están tomadas (`ARQUITECTURA.md` §14.6) y se reescribirían.
+
+## Post-Fase 1 · UX (HU-511 – HU-519)
+
+El cliente dejó los planes de clase en pausa y la mejora de la experiencia en manos del equipo. Este
+lote no depende de cómo se organicen niveles o cursos.
+
+| HU                                                       | Título                                          | Capa      | Estado       |
+| -------------------------------------------------------- | ----------------------------------------------- | --------- | ------------ |
+| [HU-511](./HU-511-el-enlace-se-abre-10-minutos-antes.md) | El enlace se abre 10 minutos antes, no 30 (D46) | fullstack | ⬜ Pendiente |
+| [HU-512](./HU-512-guia-antes-de-entrar.md)               | Guía «Antes de entrar» según la plataforma      | frontend  | ⬜ Pendiente |
+| [HU-513](./HU-513-aviso-visual-al-abrirse-el-acceso.md)  | Aviso visual cuando se abre el acceso           | frontend  | ⬜ Pendiente |
+| [HU-514](./HU-514-boton-necesitas-ayuda.md)              | Botón «¿Necesitas ayuda?»                       | frontend  | ⬜ Pendiente |
+| [HU-515](./HU-515-pudiste-seguir-la-clase.md)            | «¿Pudiste seguir la clase?» (D47)               | fullstack | ⬜ Pendiente |
+| [HU-516](./HU-516-metricas-de-la-academia-api.md)        | Métricas de la academia (API)                   | backend   | ⬜ Pendiente |
+| [HU-517](./HU-517-panel-de-metricas.md)                  | Panel de métricas del administrador             | frontend  | ⬜ Pendiente |
+| [HU-518](./HU-518-vista-de-calendario-semanal.md)        | Vista de calendario semanal                     | fullstack | ⬜ Pendiente |
+| [HU-519](./HU-519-control-de-tamano-de-texto.md)         | Control de tamaño de texto                      | frontend  | ⬜ Pendiente |
+
+```
+HU-511 (ventana 10 min) ──► HU-512 (guía antes de entrar)
+                        └─► HU-513 (aviso visual)
+HU-515 (valoración) ──► HU-516 (métricas API) ──► HU-517 (panel de métricas)
+HU-514 (ayuda) · HU-518 (calendario) · HU-519 (tamaño de texto) ── sin dependencias
+```
+
+HU-511 va primero: cambia una regla de negocio y el copy de las demás cuenta con ella. Cambian
+reglas o registran decisiones nuevas: **HU-511 (D46)** y **HU-515 (D47)**. Las dos se escriben en
+`ARQUITECTURA.md` en el mismo PR.

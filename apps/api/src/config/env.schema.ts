@@ -202,8 +202,8 @@ const camposEnv = z.object({
     .optional(),
 
   /**
-   * URL del frontend desplegado. La usa el recordatorio de 30 min (HU-402,
-   * §4.6) para enlazar a la pantalla del aula, nunca al enlace de la
+   * URL del frontend desplegado. La usa el recordatorio de apertura del acceso
+   * (§4.6) para enlazar a la pantalla del aula, nunca al enlace de la
    * videollamada. Opcional: por defecto el Vite dev server local.
    */
   FRONTEND_URL: z.string().url('debe ser una URL válida').default('http://localhost:5173'),

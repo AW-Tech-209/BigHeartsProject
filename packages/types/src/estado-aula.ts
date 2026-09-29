@@ -27,13 +27,10 @@ export const UMBRAL_ULTIMOS_CUPOS = 3;
 
 /**
  * Minutos antes de `scheduledAt` en los que se abre el acceso al enlace.
- * `contrato-api.md` ya fija el valor en 30; el env var `ACCESS_WINDOW_MINUTES`
- * que lo hará configurable de verdad lo introduce HU-303. Hasta entonces esta
- * constante es el default, y el parámetro de `derivarEstadoAula` existe para
- * que HU-303 no tenga que tocar la firma de la función, solo dejar de usar el
- * default.
+ * Es el default del env var `ACCESS_WINDOW_MINUTES`; 10 y no 30 para que el
+ * estudiante no entre a una sala vacía (D46).
  */
-export const ACCESS_WINDOW_MINUTES_DEFAULT = 30;
+export const ACCESS_WINDOW_MINUTES_DEFAULT = 10;
 
 export type ParametrosDerivarEstadoAula = {
   classroom: Pick<

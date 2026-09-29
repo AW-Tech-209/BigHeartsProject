@@ -1,3 +1,4 @@
+import { ACCESS_WINDOW_MINUTES_DEFAULT } from '@academia/types';
 import { BookmarkCheck, CalendarX, Lock, RotateCcw, type LucideIcon } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
@@ -24,7 +25,7 @@ const REGLAS: {
     riel: 'bg-attention',
     colorIcono: 'text-attention-soft-foreground',
     titulo: 'El enlace no circula',
-    cuerpo: 'Se guarda cifrado y solo lo ve quien reservó, 30 minutos antes de empezar.',
+    cuerpo: `Se guarda cifrado y solo lo ve quien reservó, ${ACCESS_WINDOW_MINUTES_DEFAULT} minutos antes de empezar.`,
   },
   {
     icon: RotateCcw,

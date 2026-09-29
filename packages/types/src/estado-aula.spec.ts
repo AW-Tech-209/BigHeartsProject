@@ -71,7 +71,7 @@ describe('derivarEstadoAula — los nueve estados, uno por uno', () => {
 
   it('acceso-abierto: reserva CONFIRMED y now >= scheduledAt - ACCESS_WINDOW_MINUTES', () => {
     const aula = classroom({
-      scheduledAt: new Date(AHORA.getTime() + 10 * 60_000).toISOString(), // en 10 min, dentro de la ventana de 30
+      scheduledAt: new Date(AHORA.getTime() + 5 * 60_000).toISOString(), // en 5 min, dentro de la ventana
     });
     expect(derivarEstadoAula({ classroom: aula, ahora: AHORA, tieneReservaConfirmada: true })).toBe(
       'acceso-abierto',
@@ -159,7 +159,18 @@ describe('derivarEstadoAula — bordes de la ventana de acceso', () => {
     return classroom({ scheduledAt: new Date(AHORA.getTime() + minutos * 60_000).toISOString() });
   }
 
-  it('en el instante exacto de apertura (now = scheduledAt - 30min), ya abrió', () => {
+  it('por defecto abre a los 10 minutos: a 11 sigue reservada, a 10 ya abrió', () => {
+    const estadoA = (minutos: number) =>
+      derivarEstadoAula({
+        classroom: aulaEnMinutos(minutos),
+        ahora: AHORA,
+        tieneReservaConfirmada: true,
+      });
+    expect(estadoA(11)).toBe('reservada');
+    expect(estadoA(10)).toBe('acceso-abierto');
+  });
+
+  it('en el instante exacto de apertura (now = scheduledAt - ventana), ya abrió', () => {
     expect(
       derivarEstadoAula({
         classroom: aulaEnMinutos(ACCESS_WINDOW_MINUTES_DEFAULT),
@@ -192,7 +203,7 @@ describe('derivarEstadoAula — bordes de la ventana de acceso', () => {
   it('accessWindowMinutes es configurable (gancho de HU-303)', () => {
     expect(
       derivarEstadoAula({
-        classroom: aulaEnMinutos(10),
+        classroom: aulaEnMinutos(8),
         ahora: AHORA,
         tieneReservaConfirmada: true,
         accessWindowMinutes: 5,

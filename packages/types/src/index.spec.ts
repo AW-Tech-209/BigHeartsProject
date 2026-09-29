@@ -145,7 +145,7 @@ describe('ApiErrorCode', () => {
 
 describe('coherencia temporal del aula (HU-212)', () => {
   it('la antelación mínima por defecto no baja de la ventana de acceso', () => {
-    // Por debajo de ACCESS_WINDOW_MINUTES (30, §4.1) el enlace se revelaría en
+    // Por debajo de ACCESS_WINDOW_MINUTES (§4.1) el enlace se revelaría en
     // el mismo instante en que se publica la clase, que es justo lo que esta
     // regla existe para impedir. Bajar este número rompe §4.1 en silencio.
     expect(CLASS_MIN_LEAD_MINUTES_DEFAULT).toBeGreaterThanOrEqual(30);

@@ -41,7 +41,7 @@ dominio: `apps/web/src/features/<dominio>/{api,components,hooks,lib}` + `pages/`
 
 Detalle en los skills `bighearts-backend` y `bighearts-ui`.
 
-1. Enlace de clase **cifrado**; solo con reserva `CONFIRMED` y dentro de los **30 min** previos. Si
+1. Enlace de clase **cifrado**; solo con reserva `CONFIRMED` y dentro de los **10 min** previos. Si
    no, el campo no viaja.
 2. Cupo con **transacción + `SELECT … FOR UPDATE`**; `currentBookings` solo se muta ahí.
 3. Cancelar hasta **60 min antes**, liberando cupo en la misma transacción; la reserva pasa a

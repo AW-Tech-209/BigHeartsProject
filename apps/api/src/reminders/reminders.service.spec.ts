@@ -1,5 +1,5 @@
 import type { SchedulerRegistry } from '@nestjs/schedule';
-import { ClassroomStatus } from '@academia/types';
+import { ACCESS_WINDOW_MINUTES_DEFAULT, ClassroomStatus } from '@academia/types';
 import { describe, expect, it, vi } from 'vitest';
 
 import type { AppConfigService } from '../config/app-config.service';
@@ -9,7 +9,7 @@ import type { PrismaService } from '../prisma/prisma.service';
 import { RemindersService } from './reminders.service';
 
 const CONFIG = {
-  accessWindowMinutes: 30,
+  accessWindowMinutes: ACCESS_WINDOW_MINUTES_DEFAULT,
   frontendUrl: 'https://academia-web.vercel.app',
   reminderSweepIntervalSeconds: 60,
 } as unknown as AppConfigService;
@@ -18,7 +18,7 @@ interface ReservaFake {
   id: string;
   status: 'CONFIRMED' | 'CANCELLED';
   reminder24hSentAt: Date | null;
-  reminder30mSentAt: Date | null;
+  reminderAccesoSentAt: Date | null;
   student: { email: string; firstName: string };
   classroom: {
     id: string;
@@ -34,7 +34,7 @@ function reserva(overrides: Partial<ReservaFake> = {}): ReservaFake {
     id: 'booking-1',
     status: 'CONFIRMED',
     reminder24hSentAt: null,
-    reminder30mSentAt: null,
+    reminderAccesoSentAt: null,
     student: { email: 'ana@academia.local', firstName: 'Ana' },
     classroom: {
       id: 'aula-1',
@@ -50,8 +50,8 @@ function reserva(overrides: Partial<ReservaFake> = {}): ReservaFake {
 /** Fake con estado real: filtra y escribe marcas como lo haría Postgres, para probar la idempotencia de verdad. */
 function fakePrisma(reservas: ReservaFake[]) {
   const findMany = vi.fn(async ({ where }: { where: Record<string, unknown> }) => {
-    const marca: 'reminder24hSentAt' | 'reminder30mSentAt' =
-      'reminder24hSentAt' in where ? 'reminder24hSentAt' : 'reminder30mSentAt';
+    const marca: 'reminder24hSentAt' | 'reminderAccesoSentAt' =
+      'reminder24hSentAt' in where ? 'reminder24hSentAt' : 'reminderAccesoSentAt';
     const classroomWhere = where.classroom as { scheduledAt: { gt: Date; lte: Date } };
     const rango = classroomWhere.scheduledAt;
 
@@ -78,8 +78,8 @@ function fakePrisma(reservas: ReservaFake[]) {
 
   const updateMany = vi.fn(
     async ({ where, data }: { where: Record<string, unknown>; data: Partial<ReservaFake> }) => {
-      const marca: 'reminder24hSentAt' | 'reminder30mSentAt' =
-        'reminder24hSentAt' in where ? 'reminder24hSentAt' : 'reminder30mSentAt';
+      const marca: 'reminder24hSentAt' | 'reminderAccesoSentAt' =
+        'reminder24hSentAt' in where ? 'reminder24hSentAt' : 'reminderAccesoSentAt';
       // `where.id` llega como string en el resto de servicios, pero el barrido
       // lo manda agrupado (`{ in: [...] }`): el fake acepta las dos formas.
       const ids = typeof where.id === 'string' ? [where.id] : (where.id as { in: string[] }).in;
@@ -117,10 +117,10 @@ function setup(reservas: ReservaFake[], notify = vi.fn().mockResolvedValue({ del
 const AHORA = new Date('2026-09-01T00:00:00.000Z');
 
 describe('RemindersService.sweep', () => {
-  it('AC1 — una reserva en ventana recibe el recordatorio de 24h y el de 30 min, cada uno con su marca', async () => {
+  it('AC1 — una reserva en ventana recibe el recordatorio de 24h y el de apertura del acceso, cada uno con su marca', async () => {
     vi.setSystemTime(AHORA);
     const r = reserva({
-      classroom: { ...reserva().classroom, scheduledAt: new Date(AHORA.getTime() + 20 * 60_000) },
+      classroom: { ...reserva().classroom, scheduledAt: new Date(AHORA.getTime() + 10 * 60_000) },
     });
     const { service, notify } = setup([r]);
 
@@ -130,17 +130,31 @@ describe('RemindersService.sweep', () => {
       expect.objectContaining({ type: NotificationType.BOOKING_REMINDER_24H }),
     );
     expect(notify).toHaveBeenCalledWith(
-      expect.objectContaining({ type: NotificationType.BOOKING_REMINDER_30M }),
+      expect.objectContaining({ type: NotificationType.BOOKING_REMINDER_ACCESO }),
     );
     expect(r.reminder24hSentAt).not.toBeNull();
-    expect(r.reminder30mSentAt).not.toBeNull();
+    expect(r.reminderAccesoSentAt).not.toBeNull();
+    vi.useRealTimers();
+  });
+
+  it('a 11 minutos del inicio todavía no sale el recordatorio de acceso', async () => {
+    vi.setSystemTime(AHORA);
+    const r = reserva({
+      classroom: { ...reserva().classroom, scheduledAt: new Date(AHORA.getTime() + 11 * 60_000) },
+    });
+    const { service, notify } = setup([r]);
+
+    await service.sweep();
+
+    expect(notify).toHaveBeenCalledTimes(1);
+    expect(r.reminderAccesoSentAt).toBeNull();
     vi.useRealTimers();
   });
 
   it('AC2 — dos barridos seguidos no duplican el envío', async () => {
     vi.setSystemTime(AHORA);
     const r = reserva({
-      classroom: { ...reserva().classroom, scheduledAt: new Date(AHORA.getTime() + 20 * 60_000) },
+      classroom: { ...reserva().classroom, scheduledAt: new Date(AHORA.getTime() + 10 * 60_000) },
     });
     const { service, notify } = setup([r]);
 
@@ -155,7 +169,7 @@ describe('RemindersService.sweep', () => {
     vi.setSystemTime(AHORA);
     const r = reserva({
       status: 'CANCELLED',
-      classroom: { ...reserva().classroom, scheduledAt: new Date(AHORA.getTime() + 20 * 60_000) },
+      classroom: { ...reserva().classroom, scheduledAt: new Date(AHORA.getTime() + 10 * 60_000) },
     });
     const { service, notify } = setup([r]);
 
@@ -171,7 +185,7 @@ describe('RemindersService.sweep', () => {
       classroom: {
         ...reserva().classroom,
         status: ClassroomStatus.CANCELLED,
-        scheduledAt: new Date(AHORA.getTime() + 20 * 60_000),
+        scheduledAt: new Date(AHORA.getTime() + 10 * 60_000),
       },
     });
     const { service, notify } = setup([r]);
@@ -198,7 +212,7 @@ describe('RemindersService.sweep', () => {
   it('AC5 — un fallo del proveedor no deja la marca escrita: el siguiente barrido reintenta', async () => {
     vi.setSystemTime(AHORA);
     const r = reserva({
-      classroom: { ...reserva().classroom, scheduledAt: new Date(AHORA.getTime() + 20 * 60_000) },
+      classroom: { ...reserva().classroom, scheduledAt: new Date(AHORA.getTime() + 10 * 60_000) },
     });
     const notify = vi.fn().mockRejectedValue(new Error('Resend caído'));
     const { service } = setup([r], notify);
@@ -206,27 +220,27 @@ describe('RemindersService.sweep', () => {
     await service.sweep();
 
     expect(r.reminder24hSentAt).toBeNull();
-    expect(r.reminder30mSentAt).toBeNull();
+    expect(r.reminderAccesoSentAt).toBeNull();
 
     notify.mockResolvedValue({ delivered: true });
     await service.sweep();
 
     expect(r.reminder24hSentAt).not.toBeNull();
-    expect(r.reminder30mSentAt).not.toBeNull();
+    expect(r.reminderAccesoSentAt).not.toBeNull();
     vi.useRealTimers();
   });
 
-  it('el recordatorio de 30 min enlaza a la pantalla del aula, no lleva el enlace de la videollamada', async () => {
+  it('el recordatorio de apertura del acceso enlaza a la pantalla del aula, no lleva el enlace de la videollamada', async () => {
     vi.setSystemTime(AHORA);
     const r = reserva({
-      classroom: { ...reserva().classroom, scheduledAt: new Date(AHORA.getTime() + 20 * 60_000) },
+      classroom: { ...reserva().classroom, scheduledAt: new Date(AHORA.getTime() + 10 * 60_000) },
     });
     const { service, notify } = setup([r]);
 
     await service.sweep();
 
     const llamada = notify.mock.calls.find(
-      ([n]) => n.type === NotificationType.BOOKING_REMINDER_30M,
+      ([n]) => n.type === NotificationType.BOOKING_REMINDER_ACCESO,
     );
     expect(llamada![0].classroom.url).toBe('https://academia-web.vercel.app/aulas/aula-1');
     expect(llamada![0]).not.toHaveProperty('meetingLink');

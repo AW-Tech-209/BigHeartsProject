@@ -129,7 +129,7 @@ export class AppConfigService {
     return this.config.get('EMAIL_FROM', { infer: true });
   }
 
-  /** URL del frontend, para enlazar a la pantalla del aula en el recordatorio de 30 min. */
+  /** URL del frontend, para enlazar a la pantalla del aula en el recordatorio de apertura del acceso. */
   get frontendUrl(): string {
     return this.config.get('FRONTEND_URL', { infer: true });
   }

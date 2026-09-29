@@ -81,7 +81,7 @@ export class CreateClassroomDto implements CreateClassroomInput {
 
   // `require_protocol` obliga a que el profesor pegue la URL entera. Un
   // `meet.google.com/abc` sin esquema se guardaría, y el enlace que el
-  // estudiante abriría 30 minutos antes de su clase no llevaría a ninguna parte
+  // estudiante abriría minutos antes de su clase no llevaría a ninguna parte
   // — que es justo el momento en el que el producto no se puede permitir fallar.
   //
   // La plataforma (Zoom, Meet o Teams) no se valida aquí: la deriva el

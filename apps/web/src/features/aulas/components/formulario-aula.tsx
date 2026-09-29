@@ -1,4 +1,5 @@
 import {
+  ACCESS_WINDOW_MINUTES_DEFAULT,
   ApiErrorCode,
   CLASS_MAX_DURATION_MINUTES_DEFAULT,
   type Classroom,
@@ -528,7 +529,7 @@ export function FormularioAula({ aula, duplicarDesde, onGuardada }: FormularioAu
       {/*
         B3. La ayuda es PERMANENTE, no un tooltip ni un texto que desaparece al
         escribir: contiene la promesa central del producto —el enlace no se
-        reparte, se abre 30 minutos antes— y el profesor tiene que entenderla
+        reparte, se abre poco antes de la clase— y el profesor tiene que entenderla
         justo en el momento en que lo pega, no después.
       */}
       <Field
@@ -543,8 +544,8 @@ export function FormularioAula({ aula, duplicarDesde, onGuardada }: FormularioAu
             <span className="mt-2 flex items-start gap-1.5 font-medium text-foreground">
               <Lock aria-hidden="true" strokeWidth={2} className="mt-0.5 size-4 shrink-0" />
               <span>
-                Tus estudiantes solo verán este enlace 30 minutos antes de la clase, y solo si
-                reservaron su cupo. Se guarda cifrado.
+                Tus estudiantes solo verán este enlace {ACCESS_WINDOW_MINUTES_DEFAULT} minutos antes
+                de la clase, y solo si reservaron su cupo. Se guarda cifrado.
               </span>
             </span>
           </>
