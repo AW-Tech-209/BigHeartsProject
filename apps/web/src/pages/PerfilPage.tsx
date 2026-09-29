@@ -7,6 +7,7 @@ import { PaginaCabecera } from '@/components/layout/pagina-cabecera';
 import { Button } from '@/components/ui/button';
 import { Callout } from '@/components/ui/callout';
 import { Card } from '@/components/ui/card';
+import { InterruptorAvisoNavegador } from '@/features/aulas/components/interruptor-aviso-navegador';
 import { ProfileForm } from '@/features/profile/components/profile-form';
 import { useProfile } from '@/features/profile/hooks/use-profile';
 
@@ -124,6 +125,17 @@ export function PerfilPage() {
                 la página, el formulario se reinicia con los datos correctos en
                 vez de conservar el estado del anterior. */}
             <ProfileForm key={user.id} user={user} />
+
+            {user.role === UserRole.STUDENT && (
+              <Card className="space-y-3 p-5 sm:p-6">
+                <h2 className="text-base font-semibold text-foreground">Avisos de clase</h2>
+                <p className="text-base text-muted-foreground">
+                  Con BigHearts abierta en otra pestaña, el título y el ícono de la pestaña te
+                  avisan cuando tu clase abre. Aquí puedes añadir una notificación del navegador.
+                </p>
+                <InterruptorAvisoNavegador />
+              </Card>
+            )}
           </div>
         )}
       </div>

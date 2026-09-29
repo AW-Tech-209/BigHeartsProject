@@ -1,4 +1,4 @@
-import type { User } from '@academia/types';
+import { type User, UserRole } from '@academia/types';
 import { LoaderCircle, LogOut } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { Link, NavLink, useNavigate } from 'react-router-dom';
@@ -6,6 +6,7 @@ import { Link, NavLink, useNavigate } from 'react-router-dom';
 import { MarcaBigHearts } from '@/components/dominio/marca-bighearts';
 import { SkipLink } from '@/components/skip-link';
 import { Button } from '@/components/ui/button';
+import { AvisoAperturaDeClase } from '@/features/aulas/components/aviso-apertura-de-clase';
 import { useAuth } from '@/features/auth/hooks/use-auth';
 import { useLogout } from '@/features/auth/hooks/use-logout';
 import { roleDisplay } from '@/features/auth/lib/role-labels';
@@ -92,7 +93,10 @@ export function AppShell({ children, conNavegacion = true }: AppShellProps) {
         tabIndex={-1}
         className={cn('flex-1 outline-none', navegacionAbajo && 'pb-24')}
       >
-        <Contenedor className="space-y-8 py-8">{children}</Contenedor>
+        <Contenedor className="space-y-8 py-8">
+          {user?.role === UserRole.STUDENT && <AvisoAperturaDeClase />}
+          {children}
+        </Contenedor>
       </main>
 
       {navegacionAbajo && (

@@ -156,7 +156,8 @@ describe('MisClasesPage — D34: solo lo próximo, con enlace al historial', () 
     renderConProviders(<MisClasesPage />);
 
     await screen.findByRole('article');
-    expect(vi.mocked(getMisReservas).mock.calls[0]?.[0]).toEqual({
+    // El aviso de apertura del shell pide además `pageSize: 1`: aquí importa la de la página.
+    expect(vi.mocked(getMisReservas).mock.calls.map(([consulta]) => consulta)).toContainEqual({
       estado: EstadoTemporalAula.PROXIMAS,
     });
     expect(screen.getByRole('link', { name: 'Ver historial' })).toHaveAttribute(
