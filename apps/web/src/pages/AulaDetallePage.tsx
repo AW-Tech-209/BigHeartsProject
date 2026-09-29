@@ -35,6 +35,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { AccionCancelarReserva } from '@/features/aulas/components/accion-cancelar-reserva';
 import { AccionesDeAula } from '@/features/aulas/components/acciones-de-aula';
 import { AccionReservarAula } from '@/features/aulas/components/accion-reservar-aula';
+import { GuiaAntesDeEntrar } from '@/features/aulas/components/guia-antes-de-entrar';
 import { InscritosAula } from '@/features/aulas/components/inscritos-aula';
 import { useAccesoAlEnlace } from '@/features/aulas/hooks/use-acceso-al-enlace';
 import { esAulaNoEncontrada, useClassroom } from '@/features/aulas/hooks/use-classroom';
@@ -44,6 +45,7 @@ import {
   describirHorario,
   describirHorarioPartes,
 } from '@/features/aulas/lib/horario';
+import { debeMostrarGuia } from '@/features/aulas/lib/guia-plataforma';
 import { nivelesDeIngles } from '@/features/aulas/lib/niveles';
 import { etiquetaPlataformaReunion } from '@/features/aulas/lib/plataforma-reunion';
 import { puedeReservar } from '@/features/aulas/lib/puede-reservar';
@@ -288,6 +290,15 @@ function DetalleDelAula({
               </p>
             </div>
           </section>
+
+          {debeMostrarGuia(aula.myBookingStatus, estado === 'finalizada') && (
+            <GuiaAntesDeEntrar
+              proveedor={aula.meetingProvider}
+              modo={aula.instructionMode}
+              apoyos={aula.supports}
+              abiertaPorDefecto={accesoAlEnlace === 'abierto'}
+            />
+          )}
 
           <InscritosAula
             classroomId={aula.id}

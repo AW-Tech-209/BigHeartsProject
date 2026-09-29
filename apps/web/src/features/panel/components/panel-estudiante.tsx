@@ -167,6 +167,7 @@ function TarjetaClaseProxima({ aula }: { aula: ClassroomListItem }) {
             id: aula.id,
             accessState: aula.accessState ?? 'sin-acceso',
             accessOpensAt: aula.accessOpensAt ?? null,
+            instructionMode: aula.instructionMode,
           }}
         />
       </div>
