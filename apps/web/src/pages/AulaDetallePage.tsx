@@ -50,6 +50,7 @@ import { debeMostrarGuia } from '@/features/aulas/lib/guia-plataforma';
 import { nivelesDeIngles } from '@/features/aulas/lib/niveles';
 import { etiquetaPlataformaReunion } from '@/features/aulas/lib/plataforma-reunion';
 import { puedeReservar } from '@/features/aulas/lib/puede-reservar';
+import { SeccionValoracionAula } from '@/features/valoracion/components/seccion-valoracion-aula';
 import { useAuth } from '@/features/auth/hooks/use-auth';
 import { cn } from '@/lib/utils';
 
@@ -292,6 +293,9 @@ function DetalleDelAula({
               </p>
             </div>
           </section>
+
+          {/* Solo llega al profesor dueño de una clase terminada: el servidor omite la clave. */}
+          {aula.valoracion !== undefined && <SeccionValoracionAula valoracion={aula.valoracion} />}
 
           {debeMostrarGuia(aula.myBookingStatus, estado === 'finalizada') && (
             <GuiaAntesDeEntrar

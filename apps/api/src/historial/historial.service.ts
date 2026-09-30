@@ -139,7 +139,7 @@ export class HistorialService {
       this.prisma.classroom.count({ where }),
     ]);
 
-    // Solo salen los campos del agregado: nunca el comentario ni la reserva (D47).
+    // Solo salen los campos del agregado: el comentario como texto suelto, nunca la reserva (D47.1).
     const feedback =
       rows.length > 0
         ? await this.prisma.classFeedback.findMany({
@@ -147,6 +147,7 @@ export class HistorialService {
             select: {
               seguimiento: true,
               problemas: true,
+              comentario: true,
               booking: { select: { classroomId: true } },
             },
           })

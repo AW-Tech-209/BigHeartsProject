@@ -1351,7 +1351,10 @@ const administradora: AuthenticatedUser = {
  */
 function setupDetalle(
   aula: Record<string, unknown> | null = {},
-  options: { miReserva?: { id?: string; status: string } | null } = {},
+  options: {
+    miReserva?: { id?: string; status: string } | null;
+    feedback?: { seguimiento: string; problemas: string[]; comentario: string | null }[];
+  } = {},
 ) {
   const cipher = new MeetingLinkCipher({ meetingLinkKey: 'a'.repeat(64) } as AppConfigService);
   const cifrado = cipher.encrypt(ENLACE);
@@ -1360,20 +1363,77 @@ function setupDetalle(
     .fn()
     .mockResolvedValue(aula === null ? null : filaDeAula({ meetingLink: cifrado, ...aula }));
   const findFirstBooking = vi.fn().mockResolvedValue(options.miReserva ?? null);
+  const findManyFeedback = vi.fn().mockResolvedValue(options.feedback ?? []);
   const prisma = {
     classroom: { findUnique },
     booking: { findFirst: findFirstBooking },
+    classFeedback: { findMany: findManyFeedback },
   } as unknown as PrismaService;
 
   return {
     service: new ClassroomsService(prisma, cipher, configuracion(), notificacionesFalsas().service),
     findUnique,
     findFirstBooking,
+    findManyFeedback,
     cifrado,
   };
 }
 
 const ID_DEL_AULA = '44444444-4444-4444-8444-444444444444';
+
+/** D47.1: el profesor dueño lee los comentarios, con la misma protección que el admin. */
+describe('ClassroomsService.getClassroomDetail — valoración del dueño (D47.1, AC2–AC4)', () => {
+  const terminada = { endsAt: new Date('2020-01-01T10:00:00.000Z') };
+  const respuesta = (comentario: string | null) => ({
+    seguimiento: 'SI',
+    problemas: [],
+    comentario,
+  });
+
+  it('el dueño de una clase terminada con 3 respuestas recibe solo textos sueltos', async () => {
+    const { service } = setupDetalle(terminada, {
+      feedback: [respuesta('Muy claro'), respuesta(null), respuesta('  Más despacio  ')],
+    });
+
+    const { valoracion } = await service.getClassroomDetail(profesorDelToken, ID_DEL_AULA);
+
+    expect(valoracion?.comentarios.slice().sort()).toEqual(['Muy claro', 'Más despacio']);
+    expect(valoracion?.comentarios.every((c) => typeof c === 'string')).toBe(true);
+  });
+
+  it('con 2 respuestas es null y no llega ni un comentario', async () => {
+    const { service } = setupDetalle(terminada, {
+      feedback: [respuesta('Muy claro'), respuesta('Otro')],
+    });
+
+    const { valoracion } = await service.getClassroomDetail(profesorDelToken, ID_DEL_AULA);
+
+    expect(valoracion).toBeNull();
+  });
+
+  it.each([
+    ['otro profesor', () => otroProfesor],
+    ['un estudiante', () => estudiante],
+    ['un administrador', () => administradora],
+  ])('%s recibe una respuesta SIN la clave valoracion', async (_quien, usuario) => {
+    const { service, findManyFeedback } = setupDetalle(terminada, {
+      feedback: [respuesta('Muy claro'), respuesta('a'), respuesta('b')],
+    });
+
+    const classroom = await service.getClassroomDetail(usuario(), ID_DEL_AULA);
+
+    expect(classroom).not.toHaveProperty('valoracion');
+    expect(findManyFeedback).not.toHaveBeenCalled();
+  });
+
+  it('el dueño de una clase que no terminó tampoco la recibe', async () => {
+    const { service } = setupDetalle({ endsAt: new Date('2099-01-01T10:00:00.000Z') });
+
+    const classroom = await service.getClassroomDetail(profesorDelToken, ID_DEL_AULA);
+
+    expect(classroom).not.toHaveProperty('valoracion');
+  });
+});
 
 describe('ClassroomsService.getClassroomDetail — el aula completa (A1, AC1)', () => {
   it('devuelve el aula con su profesor, su descripción y sus datos de horario', async () => {

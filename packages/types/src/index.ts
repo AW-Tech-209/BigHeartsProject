@@ -717,6 +717,12 @@ export interface ClassroomDetail extends ClassroomListItem {
    * Son dos respuestas distintas y el frontend las trata distinto.
    */
   myBookingStatus: BookingStatus | null;
+  /**
+   * Valoración de los estudiantes, **solo para el profesor dueño y solo de una
+   * clase terminada** (D47.1). Para el resto la clave se omite, como el enlace.
+   * `null` si hay menos de `VALORACION_MINIMO_RESPUESTAS` respuestas.
+   */
+  valoracion?: ValoracionAgregada | null;
 }
 
 /**
@@ -959,7 +965,8 @@ export interface CrearValoracionResponse {
 
 /**
  * Agregado anónimo de las valoraciones de una clase que ve el profesor dueño
- * (HU-515, D47). Nunca incluye quién respondió ni el comentario.
+ * (HU-515, D47, D47.1). Nunca incluye quién respondió: los comentarios son
+ * cadenas sueltas, sin autor ni fecha, en orden aleatorio.
  */
 export interface ValoracionAgregada {
   respuestas: number;
@@ -967,6 +974,8 @@ export interface ValoracionAgregada {
   aMedias: number;
   no: number;
   problemas: Record<ProblemaClase, number>;
+  /** Solo el texto, barajado: el orden de llegada permitiría cruzarlo con quién respondió. */
+  comentarios: string[];
 }
 
 /** Máximo de días que abarca una consulta por rango de «Mis clases» y «Mis aulas». */

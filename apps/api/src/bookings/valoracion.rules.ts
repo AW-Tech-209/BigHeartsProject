@@ -1,3 +1,5 @@
+import { randomInt } from 'node:crypto';
+
 import {
   BookingStatus,
   ProblemaClase,
@@ -33,11 +35,12 @@ export function puedeValorarReserva(
 }
 
 /**
- * Agrega las respuestas de una clase (D47). `null` bajo el mínimo: con grupos
- * pequeños, mostrar el conteo delataría a quien respondió.
+ * Agrega las respuestas de una clase (D47, D47.1). `null` bajo el mínimo: con grupos
+ * pequeños, mostrar el conteo o un comentario delataría a quien respondió.
+ * Los comentarios salen como texto suelto y barajado, nunca en orden de llegada.
  */
 export function agregarValoraciones(
-  filas: { seguimiento: string; problemas: string[] }[],
+  filas: { seguimiento: string; problemas: string[]; comentario?: string | null }[],
 ): ValoracionAgregada | null {
   if (filas.length < VALORACION_MINIMO_RESPUESTAS) {
     return null;
@@ -62,5 +65,17 @@ export function agregarValoraciones(
     aMedias: cuenta(SeguimientoClase.A_MEDIAS),
     no: cuenta(SeguimientoClase.NO),
     problemas,
+    comentarios: barajar(
+      filas.flatMap((fila) => (fila.comentario?.trim() ? [fila.comentario.trim()] : [])),
+    ),
   };
+}
+
+function barajar<T>(items: T[]): T[] {
+  const copia = [...items];
+  for (let i = copia.length - 1; i > 0; i--) {
+    const j = randomInt(i + 1);
+    [copia[i], copia[j]] = [copia[j]!, copia[i]!];
+  }
+  return copia;
 }

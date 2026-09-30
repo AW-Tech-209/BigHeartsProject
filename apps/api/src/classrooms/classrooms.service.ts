@@ -24,6 +24,7 @@ import { AppConfigService } from '../config/app-config.service';
 import { assertCuentaActiva } from '../common/assert-cuenta-activa';
 import { leerRangoAgenda } from '../common/rango-agenda';
 import { puedeCancelarse } from '../bookings/cancelacion.rules';
+import { agregarValoraciones } from '../bookings/valoracion.rules';
 import {
   type Notification,
   NotificationService,
@@ -397,7 +398,21 @@ export class ClassroomsService {
       where: { studentId: viewer.id, classroomId, status: 'CONFIRMED' },
       select: { id: true, status: true },
     });
-    const acceso = this.revelarElEnlace(viewer, classroom, Boolean(miReserva), new Date());
+    const ahora = new Date();
+    const acceso = this.revelarElEnlace(viewer, classroom, Boolean(miReserva), ahora);
+
+    // D47.1: solo el dueño, solo con la clase terminada; a los demás la clave no viaja.
+    const valoracion =
+      viewer.id === classroom.teacherId &&
+      classroom.status !== ClassroomStatus.CANCELLED &&
+      classroom.endsAt <= ahora
+        ? agregarValoraciones(
+            await this.prisma.classFeedback.findMany({
+              where: { booking: { classroomId } },
+              select: { seguimiento: true, problemas: true, comentario: true },
+            }),
+          )
+        : undefined;
 
     return toClassroomDetail(classroom, classroom.teacher, {
       // Se descifra SOLO si va a viajar: sin esta condición, el texto en claro
@@ -406,6 +421,7 @@ export class ClassroomsService {
       ...(acceso.estado === 'abierto' && {
         meetingLink: this.meetingLinks.decrypt(classroom.meetingLink),
       }),
+      ...(valoracion !== undefined && { valoracion }),
       accessState: acceso.estado,
       accessOpensAt: acceso.abreEn?.toISOString() ?? null,
       myBookingStatus: (miReserva?.status as BookingStatus | undefined) ?? null,

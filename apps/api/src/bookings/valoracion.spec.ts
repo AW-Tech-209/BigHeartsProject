@@ -84,6 +84,16 @@ describe('agregarValoraciones (AC3)', () => {
     expect(agregarValoraciones([si, aMedias])).toBeNull();
   });
 
+  it('los comentarios salen como texto suelto, sin vacíos', () => {
+    const agregado = agregarValoraciones([
+      { ...si, comentario: 'Muy claro' },
+      { ...aMedias, comentario: '   ' },
+      { ...si, comentario: null },
+    ]);
+
+    expect(agregado?.comentarios).toEqual(['Muy claro']);
+  });
+
   it('con 3 respuestas cuenta seguimiento y problemas', () => {
     const agregado = agregarValoraciones([
       si,
@@ -97,6 +107,7 @@ describe('agregarValoraciones (AC3)', () => {
       aMedias: 1,
       no: 1,
       problemas: { INTERPRETE: 0, SUBTITULOS: 2, CONEXION: 0, RITMO: 1, OTRO: 0 },
+      comentarios: [],
     });
   });
 });
@@ -270,7 +281,7 @@ describe('historial del profesor — agregado anónimo (AC2, AC3)', () => {
           Array.from({ length: respuestas }, () => ({
             seguimiento: 'SI',
             problemas: [],
-            comentario: 'no debe viajar',
+            comentario: 'texto del comentario',
             booking: { classroomId: 'aula-1', studentId: ESTUDIANTE_ID },
           })),
         ),
@@ -284,15 +295,19 @@ describe('historial del profesor — agregado anónimo (AC2, AC3)', () => {
     const resultado = await historialCon(2);
 
     expect((resultado.items[0] as { valoracion: unknown }).valoracion).toBeNull();
+    expect(JSON.stringify(resultado)).not.toContain('texto del comentario');
   });
 
-  it('con 3 respuestas trae los conteos y ni id de estudiante ni comentario', async () => {
+  it('con 3 respuestas trae conteos y comentarios sueltos, sin id de estudiante', async () => {
     const resultado = await historialCon(3);
     const item = resultado.items[0] as { valoracion: { respuestas: number; si: number } };
 
-    expect(item.valoracion).toMatchObject({ respuestas: 3, si: 3 });
+    expect(item.valoracion).toMatchObject({
+      respuestas: 3,
+      si: 3,
+      comentarios: ['texto del comentario', 'texto del comentario', 'texto del comentario'],
+    });
     const json = JSON.stringify(resultado);
     expect(json).not.toContain(ESTUDIANTE_ID);
-    expect(json).not.toContain('no debe viajar');
   });
 });
