@@ -123,7 +123,7 @@ export function CalendarioSemana({ lunes, items, rol, ahora = new Date() }: Prop
                         className="absolute inset-x-1 p-px"
                         style={{ top: aRem(inicio), height: aRem(Math.max(duracion, 30)) }}
                       >
-                        <BloqueCalendario aula={aula} ahora={ahora} />
+                        <BloqueCalendario aula={aula} ahora={ahora} minutos={duracion} />
                       </li>
                     );
                   })}

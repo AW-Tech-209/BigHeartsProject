@@ -61,37 +61,75 @@ function horas(aula: AulaEnCalendario) {
   };
 }
 
-/** Una clase dentro de la rejilla horaria: su alto es su duración. */
-export function BloqueCalendario({ aula, ahora }: { aula: AulaEnCalendario; ahora: Date }) {
+/** `7:40 – 9:40 p. m.`: el sufijo solo al final si ambas horas lo comparten (la columna es estrecha). */
+function rangoCorto(inicio: string, fin: string): string {
+  const sufijo = /\s*[ap]\.\s*m\.$/i;
+  const a = inicio.match(sufijo)?.[0];
+  const b = fin.match(sufijo)?.[0];
+  return a && a === b ? `${inicio.replace(sufijo, '')} – ${fin}` : `${inicio} – ${fin}`;
+}
+
+/**
+ * Una clase dentro de la rejilla horaria: su alto es su duración, así que el contenido se
+ * adapta a los `minutos` visibles. Lo que no cabe viaja en `title` y en el nombre accesible.
+ */
+export function BloqueCalendario({
+  aula,
+  ahora,
+  minutos,
+}: {
+  aula: AulaEnCalendario;
+  ahora: Date;
+  minutos: number;
+}) {
   const estado = estadoEnCalendario(aula, ahora);
   const variante = varianteEstadoAula[estado];
   const IconoEstado = variante.icon;
   const IconoModo = aula.instructionMode ? iconoModoInstruccion[aula.instructionMode] : null;
   const { inicio, fin } = horas(aula);
   const { cuando } = describirHorarioPartes(aula.scheduledAt);
+  const rango = rangoCorto(inicio, fin);
+  const modo = aula.instructionMode ? MODO_CORTO[aula.instructionMode] : null;
+  const densidad = minutos < 50 ? 'compacta' : minutos < 75 ? 'media' : 'completa';
 
   return (
     <Link
       to={`/aulas/${aula.id}`}
       aria-label={`${cuando}: ${aula.title}`}
+      title={[rango, aula.title, textoEstadoAula(estado), modo].filter(Boolean).join(' · ')}
       className={cn(
-        'transicion-rapida flex h-full flex-col gap-0.5 overflow-hidden rounded-lg border px-2 py-1.5 text-xs hover:shadow-md',
+        'transicion-rapida flex h-full flex-col overflow-hidden rounded-lg border px-2 text-xs leading-4 hover:shadow-md [&>*]:shrink-0',
+        densidad === 'compacta' ? 'justify-center py-0.5' : 'gap-0.5 py-1.5',
         BLOQUE[variante.tono],
         bordeSolido(variante),
       )}
     >
-      <span className="truncate tabular-nums">
-        {inicio} – {fin}
-      </span>
-      <span className="line-clamp-2 text-sm leading-snug font-semibold">{aula.title}</span>
+      {densidad === 'compacta' ? (
+        <span className="truncate">
+          <span className="tabular-nums">{inicio}</span> ·{' '}
+          <span className="font-semibold">{aula.title}</span>
+        </span>
+      ) : (
+        <>
+          <span className="truncate tabular-nums">{rango}</span>
+          <span
+            className={cn(
+              'text-sm leading-5 font-semibold',
+              densidad === 'completa' ? 'line-clamp-2' : 'truncate',
+            )}
+          >
+            {aula.title}
+          </span>
+        </>
+      )}
       <span className="flex items-center gap-1 font-medium">
         <IconoEstado aria-hidden="true" strokeWidth={2} className="size-3.5 shrink-0" />
         <span className="truncate">{textoEstadoAula(estado)}</span>
       </span>
-      {IconoModo && aula.instructionMode && (
+      {densidad === 'completa' && IconoModo && modo && (
         <span className="flex items-center gap-1">
           <IconoModo aria-hidden="true" strokeWidth={2} className="size-3.5 shrink-0" />
-          <span className="truncate">{MODO_CORTO[aula.instructionMode]}</span>
+          <span className="truncate">{modo}</span>
         </span>
       )}
     </Link>
