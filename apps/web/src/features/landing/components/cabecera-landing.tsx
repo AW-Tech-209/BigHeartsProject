@@ -25,7 +25,7 @@ export function CabeceraLanding() {
           className="transicion-rapida flex shrink-0 items-center gap-2.5 rounded-lg text-lg font-medium text-primary hover:underline"
         >
           <MarcaBigHearts className="size-6" />
-          BigHearts
+          <span className="sr-only sm:not-sr-only">BigHearts</span>
         </a>
 
         <nav aria-label="Secciones de esta página" className="hidden items-center gap-1 md:flex">
@@ -42,7 +42,7 @@ export function CabeceraLanding() {
 
         <div className="flex shrink-0 items-center gap-2 sm:gap-3">
           <SelectorTema />
-          <CtaAcceso compacto />
+          <CtaAcceso />
         </div>
       </Contenedor>
     </header>

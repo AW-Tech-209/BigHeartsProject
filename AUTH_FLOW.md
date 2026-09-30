@@ -164,7 +164,7 @@ expulsaría a login a usuarios que sí la tienen.
 `INVALID_CREDENTIALS`, `ACCOUNT_SUSPENDED`, `ACCOUNT_PENDING`, `ACCOUNT_REJECTED`,
 `UNAUTHENTICATED`, `INSUFFICIENT_ROLE`, `INVALID_REFRESH_TOKEN`,
 `TOO_MANY_REQUESTS`, `PASSWORD_RESET_TOKEN_INVALID`,
-`PASSWORD_RESET_TOKEN_EXPIRED`. El frontend decide el mensaje según el `code`
+`PASSWORD_RESET_TOKEN_EXPIRED`, `REGISTRATION_CLOSED`. El frontend decide el mensaje según el `code`
 (no según el texto).
 
 ## Cookies según entorno
@@ -202,3 +202,25 @@ Ver `apps/api/.env.example`. Nuevas en esta HU (todas opcionales, con defaults):
 
 HU-410 añade `PASSWORD_RESET_EXPIRY_MINUTES` (30, opcional); el enlace del correo
 usa `FRONTEND_URL`.
+
+## Registro público cerrado (D48)
+
+`PUBLIC_REGISTRATION_ENABLED` (por defecto `false`). Cerrado, `POST /auth/register`
+responde 403 `REGISTRATION_CLOSED` sin consultar la BD. El front pregunta a
+`GET /config/publica` (`{ registroAbierto }`, público, `staleTime` 5 min): con el
+registro cerrado la landing solo ofrece «Iniciar sesión», el login no enlaza a
+`/registro` y `/registro` muestra el aviso de fase de pruebas.
+
+## Primer ingreso: estado «debe cambiar contraseña» (HU-525)
+
+Una cuenta creada por el admin (o con contraseña restablecida por él) tiene `mustChangePassword`.
+
+- **Login:** si `temporaryPasswordExpiresAt` ya pasó → 401 `TEMPORARY_PASSWORD_EXPIRED`. Si no, entra y
+  el usuario y el access token llevan `debeCambiarContrasena: true`.
+- **Bloqueo:** con la bandera, `JwtAuthGuard` responde 403 `PASSWORD_CHANGE_REQUIRED` a todo salvo
+  `GET /users/me`, `POST /auth/cambiar-contrasena`, `POST /auth/refresh` y `POST /auth/logout`
+  (marcados con `@AllowPasswordChange()` o `@Public()`).
+- **`POST /auth/cambiar-contrasena` `{ actual, nueva }`:** valida la actual; la nueva sigue la regla del
+  registro y debe ser distinta (400 `PASSWORD_UNCHANGED`); limpia la bandera y la caducidad, revoca
+  todas las sesiones y emite tokens nuevos.
+- **Front:** `<RequireAuth>` manda a `/primer-ingreso` sea cual sea la ruta.

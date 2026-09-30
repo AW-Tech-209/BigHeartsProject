@@ -211,3 +211,27 @@ HU-514 (ayuda) · HU-518 (calendario) · HU-519 (tamaño de texto) ── sin de
 HU-511 va primero: cambia una regla de negocio y el copy de las demás cuenta con ella. Cambian
 reglas o registran decisiones nuevas: **HU-511 (D46)** y **HU-515 (D47)**. Las dos se escriben en
 `ARQUITECTURA.md` en el mismo PR.
+
+## Post-Fase 1 · Piloto controlado (HU-520 – HU-525)
+
+El piloto es cerrado: solo entran las personas que la academia invita. El registro público se
+apaga por configuración (D48) y el admin crea las cuentas con contraseña temporal (D49).
+
+| HU                                                        | Título                                             | Capa      | Estado       |
+| --------------------------------------------------------- | -------------------------------------------------- | --------- | ------------ |
+| [HU-520](./HU-520-el-profesor-lee-los-comentarios.md)     | El profesor lee lo que escribieron sus estudiantes | fullstack | ⬜ Pendiente |
+| [HU-521](./HU-521-un-solo-par-de-botones-de-acceso.md)    | La landing tiene un solo par de botones de acceso  | frontend  | ⬜ Pendiente |
+| [HU-522](./HU-522-registro-publico-cerrado.md)            | El registro público se cierra por configuración    | fullstack | ⬜ Pendiente |
+| [HU-523](./HU-523-el-admin-crea-cuentas-api.md)           | El admin crea cuentas (API)                        | backend   | ⬜ Pendiente |
+| [HU-524](./HU-524-pantalla-de-usuarios-y-credenciales.md) | Pantalla de usuarios y credenciales para copiar    | frontend  | ⬜ Pendiente |
+| [HU-525](./HU-525-primer-ingreso.md)                      | Primer ingreso: contraseña propia y preferencia    | fullstack | ⬜ Pendiente |
+
+```
+HU-521 (un par de botones) ──► HU-522 (registro cerrado)
+HU-523 (alta por el admin, API) ──► HU-524 (pantalla de usuarios)
+                                └─► HU-525 (primer ingreso)
+HU-520 (comentarios al profesor) ── sin dependencias
+```
+
+**Antes de invitar a nadie tienen que estar las cuatro de alta en `main`** (HU-522, 523, 524 y 525):
+sin HU-525, la contraseña temporal que viajó por WhatsApp se quedaría como definitiva.

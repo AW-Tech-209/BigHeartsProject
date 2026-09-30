@@ -467,11 +467,11 @@ Once bloques, en este orden. El copy está redactado para usarse tal cual.
 > Reservas tu cupo, sabes que es tuyo, y entras a la clase cuando llega la hora — sin buscar el
 > enlace en un chat.
 >
-> **Acción principal:** Crear una cuenta (`/registro`)
-> **Acción secundaria:** Iniciar sesión (`/login`)
+> **Enlace secundario:** Ver cómo es una clase (ancla a `#como-es-una-clase`)
 
-El registro de la academia ya está abierto, así que la landing enlaza directamente a él. Mientras
-solo estuvo en pruebas, la acción fue «dejar un correo»; ese momento ya pasó.
+El hero no lleva botones de acceso: el único par de «Crear cuenta» (`/registro`) e «Iniciar sesión»
+(`/login`) vive en la barra `sticky`, visible en todo momento y también en móvil. El bloque de
+cierre repite el titular sin botones y remite a esa barra.
 
 Sin imagen de fondo con texto encima: **está prohibido**. La ilustración, si la hay, es geométrica y
 construida con los mismos rectángulos y rieles del producto.

@@ -139,7 +139,11 @@ export function FormularioValoracion({ bookingId, titulo, onEnviada }: Formulari
             </div>
           </fieldset>
 
-          <Field id={`${preguntaId}-comentario`} label="Cuéntanos más (opcional)">
+          <Field
+            id={`${preguntaId}-comentario`}
+            label="Cuéntanos más (opcional)"
+            description="Tu profesor lo leerá sin tu nombre."
+          >
             <textarea
               rows={3}
               maxLength={VALORACION_COMENTARIO_MAX}

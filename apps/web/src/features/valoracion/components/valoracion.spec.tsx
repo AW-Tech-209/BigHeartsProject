@@ -146,6 +146,7 @@ describe('ResumenValoracion (AC3)', () => {
           aMedias: 2,
           no: 0,
           problemas: { INTERPRETE: 0, SUBTITULOS: 2, CONEXION: 0, RITMO: 1, OTRO: 0 },
+          comentarios: [],
         }}
       />,
     );

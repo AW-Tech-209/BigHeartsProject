@@ -24,8 +24,12 @@ import {
   invalidRefreshToken,
   passwordResetTokenExpired,
   passwordResetTokenInvalid,
+  passwordUnchanged,
+  registrationClosed,
+  temporaryPasswordExpired,
 } from './auth.errors';
 import type { IssuedSession } from './auth.types';
+import type { CambiarContrasenaDto } from './dto/cambiar-contrasena.dto';
 import type { ForgotPasswordDto } from './dto/forgot-password.dto';
 import type { LoginDto } from './dto/login.dto';
 import type { RegisterDto } from './dto/register.dto';
@@ -52,6 +56,11 @@ export class AuthService {
    * Devuelve la vista pública del usuario (sin `password`).
    */
   async register(dto: RegisterDto): Promise<User> {
+    // Antes de tocar la BD: cerrado no debe revelar qué correos existen.
+    if (!this.config.publicRegistrationEnabled) {
+      throw registrationClosed();
+    }
+
     // El DTO ya normaliza el email a minúsculas y recortado.
     const existing = await this.prisma.user.findUnique({
       where: { email: dto.email },
@@ -107,7 +116,50 @@ export class AuthService {
 
     this.assertCanLogin(user);
 
+    if (
+      user.mustChangePassword &&
+      user.temporaryPasswordExpiresAt &&
+      user.temporaryPasswordExpiresAt.getTime() <= Date.now()
+    ) {
+      throw temporaryPasswordExpired();
+    }
+
     return this.issueSession(user);
+  }
+
+  /**
+   * `POST /auth/cambiar-contrasena`: valida la actual, guarda la nueva, limpia la
+   * bandera de contraseña temporal, revoca todas las sesiones y emite una nueva.
+   */
+  async changePassword(userId: string, dto: CambiarContrasenaDto): Promise<IssuedSession> {
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    if (!user) {
+      throw invalidRefreshToken();
+    }
+    if (!(await bcrypt.compare(dto.actual, user.password))) {
+      throw invalidCredentials();
+    }
+    if (dto.actual === dto.nueva) {
+      throw passwordUnchanged();
+    }
+
+    const passwordHash = await bcrypt.hash(dto.nueva, BCRYPT_SALT_ROUNDS);
+    const [updated] = await this.prisma.$transaction([
+      this.prisma.user.update({
+        where: { id: userId },
+        data: {
+          password: passwordHash,
+          mustChangePassword: false,
+          temporaryPasswordExpiresAt: null,
+        },
+      }),
+      this.prisma.refreshToken.updateMany({
+        where: { userId, revokedAt: null },
+        data: { revokedAt: new Date() },
+      }),
+    ]);
+
+    return this.issueSession(updated);
   }
 
   /**
@@ -283,17 +335,21 @@ export class AuthService {
   }
 
   /** Proyecta la entidad de Prisma a lo mínimo que necesita el Access Token. */
-  private toAccessSubject(user: Pick<PrismaUser, 'id' | 'email' | 'role' | 'status'>): {
+  private toAccessSubject(
+    user: Pick<PrismaUser, 'id' | 'email' | 'role' | 'status' | 'mustChangePassword'>,
+  ): {
     id: string;
     email: string;
     role: UserRole;
     status: UserStatus;
+    debeCambiarContrasena: boolean;
   } {
     return {
       id: user.id,
       email: user.email,
       role: user.role as UserRole,
       status: user.status as UserStatus,
+      debeCambiarContrasena: user.mustChangePassword,
     };
   }
 }

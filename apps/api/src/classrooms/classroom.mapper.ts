@@ -12,6 +12,7 @@ import {
   type InscritoAula,
   type InstructionMode,
   type MeetingProvider,
+  type ValoracionAgregada,
 } from '@academia/types';
 
 /**
@@ -120,6 +121,8 @@ export type RevelacionesDelDetalle = {
   accessState: EstadoAccesoEnlace;
   /** El instante en que se abre la ventana, o `null` si no aplica (HU-304). */
   accessOpensAt: string | null;
+  /** Solo el profesor dueño de una clase terminada; `undefined` omite la clave. */
+  valoracion?: ValoracionAgregada | null;
 };
 
 /**
@@ -168,5 +171,6 @@ export function toClassroomDetail(
     accessState: revelaciones.accessState,
     accessOpensAt: revelaciones.accessOpensAt,
     ...(revelaciones.meetingLink !== undefined && { meetingLink: revelaciones.meetingLink }),
+    ...(revelaciones.valoracion !== undefined && { valoracion: revelaciones.valoracion }),
   };
 }

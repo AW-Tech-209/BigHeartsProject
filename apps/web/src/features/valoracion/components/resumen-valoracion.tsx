@@ -1,6 +1,7 @@
 import type { ValoracionAgregada } from '@academia/types';
 
 import { TEXTO_PROBLEMA } from '../lib/opciones';
+import { ComentariosDesplegables } from './comentarios-valoracion';
 import { describirRespuestas, problemasMasCitados } from '../lib/resumen';
 
 /**
@@ -29,6 +30,7 @@ export function ResumenValoracion({ valoracion }: { valoracion: ValoracionAgrega
             .join(', ')}
         </p>
       )}
+      <ComentariosDesplegables comentarios={valoracion.comentarios} />
     </div>
   );
 }

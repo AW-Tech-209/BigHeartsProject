@@ -18,6 +18,7 @@ type AccessTokenSubject = {
   email: string;
   role: UserRole;
   status: UserStatus;
+  debeCambiarContrasena?: boolean;
 };
 
 /**
@@ -49,6 +50,7 @@ export class TokenService {
       email: user.email,
       role: user.role,
       status: user.status,
+      ...(user.debeCambiarContrasena ? { debeCambiarContrasena: true } : {}),
     };
     const token = this.jwt.sign(payload);
     const decoded = this.jwt.decode(token) as { exp: number; iat: number };
@@ -134,8 +136,8 @@ export class TokenService {
     });
   }
 
-  /** Revoca TODAS las sesiones activas de un usuario (reuso detectado). */
-  private async revokeAllForUser(userId: string): Promise<void> {
+  /** Revoca TODAS las sesiones activas de un usuario (reuso detectado o reset del admin). */
+  async revokeAllForUser(userId: string): Promise<void> {
     await this.prisma.refreshToken.updateMany({
       where: { userId, revokedAt: null },
       data: { revokedAt: new Date() },

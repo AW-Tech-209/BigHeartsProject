@@ -111,6 +111,8 @@ export interface User {
   preferredInstructionMode: InstructionMode | null;
   /** Apoyos que le importan (D43). Vacío si no declaró ninguno. */
   preferredSupports: ClassroomSupport[];
+  /** Cuenta con contraseña temporal: la API bloquea todo hasta que la cambie. */
+  debeCambiarContrasena: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -132,6 +134,11 @@ export interface RegisterInput {
 }
 
 /** Respuesta de un registro correcto. El `status` del usuario guía el mensaje. */
+/** Respuesta de `GET /config/publica`: lo que el front necesita saber del servidor. */
+export interface ConfigPublica {
+  registroAbierto: boolean;
+}
+
 export interface RegisterResponse {
   user: User;
 }
@@ -249,6 +256,15 @@ export interface ResetPasswordInput {
   /** Debe cumplir la misma regla que el registro. */
   password: string;
 }
+
+/** Cuerpo de `POST /auth/cambiar-contrasena` (primer ingreso). */
+export interface CambiarContrasenaInput {
+  actual: string;
+  nueva: string;
+}
+
+/** Respuesta de `POST /auth/cambiar-contrasena`: sesión nueva, sin la bandera. */
+export type CambiarContrasenaResponse = AuthSession;
 
 /** Respuesta de `POST /auth/reset-password`: la contraseña quedó cambiada. */
 export interface ResetPasswordResponse {
@@ -717,6 +733,12 @@ export interface ClassroomDetail extends ClassroomListItem {
    * Son dos respuestas distintas y el frontend las trata distinto.
    */
   myBookingStatus: BookingStatus | null;
+  /**
+   * Valoración de los estudiantes, **solo para el profesor dueño y solo de una
+   * clase terminada** (D47.1). Para el resto la clave se omite, como el enlace.
+   * `null` si hay menos de `VALORACION_MINIMO_RESPUESTAS` respuestas.
+   */
+  valoracion?: ValoracionAgregada | null;
 }
 
 /**
@@ -959,7 +981,8 @@ export interface CrearValoracionResponse {
 
 /**
  * Agregado anónimo de las valoraciones de una clase que ve el profesor dueño
- * (HU-515, D47). Nunca incluye quién respondió ni el comentario.
+ * (HU-515, D47, D47.1). Nunca incluye quién respondió: los comentarios son
+ * cadenas sueltas, sin autor ni fecha, en orden aleatorio.
  */
 export interface ValoracionAgregada {
   respuestas: number;
@@ -967,6 +990,8 @@ export interface ValoracionAgregada {
   aMedias: number;
   no: number;
   problemas: Record<ProblemaClase, number>;
+  /** Solo el texto, barajado: el orden de llegada permitiría cruzarlo con quién respondió. */
+  comentarios: string[];
 }
 
 /** Máximo de días que abarca una consulta por rango de «Mis clases» y «Mis aulas». */
@@ -1219,6 +1244,57 @@ export interface TeachersResponse {
   teachers: User[];
 }
 
+/** Días que vive una contraseña temporal antes de caducar (D49). */
+export const CONTRASENA_TEMPORAL_DIAS = 7;
+
+/** Cuerpo de `POST /admin/usuarios`: el admin da de alta a un estudiante o profesor. */
+export interface CrearUsuarioInput {
+  firstName: string;
+  lastName: string;
+  email: string;
+  role: RegisterableRole;
+}
+
+/**
+ * Respuesta de `POST /admin/usuarios` y `POST /admin/usuarios/:id/contrasena-temporal`.
+ * `contrasenaTemporal` viaja solo aquí y una sola vez: en BD queda únicamente su hash.
+ */
+export interface CuentaCreadaResponse {
+  usuario: User;
+  contrasenaTemporal: string;
+  /** ISO 8601. */
+  caducaEl: string;
+}
+
+/** Query de `GET /admin/usuarios`. */
+export interface AdminUsuariosQuery {
+  rol?: UserRole;
+  estado?: UserStatus;
+  /** Busca en nombre, apellidos y correo. */
+  q?: string;
+  page?: number;
+  pageSize?: number;
+}
+
+export interface AdminUsuarioItem {
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  role: UserRole;
+  status: UserStatus;
+  /** `true` mientras no haya cambiado la contraseña temporal. */
+  pendienteDePrimerIngreso: boolean;
+  createdAt: string;
+}
+
+export interface AdminUsuariosResponse {
+  items: AdminUsuarioItem[];
+  total: number;
+  page: number;
+  pageSize: number;
+}
+
 /** Códigos de error estables que la API puede devolver en `ApiError.code`. */
 export const ApiErrorCode = {
   VALIDATION_ERROR: 'VALIDATION_ERROR',
@@ -1236,6 +1312,8 @@ export const ApiErrorCode = {
    * dicen cosas distintas y el frontend muestra mensajes distintos. Ver D13.
    */
   ACCOUNT_REJECTED: 'ACCOUNT_REJECTED',
+  /** El registro público está cerrado por configuración (piloto cerrado, D48). */
+  REGISTRATION_CLOSED: 'REGISTRATION_CLOSED',
   /**
    * Se pidió un cambio de estado que las reglas de §4.5 no permiten: aprobar o
    * rechazar a alguien que no es profesor, o que ya no está `PENDING`.
@@ -1268,6 +1346,12 @@ export const ApiErrorCode = {
    * pide otro» en vez de «no es válido».
    */
   PASSWORD_RESET_TOKEN_EXPIRED: 'PASSWORD_RESET_TOKEN_EXPIRED',
+  /** La contraseña temporal pasó de su vigencia (7 días): hay que pedir otra. */
+  TEMPORARY_PASSWORD_EXPIRED: 'TEMPORARY_PASSWORD_EXPIRED',
+  /** Con contraseña temporal, la API solo deja cambiarla hasta que se haga. */
+  PASSWORD_CHANGE_REQUIRED: 'PASSWORD_CHANGE_REQUIRED',
+  /** La contraseña nueva es igual a la actual. */
+  PASSWORD_UNCHANGED: 'PASSWORD_UNCHANGED',
   /**
    * Intento de leer o editar el perfil de otra persona.
    *

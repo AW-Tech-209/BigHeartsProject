@@ -10,6 +10,7 @@ import { ClassroomsModule } from './classrooms/classrooms.module';
 import { CommonModule } from './common/common.module';
 import { AppConfigModule } from './config/config.module';
 import { AppConfigService } from './config/app-config.service';
+import { ConfigPublicaModule } from './config-publica/config-publica.module';
 import { HealthModule } from './health/health.module';
 import { HistorialModule } from './historial/historial.module';
 import { NotificationsModule } from './notifications/notifications.module';
@@ -33,6 +34,7 @@ import { UsersModule } from './users/users.module';
       }),
     }),
     HealthModule,
+    ConfigPublicaModule,
     AuthModule,
     UsersModule,
     ClassroomsModule,

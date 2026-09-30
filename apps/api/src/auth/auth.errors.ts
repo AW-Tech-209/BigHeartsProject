@@ -40,6 +40,27 @@ export const passwordResetTokenExpired = (): BadRequestException =>
     message: 'El enlace de recuperación caducó. Solicita uno nuevo.',
   });
 
+/** La contraseña temporal pasó de su vigencia: el login ya no la acepta. */
+export const temporaryPasswordExpired = (): UnauthorizedException =>
+  new UnauthorizedException({
+    code: ApiErrorCode.TEMPORARY_PASSWORD_EXPIRED,
+    message: 'Tu contraseña temporal caducó. Pídele una nueva a la academia.',
+  });
+
+/** Cuenta con contraseña temporal: solo puede cambiarla. */
+export const passwordChangeRequired = (): ForbiddenException =>
+  new ForbiddenException({
+    code: ApiErrorCode.PASSWORD_CHANGE_REQUIRED,
+    message: 'Debes crear tu contraseña antes de seguir.',
+  });
+
+/** La contraseña nueva coincide con la actual. */
+export const passwordUnchanged = (): BadRequestException =>
+  new BadRequestException({
+    code: ApiErrorCode.PASSWORD_UNCHANGED,
+    message: 'La contraseña nueva debe ser distinta de la actual.',
+  });
+
 /** Falta el access token o es inválido en una ruta protegida. */
 export const unauthenticated = (): UnauthorizedException =>
   new UnauthorizedException({
@@ -73,6 +94,13 @@ export const accountRejected = (): ForbiddenException =>
     code: ApiErrorCode.ACCOUNT_REJECTED,
     message:
       'Tu solicitud de cuenta de profesor no fue aprobada. Escribe al equipo de soporte si crees que es un error.',
+  });
+
+/** El registro público está cerrado (piloto cerrado, D48). */
+export const registrationClosed = (): ForbiddenException =>
+  new ForbiddenException({
+    code: ApiErrorCode.REGISTRATION_CLOSED,
+    message: 'El registro está cerrado: las cuentas las crea la academia.',
   });
 
 /** Hay sesión, pero el rol no alcanza para el endpoint. Lo lanza el RolesGuard. */

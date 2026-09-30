@@ -6,6 +6,7 @@ import {
   History,
   LayoutDashboard,
   type LucideIcon,
+  Users,
 } from 'lucide-react';
 
 export type Destino = {
@@ -53,5 +54,6 @@ export const destinosPorRol: Record<UserRole, Destino[]> = {
     PANEL,
     { to: '/admin/aulas', label: 'Aulas', icon: BookOpen },
     { to: '/admin/metricas', label: 'Métricas', icon: ChartColumn },
+    { to: '/admin/usuarios', label: 'Usuarios', icon: Users },
   ],
 };

@@ -50,6 +50,7 @@ function dbUser(overrides: Record<string, unknown> = {}) {
 function setup(
   options: {
     teacherApprovalRequired?: boolean;
+    registrationOpen?: boolean;
     existingEmail?: boolean;
     foundUser?: ReturnType<typeof dbUser> | null;
   } = {},
@@ -88,6 +89,7 @@ function setup(
   );
 
   const config = {
+    publicRegistrationEnabled: options.registrationOpen ?? true,
     teacherApprovalRequired: options.teacherApprovalRequired ?? true,
     passwordResetExpiryMinutes: 30,
     frontendUrl: 'https://academia-web.vercel.app',
@@ -145,6 +147,16 @@ beforeEach(() => {
 });
 
 describe('AuthService.register', () => {
+  it('con el registro cerrado responde REGISTRATION_CLOSED sin consultar ni crear', async () => {
+    const { service, create, findUnique } = setup({ registrationOpen: false, existingEmail: true });
+
+    await expect(service.register(baseDto({ role: UserRole.STUDENT }))).rejects.toMatchObject({
+      response: { code: 'REGISTRATION_CLOSED' },
+    });
+    expect(findUnique).not.toHaveBeenCalled();
+    expect(create).not.toHaveBeenCalled();
+  });
+
   it('registra un estudiante con estado ACTIVE', async () => {
     const { service, create } = setup();
 
@@ -464,5 +476,70 @@ describe('AuthService.resetPassword', () => {
       service.resetPassword({ token: 'x', password: 'NuevaPass123' }),
     ).rejects.toMatchObject({ response: { code: ApiErrorCode.PASSWORD_RESET_TOKEN_EXPIRED } });
     expect(userUpdate).not.toHaveBeenCalled();
+  });
+});
+
+describe('AuthService — contraseña temporal', () => {
+  const HORA = 3_600_000;
+
+  it('con la contraseña temporal caducada responde 401 TEMPORARY_PASSWORD_EXPIRED', async () => {
+    const { service, tokens } = setup({
+      foundUser: dbUser({
+        mustChangePassword: true,
+        temporaryPasswordExpiresAt: new Date(Date.now() - HORA),
+      }),
+    });
+
+    await expect(service.login(loginDto())).rejects.toMatchObject({
+      response: { code: ApiErrorCode.TEMPORARY_PASSWORD_EXPIRED },
+    });
+    expect(tokens.issueRefreshToken).not.toHaveBeenCalled();
+  });
+
+  it('vigente: entra y la sesión lleva debeCambiarContrasena', async () => {
+    const { service, tokens } = setup({
+      foundUser: dbUser({
+        mustChangePassword: true,
+        temporaryPasswordExpiresAt: new Date(Date.now() + HORA),
+      }),
+    });
+
+    const issued = await service.login(loginDto());
+
+    expect(issued.session.user.debeCambiarContrasena).toBe(true);
+    expect(tokens.issueAccessToken).toHaveBeenCalledWith(
+      expect.objectContaining({ debeCambiarContrasena: true }),
+    );
+  });
+
+  it('cambiar a la misma contraseña responde 400 PASSWORD_UNCHANGED', async () => {
+    const { service } = setup({ foundUser: dbUser({ mustChangePassword: true }) });
+
+    await expect(
+      service.changePassword('user-id', { actual: 'Password123', nueva: 'Password123' }),
+    ).rejects.toMatchObject({ response: { code: ApiErrorCode.PASSWORD_UNCHANGED } });
+  });
+
+  it('cambia la contraseña, limpia la bandera, revoca sesiones y emite una nueva', async () => {
+    const { service, userUpdate, refreshTokenModel } = setup({
+      foundUser: dbUser({ mustChangePassword: true }),
+    });
+    userUpdate.mockResolvedValue(dbUser({ mustChangePassword: false }));
+
+    const issued = await service.changePassword('user-id', {
+      actual: 'Temporal123',
+      nueva: 'Password456',
+    });
+
+    expect(userUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          mustChangePassword: false,
+          temporaryPasswordExpiresAt: null,
+        }),
+      }),
+    );
+    expect(refreshTokenModel.updateMany).toHaveBeenCalled();
+    expect(issued.session.user.debeCambiarContrasena).toBe(false);
   });
 });

@@ -1,4 +1,9 @@
-import { ConflictException, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  NotFoundException,
+  ParseUUIDPipe,
+} from '@nestjs/common';
 import { ApiErrorCode } from '@academia/types';
 
 /**
@@ -47,3 +52,19 @@ export const invalidStatusTransition = (): ConflictException =>
     message:
       'Esa cuenta ya no está pendiente de aprobación. Vuelve a cargar la lista para ver su estado actual.',
   });
+
+/** Un admin no puede crear ni resetear la contraseña de otra cuenta `ADMIN`. */
+export const adminAccountNotAllowed = (): BadRequestException =>
+  new BadRequestException({
+    code: ApiErrorCode.VALIDATION_ERROR,
+    message: 'Las cuentas de administrador no se gestionan desde aquí.',
+  });
+
+export const usuarioNotFound = (): NotFoundException =>
+  new NotFoundException({
+    code: ApiErrorCode.USER_NOT_FOUND,
+    message: 'No encontramos a esa persona. Puede que su cuenta ya no exista.',
+  });
+
+/** Un id sin forma de UUID equivale a «no existe» (evita el 500 de Postgres). */
+export const idDeUsuario = new ParseUUIDPipe({ exceptionFactory: () => usuarioNotFound() });
