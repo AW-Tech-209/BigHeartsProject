@@ -111,6 +111,8 @@ export interface User {
   preferredInstructionMode: InstructionMode | null;
   /** Apoyos que le importan (D43). Vacío si no declaró ninguno. */
   preferredSupports: ClassroomSupport[];
+  /** Cuenta con contraseña temporal: la API bloquea todo hasta que la cambie. */
+  debeCambiarContrasena: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -254,6 +256,15 @@ export interface ResetPasswordInput {
   /** Debe cumplir la misma regla que el registro. */
   password: string;
 }
+
+/** Cuerpo de `POST /auth/cambiar-contrasena` (primer ingreso). */
+export interface CambiarContrasenaInput {
+  actual: string;
+  nueva: string;
+}
+
+/** Respuesta de `POST /auth/cambiar-contrasena`: sesión nueva, sin la bandera. */
+export type CambiarContrasenaResponse = AuthSession;
 
 /** Respuesta de `POST /auth/reset-password`: la contraseña quedó cambiada. */
 export interface ResetPasswordResponse {
@@ -1335,6 +1346,12 @@ export const ApiErrorCode = {
    * pide otro» en vez de «no es válido».
    */
   PASSWORD_RESET_TOKEN_EXPIRED: 'PASSWORD_RESET_TOKEN_EXPIRED',
+  /** La contraseña temporal pasó de su vigencia (7 días): hay que pedir otra. */
+  TEMPORARY_PASSWORD_EXPIRED: 'TEMPORARY_PASSWORD_EXPIRED',
+  /** Con contraseña temporal, la API solo deja cambiarla hasta que se haga. */
+  PASSWORD_CHANGE_REQUIRED: 'PASSWORD_CHANGE_REQUIRED',
+  /** La contraseña nueva es igual a la actual. */
+  PASSWORD_UNCHANGED: 'PASSWORD_UNCHANGED',
   /**
    * Intento de leer o editar el perfil de otra persona.
    *

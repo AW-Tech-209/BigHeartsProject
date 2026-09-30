@@ -78,6 +78,7 @@ describe('UsersService.getProfile', () => {
     expect(Object.keys(user).sort()).toEqual(
       [
         'createdAt',
+        'debeCambiarContrasena',
         'email',
         'firstName',
         'hearingLossLevel',

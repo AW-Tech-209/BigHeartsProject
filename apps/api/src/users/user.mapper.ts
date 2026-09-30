@@ -27,6 +27,7 @@ export function toPublicUser(user: PrismaUser): User {
     hearingLossLevel: user.hearingLossLevel as HearingLossLevel | null,
     preferredInstructionMode: user.preferredInstructionMode as InstructionMode | null,
     preferredSupports: user.preferredSupports as ClassroomSupport[],
+    debeCambiarContrasena: user.mustChangePassword,
     createdAt: user.createdAt.toISOString(),
     updatedAt: user.updatedAt.toISOString(),
   };

@@ -3,6 +3,7 @@ import { Throttle } from '@nestjs/throttler';
 import type { ProfileResponse } from '@academia/types';
 
 import type { AuthenticatedUser } from '../auth/auth.types';
+import { AllowPasswordChange } from '../auth/decorators/allow-password-change.decorator';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { API_THROTTLE } from '../common/api-throttle';
 import { UpdateProfileDto } from './dto/update-profile.dto';
@@ -34,6 +35,7 @@ export class UsersController {
    * ni el nombre ni las preferencias de accesibilidad.
    */
   @Get('me')
+  @AllowPasswordChange()
   @HttpCode(HttpStatus.OK)
   async getMe(@CurrentUser() current: AuthenticatedUser): Promise<ProfileResponse> {
     const user = await this.usersService.getProfile(current.id);

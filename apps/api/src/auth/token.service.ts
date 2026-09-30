@@ -18,6 +18,7 @@ type AccessTokenSubject = {
   email: string;
   role: UserRole;
   status: UserStatus;
+  debeCambiarContrasena?: boolean;
 };
 
 /**
@@ -49,6 +50,7 @@ export class TokenService {
       email: user.email,
       role: user.role,
       status: user.status,
+      ...(user.debeCambiarContrasena ? { debeCambiarContrasena: true } : {}),
     };
     const token = this.jwt.sign(payload);
     const decoded = this.jwt.decode(token) as { exp: number; iat: number };

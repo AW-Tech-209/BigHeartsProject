@@ -17,6 +17,7 @@ import { UsuariosPage } from '@/pages/UsuariosPage';
 import { MisAulasPage } from '@/pages/MisAulasPage';
 import { MisClasesPage } from '@/pages/MisClasesPage';
 import { NotFoundPage } from '@/pages/NotFoundPage';
+import { PrimerIngresoPage } from '@/pages/PrimerIngresoPage';
 import { NuevaContrasenaPage } from '@/pages/NuevaContrasenaPage';
 import { SolicitarRecuperacionPage } from '@/pages/SolicitarRecuperacionPage';
 import { PanelPage } from '@/pages/PanelPage';
@@ -85,6 +86,14 @@ export function AppRoutes() {
       />
 
       {/* Privadas */}
+      <Route
+        path="/primer-ingreso"
+        element={
+          <RequireAuth>
+            <PrimerIngresoPage />
+          </RequireAuth>
+        }
+      />
       <Route
         path="/panel"
         element={

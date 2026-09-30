@@ -20,6 +20,7 @@ export function usuarioDePrueba(role: UserRole = UserRole.STUDENT): User {
     hearingLossLevel: null,
     preferredInstructionMode: null,
     preferredSupports: [],
+    debeCambiarContrasena: false,
     createdAt: '2026-01-01T00:00:00.000Z',
     updatedAt: '2026-01-01T00:00:00.000Z',
   };

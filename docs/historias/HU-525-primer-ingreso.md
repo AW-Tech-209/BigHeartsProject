@@ -5,7 +5,7 @@
 | **Sprint**          | Post-Fase 1 · Piloto controlado                                  |
 | **Prioridad**       | 🔴 Crítica                                                       |
 | **Estimación**      | 1.5 días                                                         |
-| **Estado**          | ⬜ Pendiente                                                     |
+| **Estado**          | ✅ Hecha                                                         |
 | **Asignada a**      | **Dev A** (T1–T3) · **Dev B** (T4–T5)                            |
 | **Rama**            | `hu-525-primer-ingreso-a` / `-b`                                 |
 | **Alcance técnico** | fullstack                                                        |
@@ -36,35 +36,35 @@ contraseña es obligatoria; la preferencia se puede dejar para después.
 
 ## Tasks
 
-- [ ] **T1** — Login: si `temporaryPasswordExpiresAt` ya pasó → 401 `TEMPORARY_PASSWORD_EXPIRED`
+- [x] **T1** — Login: si `temporaryPasswordExpiresAt` ya pasó → 401 `TEMPORARY_PASSWORD_EXPIRED`
       («Tu contraseña temporal caducó. Pídele una nueva a la academia»). Si no, el login funciona y
       el usuario de la respuesta y el access token llevan `debeCambiarContrasena: true`.
-- [ ] **T2** — Con `debeCambiarContrasena`, **toda** la API responde 403 `PASSWORD_CHANGE_REQUIRED`
+- [x] **T2** — Con `debeCambiarContrasena`, **toda** la API responde 403 `PASSWORD_CHANGE_REQUIRED`
       salvo `GET /users/me`, `POST /auth/cambiar-contrasena`, `POST /auth/refresh` y
       `POST /auth/logout`. Se decide en el servidor (guard global), no en el front.
-- [ ] **T3** — `POST /auth/cambiar-contrasena` `{ actual, nueva }`: valida la actual, aplica la regla
+- [x] **T3** — `POST /auth/cambiar-contrasena` `{ actual, nueva }`: valida la actual, aplica la regla
       de contraseña, exige que la nueva sea distinta, limpia `mustChangePassword` y
       `temporaryPasswordExpiresAt`, **revoca las demás sesiones** y emite tokens nuevos.
-- [ ] **T4** — Front: `<RequireAuth>` manda a `/primer-ingreso` a quien tenga `debeCambiarContrasena`,
+- [x] **T4** — Front: `<RequireAuth>` manda a `/primer-ingreso` a quien tenga `debeCambiarContrasena`,
       sea cual sea la ruta. Paso 1 «Crea tu contraseña» (nueva + confirmación, con los requisitos
       visibles y en vivo). Paso 2, **solo estudiantes**: «¿Cómo prefieres seguir las clases?» con
       `<CamposPreferencia>` y nivel de hipoacusia, con «Lo haré después» (se completa luego en el
       perfil). Al terminar, al panel con un `<Callout>` «Todo listo».
-- [ ] **T5** — Tests: API bloquea `GET /classrooms` con la bandera y lo permite tras cambiar; contraseña
+- [x] **T5** — Tests: API bloquea `GET /classrooms` con la bandera y lo permite tras cambiar; contraseña
       caducada → 401 con su código; misma contraseña → 400. Front: con la bandera, `/aulas` redirige a
       `/primer-ingreso`; el profesor no ve el paso 2; `axe` en los dos pasos.
 
 ## Criterios de aceptación
 
-- [ ] **AC1** — Con una cuenta recién creada por el admin, tras el login cualquier endpoint fuera de
+- [x] **AC1** — Con una cuenta recién creada por el admin, tras el login cualquier endpoint fuera de
       la lista de T2 responde 403 `PASSWORD_CHANGE_REQUIRED`, aunque se llame directo a la API.
-- [ ] **AC2** — Tras cambiar la contraseña, la temporal ya no sirve para entrar y las otras sesiones
+- [x] **AC2** — Tras cambiar la contraseña, la temporal ya no sirve para entrar y las otras sesiones
       abiertas quedan revocadas.
-- [ ] **AC3** — Una contraseña temporal con más de 7 días no permite entrar y el mensaje dice qué
+- [x] **AC3** — Una contraseña temporal con más de 7 días no permite entrar y el mensaje dice qué
       hacer.
-- [ ] **AC4** — El estudiante puede terminar el primer ingreso sin declarar preferencia, y si la
+- [x] **AC4** — El estudiante puede terminar el primer ingreso sin declarar preferencia, y si la
       declara, el catálogo empieza a destacarle clases sin volver a entrar.
-- [ ] **AC5** — `AUTH_FLOW.md` describe el estado «debe cambiar contraseña» y los endpoints permitidos.
+- [x] **AC5** — `AUTH_FLOW.md` describe el estado «debe cambiar contraseña» y los endpoints permitidos.
 
 ## Fuera de alcance
 
@@ -73,4 +73,4 @@ contraseña es obligatoria; la preferencia se puede dejar para después.
 
 ## Notas de implementación
 
-_Se rellena al cerrar: máximo 3 líneas o «Sin desviaciones»._
+Login del paso 1 pide también la contraseña temporal (la API exige `actual`). La bandera viaja en el JWT y en `User`; el guard usa `@AllowPasswordChange()`.

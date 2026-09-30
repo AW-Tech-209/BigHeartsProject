@@ -81,6 +81,48 @@ describe('JwtAuthGuard', () => {
       email: 'u@a.local',
       role: UserRole.STUDENT,
       status: UserStatus.ACTIVE,
+      debeCambiarContrasena: false,
     });
+  });
+});
+
+describe('JwtAuthGuard — contraseña temporal', () => {
+  function conBandera(allowed: boolean) {
+    const reflector = {
+      getAllAndOverride: vi.fn((key: string) => (key === 'allowPasswordChange' ? allowed : false)),
+    } as unknown as Reflector;
+    const jwt = {
+      verify: vi.fn(() => ({
+        sub: 'user-id',
+        email: 'u@a.local',
+        role: UserRole.STUDENT,
+        status: UserStatus.ACTIVE,
+        debeCambiarContrasena: true,
+      })),
+    } as unknown as JwtService;
+    const request: FakeRequest = { headers: { authorization: 'Bearer good' } };
+    const context = {
+      getHandler: () => vi.fn(),
+      getClass: () => vi.fn(),
+      switchToHttp: () => ({ getRequest: () => request }),
+    } as unknown as ExecutionContext;
+    return { guard: new JwtAuthGuard(reflector, jwt), context };
+  }
+
+  it('bloquea con 403 PASSWORD_CHANGE_REQUIRED todo endpoint no permitido', () => {
+    const { guard, context } = conBandera(false);
+    try {
+      guard.canActivate(context);
+      expect.unreachable();
+    } catch (error) {
+      expect((error as { getResponse: () => unknown }).getResponse()).toMatchObject({
+        code: ApiErrorCode.PASSWORD_CHANGE_REQUIRED,
+      });
+    }
+  });
+
+  it('deja pasar los endpoints marcados como permitidos', () => {
+    const { guard, context } = conBandera(true);
+    expect(guard.canActivate(context)).toBe(true);
   });
 });

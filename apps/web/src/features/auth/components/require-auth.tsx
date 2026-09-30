@@ -23,7 +23,8 @@ type RequireAuthProps = {
  *  2. Sin sesión → redirect a `/login`, guardando de dónde venía para volver
  *     ahí tras entrar. `replace` evita que el botón "atrás" del navegador
  *     devuelva al usuario a una página que no puede ver.
- *  3. Con sesión pero rol insuficiente → pantalla de acceso denegado.
+ *  3. Con contraseña temporal pendiente → `/primer-ingreso`, sea cual sea la ruta.
+ *  4. Con sesión pero rol insuficiente → pantalla de acceso denegado.
  */
 export function RequireAuth({ children, roles }: RequireAuthProps) {
   const { status, user, hasRole } = useAuth();
@@ -37,6 +38,10 @@ export function RequireAuth({ children, roles }: RequireAuthProps) {
     return (
       <Navigate to="/login" replace state={{ from: `${location.pathname}${location.search}` }} />
     );
+  }
+
+  if (user.debeCambiarContrasena && location.pathname !== '/primer-ingreso') {
+    return <Navigate to="/primer-ingreso" replace />;
   }
 
   if (roles && !hasRole(...roles)) {

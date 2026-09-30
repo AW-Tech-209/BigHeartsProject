@@ -210,3 +210,17 @@ responde 403 `REGISTRATION_CLOSED` sin consultar la BD. El front pregunta a
 `GET /config/publica` (`{ registroAbierto }`, público, `staleTime` 5 min): con el
 registro cerrado la landing solo ofrece «Iniciar sesión», el login no enlaza a
 `/registro` y `/registro` muestra el aviso de fase de pruebas.
+
+## Primer ingreso: estado «debe cambiar contraseña» (HU-525)
+
+Una cuenta creada por el admin (o con contraseña restablecida por él) tiene `mustChangePassword`.
+
+- **Login:** si `temporaryPasswordExpiresAt` ya pasó → 401 `TEMPORARY_PASSWORD_EXPIRED`. Si no, entra y
+  el usuario y el access token llevan `debeCambiarContrasena: true`.
+- **Bloqueo:** con la bandera, `JwtAuthGuard` responde 403 `PASSWORD_CHANGE_REQUIRED` a todo salvo
+  `GET /users/me`, `POST /auth/cambiar-contrasena`, `POST /auth/refresh` y `POST /auth/logout`
+  (marcados con `@AllowPasswordChange()` o `@Public()`).
+- **`POST /auth/cambiar-contrasena` `{ actual, nueva }`:** valida la actual; la nueva sigue la regla del
+  registro y debe ser distinta (400 `PASSWORD_UNCHANGED`); limpia la bandera y la caducidad, revoca
+  todas las sesiones y emite tokens nuevos.
+- **Front:** `<RequireAuth>` manda a `/primer-ingreso` sea cual sea la ruta.

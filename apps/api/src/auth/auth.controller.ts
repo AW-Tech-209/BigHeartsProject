@@ -1,6 +1,7 @@
 import { Body, Controller, HttpCode, HttpStatus, Post, Req, Res, UseGuards } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
 import type {
+  CambiarContrasenaResponse,
   ForgotPasswordResponse,
   LoginResponse,
   RefreshResponse,
@@ -12,8 +13,11 @@ import type { Request, Response } from 'express';
 import { AppConfigService } from '../config/app-config.service';
 import { REFRESH_COOKIE_NAME } from './auth.constants';
 import { AuthService } from './auth.service';
-import type { IssuedSession } from './auth.types';
+import type { AuthenticatedUser, IssuedSession } from './auth.types';
+import { AllowPasswordChange } from './decorators/allow-password-change.decorator';
+import { CurrentUser } from './decorators/current-user.decorator';
 import { Public } from './decorators/public.decorator';
+import { CambiarContrasenaDto } from './dto/cambiar-contrasena.dto';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { LoginDto } from './dto/login.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
@@ -105,6 +109,25 @@ export class AuthController {
     }
     clearRefreshCookie(res, this.config);
     return { loggedOut: true };
+  }
+
+  /**
+   * POST /auth/cambiar-contrasena
+   *
+   * Primer ingreso: cambia la contraseña, revoca las demás sesiones y planta
+   * la cookie de la sesión nueva. Permitido con la bandera de cambio pendiente.
+   */
+  @AllowPasswordChange()
+  @Post('cambiar-contrasena')
+  @HttpCode(HttpStatus.OK)
+  async cambiarContrasena(
+    @CurrentUser() current: AuthenticatedUser,
+    @Body() dto: CambiarContrasenaDto,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<CambiarContrasenaResponse> {
+    const issued = await this.authService.changePassword(current.id, dto);
+    this.plantCookie(res, issued);
+    return issued.session;
   }
 
   /**

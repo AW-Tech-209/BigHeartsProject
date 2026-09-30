@@ -1,7 +1,9 @@
 import { UserRole } from '@academia/types';
+import { useLocation } from 'react-router-dom';
 
 import { AppShell } from '@/components/layout/app-shell';
 import { PaginaCabecera } from '@/components/layout/pagina-cabecera';
+import { Callout } from '@/components/ui/callout';
 import { AprobacionesPendientes } from '@/features/admin/components/aprobaciones-pendientes';
 import { RoleGate } from '@/features/auth/components/role-gate';
 import { useAuth } from '@/features/auth/hooks/use-auth';
@@ -39,6 +41,9 @@ const CONTEXTO_POR_ROL: Record<UserRole, string> = {
  */
 export function PanelPage() {
   const { user } = useAuth();
+  const primerIngreso = Boolean(
+    (useLocation().state as { primerIngreso?: boolean } | null)?.primerIngreso,
+  );
 
   return (
     <AppShell>
@@ -49,6 +54,11 @@ export function PanelPage() {
       />
 
       <div className="space-y-8">
+        {primerIngreso && (
+          <Callout variant="success" live="polite" title="Todo listo">
+            <p>Tu contraseña quedó guardada. Desde ahora entras con ella.</p>
+          </Callout>
+        )}
         <ResumenPanel />
 
         <RoleGate roles={[UserRole.STUDENT]}>

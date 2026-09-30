@@ -12,6 +12,7 @@ export interface JwtPayload {
   email: string;
   role: UserRole;
   status: UserStatus;
+  debeCambiarContrasena?: boolean;
 }
 
 /**
@@ -23,6 +24,7 @@ export interface AuthenticatedUser {
   email: string;
   role: UserRole;
   status: UserStatus;
+  debeCambiarContrasena?: boolean;
 }
 
 /**

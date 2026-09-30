@@ -478,3 +478,68 @@ describe('AuthService.resetPassword', () => {
     expect(userUpdate).not.toHaveBeenCalled();
   });
 });
+
+describe('AuthService — contraseña temporal', () => {
+  const HORA = 3_600_000;
+
+  it('con la contraseña temporal caducada responde 401 TEMPORARY_PASSWORD_EXPIRED', async () => {
+    const { service, tokens } = setup({
+      foundUser: dbUser({
+        mustChangePassword: true,
+        temporaryPasswordExpiresAt: new Date(Date.now() - HORA),
+      }),
+    });
+
+    await expect(service.login(loginDto())).rejects.toMatchObject({
+      response: { code: ApiErrorCode.TEMPORARY_PASSWORD_EXPIRED },
+    });
+    expect(tokens.issueRefreshToken).not.toHaveBeenCalled();
+  });
+
+  it('vigente: entra y la sesión lleva debeCambiarContrasena', async () => {
+    const { service, tokens } = setup({
+      foundUser: dbUser({
+        mustChangePassword: true,
+        temporaryPasswordExpiresAt: new Date(Date.now() + HORA),
+      }),
+    });
+
+    const issued = await service.login(loginDto());
+
+    expect(issued.session.user.debeCambiarContrasena).toBe(true);
+    expect(tokens.issueAccessToken).toHaveBeenCalledWith(
+      expect.objectContaining({ debeCambiarContrasena: true }),
+    );
+  });
+
+  it('cambiar a la misma contraseña responde 400 PASSWORD_UNCHANGED', async () => {
+    const { service } = setup({ foundUser: dbUser({ mustChangePassword: true }) });
+
+    await expect(
+      service.changePassword('user-id', { actual: 'Password123', nueva: 'Password123' }),
+    ).rejects.toMatchObject({ response: { code: ApiErrorCode.PASSWORD_UNCHANGED } });
+  });
+
+  it('cambia la contraseña, limpia la bandera, revoca sesiones y emite una nueva', async () => {
+    const { service, userUpdate, refreshTokenModel } = setup({
+      foundUser: dbUser({ mustChangePassword: true }),
+    });
+    userUpdate.mockResolvedValue(dbUser({ mustChangePassword: false }));
+
+    const issued = await service.changePassword('user-id', {
+      actual: 'Temporal123',
+      nueva: 'Password456',
+    });
+
+    expect(userUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          mustChangePassword: false,
+          temporaryPasswordExpiresAt: null,
+        }),
+      }),
+    );
+    expect(refreshTokenModel.updateMany).toHaveBeenCalled();
+    expect(issued.session.user.debeCambiarContrasena).toBe(false);
+  });
+});

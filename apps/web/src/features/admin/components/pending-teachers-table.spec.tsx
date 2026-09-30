@@ -19,6 +19,7 @@ function profesor(overrides: Partial<User> = {}): User {
     hearingLossLevel: null,
     preferredInstructionMode: null,
     preferredSupports: [],
+    debeCambiarContrasena: false,
     createdAt: '2026-08-12T15:30:00.000Z',
     updatedAt: '2026-08-12T15:30:00.000Z',
     ...overrides,

@@ -3,8 +3,9 @@ import { Reflector } from '@nestjs/core';
 import { JwtService } from '@nestjs/jwt';
 import type { Request } from 'express';
 
-import { unauthenticated } from '../auth.errors';
+import { passwordChangeRequired, unauthenticated } from '../auth.errors';
 import type { AuthenticatedUser, JwtPayload } from '../auth.types';
+import { ALLOW_PASSWORD_CHANGE_KEY } from '../decorators/allow-password-change.decorator';
 import { IS_PUBLIC_KEY } from '../decorators/public.decorator';
 
 /**
@@ -37,19 +38,30 @@ export class JwtAuthGuard implements CanActivate {
       throw unauthenticated();
     }
 
+    let payload: JwtPayload;
     try {
-      const payload = this.jwt.verify<JwtPayload>(token);
-      (request as Request & { user: AuthenticatedUser }).user = {
-        id: payload.sub,
-        email: payload.email,
-        role: payload.role,
-        status: payload.status,
-      };
-      return true;
+      payload = this.jwt.verify<JwtPayload>(token);
     } catch {
       // Firma inválida, token expirado o malformado: todo se trata igual.
       throw unauthenticated();
     }
+
+    const allowed = this.reflector.getAllAndOverride<boolean>(ALLOW_PASSWORD_CHANGE_KEY, [
+      context.getHandler(),
+      context.getClass(),
+    ]);
+    if (payload.debeCambiarContrasena && !allowed) {
+      throw passwordChangeRequired();
+    }
+
+    (request as Request & { user: AuthenticatedUser }).user = {
+      id: payload.sub,
+      email: payload.email,
+      role: payload.role,
+      status: payload.status,
+      debeCambiarContrasena: payload.debeCambiarContrasena ?? false,
+    };
+    return true;
   }
 
   private extractBearerToken(request: Request): string | null {
