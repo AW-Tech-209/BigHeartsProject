@@ -1,5 +1,4 @@
 import { Contenedor } from '@/components/layout/contenedor';
-import { CtaAcceso } from './cta-acceso';
 import { Revelar } from './revelar';
 
 export function SeccionCierre() {
@@ -10,7 +9,9 @@ export function SeccionCierre() {
           <h2 className="max-w-[24ch] font-serif text-4xl leading-[1.08] font-normal tracking-tight text-balance sm:text-5xl">
             Aprender inglés no debería ser más difícil por no poder oír.
           </h2>
-          <CtaAcceso className="mt-10" />
+          <p className="mt-8 max-w-[46ch] text-lg text-muted-foreground text-pretty">
+            Para crear tu cuenta o entrar, usa los botones de la barra de arriba.
+          </p>
         </Revelar>
       </Contenedor>
     </section>

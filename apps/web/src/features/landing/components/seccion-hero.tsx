@@ -1,7 +1,8 @@
+import { ArrowDown } from 'lucide-react';
+
 import { Contenedor } from '@/components/layout/contenedor';
 import { usePageTitle } from '@/hooks/use-page-title';
 import { AULAS_DEMO } from '../lib/aulas-demo';
-import { CtaAcceso } from './cta-acceso';
 import { RotuloSeccion } from './primitivos-landing';
 import { Revelar } from './revelar';
 import { TarjetaAulaDemo } from './tarjeta-aula-demo';
@@ -42,7 +43,13 @@ export function SeccionHero() {
             Reservas tu cupo, sabes que es tuyo, y entras a la clase cuando llega la hora — sin
             buscar el enlace en un chat.
           </p>
-          <CtaAcceso className="mt-9" />
+          <a
+            href="#como-es-una-clase"
+            className="transicion-rapida mt-9 inline-flex min-h-11 items-center gap-2 rounded-lg text-base font-medium text-primary underline-offset-4 hover:underline"
+          >
+            Ver cómo es una clase
+            <ArrowDown aria-hidden="true" strokeWidth={2} className="size-4" />
+          </a>
           <p className="mt-7 max-w-[46ch] text-sm text-muted-foreground">
             La plataforma está hoy en un entorno de pruebas. Puedes crear tu cuenta y explorar; el
             paso a producción es posterior.

@@ -1,7 +1,5 @@
-import { Clock, Eye, Hand, Type, UserPlus, Users, type LucideIcon } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Clock, Eye, Hand, Type, Users, type LucideIcon } from 'lucide-react';
 
-import { Button } from '@/components/ui/button';
 import { RotuloSeccion, SeccionLanding } from './primitivos-landing';
 import { Revelar } from './revelar';
 
@@ -25,11 +23,7 @@ export function SeccionProfesores() {
             cupos, los recordatorios y el acceso. Antes de empezar ves tu lista de inscritos con la
             preferencia de comunicación de cada uno.
           </p>
-          <Button render={<Link to="/registro" />} className="mt-8 h-12 gap-2 px-6 text-base">
-            <UserPlus aria-hidden="true" strokeWidth={2} className="size-5" />
-            Crear mi cuenta de profesor
-          </Button>
-          <p className="mt-4 flex max-w-[46ch] items-start gap-2.5 text-sm text-muted-foreground">
+          <p className="mt-8 flex max-w-[46ch] items-start gap-2.5 text-sm text-muted-foreground">
             <Clock
               aria-hidden="true"
               strokeWidth={2}

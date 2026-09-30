@@ -28,21 +28,19 @@ describe('<Landing>', () => {
     expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1);
   });
 
-  it('lleva a registro y a login desde el CTA, no a un formulario de correo', () => {
+  it('tiene un solo par de acceso, dentro de la barra', () => {
     renderConProviders(<Landing />);
+    const barra = screen.getByRole('banner');
 
-    const crear = screen.getAllByRole('link', { name: /^crear una cuenta$/i });
-    expect(crear.length).toBeGreaterThan(0);
-    crear.forEach((enlace) => expect(enlace).toHaveAttribute('href', '/registro'));
+    const crear = screen.getAllByRole('link', { name: /crear/i });
+    expect(crear).toHaveLength(1);
+    expect(crear[0]).toHaveAttribute('href', '/registro');
+    expect(barra).toContainElement(crear[0] as HTMLElement);
 
-    for (const enlace of screen.getAllByRole('link', { name: /iniciar sesión/i })) {
-      expect(enlace).toHaveAttribute('href', '/login');
-    }
-
-    expect(screen.getByRole('link', { name: /crear mi cuenta de profesor/i })).toHaveAttribute(
-      'href',
-      '/registro',
-    );
+    const entrar = screen.getAllByRole('link', { name: /iniciar sesión/i });
+    expect(entrar).toHaveLength(1);
+    expect(entrar[0]).toHaveAttribute('href', '/login');
+    expect(barra).toContainElement(entrar[0] as HTMLElement);
     expect(screen.queryByRole('textbox', { name: /correo/i })).not.toBeInTheDocument();
   });
 
@@ -50,11 +48,8 @@ describe('<Landing>', () => {
     darSesion(UserRole.STUDENT);
     renderConProviders(<Landing />);
 
-    expect(screen.getAllByRole('link', { name: /ir a mi panel/i })[0]).toHaveAttribute(
-      'href',
-      '/panel',
-    );
-    expect(screen.queryByRole('link', { name: /^crear una cuenta$/i })).not.toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /ir a mi panel/i })).toHaveAttribute('href', '/panel');
+    expect(screen.queryByRole('link', { name: /crear/i })).not.toBeInTheDocument();
   });
 
   it('filtra el catálogo de ejemplo y actualiza el resumen', async () => {

@@ -16,7 +16,7 @@ describe('CtaAcceso', () => {
   it('sin sesión muestra crear cuenta e iniciar sesión', () => {
     renderConProviders(<CtaAcceso />);
 
-    expect(screen.getByRole('link', { name: 'Crear una cuenta' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Crear cuenta' })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Iniciar sesión' })).toBeInTheDocument();
   });
 
@@ -26,7 +26,7 @@ describe('CtaAcceso', () => {
 
     expect(screen.queryByRole('link')).toBeNull();
     const hueco = container.querySelector('[aria-hidden="true"]');
-    expect(hueco?.className).toContain('h-12');
+    expect(hueco?.className).toContain('h-11');
     expect(hueco?.className).toContain('mt-9');
   });
 

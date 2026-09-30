@@ -5,7 +5,7 @@
 | **Sprint**          | Post-Fase 1 · UX                            |
 | **Prioridad**       | 🟠 Alta (pedido del cliente)                |
 | **Estimación**      | 0.5 días                                    |
-| **Estado**          | ⬜ Pendiente                                |
+| **Estado**          | ✅ Hecha                                    |
 | **Asignada a**      | **Dev A** — frontend, `features/landing/`   |
 | **Rama**            | `hu-521-un-solo-par-de-botones-de-acceso-a` |
 | **Alcance técnico** | frontend                                    |
@@ -34,27 +34,27 @@ a nadie sin salida.
 
 ## Tasks
 
-- [ ] **T1** — Hero: se retira `<CtaAcceso>`. En su lugar va un enlace secundario, sin estilo de
+- [x] **T1** — Hero: se retira `<CtaAcceso>`. En su lugar va un enlace secundario, sin estilo de
       botón de acceso, «Ver cómo es una clase» que baja a `#como-es-una-clase` (un ancla, no una
       acción de cuenta).
-- [ ] **T2** — Cierre: se retira `<CtaAcceso>`. El titular queda y debajo va una línea que dirige a
+- [x] **T2** — Cierre: se retira `<CtaAcceso>`. El titular queda y debajo va una línea que dirige a
       la barra solo si hace falta: nada de repetir los botones.
-- [ ] **T3** — Profesores: se retira «Crear mi cuenta de profesor» y la nota de aprobación se reescribe
+- [x] **T3** — Profesores: se retira «Crear mi cuenta de profesor» y la nota de aprobación se reescribe
       sin llamada a la acción.
-- [ ] **T4** — `<CtaAcceso>` queda con **un solo uso** (la barra). Se simplifica: se retira la variante
+- [x] **T4** — `<CtaAcceso>` queda con **un solo uso** (la barra). Se simplifica: se retira la variante
       no compacta si ya nadie la usa. En móvil, el par sigue visible en la barra, sin menú.
-- [ ] **T5** — Tests: en la landing hay exactamente **un** enlace a `/registro` y **uno** a `/login`
+- [x] **T5** — Tests: en la landing hay exactamente **un** enlace a `/registro` y **uno** a `/login`
       (por rol y nombre), y los dos están dentro del `banner`.
 
 ## Criterios de aceptación
 
-- [ ] **AC1** — En toda la landing, `getAllByRole('link', { name: /crear/i })` hacia `/registro`
+- [x] **AC1** — En toda la landing, `getAllByRole('link', { name: /crear/i })` hacia `/registro`
       devuelve 1 y `/iniciar sesión/i` hacia `/login` devuelve 1, ambos dentro de `role="banner"`.
-- [ ] **AC2** — Al cargar la landing a 1280 px y a 375 px se ve un solo par de botones de acceso.
-- [ ] **AC3** — Al hacer scroll hasta el cierre, el par de la barra sigue visible (`sticky`).
-- [ ] **AC4** — Con sesión abierta, la barra sigue ofreciendo «Ir a mi panel» (comportamiento actual
+- [x] **AC2** — Al cargar la landing a 1280 px y a 375 px se ve un solo par de botones de acceso.
+- [x] **AC3** — Al hacer scroll hasta el cierre, el par de la barra sigue visible (`sticky`).
+- [x] **AC4** — Con sesión abierta, la barra sigue ofreciendo «Ir a mi panel» (comportamiento actual
       de `<CtaAcceso>`), también una sola vez.
-- [ ] **AC5** — El documento de marca, Parte VI, describe el hero y el cierre sin botones de acceso.
+- [x] **AC5** — El documento de marca, Parte VI, describe el hero y el cierre sin botones de acceso.
 
 ## Fuera de alcance
 
@@ -62,4 +62,4 @@ a nadie sin salida.
 
 ## Notas de implementación
 
-_Se rellena al cerrar: máximo 3 líneas o «Sin desviaciones»._
+Barra en móvil: «Crear cuenta» ya no se oculta bajo `sm`; se ocultan los íconos y el texto de la marca (queda como `sr-only`) para que quepa el par en 375 px.

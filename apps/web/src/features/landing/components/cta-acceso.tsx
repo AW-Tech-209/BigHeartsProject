@@ -6,31 +6,29 @@ import { useAuth } from '@/features/auth/hooks/use-auth';
 import { cn } from '@/lib/utils';
 
 type CtaAccesoProps = {
-  /** En la cabecera los botones van más bajos y con texto más corto. */
-  compacto?: boolean;
   className?: string;
 };
 
 /**
- * El par de acciones de la landing: crear cuenta e iniciar sesión.
+ * El par de acciones de la barra de la landing: crear cuenta e iniciar sesión.
  *
  * Consciente de la sesión: mientras se rehidrata reserva el alto de los botones
  * —enseñar «Iniciar sesión» y cambiarlo medio segundo después es peor que
  * esperar, pero el hueco evita que nada salte al aparecer—, y a quien ya tiene
  * sesión le ofrece su panel en vez de un registro que no necesita.
  */
-export function CtaAcceso({ compacto = false, className }: CtaAccesoProps) {
+export function CtaAcceso({ className }: CtaAccesoProps) {
   const { isAuthenticated, isChecking } = useAuth();
 
-  const alto = compacto ? 'h-11 px-4 text-sm' : 'h-12 px-6 text-base';
+  const alto = 'h-11 px-3 text-sm sm:px-4';
 
   if (isChecking) {
-    return <div aria-hidden="true" className={cn(compacto ? 'h-11' : 'h-12', className)} />;
+    return <div aria-hidden="true" className={cn('h-11', className)} />;
   }
 
   if (isAuthenticated) {
     return (
-      <div className={cn('flex flex-wrap gap-3', className)}>
+      <div className={cn('flex gap-2 sm:gap-3', className)}>
         <Button render={<Link to="/panel" />} className={cn('gap-2', alto)}>
           <LayoutDashboard aria-hidden="true" strokeWidth={2} className="size-5" />
           Ir a mi panel
@@ -40,16 +38,13 @@ export function CtaAcceso({ compacto = false, className }: CtaAccesoProps) {
   }
 
   return (
-    <div className={cn('flex flex-wrap gap-3', className)}>
-      <Button
-        render={<Link to="/registro" />}
-        className={cn('gap-2', alto, compacto && 'hidden sm:inline-flex')}
-      >
-        <UserPlus aria-hidden="true" strokeWidth={2} className="size-5" />
-        {compacto ? 'Crear cuenta' : 'Crear una cuenta'}
+    <div className={cn('flex gap-2 sm:gap-3', className)}>
+      <Button render={<Link to="/registro" />} className={cn('gap-2', alto)}>
+        <UserPlus aria-hidden="true" strokeWidth={2} className="hidden size-5 sm:block" />
+        Crear cuenta
       </Button>
       <Button variant="outline" render={<Link to="/login" />} className={cn('gap-2', alto)}>
-        <LogIn aria-hidden="true" strokeWidth={2} className="size-5" />
+        <LogIn aria-hidden="true" strokeWidth={2} className="hidden size-5 sm:block" />
         Iniciar sesión
       </Button>
     </div>
