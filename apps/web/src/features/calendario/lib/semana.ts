@@ -54,6 +54,38 @@ export function agruparPorDia(items: AulaEnCalendario[]): Map<string, AulaEnCale
   return porDia;
 }
 
+/** Minutos desde la medianoche LOCAL. */
+export function minutoDelDia(fecha: Date): number {
+  return fecha.getHours() * 60 + fecha.getMinutes();
+}
+
+const HORAS_MINIMAS = 4;
+
+/**
+ * Horas enteras `[desde, hasta)` que pinta la rejilla: de la primera clase a la última,
+ * nunca menos de 4 para que una semana con una sola clase no quede aplastada.
+ */
+export function rangoDeHoras(items: AulaEnCalendario[]): { desde: number; hasta: number } {
+  if (items.length === 0) return { desde: 8, hasta: 8 + HORAS_MINIMAS };
+  const inicios = items.map((a) => minutoDelDia(new Date(a.scheduledAt)));
+  const finales = items.map((a, i) => inicios[i]! + a.durationMinutes);
+  let desde = Math.floor(Math.min(...inicios) / 60);
+  let hasta = Math.min(24, Math.ceil(Math.max(...finales) / 60));
+  if (hasta - desde < HORAS_MINIMAS) {
+    hasta = Math.min(24, desde + HORAS_MINIMAS);
+    desde = Math.max(0, hasta - HORAS_MINIMAS);
+  }
+  return { desde, hasta };
+}
+
+/** `28 sept – 4 oct 2026` */
+export function tituloSemana(lunes: string): string {
+  const formato = new Intl.DateTimeFormat('es', { day: 'numeric', month: 'short' });
+  const inicio = deClaveDia(lunes);
+  const fin = sumarDias(inicio, 6);
+  return `${formato.format(inicio)} – ${formato.format(fin)} ${fin.getFullYear()}`;
+}
+
 /** `del 28 de sep. al 4 de oct.` */
 export function describirSemana(lunes: string): string {
   const formato = new Intl.DateTimeFormat('es', { day: 'numeric', month: 'short' });

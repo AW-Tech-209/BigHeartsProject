@@ -112,7 +112,11 @@ export function MisAulasPage() {
       <SelectorVista vista={vista} onChange={cambiarVista} />
 
       {vista === 'semana' && (
-        <VistaSemana useConsulta={useMisAulas} textoVacio="No tienes aulas esta semana" />
+        <VistaSemana
+          useConsulta={useMisAulas}
+          textoVacio="No tienes aulas esta semana"
+          rol="profesor"
+        />
       )}
 
       {vista === 'lista' && (

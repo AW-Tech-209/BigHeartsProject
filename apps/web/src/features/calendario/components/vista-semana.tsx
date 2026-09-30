@@ -17,9 +17,10 @@ import {
   lunesDe,
   rangoDeSemana,
   sumarDias,
+  tituloSemana,
 } from '../lib/semana';
 import { CalendarioSemana } from './calendario-semana';
-import type { AulaEnCalendario } from './evento-calendario';
+import type { AulaEnCalendario, Rol } from './evento-calendario';
 
 type Consulta = {
   data?: { items: AulaEnCalendario[] };
@@ -33,10 +34,11 @@ type Props = {
   /** El hook de datos de la pantalla (`useMisReservas` o `useMisAulas`), pedido por rango. */
   useConsulta: (rango: { desde: string; hasta: string }) => Consulta;
   textoVacio: string;
+  rol: Rol;
 };
 
 /** La vista «Semana»: navegación, anuncio del rango y calendario. La semana vive en la URL. */
-export function VistaSemana({ useConsulta, textoVacio }: Props) {
+export function VistaSemana({ useConsulta, textoVacio, rol }: Props) {
   const [searchParams, setSearchParams] = useSearchParams();
   const lunes = leerSemana(searchParams);
   const { data, isPending, isError, isRefetching, refetch } = useConsulta(rangoDeSemana(lunes));
@@ -47,6 +49,11 @@ export function VistaSemana({ useConsulta, textoVacio }: Props) {
   const inicio = deClaveDia(lunes);
   const zona = describirHorarioRenglon(inicio.toISOString()).zona;
   const total = items?.length;
+  const sustantivo = rol === 'profesor' ? ['aula', 'aulas'] : ['clase', 'clases'];
+  const conteo =
+    total === undefined
+      ? null
+      : `${total} ${total === 1 ? sustantivo[0] : sustantivo[1]} esta semana`;
 
   useEffect(() => {
     if (total === undefined) return;
@@ -63,28 +70,33 @@ export function VistaSemana({ useConsulta, textoVacio }: Props) {
 
   return (
     <section aria-labelledby="semana-titulo" className="space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <h2 id="semana-titulo" className="text-xl font-medium text-foreground">
-          {rango} · {zona}
-        </h2>
-        <div className="flex flex-wrap gap-2">
-          <Button
-            variant="outline"
-            onClick={() => irA(sumarDias(inicio, -7))}
-            className="h-11 gap-2 px-4"
-          >
-            <ChevronLeft aria-hidden="true" strokeWidth={2} className="size-5" />
-            Semana anterior
-          </Button>
+      <div className="flex flex-wrap items-end justify-between gap-4">
+        <div className="space-y-1">
+          <h2 id="semana-titulo" className="text-2xl font-semibold text-foreground">
+            {tituloSemana(lunes)}
+          </h2>
+          <p className="text-sm text-muted-foreground">
+            {conteo && `${conteo} · `}Horas en {zona}
+          </p>
+        </div>
+        <div className="flex gap-2">
           <Button variant="outline" onClick={() => irA(lunesDe(new Date()))} className="h-11 px-4">
             Esta semana
           </Button>
           <Button
             variant="outline"
-            onClick={() => irA(sumarDias(inicio, 7))}
-            className="h-11 gap-2 px-4"
+            onClick={() => irA(sumarDias(inicio, -7))}
+            aria-label="Semana anterior"
+            className="size-11 p-0"
           >
-            Semana siguiente
+            <ChevronLeft aria-hidden="true" strokeWidth={2} className="size-5" />
+          </Button>
+          <Button
+            variant="outline"
+            onClick={() => irA(sumarDias(inicio, 7))}
+            aria-label="Semana siguiente"
+            className="size-11 p-0"
+          >
             <ChevronRight aria-hidden="true" strokeWidth={2} className="size-5" />
           </Button>
         </div>
@@ -122,7 +134,9 @@ export function VistaSemana({ useConsulta, textoVacio }: Props) {
         <EstadoVacio titular={textoVacio} ayuda="Prueba con otra semana." />
       )}
 
-      {!isError && items && items.length > 0 && <CalendarioSemana lunes={lunes} items={items} />}
+      {!isError && items && items.length > 0 && (
+        <CalendarioSemana lunes={lunes} items={items} rol={rol} />
+      )}
     </section>
   );
 }
