@@ -116,6 +116,15 @@ const camposEnv = z.object({
   CORS_ORIGIN: z.string().optional(),
 
   /**
+   * Si cualquiera puede crearse una cuenta en `POST /auth/register` (D48).
+   * Opcional: por defecto `false` (piloto cerrado).
+   */
+  PUBLIC_REGISTRATION_ENABLED: z
+    .enum(['true', 'false'])
+    .default('false')
+    .transform((value) => value === 'true'),
+
+  /**
    * Si está activo, los profesores se registran con status PENDING (a la espera
    * de aprobación); los estudiantes siempre nacen ACTIVE. Si se desactiva, los
    * profesores también nacen ACTIVE. Llega como string desde el entorno.

@@ -87,6 +87,11 @@ export class AppConfigService {
       .filter((origin) => origin.length > 0);
   }
 
+  /** Si el registro público está abierto (D48). Por defecto, cerrado. */
+  get publicRegistrationEnabled(): boolean {
+    return this.config.get('PUBLIC_REGISTRATION_ENABLED', { infer: true });
+  }
+
   /**
    * Si los profesores requieren aprobación (nacen PENDING). Ver la regla de
    * negocio en AuthService.

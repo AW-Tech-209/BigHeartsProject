@@ -1,17 +1,21 @@
 import { UserRole } from '@academia/types';
 import { screen } from '@testing-library/react';
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { esperarSinFallosDeAccesibilidad } from '@/test/accesibilidad';
 import { renderConProviders } from '@/test/render-con-providers';
 import { darSesion } from '@/test/sesion';
+import { obtenerConfigPublica } from '@/features/auth/api/config-publica';
 import { Landing } from './landing';
+
+vi.mock('@/features/auth/api/config-publica');
 
 const RESUMEN = /clases? disponibles? con estos filtros|ninguna clase coincide con estos filtros/i;
 
 describe('<Landing>', () => {
   beforeEach(() => {
     darSesion(null);
+    vi.mocked(obtenerConfigPublica).mockResolvedValue({ registroAbierto: true });
   });
 
   it('no tiene violaciones de accesibilidad en claro y en oscuro', async () => {
@@ -28,11 +32,19 @@ describe('<Landing>', () => {
     expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1);
   });
 
-  it('tiene un solo par de acceso, dentro de la barra', () => {
+  it('con el registro cerrado no enlaza a /registro en ningún punto', async () => {
+    vi.mocked(obtenerConfigPublica).mockResolvedValue({ registroAbierto: false });
+    const { container } = renderConProviders(<Landing />);
+
+    await screen.findByRole('link', { name: /iniciar sesión/i });
+    expect(container.querySelector('a[href="/registro"]')).toBeNull();
+  });
+
+  it('tiene un solo par de acceso, dentro de la barra', async () => {
     renderConProviders(<Landing />);
     const barra = screen.getByRole('banner');
 
-    const crear = screen.getAllByRole('link', { name: /crear/i });
+    const crear = await screen.findAllByRole('link', { name: /crear/i });
     expect(crear).toHaveLength(1);
     expect(crear[0]).toHaveAttribute('href', '/registro');
     expect(barra).toContainElement(crear[0] as HTMLElement);

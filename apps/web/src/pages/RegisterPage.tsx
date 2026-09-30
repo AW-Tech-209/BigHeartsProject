@@ -1,10 +1,15 @@
 import type { User } from '@academia/types';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { LogIn } from 'lucide-react';
 
 import { LayoutAutenticacion } from '@/components/layout/layout-autenticacion';
+import { BotonAyuda } from '@/components/layout/boton-ayuda';
 import { PaginaCabecera } from '@/components/layout/pagina-cabecera';
+import { buttonVariants } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { cn } from '@/lib/utils';
+import { useRegistroAbierto } from '@/features/auth/hooks/use-registro-abierto';
 import { RegisterForm } from '@/features/auth/components/register-form';
 import {
   RegistrationResult,
@@ -13,6 +18,41 @@ import {
 
 export function RegisterPage() {
   const [registeredUser, setRegisteredUser] = useState<User | null>(null);
+  const { abierto, cargando } = useRegistroAbierto();
+
+  if (cargando) {
+    return (
+      <LayoutAutenticacion>
+        <div className="mx-auto w-full max-w-2xl space-y-8">
+          <PaginaCabecera titulo="Crea tu cuenta" tituloDocumento="Crear cuenta" />
+          <p role="status" className="text-muted-foreground">
+            Cargando…
+          </p>
+        </div>
+      </LayoutAutenticacion>
+    );
+  }
+
+  if (!abierto && !registeredUser) {
+    return (
+      <LayoutAutenticacion>
+        <div className="mx-auto w-full max-w-2xl space-y-8">
+          <PaginaCabecera
+            titulo="El registro está cerrado"
+            tituloDocumento="Registro cerrado"
+            contexto="BigHearts está en fase de pruebas. Las cuentas las crea la academia."
+          />
+          <div className="flex flex-wrap gap-3">
+            <Link to="/login" className={cn(buttonVariants(), 'h-12 gap-2 px-4')}>
+              <LogIn aria-hidden="true" strokeWidth={2} className="size-5" />
+              Iniciar sesión
+            </Link>
+            <BotonAyuda />
+          </div>
+        </div>
+      </LayoutAutenticacion>
+    );
+  }
 
   return (
     <LayoutAutenticacion>

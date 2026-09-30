@@ -6,6 +6,7 @@ import { PaginaCabecera } from '@/components/layout/pagina-cabecera';
 import { Callout } from '@/components/ui/callout';
 import { Card } from '@/components/ui/card';
 import { LoginForm } from '@/features/auth/components/login-form';
+import { useRegistroAbierto } from '@/features/auth/hooks/use-registro-abierto';
 import { useAuthStore } from '@/stores/auth-store';
 
 /** Estado que deja `RequireAuth` al expulsar de una ruta privada. */
@@ -13,6 +14,7 @@ type LoginLocationState = { from?: string };
 
 export function LoginPage() {
   const navigate = useNavigate();
+  const { abierto: registroAbierto } = useRegistroAbierto();
   const location = useLocation();
 
   // Si el usuario llegó aquí porque intentó entrar a una ruta privada, tras
@@ -52,15 +54,17 @@ export function LoginPage() {
           <LoginForm onLoggedIn={() => navigate(from ?? '/panel', { replace: true })} />
         </Card>
 
-        <p className="text-sm text-muted-foreground">
-          ¿Todavía no tienes cuenta?{' '}
-          <Link
-            to="/registro"
-            className="font-medium text-primary underline-offset-4 hover:underline"
-          >
-            Crea tu cuenta
-          </Link>
-        </p>
+        {registroAbierto && (
+          <p className="text-sm text-muted-foreground">
+            ¿Todavía no tienes cuenta?{' '}
+            <Link
+              to="/registro"
+              className="font-medium text-primary underline-offset-4 hover:underline"
+            >
+              Crea tu cuenta
+            </Link>
+          </p>
+        )}
       </div>
     </LayoutAutenticacion>
   );

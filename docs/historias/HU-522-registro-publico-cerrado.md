@@ -5,7 +5,7 @@
 | **Sprint**          | Post-Fase 1 · Piloto controlado                           |
 | **Prioridad**       | 🔴 Crítica                                                |
 | **Estimación**      | 1 día                                                     |
-| **Estado**          | ⬜ Pendiente                                              |
+| **Estado**          | ✅ Hecha                                                  |
 | **Asignada a**      | **Dev A** (T1–T3) · **Dev B** (T4–T5)                     |
 | **Rama**            | `hu-522-registro-publico-cerrado-a` / `-b`                |
 | **Alcance técnico** | fullstack                                                 |
@@ -36,31 +36,31 @@ no lo supone.
 
 ## Tasks
 
-- [ ] **T1** — Entorno: `PUBLIC_REGISTRATION_ENABLED` (`'true' | 'false'`, por defecto `false`), igual
+- [x] **T1** — Entorno: `PUBLIC_REGISTRATION_ENABLED` (`'true' | 'false'`, por defecto `false`), igual
       que `TEACHER_APPROVAL_REQUIRED`.
-- [ ] **T2** — `POST /auth/register` con el registro cerrado → **403 `REGISTRATION_CLOSED`**, sin crear
+- [x] **T2** — `POST /auth/register` con el registro cerrado → **403 `REGISTRATION_CLOSED`**, sin crear
       nada y antes de validar si el correo existe (no se filtra qué correos hay).
-- [ ] **T3** — `GET /config/publica` (`@Public()`): `{ registroAbierto: boolean }`. Cacheable 5 min
+- [x] **T3** — `GET /config/publica` (`@Public()`): `{ registroAbierto: boolean }`. Cacheable 5 min
       en el cliente (React Query `staleTime`).
-- [ ] **T4** — Front con el registro cerrado: la barra de la landing muestra **solo «Iniciar sesión»**;
+- [x] **T4** — Front con el registro cerrado: la barra de la landing muestra **solo «Iniciar sesión»**;
       el login no enlaza a `/registro`; y `/registro` muestra un estado honesto: «BigHearts está en
       fase de pruebas. Las cuentas las crea la academia», con el botón «Iniciar sesión» y el botón de
       ayuda de HU-514 para pedir acceso. El formulario de registro **no se borra**.
-- [ ] **T5** — Tests: API cerrada → 403 y ningún `user.create`; abierta → comportamiento actual.
+- [x] **T5** — Tests: API cerrada → 403 y ningún `user.create`; abierta → comportamiento actual.
       Front: con `registroAbierto: false` no hay enlaces a `/registro` en landing ni login, y
       `/registro` muestra el aviso.
 
 ## Criterios de aceptación
 
-- [ ] **AC1** — Sin definir la variable, `POST /auth/register` responde 403 `REGISTRATION_CLOSED` para
+- [x] **AC1** — Sin definir la variable, `POST /auth/register` responde 403 `REGISTRATION_CLOSED` para
       cualquier rol, y la tabla `users` no cambia.
-- [ ] **AC2** — Con `PUBLIC_REGISTRATION_ENABLED=true`, el registro de estudiantes y profesores
+- [x] **AC2** — Con `PUBLIC_REGISTRATION_ENABLED=true`, el registro de estudiantes y profesores
       (con aprobación) funciona exactamente como hoy (los tests existentes pasan sin tocarlos).
-- [ ] **AC3** — Con el registro cerrado, ninguna pantalla pública tiene un enlace a `/registro`, y la
+- [x] **AC3** — Con el registro cerrado, ninguna pantalla pública tiene un enlace a `/registro`, y la
       barra de la landing muestra un solo botón: «Iniciar sesión».
-- [ ] **AC4** — Entrar a `/registro` escribiendo la URL muestra el aviso de fase de pruebas, no el
+- [x] **AC4** — Entrar a `/registro` escribiendo la URL muestra el aviso de fase de pruebas, no el
       formulario.
-- [ ] **AC5** — `ARQUITECTURA.md` §4.5 y `AUTH_FLOW.md` describen D48.
+- [x] **AC5** — `ARQUITECTURA.md` §4.5 y `AUTH_FLOW.md` describen D48.
 
 ## Fuera de alcance
 
@@ -69,5 +69,5 @@ no lo supone.
 
 ## Notas de implementación
 
-_Se rellena al cerrar. Recordatorio: en Render, **no** definir la variable (o `false`) en staging y
+Sin desviaciones. Mientras carga `/config/publica` el front trata el registro como cerrado. Recordatorio: en Render, **no** definir la variable (o `false`) en staging y
 prod durante el piloto._

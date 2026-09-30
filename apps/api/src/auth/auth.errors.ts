@@ -75,6 +75,13 @@ export const accountRejected = (): ForbiddenException =>
       'Tu solicitud de cuenta de profesor no fue aprobada. Escribe al equipo de soporte si crees que es un error.',
   });
 
+/** El registro público está cerrado (piloto cerrado, D48). */
+export const registrationClosed = (): ForbiddenException =>
+  new ForbiddenException({
+    code: ApiErrorCode.REGISTRATION_CLOSED,
+    message: 'El registro está cerrado: las cuentas las crea la academia.',
+  });
+
 /** Hay sesión, pero el rol no alcanza para el endpoint. Lo lanza el RolesGuard. */
 export const insufficientRole = (): ForbiddenException =>
   new ForbiddenException({

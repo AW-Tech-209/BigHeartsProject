@@ -50,6 +50,7 @@ function dbUser(overrides: Record<string, unknown> = {}) {
 function setup(
   options: {
     teacherApprovalRequired?: boolean;
+    registrationOpen?: boolean;
     existingEmail?: boolean;
     foundUser?: ReturnType<typeof dbUser> | null;
   } = {},
@@ -88,6 +89,7 @@ function setup(
   );
 
   const config = {
+    publicRegistrationEnabled: options.registrationOpen ?? true,
     teacherApprovalRequired: options.teacherApprovalRequired ?? true,
     passwordResetExpiryMinutes: 30,
     frontendUrl: 'https://academia-web.vercel.app',
@@ -145,6 +147,16 @@ beforeEach(() => {
 });
 
 describe('AuthService.register', () => {
+  it('con el registro cerrado responde REGISTRATION_CLOSED sin consultar ni crear', async () => {
+    const { service, create, findUnique } = setup({ registrationOpen: false, existingEmail: true });
+
+    await expect(service.register(baseDto({ role: UserRole.STUDENT }))).rejects.toMatchObject({
+      response: { code: 'REGISTRATION_CLOSED' },
+    });
+    expect(findUnique).not.toHaveBeenCalled();
+    expect(create).not.toHaveBeenCalled();
+  });
+
   it('registra un estudiante con estado ACTIVE', async () => {
     const { service, create } = setup();
 

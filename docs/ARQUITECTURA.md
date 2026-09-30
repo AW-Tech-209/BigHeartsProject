@@ -236,6 +236,13 @@ con poca antelación solo perjudica al propio profesor. El solapamiento sí bloq
 
 ### 4.5 Registro y aprobación
 
+> **Decisión D48 — el registro público está cerrado por configuración.** Durante el piloto las
+> cuentas las crea la academia. `PUBLIC_REGISTRATION_ENABLED` (`'true' | 'false'`, por defecto
+> `false`): cerrado, `POST /auth/register` responde 403 `REGISTRATION_CLOSED` antes de consultar
+> si el correo existe. `GET /config/publica` (`@Public()`) devuelve `{ registroAbierto }` y el
+> front lo pregunta (caché 5 min) en vez de suponerlo. El formulario no se borra: abrirlo es
+> cambiar la variable. Lo que sigue describe el registro **abierto**.
+
 - Estudiantes: nacen `ACTIVE`.
 - Profesores: nacen `PENDING` si `TEACHER_APPROVAL_REQUIRED` (por defecto `true`), y `ACTIVE` si
   está desactivado. Un profesor `PENDING` **no puede crear aulas** y **no puede iniciar sesión**

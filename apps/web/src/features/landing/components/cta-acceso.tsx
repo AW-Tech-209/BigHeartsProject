@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/features/auth/hooks/use-auth';
+import { useRegistroAbierto } from '@/features/auth/hooks/use-registro-abierto';
 import { cn } from '@/lib/utils';
 
 type CtaAccesoProps = {
@@ -10,7 +11,8 @@ type CtaAccesoProps = {
 };
 
 /**
- * El par de acciones de la barra de la landing: crear cuenta e iniciar sesión.
+ * Las acciones de la barra de la landing: iniciar sesión y, si el servidor
+ * tiene el registro abierto, crear cuenta.
  *
  * Consciente de la sesión: mientras se rehidrata reserva el alto de los botones
  * —enseñar «Iniciar sesión» y cambiarlo medio segundo después es peor que
@@ -19,6 +21,7 @@ type CtaAccesoProps = {
  */
 export function CtaAcceso({ className }: CtaAccesoProps) {
   const { isAuthenticated, isChecking } = useAuth();
+  const { abierto } = useRegistroAbierto();
 
   const alto = 'h-11 px-3 text-sm sm:px-4';
 
@@ -39,11 +42,17 @@ export function CtaAcceso({ className }: CtaAccesoProps) {
 
   return (
     <div className={cn('flex gap-2 sm:gap-3', className)}>
-      <Button render={<Link to="/registro" />} className={cn('gap-2', alto)}>
-        <UserPlus aria-hidden="true" strokeWidth={2} className="hidden size-5 sm:block" />
-        Crear cuenta
-      </Button>
-      <Button variant="outline" render={<Link to="/login" />} className={cn('gap-2', alto)}>
+      {abierto && (
+        <Button render={<Link to="/registro" />} className={cn('gap-2', alto)}>
+          <UserPlus aria-hidden="true" strokeWidth={2} className="hidden size-5 sm:block" />
+          Crear cuenta
+        </Button>
+      )}
+      <Button
+        variant={abierto ? 'outline' : 'default'}
+        render={<Link to="/login" />}
+        className={cn('gap-2', alto)}
+      >
         <LogIn aria-hidden="true" strokeWidth={2} className="hidden size-5 sm:block" />
         Iniciar sesión
       </Button>

@@ -132,6 +132,11 @@ export interface RegisterInput {
 }
 
 /** Respuesta de un registro correcto. El `status` del usuario guía el mensaje. */
+/** Respuesta de `GET /config/publica`: lo que el front necesita saber del servidor. */
+export interface ConfigPublica {
+  registroAbierto: boolean;
+}
+
 export interface RegisterResponse {
   user: User;
 }
@@ -1245,6 +1250,8 @@ export const ApiErrorCode = {
    * dicen cosas distintas y el frontend muestra mensajes distintos. Ver D13.
    */
   ACCOUNT_REJECTED: 'ACCOUNT_REJECTED',
+  /** El registro público está cerrado por configuración (piloto cerrado, D48). */
+  REGISTRATION_CLOSED: 'REGISTRATION_CLOSED',
   /**
    * Se pidió un cambio de estado que las reglas de §4.5 no permiten: aprobar o
    * rechazar a alguien que no es profesor, o que ya no está `PENDING`.

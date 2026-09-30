@@ -24,6 +24,7 @@ import {
   invalidRefreshToken,
   passwordResetTokenExpired,
   passwordResetTokenInvalid,
+  registrationClosed,
 } from './auth.errors';
 import type { IssuedSession } from './auth.types';
 import type { ForgotPasswordDto } from './dto/forgot-password.dto';
@@ -52,6 +53,11 @@ export class AuthService {
    * Devuelve la vista pública del usuario (sin `password`).
    */
   async register(dto: RegisterDto): Promise<User> {
+    // Antes de tocar la BD: cerrado no debe revelar qué correos existen.
+    if (!this.config.publicRegistrationEnabled) {
+      throw registrationClosed();
+    }
+
     // El DTO ya normaliza el email a minúsculas y recortado.
     const existing = await this.prisma.user.findUnique({
       where: { email: dto.email },
