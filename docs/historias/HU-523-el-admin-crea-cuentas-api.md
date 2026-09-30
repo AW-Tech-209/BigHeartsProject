@@ -5,7 +5,7 @@
 | **Sprint**          | Post-Fase 1 · Piloto controlado                                  |
 | **Prioridad**       | 🔴 Crítica                                                       |
 | **Estimación**      | 1.5 días                                                         |
-| **Estado**          | ⬜ Pendiente                                                     |
+| **Estado**          | ✅ Hecha                                                         |
 | **Asignada a**      | **Dev A** — backend                                              |
 | **Rama**            | `hu-523-el-admin-crea-cuentas-api-a`                             |
 | **Alcance técnico** | backend · types · prisma                                         |
@@ -37,34 +37,34 @@ no puede quedar como la contraseña definitiva.
 
 ## Tasks
 
-- [ ] **T1** — Modelo: `User.mustChangePassword Boolean @default(false)` y
+- [x] **T1** — Modelo: `User.mustChangePassword Boolean @default(false)` y
       `User.temporaryPasswordExpiresAt DateTime?`. Las cuentas existentes quedan en `false`/`null`.
-- [ ] **T2** — `generarContrasenaTemporal()`: 12 caracteres con `crypto.randomInt`, alfabeto **sin
+- [x] **T2** — `generarContrasenaTemporal()`: 12 caracteres con `crypto.randomInt`, alfabeto **sin
       caracteres ambiguos** (sin `0 O o 1 l I`), agrupada para dictarla o copiarla sin error
       (`Kx7m-Pq4r-Tz9w`). Cumple la regla de contraseña de `register.dto.ts`.
-- [ ] **T3** — `POST /admin/usuarios` (`@Roles(ADMIN)`): `{ firstName, lastName, email, role }` con
+- [x] **T3** — `POST /admin/usuarios` (`@Roles(ADMIN)`): `{ firstName, lastName, email, role }` con
       `role ∈ {STUDENT, TEACHER}` (un admin no crea admins). Crea la cuenta `ACTIVE` con
       `mustChangePassword = true` y caducidad a 7 días. Responde `{ usuario, contrasenaTemporal,
-  caducaEl }`. Correo repetido → 409 `EMAIL_ALREADY_REGISTERED`.
-- [ ] **T4** — `POST /admin/usuarios/:id/contrasena-temporal`: genera una nueva, vuelve a activar
+caducaEl }`. Correo repetido → 409 `EMAIL_ALREADY_REGISTERED`.
+- [x] **T4** — `POST /admin/usuarios/:id/contrasena-temporal`: genera una nueva, vuelve a activar
       `mustChangePassword`, **revoca todas las sesiones** del usuario y responde igual que T3. No
       aplica a cuentas `ADMIN`.
-- [ ] **T5** — `GET /admin/usuarios?rol=&estado=&q=&page=`: lista paginada (nombre, correo, rol,
+- [x] **T5** — `GET /admin/usuarios?rol=&estado=&q=&page=`: lista paginada (nombre, correo, rol,
       estado, `pendienteDePrimerIngreso`, `createdAt`). **Nunca** incluye contraseñas ni hashes.
-- [ ] **T6** — Tests: estudiante y profesor → 403; crear devuelve la contraseña y en BD solo hay un
+- [x] **T6** — Tests: estudiante y profesor → 403; crear devuelve la contraseña y en BD solo hay un
       hash que la valida; el alfabeto no contiene ambiguos (1 000 generaciones); reset revoca los
       refresh tokens; el listado no expone `password`.
 
 ## Criterios de aceptación
 
-- [ ] **AC1** — El admin crea un estudiante y un profesor. Los dos pueden hacer login con la
+- [x] **AC1** — El admin crea un estudiante y un profesor. Los dos pueden hacer login con la
       contraseña devuelta sin pasar por aprobación, y quedan con `mustChangePassword = true`.
-- [ ] **AC2** — La contraseña temporal aparece **solo** en la respuesta de T3/T4. Ningún otro
+- [x] **AC2** — La contraseña temporal aparece **solo** en la respuesta de T3/T4. Ningún otro
       endpoint ni log la contiene (verificado buscando en los logs del test).
-- [ ] **AC3** — Pedir una contraseña temporal nueva invalida la anterior y cierra todas las sesiones
+- [x] **AC3** — Pedir una contraseña temporal nueva invalida la anterior y cierra todas las sesiones
       abiertas del usuario.
-- [ ] **AC4** — `POST /admin/usuarios` con `role: ADMIN` → 400. Sin rol `ADMIN` → 403.
-- [ ] **AC5** — `ARQUITECTURA.md` registra D49 y §4.5 describe las dos vías de alta (registro
+- [x] **AC4** — `POST /admin/usuarios` con `role: ADMIN` → 400. Sin rol `ADMIN` → 403.
+- [x] **AC5** — `ARQUITECTURA.md` registra D49 y §4.5 describe las dos vías de alta (registro
       público apagable y alta por el admin).
 
 ## Fuera de alcance
@@ -75,4 +75,4 @@ no puede quedar como la contraseña definitiva.
 
 ## Notas de implementación
 
-_Se rellena al cerrar: máximo 3 líneas o «Sin desviaciones»._
+Desviación: el 409 usa el código existente `EMAIL_ALREADY_EXISTS` (la HU decía `EMAIL_ALREADY_REGISTERED`, que no existe). Los specs de integración con BD (`prisma/*.integration.spec.ts`) fallan por no haber Postgres local.

@@ -1,10 +1,13 @@
 import { Module } from '@nestjs/common';
 
+import { AuthModule } from '../auth/auth.module';
 import { NotificationsModule } from '../notifications/notifications.module';
 import { AdminClassroomsController } from './admin-classrooms.controller';
 import { AdminClassroomsService } from './admin-classrooms.service';
 import { AdminMetricasController } from './admin-metricas.controller';
 import { AdminMetricasService } from './admin-metricas.service';
+import { AdminUsuariosController } from './admin-usuarios.controller';
+import { AdminUsuariosService } from './admin-usuarios.service';
 import { AdminController } from './admin.controller';
 import { AdminService } from './admin.service';
 
@@ -19,8 +22,13 @@ import { AdminService } from './admin.service';
  * controlador, que el `RolesGuard` global aplica.
  */
 @Module({
-  imports: [NotificationsModule],
-  controllers: [AdminController, AdminClassroomsController, AdminMetricasController],
-  providers: [AdminService, AdminClassroomsService, AdminMetricasService],
+  imports: [NotificationsModule, AuthModule],
+  controllers: [
+    AdminController,
+    AdminClassroomsController,
+    AdminMetricasController,
+    AdminUsuariosController,
+  ],
+  providers: [AdminService, AdminClassroomsService, AdminMetricasService, AdminUsuariosService],
 })
 export class AdminModule {}

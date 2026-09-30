@@ -1233,6 +1233,57 @@ export interface TeachersResponse {
   teachers: User[];
 }
 
+/** Días que vive una contraseña temporal antes de caducar (D49). */
+export const CONTRASENA_TEMPORAL_DIAS = 7;
+
+/** Cuerpo de `POST /admin/usuarios`: el admin da de alta a un estudiante o profesor. */
+export interface CrearUsuarioInput {
+  firstName: string;
+  lastName: string;
+  email: string;
+  role: RegisterableRole;
+}
+
+/**
+ * Respuesta de `POST /admin/usuarios` y `POST /admin/usuarios/:id/contrasena-temporal`.
+ * `contrasenaTemporal` viaja solo aquí y una sola vez: en BD queda únicamente su hash.
+ */
+export interface CuentaCreadaResponse {
+  usuario: User;
+  contrasenaTemporal: string;
+  /** ISO 8601. */
+  caducaEl: string;
+}
+
+/** Query de `GET /admin/usuarios`. */
+export interface AdminUsuariosQuery {
+  rol?: UserRole;
+  estado?: UserStatus;
+  /** Busca en nombre, apellidos y correo. */
+  q?: string;
+  page?: number;
+  pageSize?: number;
+}
+
+export interface AdminUsuarioItem {
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  role: UserRole;
+  status: UserStatus;
+  /** `true` mientras no haya cambiado la contraseña temporal. */
+  pendienteDePrimerIngreso: boolean;
+  createdAt: string;
+}
+
+export interface AdminUsuariosResponse {
+  items: AdminUsuarioItem[];
+  total: number;
+  page: number;
+  pageSize: number;
+}
+
 /** Códigos de error estables que la API puede devolver en `ApiError.code`. */
 export const ApiErrorCode = {
   VALIDATION_ERROR: 'VALIDATION_ERROR',

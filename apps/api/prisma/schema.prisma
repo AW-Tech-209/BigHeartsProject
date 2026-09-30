@@ -153,6 +153,10 @@ model User {
   role      UserRole   @default(STUDENT)
   status    UserStatus @default(ACTIVE)
 
+  /// Cuenta creada por el admin con contraseña temporal: debe cambiarla al entrar.
+  mustChangePassword          Boolean   @default(false) @map("must_change_password")
+  temporaryPasswordExpiresAt  DateTime? @map("temporary_password_expires_at")
+
   /// Preferencias de accesibilidad. Opcionales: `null` si no se declararon.
   hearingLossLevel HearingLossLevel? @map("hearing_loss_level")
 

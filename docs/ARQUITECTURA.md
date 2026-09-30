@@ -243,6 +243,17 @@ con poca antelación solo perjudica al propio profesor. El solapamiento sí bloq
 > front lo pregunta (caché 5 min) en vez de suponerlo. El formulario no se borra: abrirlo es
 > cambiar la variable. Lo que sigue describe el registro **abierto**.
 
+> **Decisión D49 — el admin crea las cuentas.** `POST /admin/usuarios` (`{ firstName, lastName,
+email, role }`, `role` ∈ `STUDENT | TEACHER`) crea la cuenta `ACTIVE` —crear a un profesor **es**
+> su aprobación— con una contraseña temporal de 12 caracteres sin ambiguos (`Kx7m-Pq4r-Tz9w`). Se
+> devuelve **una sola vez** en la respuesta y en BD solo queda el hash. La cuenta nace con
+> `mustChangePassword = true` y `temporaryPasswordExpiresAt` a 7 días. `POST
+/admin/usuarios/:id/contrasena-temporal` la regenera y revoca todas las sesiones del usuario
+> (no aplica a `ADMIN`). `GET /admin/usuarios` lista sin exponer contraseñas.
+
+Hay **dos vías de alta**: el registro público (apagable, D48) y el alta por el admin (D49), que
+nace `ACTIVE` sin pasar por aprobación. Lo siguiente describe la vía de registro público.
+
 - Estudiantes: nacen `ACTIVE`.
 - Profesores: nacen `PENDING` si `TEACHER_APPROVAL_REQUIRED` (por defecto `true`), y `ACTIVE` si
   está desactivado. Un profesor `PENDING` **no puede crear aulas** y **no puede iniciar sesión**

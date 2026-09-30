@@ -134,8 +134,8 @@ export class TokenService {
     });
   }
 
-  /** Revoca TODAS las sesiones activas de un usuario (reuso detectado). */
-  private async revokeAllForUser(userId: string): Promise<void> {
+  /** Revoca TODAS las sesiones activas de un usuario (reuso detectado o reset del admin). */
+  async revokeAllForUser(userId: string): Promise<void> {
     await this.prisma.refreshToken.updateMany({
       where: { userId, revokedAt: null },
       data: { revokedAt: new Date() },
