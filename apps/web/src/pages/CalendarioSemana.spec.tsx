@@ -11,7 +11,7 @@ import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vite
 
 import { getMisAulas } from '@/features/aulas/api/get-mis-aulas';
 import { getMisReservas } from '@/features/aulas/api/get-mis-reservas';
-import { agruparPorDia, rangoDeSemana } from '@/features/calendario/lib/semana';
+import { agruparPorDia, rangoDeHoras, rangoDeSemana } from '@/features/calendario/lib/semana';
 import { esperarSinFallosDeAccesibilidad } from '@/test/accesibilidad';
 import { renderConProviders } from '@/test/render-con-providers';
 import { darSesion } from '@/test/sesion';
@@ -80,6 +80,16 @@ describe('semana — funciones puras (AC2)', () => {
     expect([...porDia.keys()]).toEqual(['2026-09-28']);
   });
 
+  it('la rejilla va de la primera clase a la última, con 4 horas como mínimo', () => {
+    expect(rangoDeHoras([clase()])).toEqual({ desde: 19, hasta: 23 });
+    expect(
+      rangoDeHoras([
+        clase({ scheduledAt: '2026-09-29T14:00:00.000Z' }),
+        clase({ scheduledAt: '2026-09-30T03:30:00.000Z', durationMinutes: 90 }),
+      ]),
+    ).toEqual({ desde: 9, hasta: 24 });
+  });
+
   it('el rango va de un lunes local al siguiente, en UTC', () => {
     expect(rangoDeSemana('2026-09-28')).toEqual({
       desde: '2026-09-28T05:00:00.000Z',
@@ -134,17 +144,22 @@ describe('Vista Semana', () => {
     );
   });
 
-  it('en móvil se ve la agenda con los días vacíos plegados (AC5)', async () => {
+  it('en móvil abre el primer día con clases y se cambia de día con la tira (AC5)', async () => {
     vi.stubGlobal('matchMedia', (query: string) => ({
       matches: true,
       media: query,
       addEventListener: () => undefined,
       removeEventListener: () => undefined,
     }));
-    renderConProviders(<MisClasesPage />, { ruta: SEMANA });
+    const { user } = renderConProviders(<MisClasesPage />, { ruta: SEMANA });
 
     await screen.findByRole('link', { name: /Conversación cotidiana/ });
-    expect(screen.getByText('Sin clases (6 días)')).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: /Lunes,? 28 de septiembre.*1 clase/ }),
+    ).toHaveAttribute('aria-pressed', 'true');
+
+    await user.click(screen.getByRole('button', { name: /Miércoles,? 30 de septiembre/ }));
+    expect(screen.getByText('Sin clases este día.')).toBeInTheDocument();
   });
 
   it('axe limpio', async () => {

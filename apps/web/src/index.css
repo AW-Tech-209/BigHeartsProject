@@ -360,6 +360,17 @@
   }
 }
 
+/* Líneas de hora de la vista Semana; 5.5rem = `HORA_REM` de `calendario-semana.tsx`. */
+@utility rejilla-horas {
+  background-image: repeating-linear-gradient(
+    to bottom,
+    transparent 0,
+    transparent calc(5.5rem - 1px),
+    var(--border) calc(5.5rem - 1px),
+    var(--border) 5.5rem
+  );
+}
+
 /* ─────────────────────────────────────────────
    MOVIMIENTO
    ───────────────────────────────────────────── */
