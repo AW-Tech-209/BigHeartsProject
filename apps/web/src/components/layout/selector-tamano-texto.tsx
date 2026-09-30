@@ -11,7 +11,8 @@ const OPCIONES: Record<TamanoTexto, { nombre: string; muestra: string }> = {
   'muy-grande': { nombre: 'Muy grande', muestra: 'text-[1.25rem]' },
 };
 
-function Grupo({ compacto, className }: { compacto: boolean; className?: string }) {
+/** Tres tamaños de texto con muestra «Aa» y nombre escrito, sobre radios nativos. */
+export function SelectorTamanoTexto({ className }: { className?: string }) {
   const { tamano, elegir } = useTamanoTexto();
   const announce = useAnnounce();
   const nombre = useId();
@@ -19,17 +20,10 @@ function Grupo({ compacto, className }: { compacto: boolean; className?: string 
 
   return (
     <div className={className}>
-      <p
-        id={titulo}
-        className={cn('text-sm font-medium text-foreground', compacto ? 'sr-only' : 'mb-2')}
-      >
+      <p id={titulo} className="mb-2 text-sm font-medium text-foreground">
         Tamaño del texto
       </p>
-      <div
-        role="radiogroup"
-        aria-labelledby={titulo}
-        className={cn('flex gap-2', !compacto && 'flex-wrap')}
-      >
+      <div role="radiogroup" aria-labelledby={titulo} className="flex flex-wrap gap-2">
         {TAMANOS_TEXTO.map((valor) => {
           const opcion = OPCIONES[valor];
           const elegida = valor === tamano;
@@ -37,18 +31,9 @@ function Grupo({ compacto, className }: { compacto: boolean; className?: string 
             <label
               key={valor}
               className={cn(
-                'relative flex min-h-11 cursor-pointer items-center gap-2 rounded-lg border px-3 py-2 transicion-rapida',
-                compacto
-                  ? 'border-brand-foreground/30 text-brand-foreground'
-                  : 'bg-card text-foreground',
+                'relative flex min-h-12 cursor-pointer items-center gap-2 rounded-lg border bg-card px-3 py-2 text-foreground transicion-rapida',
                 'has-[:focus-visible]:outline has-[:focus-visible]:outline-[3px] has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-ring',
-                elegida
-                  ? compacto
-                    ? 'bg-brand-foreground/15'
-                    : 'border-primary bg-primary-soft'
-                  : compacto
-                    ? 'hover:bg-brand-foreground/10'
-                    : 'border-border hover:border-input',
+                elegida ? 'border-primary bg-primary-soft' : 'border-border hover:border-input',
               )}
             >
               <input
@@ -65,15 +50,9 @@ function Grupo({ compacto, className }: { compacto: boolean; className?: string 
               <span aria-hidden="true" className={cn('font-medium leading-none', opcion.muestra)}>
                 Aa
               </span>
-              <span className={cn('text-sm font-medium', compacto && 'sr-only sm:not-sr-only')}>
-                {opcion.nombre}
-              </span>
+              <span className="text-sm font-medium">{opcion.nombre}</span>
               {elegida && (
-                <Check
-                  aria-hidden="true"
-                  strokeWidth={3}
-                  className={cn('size-4', !compacto && 'text-primary')}
-                />
+                <Check aria-hidden="true" strokeWidth={3} className="size-4 text-primary" />
               )}
             </label>
           );
@@ -81,18 +60,4 @@ function Grupo({ compacto, className }: { compacto: boolean; className?: string 
       </div>
     </div>
   );
-}
-
-/**
- * Tres tamaños de texto con muestra «Aa» y nombre escrito. `compacto` es la variante de la
- * barra del shell: siempre visible (sin desplegable) y con el nombre solo desde `sm`.
- */
-export function SelectorTamanoTexto({
-  compacto = false,
-  className,
-}: {
-  compacto?: boolean;
-  className?: string;
-}) {
-  return <Grupo compacto={compacto} className={className} />;
 }

@@ -16,7 +16,6 @@ import { cn } from '@/lib/utils';
 import { BotonAyuda } from './boton-ayuda';
 import { Contenedor } from './contenedor';
 import { destinosPorRol, type Destino } from './destinos-por-rol';
-import { SelectorTamanoTexto } from './selector-tamano-texto';
 import { SelectorTema } from './selector-tema';
 
 type AppShellProps = {
@@ -59,7 +58,7 @@ export function AppShell({ children, conNavegacion = true }: AppShellProps) {
       <SkipLink />
 
       <header className="sticky top-0 z-40 border-b border-brand-foreground/10 bg-brand text-brand-foreground shadow-sm">
-        <Contenedor className="flex min-h-[3.625rem] flex-wrap items-center justify-between gap-x-4 gap-y-2 py-1">
+        <Contenedor className="flex min-h-[3.625rem] items-center justify-between gap-4">
           <Link
             to={isAuthenticated ? '/panel' : '/'}
             className="flex shrink-0 items-center gap-2.5 rounded-lg text-lg font-medium text-brand-foreground hover:underline"
@@ -78,15 +77,11 @@ export function AppShell({ children, conNavegacion = true }: AppShellProps) {
             </nav>
           )}
 
-          <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+          <div className="flex shrink-0 items-center gap-3">
             {!navegacionAbajo && (
               <BotonAyuda className="border-brand-foreground/30 bg-transparent text-brand-foreground hover:bg-brand-foreground/10 hover:text-brand-foreground dark:border-brand-foreground/30 dark:bg-transparent dark:hover:bg-brand-foreground/10" />
             )}
             {user && <CuentaDelShell user={user} />}
-            <SelectorTamanoTexto
-              compacto
-              className="border-brand-foreground/30 bg-transparent text-brand-foreground hover:bg-brand-foreground/10 hover:text-brand-foreground dark:bg-transparent"
-            />
             <SelectorTema className="border-brand-foreground/30 bg-transparent text-brand-foreground hover:bg-brand-foreground/10 hover:text-brand-foreground dark:bg-transparent" />
           </div>
         </Contenedor>
