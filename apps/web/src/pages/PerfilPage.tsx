@@ -128,9 +128,10 @@ export function PerfilPage() {
             <ProfileForm key={user.id} user={user} />
 
             <Card className="space-y-3 p-5 sm:p-6">
-              <h2 className="text-base font-semibold text-foreground">Visualización</h2>
+              <h2 className="text-base font-semibold text-foreground">Configuración</h2>
               <p className="text-base text-muted-foreground">
-                Agranda el texto de la plataforma. Se guarda solo en este navegador.
+                Ajusta cómo ves la plataforma. Se guarda solo en este navegador y se mantiene aunque
+                cierres sesión.
               </p>
               <SelectorTamanoTexto />
             </Card>

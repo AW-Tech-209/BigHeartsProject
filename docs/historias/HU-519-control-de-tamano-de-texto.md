@@ -71,4 +71,4 @@ en `localStorage` y aplicado antes del primer pintado para que no haya salto.
 
 ## Notas de implementación
 
-Selector plegable (`compacto`) en la barra del shell y autenticación en lugar de menú móvil, que no existe. Cabecera del shell pasa a `min-h` + `flex-wrap`. AC3 (revisión manual a 375 px) sin verificar en navegador.
+El selector vive solo en Perfil → «Configuración» (no en la barra ni en el acceso) para no saturar la cabecera; la elección se aplica igual en pantallas sin sesión. AC3 (revisión manual a 375 px) sin verificar en navegador.
