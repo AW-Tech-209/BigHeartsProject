@@ -1,0 +1,480 @@
+modulo,unidad,categoria,tipo,ingles,espanol
+1,U1,Acciones,Verbo,To eat,Comer
+1,U1,Acciones,Verbo,To drink,"Tomar, beber"
+1,U1,Acciones,Verbo,To read,Leer
+1,U1,Acciones,Verbo,To sleep,Dormir
+1,U1,Acciones,Verbo,To work,Trabajar
+1,U1,Acciones,Verbo,To write,Escribir
+1,U1,Acciones,Verbo,To ask,"Preguntar, pedir"
+1,U1,Acciones,Verbo,To study,Estudiar
+1,U1,Acciones,Verbo,To answer,"Contestar, responder"
+1,U1,Acciones,Verbo,To rest,Descansar
+1,U1,Acciones,Verbo,To get,"Conseguir, obtener"
+1,U1,Acciones,Verbo,To get up,Levantarse
+1,U1,Acciones,Verbo,To prepare,Preparar
+1,U1,Acciones,Verbo,To cook,Cocinar
+1,U1,Acciones,Verbo,To clean,Limpiar
+1,U1,Acciones,Verbo,To bring,Traer
+1,U3,Acciones,Verbo,To drive,Manejar
+1,U3,Acciones,Verbo,To buy,Comprar
+1,U3,Acciones,Verbo,To sell,Vender
+1,U3,Acciones,Verbo,To leave,"Salir, irse"
+1,U3,Acciones,Verbo,To use,Usar
+1,U3,Acciones,Verbo,To carry,"Llevar, cargar"
+1,U3,Acciones,Verbo,To wash,Lavar
+1,U3,Acciones,Verbo,To see,Ver
+1,U3,Acciones,Verbo,To hear,Oír
+1,U3,Acciones,Verbo,To finish,Terminar
+1,U3,Acciones,Verbo,To watch,"Mirar, observar"
+1,U3,Acciones,Verbo,To wear,Llevar puesto
+1,U3,Acciones,Verbo,To spend,"Gastar, pasar"
+1,U3,Acciones,Verbo,To start,Comenzar
+1,U3,Acciones,Verbo,To cut,Cortar
+1,U4,Acciones,Verbo,To do,Hacer
+1,U5,Acciones,Verbo,To open,Abrir
+1,U5,Acciones,Verbo,To close,Cerrar
+1,U5,Acciones,Verbo,To borrow,Pedir prestado
+1,U5,Acciones,Verbo,To pay,Pagar
+1,U5,Acciones,Verbo,To take,"Tomar, recoger"
+1,U5,Acciones,Verbo,To send,Enviar
+1,U5,Acciones,Verbo,To examine,Examinar
+1,U5,Acciones,Verbo,To deposit,Depositar
+1,U5,Acciones,Verbo,To remember,Recordar
+1,U5,Acciones,Verbo,To cash,Hacer efectivo
+1,U5,Acciones,Verbo,To obey,Obedecer
+1,U5,Acciones,Verbo,To accept,Aceptar
+1,U5,Acciones,Verbo,To order,"Ordenar, pedir"
+1,U5,Acciones,Verbo,To forget,Olvidar
+1,U6,Acciones,Verbo,To make,"Hacer, fabricar"
+1,U6,Acciones,Verbo,To help,Ayudar
+1,U6,Acciones,Verbo,To receive,Recibir
+1,U6,Acciones,Verbo,To tell,"Contar, narrar"
+1,U6,Acciones,Verbo,To like,Gustar
+1,U2,Objetos,Palabra,Book,Libro
+1,U2,Objetos,Palabra,Letter,Carta
+1,U2,Objetos,Palabra,Newspaper,Periódico
+1,U2,Objetos,Palabra,Magazine,Revista
+1,U2,Objetos,Palabra,Telephone,Teléfono
+1,U2,Objetos,Palabra,Door,Puerta
+1,U2,Objetos,Palabra,Sleeping bag,Bolsa de dormir
+1,U3,Objetos,Palabra,Furniture,Muebles
+1,U3,Objetos,Palabra,TV,Televisión
+1,U3,Objetos,Palabra,Paper,Papel
+1,U5,Objetos,Palabra,Table,Mesa
+1,U5,Objetos,Palabra,Package,Paquete
+1,U5,Objetos,Palabra,Chair,Silla
+1,U5,Objetos,Palabra,Glasses,"Gafas, vasos"
+1,U5,Objetos,Palabra,Window,Ventana
+1,U5,Objetos,Palabra,Notebook,Cuaderno
+1,U5,Objetos,Palabra,Closet,Guardarropa
+1,U5,Objetos,Palabra,Pen,Lapicero
+1,U5,Objetos,Palabra,Pencil,Lápiz
+1,U5,Objetos,Palabra,Bottle,Botella
+1,U2,Lugares,Palabra,Hospital,Hospital
+1,U2,Lugares,Palabra,Store,Tienda
+1,U2,Lugares,Palabra,Garage,Garaje
+1,U2,Lugares,Palabra,Factory,Fábrica
+1,U2,Lugares,Palabra,Kitchen,Cocina
+1,U2,Lugares,Palabra,Restaurant,Restaurante
+1,U2,Lugares,Frase,At home,En casa
+1,U2,Lugares,Palabra,Hotel,Hotel
+1,U2,Lugares,Palabra,Bedroom,"Cuarto, habitación"
+1,U3,Lugares,Palabra,City,Ciudad
+1,U3,Lugares,Palabra,House,Casa
+1,U3,Lugares,Palabra,Car dealer,Concesionario
+1,U3,Lugares,Palabra,Cinema,Cine
+1,U3,Lugares,Palabra,University,Universidad
+1,U3,Lugares,Palabra,Boutique,Boutique
+1,U5,Lugares,Palabra,Bank,Banco
+1,U5,Lugares,Frase,Bus station,Estación de bus
+1,U6,Lugares,Palabra,School,Escuela
+1,U2,Tiempo y fechas,Palabra,Today,Hoy
+1,U2,Tiempo y fechas,Palabra,Tomorrow,Mañana
+1,U2,Tiempo y fechas,Palabra,Tonight,Esta noche
+1,U2,Tiempo y fechas,Frase,In the morning,En la mañana
+1,U2,Tiempo y fechas,Palabra,Now,Ahora
+1,U2,Tiempo y fechas,Frase,At six a.m.,A las 6 de la mañana
+1,U2,Tiempo y fechas,Frase,At night,En la noche
+1,U2,Tiempo y fechas,Frase,From 6 to 9 p.m.,De 6 a 9 p.m.
+1,U2,Tiempo y fechas,Frase,This afternoon,Esta tarde
+1,U2,Tiempo y fechas,Frase,On Saturdays,Los sábados
+1,U2,Tiempo y fechas,Frase,On weekends,Los fines de semana
+1,U3,Tiempo y fechas,Frase,Next year,El próximo año
+1,U3,Tiempo y fechas,Frase,This year,Este año
+1,U3,Tiempo y fechas,Palabra,Time,Tiempo
+1,U3,Tiempo y fechas,Palabra,Weekend,Fin de semana
+1,U6,Tiempo y fechas,Palabra,Years,Años
+1,U6,Tiempo y fechas,Palabra,Day,Día
+1,U1,Pronombres e ideas,Palabra,I,Yo
+1,U1,Pronombres e ideas,Palabra,You,Tú / Ustedes
+1,U1,Pronombres e ideas,Palabra,He,Él
+1,U1,Pronombres e ideas,Palabra,She,Ella
+1,U1,Pronombres e ideas,Palabra,We,Nosotros (as)
+1,U1,Pronombres e ideas,Palabra,They,Ellos (as)
+1,U1,Pronombres e ideas,Verbo,Need,Necesitar
+1,U1,Pronombres e ideas,Verbo,Want,Querer
+1,U3,Pronombres e ideas,Verbo,Wish,Desear
+1,U4,Pronombres e ideas,Palabra,Then,Entonces
+1,U4,Pronombres e ideas,Palabra,Don't / Doesn't,No (auxiliar negativo)
+1,U5,Pronombres e ideas,Verbo,Have / Has,Tener
+1,U5,Pronombres e ideas,Palabra,Problem,Problema
+1,U5,Pronombres e ideas,Palabra,Law,Ley
+1,U5,Pronombres e ideas,Palabra,Rules,Reglas
+1,U6,Pronombres e ideas,Verbo,To be,Ser o estar
+1,U6,Pronombres e ideas,Palabra,Name,Nombre
+1,U6,Expresiones,Expresión,My name is,Mi nombre es
+1,U6,Expresiones,Expresión,I am from,Soy de
+1,U6,Expresiones,Expresión,My family and me,Mi familia y yo
+1,U6,Expresiones,Expresión,She is fifteen years old,Ella tiene quince años
+1,U6,Expresiones,Expresión,She likes to cook,A ella le gusta cocinar
+1,U6,Expresiones,Expresión,Latin American,Latinoamericano
+1,U6,Expresiones,Expresión,She wishes to be,Ella desea ser
+1,U6,Expresiones,Expresión,A lot of time,Bastante tiempo
+1,U6,Expresiones,Expresión,Every day,Todos los días
+1,U6,Expresiones,Expresión,He takes them back,Él los lleva de regreso
+1,U6,Expresiones,Expresión,On time,A tiempo
+1,U6,Expresiones,Expresión,I make good money,Gano buen dinero
+1,U6,Expresiones,Expresión,The rest of the money,El resto del dinero
+1,U6,Palabras de enlace,Palabra,My,Mi
+1,U6,Palabras de enlace,Palabra,From,"De, desde"
+1,U6,Palabras de enlace,Palabra,With,Con
+1,U6,Palabras de enlace,Palabra,About,Acerca de
+1,U6,Palabras de enlace,Palabra,And,Y
+1,U6,Palabras de enlace,Palabra,The,"El, la, los, las"
+1,U6,Palabras de enlace,Palabra,A,"Un, una"
+1,U6,Palabras de enlace,Palabra,In,"En, dentro"
+1,U6,Palabras de enlace,Palabra,His,Su (de él)
+1,U6,Palabras de enlace,Palabra,Me,Mí (pronombre objeto)
+1,U6,Palabras de enlace,Palabra,So,"Así, de esta manera"
+1,U6,Palabras de enlace,Palabra,Back,"Atrás, de regreso"
+1,U2,Escuela e idiomas,Palabra,Question,Pregunta
+1,U2,Escuela e idiomas,Palabra,English,Inglés
+1,U2,Escuela e idiomas,Palabra,History,Historia
+1,U2,Escuela e idiomas,Palabra,Medicine,Medicina
+1,U2,Escuela e idiomas,Palabra,Economics,Economía
+1,U5,Escuela e idiomas,Palabra,Lesson,Lección
+1,U5,Escuela e idiomas,Palabra,Answer,Respuesta
+1,U6,Escuela e idiomas,Palabra,Story,"Historia, cuento"
+1,U6,Escuela e idiomas,Palabra,Spanish,Español
+1,U6,Escuela e idiomas,Palabra,Culture,Cultura
+1,U3,Dinero y compras,Palabra,Money,Dinero
+1,U5,Dinero y compras,Palabra,Account,Cuenta
+1,U5,Dinero y compras,Palabra,Bill,Factura
+1,U5,Dinero y compras,Frase,Water bill,Factura del agua
+1,U5,Dinero y compras,Frase,Gas bill,Factura del gas
+1,U5,Dinero y compras,Frase,Telephone bill,Factura telefónica
+1,U5,Dinero y compras,Palabra,Check,Cheque
+1,U5,Dinero y compras,Palabra,Paycheck,Cheque de nómina
+1,U6,Dinero y compras,Frase,Saving account,Cuenta de ahorro
+1,U2,Comida y frutas,Palabra,Chicken,Pollo
+1,U2,Comida y frutas,Palabra,Hot dog,Perro caliente
+1,U2,Comida y frutas,Palabra,Pizza,Pizza
+1,U2,Comida y frutas,Palabra,Fish,Pescado
+1,U3,Comida y frutas,Palabra,Bread,Pan
+1,U5,Comida y frutas,Palabra,Food,Comida
+1,U6,Comida y frutas,Palabra,Dinner,Cena
+1,U5,Familia y personas,Palabra,Children,Niños
+1,U5,Familia y personas,Palabra,Patient,Paciente
+1,U5,Familia y personas,Palabra,Enemy,Enemigo
+1,U6,Familia y personas,Palabra,Family,Familia
+1,U6,Familia y personas,Palabra,Sister,Hermana
+1,U6,Familia y personas,Palabra,Father,"Papá, padre"
+1,U6,Familia y personas,Palabra,Mother,"Mamá, madre"
+1,U3,Fiestas y deportes,Palabra,Movie,Película
+1,U3,Fiestas y deportes,Palabra,Music,Música
+1,U5,Fiestas y deportes,Palabra,Invitation,Invitación
+1,U6,Fiestas y deportes,Palabra,Program,Programa
+1,U3,Transporte y viajes,Palabra,Car,Carro
+1,U3,Transporte y viajes,Palabra,Truck,Camión
+1,U5,Transporte y viajes,Palabra,Bus,Bus
+1,U5,Transporte y viajes,Palabra,Plane,Avión
+1,U6,Cómo es,Palabra,Little,"Pequeño, poco"
+1,U6,Cómo es,Palabra,Old,Viejo (a)
+1,U6,Cómo es,Palabra,Good,Bueno (a)
+1,U6,Cómo es,Palabra,Ready,Listo (a)
+1,U5,Profesiones y trabajo,Palabra,Job,"Trabajo, empleo"
+1,U5,Profesiones y trabajo,Palabra,Offer,Oferta
+1,U6,Profesiones y trabajo,Palabra,Writer,Escritor (a)
+1,U6,Números,Palabra,Five,Cinco
+1,U6,Números,Palabra,Eight,Ocho
+1,U6,Números,Palabra,Fifteen,Quince
+1,U2,Preguntas,Palabra,What?,¿Qué?
+1,U2,Preguntas,Palabra,Where?,¿Dónde?
+1,U2,Preguntas,Palabra,When?,¿Cuándo?
+1,U3,Ropa,Palabra,Jeans,"Jeans, pantalones"
+2,U1,Acciones,Verbo,To repair,Reparar
+2,U1,Acciones,Verbo,To play,"Jugar, tocar"
+2,U1,Acciones,Verbo,To compare,Comparar
+2,U1,Acciones,Verbo,To enjoy,Disfrutar
+2,U1,Acciones,Verbo,To teach,Enseñar
+2,U1,Acciones,Verbo,To arrange,"Arreglar, organizar"
+2,U1,Acciones,Verbo,To talk,Hablar
+2,U1,Acciones,Verbo,To say,Decir
+2,U1,Acciones,Verbo,To learn,Aprender
+2,U1,Acciones,Verbo,To try,"Intentar, probar"
+2,U1,Acciones,Verbo,To feel,Sentir
+2,U1,Acciones,Verbo,To fly,Volar
+2,U1,Acciones,Verbo,To speak,Hablar (un idioma)
+2,U1,Acciones,Verbo,To sit,Sentarse
+2,U1,Acciones,Verbo,To understand,Entender
+2,U2,Acciones,Verbo,To visit,Visitar
+2,U2,Acciones,Verbo,To practice,Practicar
+2,U2,Acciones,Verbo,To follow,"Seguir, cumplir"
+2,U2,Acciones,Verbo,To apply for,Solicitar
+2,U2,Acciones,Verbo,To earn,Ganar
+2,U2,Acciones,Verbo,To travel,Viajar
+2,U2,Acciones,Verbo,To save,"Ahorrar, salvar"
+2,U2,Acciones,Verbo,To rent,Alquilar
+2,U2,Acciones,Verbo,To permit,Permitir
+2,U3,Acciones,Verbo,To go,Ir
+2,U3,Acciones,Verbo,To celebrate,Celebrar
+2,U3,Acciones,Verbo,To build,Construir
+2,U3,Acciones,Verbo,To continue,Continuar
+2,U3,Acciones,Verbo,To pick up,"Recoger, levantar"
+2,U3,Acciones,Verbo,To paint,Pintar
+2,U3,Acciones,Verbo,To sing,Cantar
+2,U3,Acciones,Verbo,To graduate,Graduarse
+2,U3,Acciones,Verbo,To give,Dar
+2,U3,Acciones,Verbo,To choose,"Escoger, elegir"
+2,U4,Acciones,Verbo,To plan,Planear
+2,U4,Acciones,Verbo,To imagine,Imaginar
+2,U4,Acciones,Verbo,To let,"Permitir, dejar"
+2,U4,Acciones,Verbo,To know,"Saber, conocer"
+2,U4,Acciones,Verbo,To discount,Descontar
+2,U4,Acciones,Verbo,To stay,"Quedarse, permanecer"
+2,U4,Acciones,Verbo,To figure,"Figurar, imaginar"
+2,U4,Acciones,Verbo,To think,Pensar
+2,U1,Lugares,Palabra,Office,Oficina
+2,U2,Lugares,Palabra,Museum,Museo
+2,U2,Lugares,Palabra,Zoo,Zoológico
+2,U2,Lugares,Palabra,North America,Norteamérica
+2,U2,Lugares,Palabra,South America,Suramérica
+2,U2,Lugares,Palabra,Central America,Centroamérica
+2,U2,Lugares,Palabra,Apartment,Apartamento
+2,U3,Lugares,Palabra,Beach,Playa
+2,U3,Lugares,Palabra,Park,Parque
+2,U3,Lugares,Palabra,Building,Edificio
+2,U3,Lugares,Palabra,Bridge,Puente
+2,U3,Lugares,Palabra,Church,Iglesia
+2,U3,Lugares,Palabra,Theater,Teatro
+2,U4,Lugares,Palabra,Place,"Lugar, sitio"
+2,U4,Lugares,Palabra,Consulate,Consulado
+2,U4,Lugares,Palabra,Institute,Instituto
+2,U1,Fiestas y deportes,Palabra,Party,Fiesta
+2,U1,Fiestas y deportes,Palabra,Guitar,Guitarra
+2,U1,Fiestas y deportes,Palabra,Baseball,Béisbol
+2,U1,Fiestas y deportes,Palabra,Soccer,Fútbol
+2,U1,Fiestas y deportes,Palabra,Cards,Cartas
+2,U1,Fiestas y deportes,Palabra,Joke,Broma
+2,U1,Fiestas y deportes,Palabra,Game,Juego
+2,U1,Fiestas y deportes,Palabra,Prayers,Oraciones
+2,U2,Fiestas y deportes,Palabra,Dance,Baile
+2,U2,Fiestas y deportes,Palabra,Exercise,Ejercicio
+2,U3,Fiestas y deportes,Palabra,Birthday,Cumpleaños
+2,U3,Fiestas y deportes,Palabra,Wedding,Boda
+2,U3,Fiestas y deportes,Palabra,Graduation,Graduación
+2,U3,Fiestas y deportes,Palabra,Songs,Canciones
+2,U3,Fiestas y deportes,Palabra,Concert,Concierto
+2,U3,Fiestas y deportes,Palabra,Gift,Regalo
+2,U1,Expresiones,Expresión,Good-bye,Adiós
+2,U2,Expresiones,Expresión,The use of,El uso de
+2,U2,Expresiones,Expresión,The entrance to,La entrada a
+2,U2,Expresiones,Expresión,The visit to,La visita a
+2,U3,Expresiones,Expresión,To the movies,Al cine
+2,U3,Expresiones,Expresión,The regards,Los saludos
+2,U4,Expresiones,Expresión,Hello,Hola
+2,U4,Expresiones,Expresión,Let me tell you,Déjame contarte
+2,U4,Expresiones,Expresión,At the same time,Al mismo tiempo
+2,U4,Expresiones,Expresión,Colombian consulate,Consulado colombiano
+2,U4,Expresiones,Expresión,I already know,"Ya sé, ya conozco"
+2,U4,Expresiones,Expresión,Just figure it out,Imagínate
+2,U4,Expresiones,Expresión,The most beautiful,El más hermoso
+2,U4,Expresiones,Expresión,That's why,Es por eso
+2,U4,Expresiones,Expresión,Just enough to,Lo suficiente para
+2,U4,Expresiones,Expresión,I have to tell you,Tengo que contarte
+2,U1,Pronombres e ideas,Frase,I am / You are / He is,Yo estoy / Tú estás / Él está
+2,U1,Pronombres e ideas,Palabra,Truth,Verdad
+2,U2,Pronombres e ideas,Frase,Going to,Ir a (futuro)
+2,U2,Pronombres e ideas,Palabra,Energy,Energía
+2,U2,Pronombres e ideas,Palabra,Use,Uso
+2,U3,Pronombres e ideas,Palabra,Will / 'll,Auxiliar de futuro
+2,U3,Pronombres e ideas,Palabra,Won't,No (futuro negativo)
+2,U4,Pronombres e ideas,Palabra,It,"Eso, él, ella, lo, la"
+2,U4,Pronombres e ideas,Palabra,Because,Porque
+2,U4,Pronombres e ideas,Verbo,Can,Poder
+2,U4,Pronombres e ideas,Palabra,Life,Vida
+2,U4,Pronombres e ideas,Palabra,That,"Eso, ese, aquel"
+2,U4,Pronombres e ideas,Palabra,Idea,Idea
+2,U4,Pronombres e ideas,Palabra,Opportunity,Oportunidad
+2,U4,Pronombres e ideas,Palabra,Something,Algo
+2,U1,Escuela e idiomas,Palabra,Numbers,Números
+2,U1,Escuela e idiomas,Palabra,French,Francés
+2,U1,Escuela e idiomas,Palabra,Class,Clase
+2,U1,Escuela e idiomas,Palabra,Geography,Geografía
+2,U1,Escuela e idiomas,Palabra,Mathematics,Matemáticas
+2,U1,Escuela e idiomas,Palabra,Biology,Biología
+2,U1,Escuela e idiomas,Palabra,Chemistry,Química
+2,U2,Escuela e idiomas,Palabra,Instructions,Instrucciones
+2,U3,Escuela e idiomas,Palabra,Course,Curso
+2,U3,Escuela e idiomas,Palabra,Conversation,Conversación
+2,U4,Escuela e idiomas,Palabra,Language,"Idioma, lenguaje"
+2,U1,Cómo es,Palabra,Emotions,Emociones
+2,U1,Cómo es,Palabra,Happy,Feliz
+2,U1,Cómo es,Palabra,Sad,Triste
+2,U4,Cómo es,Palabra,Nice,"Bonito, agradable"
+2,U4,Cómo es,Palabra,Beautiful,"Hermoso, lindo"
+2,U4,Cómo es,Palabra,Wonderful,Maravilloso
+2,U4,Cómo es,Palabra,Near,Cerca
+2,U4,Cómo es,Palabra,Enough,Suficiente
+2,U4,Cómo es,Palabra,Historical,Histórico (a)
+2,U4,Cómo es,Palabra,Full,Lleno (a)
+2,U4,Cómo es,Palabra,The best,El mejor
+2,U4,Palabras de enlace,Palabra,If,Si (condicional)
+2,U4,Palabras de enlace,Palabra,Well,"Bien, bueno"
+2,U4,Palabras de enlace,Palabra,At,"En, a"
+2,U4,Palabras de enlace,Palabra,Some,"Alguno (a), algunos"
+2,U4,Palabras de enlace,Palabra,Same,Mismo (a)
+2,U4,Palabras de enlace,Palabra,Already,Ya
+2,U4,Palabras de enlace,Palabra,By,"Por, para (fecha límite)"
+2,U4,Palabras de enlace,Palabra,There,Allá
+2,U4,Palabras de enlace,Palabra,Just,"Justo, solo"
+2,U1,Objetos,Palabra,Fan,"Abanico, ventilador"
+2,U1,Objetos,Palabra,Bench,Banca
+2,U1,Objetos,Palabra,Steps,Peldaños
+2,U2,Objetos,Palabra,Toy,Juguete
+2,U2,Objetos,Palabra,Desk,Escritorio
+2,U3,Objetos,Palabra,Wall,"Pared, muro"
+2,U3,Objetos,Palabra,Message,"Mensaje, recado"
+2,U3,Tiempo y fechas,Palabra,January,Enero
+2,U3,Tiempo y fechas,Palabra,Sunday,Domingo
+2,U3,Tiempo y fechas,Frase,Next month,El próximo mes
+2,U3,Tiempo y fechas,Frase,Next weekend,El próximo fin de semana
+2,U4,Tiempo y fechas,Palabra,November,Noviembre
+2,U4,Tiempo y fechas,Palabra,December,Diciembre
+2,U4,Transporte y viajes,Palabra,Passport,Pasaporte
+2,U4,Transporte y viajes,Palabra,Visa,Visa
+2,U4,Transporte y viajes,Palabra,Travel agency,Agencia de viajes
+2,U4,Transporte y viajes,Palabra,Airline,Aerolínea
+2,U4,Transporte y viajes,Palabra,Tickets,"Boletos, tiquetes"
+2,U1,Dinero y compras,Palabra,Prices,Precios
+2,U1,Dinero y compras,Palabra,Quality,Calidad
+2,U2,Dinero y compras,Palabra,Loan,Préstamo
+2,U3,Dinero y compras,Palabra,Order,"Orden, pedido"
+2,U1,Profesiones y trabajo,Palabra,Meeting,Reunión
+2,U2,Profesiones y trabajo,Palabra,Company,"Compañía, empresa"
+2,U3,Profesiones y trabajo,Palabra,Career,Carrera
+2,U4,Familia y personas,Palabra,Friend,Amigo (a)
+2,U4,Familia y personas,Palabra,People,"Gente, personas"
+2,U3,Ropa,Palabra,Suit,Traje (de hombre)
+2,U3,Ropa,Palabra,Dress,Vestido (de mujer)
+2,U1,Comida y frutas,Palabra,Fruits,Frutas
+2,U3,Colores,Palabra,Color,Color
+3,U1,Cómo es,Palabra,European,Europeo (a)
+3,U1,Cómo es,Palabra,American,Americano (a)
+3,U2,Cómo es,Palabra,Far,Lejos
+3,U2,Cómo es,Palabra,Hot,Caliente
+3,U2,Cómo es,Palabra,Correct,Correcto
+3,U2,Cómo es,Palabra,Colloquial,Coloquial
+3,U3,Cómo es,Palabra,Big,Grande
+3,U3,Cómo es,Palabra,Small,Pequeño (a)
+3,U3,Cómo es,Palabra,Cold,Frío (a)
+3,U3,Cómo es,Palabra,Bad,Malo (a)
+3,U3,Cómo es,Palabra,Tall,Alto (a)
+3,U3,Cómo es,Palabra,Short,"Bajo (a), corto (a)"
+3,U3,Cómo es,Palabra,Thin,Flaco (a)
+3,U3,Cómo es,Palabra,Fat,Gordo (a)
+3,U3,Cómo es,Palabra,Long,Largo (a)
+3,U4,Cómo es,Palabra,Important,Importante
+3,U4,Cómo es,Palabra,New,Nuevo (a)
+3,U4,Cómo es,Palabra,Hard,"Duro, difícil"
+3,U4,Cómo es,Palabra,Expensive,Caro (a)
+3,U1,Lugares,Palabra,Farm,Finca
+3,U1,Lugares,Palabra,Beauty shop,Salón de belleza
+3,U1,Lugares,Palabra,Shopping center,Centro comercial
+3,U1,Lugares,Palabra,Country,País
+3,U1,Lugares,Palabra,Town,Pueblo
+3,U1,Lugares,Palabra,Sidewalk,Acera
+3,U1,Lugares,Palabra,Street,Calle
+3,U1,Lugares,Palabra,Coffee shop,Cafetería
+3,U1,Lugares,Palabra,Patio,Patio
+3,U1,Lugares,Palabra,Night club,Club nocturno
+3,U1,Lugares,Palabra,Gym,Gimnasio
+3,U1,Lugares,Palabra,Living room,Sala
+3,U1,Lugares,Palabra,Bathroom,Baño
+3,U1,Lugares,Palabra,Laundry,Lavandería
+3,U2,Lugares,Palabra,Block,Cuadra
+3,U2,Lugares,Palabra,Avenue,Avenida
+3,U1,Familia y personas,Palabra,Adult,Adulto (a)
+3,U1,Familia y personas,Palabra,Man / Men,Hombre / hombres
+3,U1,Familia y personas,Palabra,Woman / Women,Mujer / mujeres
+3,U1,Familia y personas,Palabra,Baby,Bebé
+3,U1,Familia y personas,Palabra,Parents,Padres
+3,U1,Familia y personas,Palabra,Child,"Niño, niña"
+3,U1,Familia y personas,Palabra,Boy,Chico
+3,U1,Familia y personas,Palabra,Girl,Chica
+3,U1,Familia y personas,Palabra,Students,Estudiantes
+3,U1,Familia y personas,Palabra,Brothers,Hermanos
+3,U3,Familia y personas,Palabra,Old lady,Anciana
+3,U3,Familia y personas,Palabra,Person,Persona
+3,U5,Familia y personas,Palabra,Community,Comunidad
+3,U5,Familia y personas,Palabra,Society,Sociedad
+3,U1,Profesiones y trabajo,Palabra,Teacher,Profesor (a)
+3,U1,Profesiones y trabajo,Palabra,Nurse,Enfermera (o)
+3,U1,Profesiones y trabajo,Palabra,Employee,Empleado (a)
+3,U1,Profesiones y trabajo,Palabra,Employer,Empleador (a)
+3,U1,Profesiones y trabajo,Palabra,Customers,Clientes
+3,U3,Profesiones y trabajo,Palabra,Economist,Economista
+3,U3,Profesiones y trabajo,Palabra,Lawyer,Abogado (a)
+3,U3,Profesiones y trabajo,Palabra,Singer,Cantante
+3,U5,Profesiones y trabajo,Palabra,Doctor,Médico (a)
+3,U5,Profesiones y trabajo,Palabra,Professions,Profesiones
+3,U5,Profesiones y trabajo,Palabra,Service,Servicio
+3,U3,Acciones,Verbo,To employ,Emplear
+3,U3,Acciones,Verbo,To fry,Freír
+3,U3,Acciones,Verbo,To heat,Calentar
+3,U3,Acciones,Verbo,To roast,Asar
+3,U3,Acciones,Verbo,To admire,Admirar
+3,U4,Acciones,Verbo,To present,Presentar
+3,U5,Acciones,Verbo,To require,Requerir
+3,U5,Acciones,Verbo,To happen,"Pasar, ocurrir"
+3,U5,Acciones,Verbo,To serve,Servir
+3,U2,Tiempo y fechas,Palabra,Late,Tarde
+3,U2,Tiempo y fechas,Palabra,Winter,Invierno
+3,U2,Tiempo y fechas,Palabra,Summer,Verano
+3,U2,Tiempo y fechas,Palabra,Spring,Primavera
+3,U2,Tiempo y fechas,Palabra,Fall,Otoño
+3,U2,Tiempo y fechas,Palabra,O'clock,En punto
+3,U2,Colores,Palabra,Red,Rojo
+3,U3,Colores,Palabra,Yellow,Amarillo
+3,U3,Colores,Palabra,Green,Verde
+3,U3,Colores,Palabra,Black,Negro
+3,U3,Colores,Palabra,White,Blanco
+3,U3,Colores,Palabra,Blue,Azul
+3,U3,Pronombres e ideas,Palabra,This / These,"Este, esta / estos, estas"
+3,U3,Pronombres e ideas,Palabra,That / Those,"Ese, aquel / esos, aquellos"
+3,U5,Pronombres e ideas,Palabra,Benefit,Beneficio
+3,U5,Pronombres e ideas,Palabra,Ways,"Formas, maneras"
+3,U5,Pronombres e ideas,Palabra,Choice,Elección
+3,U5,Pronombres e ideas,Palabra,The needs,Las necesidades
+3,U2,Palabras de enlace,Palabra,Here,Aquí
+3,U4,Palabras de enlace,Palabra,Very,Muy
+3,U5,Palabras de enlace,Palabra,Many,Muchos (as)
+3,U5,Palabras de enlace,Palabra,Others,Otros (as)
+3,U5,Palabras de enlace,Palabra,Simply,Simplemente
+3,U5,Palabras de enlace,Palabra,Our,Nuestro (a)
+3,U2,Comida y frutas,Palabra,Apple,Manzana
+3,U3,Comida y frutas,Palabra,Meat,Carne
+3,U3,Comida y frutas,Palabra,Water,Agua
+3,U3,Comida y frutas,Palabra,Beef,Carne de res
+3,U3,Comida y frutas,Palabra,Plantain,Plátano
+3,U1,Preguntas,Palabra,Who?,"¿Quién?, ¿quiénes?"
+3,U2,Preguntas,Palabra,How?,¿Cómo?
+3,U3,Preguntas,Palabra,Which?,"¿Cuál?, ¿cuáles?"
+3,U3,Preguntas,Frase,Which one? / Which ones?,¿Cuál? / ¿Cuáles?
+3,U4,Preguntas,Palabra,Why?,¿Por qué?
+3,U2,Escuela e idiomas,Palabra,Word,Palabra
+3,U4,Escuela e idiomas,Palabra,Homework,Tarea
+3,U2,Números,Palabra,Four,Cuatro
+3,U2,Números,Palabra,Ten,Diez
+3,U2,Objetos,Palabra,Key,Llave
+3,U2,Dinero y compras,Palabra,Transfer,Transferencia

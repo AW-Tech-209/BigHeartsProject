@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Diccionario · Estructura</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="/_blob/8500f8b95e34d7853d88e913eba28e73">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&amp;family=Instrument+Serif:ital@0;1&amp;display=swap">
+<style>
+body{margin:0}
+.dos{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:24px;align-items:start}
+.m .dos{grid-template-columns:minmax(0,1fr)}
+.sec-cab{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:16px 16px 16px 20px;border-bottom:1px solid var(--border);flex-wrap:wrap}
+.fe{display:flex;align-items:center;gap:10px;padding:8px 12px 8px 12px;border-bottom:1px solid var(--border);min-height:60px;flex-wrap:wrap}
+.fe:last-child{border-bottom:0}
+.fe.sub{padding-left:40px;background:color-mix(in oklch,var(--muted) 45%,var(--card));min-height:56px}
+.fe.edit{background:var(--accent);box-shadow:inset 3px 0 0 var(--primary)}
+.m .fe{padding-left:12px}
+.m .fe.sub{padding-left:20px}
+.m .fe .agarre{display:none}
+.orden{display:flex;gap:2px}
+.orden .btn{width:40px;min-height:40px;padding:0}
+.fe .btn{min-height:40px;padding:0 12px}
+.fe .btn.btn-icono{width:40px;padding:0}
+.icono-cat{width:36px;height:36px;border-radius:10px;background:var(--muted);display:grid;place-items:center;flex:none}
+.rejilla-ic{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:6px}
+.m .rejilla-ic{grid-template-columns:repeat(6,minmax(0,1fr))}
+.rejilla-ic button{aspect-ratio:1;min-height:44px;border:1px solid var(--input);border-radius:10px;background:var(--card);display:grid;place-items:center;cursor:pointer}
+.rejilla-ic button[aria-checked=true]{background:var(--primary-soft);border:2px solid var(--primary);color:var(--primary-soft-foreground)}
+.tramo-sep{padding:10px 20px 6px;font-size:.8125rem;font-weight:500;color:var(--muted-foreground);border-bottom:1px solid var(--border);background:var(--muted)}
+.dlg{left:50%;top:120px;transform:translateX(-50%);width:580px}
+.m .dlg{left:0;right:0;top:auto;bottom:0;transform:none;width:auto;border-radius:20px 20px 0 0;padding:20px 16px 24px}
+.opcion-r{display:flex;gap:12px;align-items:flex-start;padding:14px;border:1px solid var(--input);border-radius:12px;cursor:pointer}
+.opcion-r[aria-checked=true]{border:2px solid var(--primary);background:var(--primary-soft)}
+.punto{width:22px;height:22px;border-radius:999px;border:2px solid var(--input);flex:none;margin-top:1px;display:grid;place-items:center;background:var(--card)}
+.opcion-r[aria-checked=true] .punto{border-color:var(--primary)}
+.opcion-r[aria-checked=true] .punto::after{content:'';width:10px;height:10px;border-radius:999px;background:var(--primary)}
+select.input{appearance:auto}
+</style>
+</helmet>
+<div class="lienzo" style="width: 3630px; min-height: 5000px">
+<sc-for list="{{variantes}}" as="v" hint-placeholder-count="6">
+<div class="marco">
+<p class="marco-etiqueta"><b>{{v.titulo}}</b><span>{{v.medida}}</span></p>
+<div class="{{v.cls}}" style="height: {{v.alto}}">
+
+<header class="barra-sup"><div class="in">
+<a class="marca" href="#"><span class="sello"><span class="ic s i-heart"></span></span>BigHearts</a>
+<nav class="nav solo-d" aria-label="Principal">
+<a href="#"><span class="ic s i-layout-dashboard"></span>Panel</a>
+<a href="#"><span class="ic s i-school"></span>Aulas</a>
+<a href="Consola.dc.html" aria-current="page"><span class="ic s i-book-a"></span>Diccionario</a>
+</nav>
+<div class="fila g12"><span class="rol solo-d">Administrador</span><button class="cuenta" type="button"><span class="av">AD</span><span class="solo-d">Mi cuenta</span></button></div>
+</div></header>
+
+<main class="principal" id="contenido">
+<div class="contenedor">
+<nav class="migas" aria-label="Estás en"><a href="Consola.dc.html">Diccionario</a><span class="ic s i-chevron-right"></span><span aria-current="page">Estructura</span></nav>
+<div class="cabecera" style="margin-top: -12px">
+<h1>Estructura</h1>
+<p class="contexto">Módulos, unidades y categorías. Arrastra con el asa o usa las flechas para cambiar el orden.</p>
+</div>
+
+<div class="dos">
+<section class="tarjeta" aria-labelledby="mm-{{$index}}">
+<div class="sec-cab"><h2 class="h3" id="mm-{{$index}}">Módulos y unidades</h2><span class="t-sm apagado">9 módulos · 3 disponibles</span></div>
+<p class="tramo-sep">Básico</p>
+<ul>
+<li class="fe tramo-1">
+<span class="ic i-grip-vertical c-apagado agarre" aria-hidden="true"></span>
+<button class="btn btn-icono btn-fantasma" type="button" aria-expanded="true" aria-label="Ocultar unidades del Módulo 1"><span class="ic s i-chevron-down"></span></button>
+<span class="col crece"><span class="p6">Módulo 1</span><span class="t-xs apagado"><span lang="en">Level I</span> · 6 unidades · 203 entradas</span></span>
+<span class="insignia insignia-tramo"><span class="ic s i-signal-low"></span>Básico</span>
+<span class="estado estado-exito"><span class="ic s i-circle-check"></span>Disponible</span>
+<span class="orden"><button class="btn btn-sec" type="button" aria-label="Subir Módulo 1" aria-disabled="true"><span class="ic s i-arrow-up"></span></button><button class="btn btn-sec" type="button" aria-label="Bajar Módulo 1"><span class="ic s i-arrow-down"></span></button></span>
+<button class="btn btn-sec" type="button"><span class="ic s i-pencil"></span>Editar</button>
+</li>
+<sc-for list="{{unidades}}" as="u" hint-placeholder-count="6">
+<li class="fe sub {{u.cls}}">
+<span class="ic s i-grip-vertical c-apagado agarre" aria-hidden="true"></span>
+<sc-if value="{{u.ver}}" hint-placeholder-val="{{ true }}"><span class="col crece"><span class="p5">Unidad {{u.n}} · <span lang="en">{{u.nom}}</span></span><span class="t-xs apagado">{{u.c}} entradas</span></span></sc-if>
+<sc-if value="{{u.edit}}" hint-placeholder-val="{{ false }}"><span class="campo crece"><label class="t-xs p5" for="ru-{{$index}}">Nombre de la Unidad {{u.n}}</label><input class="input" id="ru-{{$index}}" value="{{u.nom}}" lang="en" style="min-height: 44px"></span></sc-if>
+<span class="orden"><button class="btn btn-sec" type="button" aria-label="Subir Unidad {{u.n}}"><span class="ic s i-arrow-up"></span></button><button class="btn btn-sec" type="button" aria-label="Bajar Unidad {{u.n}}"><span class="ic s i-arrow-down"></span></button></span>
+<sc-if value="{{u.ver}}" hint-placeholder-val="{{ true }}"><button class="btn btn-icono btn-fantasma" type="button" aria-label="Renombrar Unidad {{u.n}}"><span class="ic s i-pencil"></span></button></sc-if>
+<sc-if value="{{u.edit}}" hint-placeholder-val="{{ false }}"><span class="fila g6"><button class="btn btn-sec" type="button">Cancelar</button><button class="btn btn-primario" type="button" style="min-height: 40px">Guardar</button></span></sc-if>
+</li>
+</sc-for>
+<li class="fe sub"><button class="btn btn-fantasma" type="button"><span class="ic s i-plus"></span>Agregar unidad al Módulo 1</button></li>
+<sc-for list="{{basicos}}" as="mo" hint-placeholder-count="2">
+<li class="fe tramo-1"><span class="ic i-grip-vertical c-apagado agarre" aria-hidden="true"></span><button class="btn btn-icono btn-fantasma" type="button" aria-expanded="false" aria-label="Ver unidades del Módulo {{mo.n}}"><span class="ic s i-chevron-right"></span></button><span class="col crece"><span class="p6">Módulo {{mo.n}}</span><span class="t-xs apagado"><span lang="en">{{mo.l}}</span> · {{mo.d}}</span></span><span class="insignia insignia-tramo"><span class="ic s i-signal-low"></span>Básico</span><span class="estado estado-exito"><span class="ic s i-circle-check"></span>Disponible</span><span class="orden"><button class="btn btn-sec" type="button" aria-label="Subir Módulo {{mo.n}}"><span class="ic s i-arrow-up"></span></button><button class="btn btn-sec" type="button" aria-label="Bajar Módulo {{mo.n}}"><span class="ic s i-arrow-down"></span></button></span><button class="btn btn-sec" type="button"><span class="ic s i-pencil"></span>Editar</button></li>
+</sc-for>
+</ul>
+<p class="tramo-sep">Intermedio y Avanzado</p>
+<ul>
+<sc-for list="{{proximos}}" as="mo" hint-placeholder-count="6">
+<li class="fe {{mo.t}}"><span class="ic i-grip-vertical c-apagado agarre" aria-hidden="true"></span><span class="col crece" style="padding-left: 50px"><span class="p6">Módulo {{mo.n}}</span><span class="t-xs apagado"><span lang="en">{{mo.l}}</span> · sin entradas</span></span><span class="insignia insignia-tramo"><span class="ic s {{mo.i}}"></span>{{mo.tr}}</span><span class="estado estado-proximo"><span class="ic s i-clock"></span>Próximamente</span><button class="btn btn-sec" type="button"><span class="ic s i-pencil"></span>Editar</button></li>
+</sc-for>
+</ul>
+</section>
+
+<section class="tarjeta" aria-labelledby="cc-{{$index}}">
+<div class="sec-cab"><h2 class="h3" id="cc-{{$index}}">Categorías</h2><button class="btn btn-sec" type="button" style="min-height: 40px"><span class="ic s i-plus"></span>Crear categoría</button></div>
+<ul>
+<sc-for list="{{categorias}}" as="c" hint-placeholder-count="19">
+<li class="fe {{c.cls}}">
+<span class="ic s i-grip-vertical c-apagado agarre" aria-hidden="true"></span>
+<span class="icono-cat"><span class="ic {{c.i}}"></span></span>
+<span class="col crece"><span class="p5">{{c.n}}</span><span class="t-xs apagado num">{{c.c}} entradas</span></span>
+<span class="orden solo-d"><button class="btn btn-sec" type="button" aria-label="Subir {{c.n}}"><span class="ic s i-arrow-up"></span></button><button class="btn btn-sec" type="button" aria-label="Bajar {{c.n}}"><span class="ic s i-arrow-down"></span></button></span>
+<button class="btn btn-icono btn-fantasma" type="button" aria-label="Editar {{c.n}}"><span class="ic s i-pencil"></span></button>
+<button class="btn btn-icono btn-fantasma" type="button" aria-label="Eliminar {{c.n}}" style="color: var(--destructive)"><span class="ic s i-trash-2"></span></button>
+<sc-if value="{{c.edit}}" hint-placeholder-val="{{ false }}">
+<div class="col g12" style="flex-basis: 100%; padding: 8px 4px 6px">
+<div class="campo"><label class="etiqueta" for="cn-{{$index}}">Nombre</label><input class="input" id="cn-{{$index}}" value="Cómo es"></div>
+<div class="col g8"><p class="etiqueta" id="ci-{{$index}}">Ícono</p>
+<div class="rejilla-ic" role="radiogroup" aria-labelledby="ci-{{$index}}">
+<button type="button" role="radio" aria-checked="true" aria-label="Destellos"><span class="ic i-sparkles"></span></button>
+<button type="button" role="radio" aria-checked="false" aria-label="Paleta"><span class="ic i-palette"></span></button>
+<button type="button" role="radio" aria-checked="false" aria-label="Corazón"><span class="ic i-heart"></span></button>
+<button type="button" role="radio" aria-checked="false" aria-label="Rompecabezas"><span class="ic i-puzzle"></span></button>
+<button type="button" role="radio" aria-checked="false" aria-label="Lámpara"><span class="ic i-lamp"></span></button>
+<button type="button" role="radio" aria-checked="false" aria-label="Personas"><span class="ic i-users"></span></button>
+<button type="button" role="radio" aria-checked="false" aria-label="Libro"><span class="ic i-book-a"></span></button>
+<button type="button" role="radio" aria-checked="false" aria-label="Mapa"><span class="ic i-map-pin"></span></button>
+</div>
+<p class="ayuda">Lista corta de íconos de Lucide revisados para que se entiendan sin texto.</p>
+</div>
+<div class="fila g8 fin"><button class="btn btn-sec" type="button">Cancelar</button><button class="btn btn-primario" type="button">Guardar categoría</button></div>
+</div>
+</sc-if>
+</li>
+</sc-for>
+</ul>
+</section>
+</div>
+</div>
+</main>
+
+<sc-if value="{{v.dialogo}}" hint-placeholder-val="{{ false }}">
+<div class="velo"></div>
+<section class="dialogo dlg" role="alertdialog" aria-modal="true" aria-labelledby="dt-{{$index}}" aria-describedby="dd-{{$index}}">
+<h2 id="dt-{{$index}}">Eliminar la categoría «Ropa»</h2>
+<p id="dd-{{$index}}">Tiene 3 entradas: <span lang="en">Jeans</span> (Módulo 1), <span lang="en">Suit</span> y <span lang="en">Dress</span> (Módulo 2). ¿A dónde van?</p>
+<div class="col g8" role="radiogroup" aria-label="Qué hacer con las 3 entradas">
+<div class="opcion-r" role="radio" aria-checked="true" tabindex="0"><span class="punto"></span><div class="col g8 crece"><span class="p6">Moverlas a otra categoría</span><div class="campo"><label class="t-sm" for="mv-{{$index}}">Categoría de destino</label><select class="input" id="mv-{{$index}}"><option>Objetos</option></select></div></div></div>
+<div class="opcion-r" role="radio" aria-checked="false" tabindex="-1"><span class="punto"></span><div class="col g4"><span class="p6">Enviarlas a la papelera</span><span class="t-sm apagado">Se pueden restaurar durante 30 días.</span></div></div>
+</div>
+<div class="campo"><label class="etiqueta" for="cf-{{$index}}">Para confirmar, escribe <b>Ropa</b></label><input class="input" id="cf-{{$index}}" value="{{v.escrito}}" aria-describedby="cfa-{{$index}}"><p class="ayuda" id="cfa-{{$index}}">{{v.ayudaConf}}</p></div>
+<div class="fila g8 fin envolver">
+<button class="btn btn-sec foco" type="button">Volver</button>
+<button class="btn btn-peligro" type="button" aria-disabled="{{v.bloq}}" aria-describedby="cfa-{{$index}}"><span class="ic s i-trash-2"></span>Eliminar y mover 3 entradas</button>
+</div>
+</section>
+</sc-if>
+
+<nav class="barra-inf tres solo-m" aria-label="Principal">
+<a href="#"><span class="ic i-layout-dashboard"></span>Panel</a>
+<a href="#"><span class="ic i-school"></span>Aulas</a>
+<a href="Consola.dc.html" aria-current="page"><span class="ic i-book-a"></span>Diccionario</a>
+</nav>
+</div>
+</div>
+</sc-for>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":3630,"height":5000}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const U = [[1, 'Need, Want', 24], [2, 'What, Where, When', 39], [3, 'Wish', 36], [4, 'Then and to do', 3], [5, 'Have', 48], [6, 'Talking about my family and me', 53]];
+    const C = [['Acciones', 'i-activity', 102], ['Lugares', 'i-map-pin', 50], ['Pronombres e ideas', 'i-puzzle', 38], ['Cómo es', 'i-sparkles', 34], ['Tiempo y fechas', 'i-clock', 29], ['Expresiones', 'i-quote', 29], ['Objetos', 'i-lamp', 28], ['Palabras de enlace', 'i-link', 27], ['Familia y personas', 'i-users', 23], ['Escuela e idiomas', 'i-graduation-cap', 23], ['Fiestas y deportes', 'i-party-popper', 20], ['Profesiones y trabajo', 'i-briefcase', 17], ['Dinero y compras', 'i-wallet', 14], ['Comida y frutas', 'i-apple', 13], ['Transporte y viajes', 'i-bus', 9], ['Preguntas', 'i-message-circle-question', 8], ['Colores', 'i-palette', 7], ['Números', 'i-hash', 5], ['Ropa', 'i-shirt', 3]];
+    const P = (n, l, t, tr, i) => ({ n, l, t, tr, i });
+    const x = (o) => Object.assign({ alto: 'auto', dialogo: false, escrito: '', bloq: 'true', ayudaConf: '' }, o);
+    return {
+      unidades: U.map(([n, nom, c]) => ({ n, nom, c, edit: n === 4, ver: n !== 4, cls: n === 4 ? 'edit' : '' })),
+      basicos: [{ n: 2, l: 'Level II', d: '4 unidades · 167 entradas' }, { n: 3, l: 'Level III', d: '5 unidades · 109 entradas' }],
+      proximos: [P(4, 'Level IV', 'tramo-2', 'Intermedio', 'i-signal-medium'), P(5, 'Level V', 'tramo-2', 'Intermedio', 'i-signal-medium'), P(6, 'Level VI', 'tramo-2', 'Intermedio', 'i-signal-medium'), P(7, 'Level VII', 'tramo-3', 'Avanzado', 'i-signal-high'), P(8, 'Level VIII', 'tramo-3', 'Avanzado', 'i-signal-high'), P(9, 'Level IX', 'tramo-3', 'Avanzado', 'i-signal-high')],
+      categorias: C.map(([n, i, c]) => ({ n, i, c, edit: n === 'Cómo es', cls: n === 'Cómo es' ? 'edit' : '' })),
+      variantes: [
+        x({ cls: 'bh t-claro d', titulo: 'Escritorio · claro', medida: '1280 px · renombrando Unidad 4 y editando «Cómo es»' }),
+        x({ cls: 'bh t-claro m', titulo: 'Móvil · claro', medida: '375 px' }),
+        x({ cls: 'bh t-oscuro d', titulo: 'Escritorio · oscuro', medida: '1280 px' }),
+        x({ cls: 'bh t-oscuro m', titulo: 'Móvil · oscuro', medida: '375 px' }),
+        x({ cls: 'bh t-claro d', titulo: 'Diálogo eliminar categoría · escritorio · claro', medida: 'confirmación completa', alto: '1000px', dialogo: true, escrito: 'Ropa', bloq: 'false', ayudaConf: 'Coincide. Ya puedes eliminarla.' }),
+        x({ cls: 'bh t-oscuro m', titulo: 'Diálogo · móvil · oscuro', medida: 'nombre incompleto: botón inactivo con motivo', alto: '900px', dialogo: true, escrito: 'Rop', bloq: 'true', ayudaConf: 'Escribe «Ropa» completo para activar «Eliminar».' })
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

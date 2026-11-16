@@ -1,0 +1,211 @@
+{
+  "v": 3,
+  "createdOnFiles": { "v": 1, "at": "2026-11-09T15:00:00Z" },
+  "title": "BigHearts · Diccionario",
+  "launch": { "view": "canvas", "page": "lectura" },
+  "pages": [
+    { "id": "lectura", "name": "Lectura" },
+    { "id": "gestion", "name": "Gestión (admin)" },
+    { "id": "sistema", "name": "Sistema y especificación" }
+  ],
+  "boards": {
+    "Main.dc.html": {
+      "x": 0,
+      "y": 300,
+      "w": 3630,
+      "h": 2700,
+      "title": "1 · Inicio del diccionario",
+      "page": "lectura"
+    },
+    "Busqueda.dc.html": {
+      "x": 0,
+      "y": 3120,
+      "w": 3630,
+      "h": 3600,
+      "title": "1b · Búsqueda: sugerencias, sin resultados, resultados",
+      "page": "lectura"
+    },
+    "Modulo.dc.html": {
+      "x": 0,
+      "y": 6840,
+      "w": 3630,
+      "h": 2600,
+      "title": "2 · Módulo",
+      "page": "lectura"
+    },
+    "Categoria.dc.html": {
+      "x": 0,
+      "y": 9560,
+      "w": 3630,
+      "h": 4000,
+      "title": "3 · Categoría dentro del módulo",
+      "page": "lectura"
+    },
+    "Entrada.dc.html": {
+      "x": 0,
+      "y": 13680,
+      "w": 3630,
+      "h": 4000,
+      "title": "4 · Entrada (reproductor y ficha)",
+      "page": "lectura"
+    },
+    "EntradaMuyGrande.dc.html": {
+      "x": 0,
+      "y": 17800,
+      "w": 2286,
+      "h": 2900,
+      "title": "4b · Entrada con texto «Muy grande» (125 %)",
+      "page": "lectura"
+    },
+    "Practica.dc.html": {
+      "x": 0,
+      "y": 20820,
+      "w": 3630,
+      "h": 1600,
+      "title": "5 · Práctica (concepto)",
+      "page": "lectura"
+    },
+    "Consola.dc.html": {
+      "x": 0,
+      "y": 300,
+      "w": 3630,
+      "h": 3000,
+      "title": "6 · Consola del diccionario",
+      "page": "gestion"
+    },
+    "Editor.dc.html": {
+      "x": 0,
+      "y": 3420,
+      "w": 3630,
+      "h": 2500,
+      "title": "7 · Editor de entrada",
+      "page": "gestion"
+    },
+    "Cola.dc.html": {
+      "x": 0,
+      "y": 6040,
+      "w": 3630,
+      "h": 3400,
+      "title": "8 · Cola de grabación y subida masiva",
+      "page": "gestion"
+    },
+    "Estructura.dc.html": {
+      "x": 0,
+      "y": 9560,
+      "w": 3630,
+      "h": 5000,
+      "title": "9 · Estructura: módulos, unidades y categorías",
+      "page": "gestion"
+    },
+    "Importar.dc.html": {
+      "x": 0,
+      "y": 14680,
+      "w": 3630,
+      "h": 3800,
+      "title": "10 · Importar CSV",
+      "page": "gestion"
+    },
+    "Papelera.dc.html": {
+      "x": 0,
+      "y": 18600,
+      "w": 3630,
+      "h": 2100,
+      "title": "11 · Papelera",
+      "page": "gestion"
+    },
+    "Estados.dc.html": {
+      "x": 0,
+      "y": 300,
+      "w": 3630,
+      "h": 2900,
+      "title": "Estados compartidos",
+      "page": "sistema"
+    },
+    "Componentes.dc.html": {
+      "x": 0,
+      "y": 3320,
+      "w": 2600,
+      "h": 3400,
+      "title": "Inventario de componentes",
+      "page": "sistema"
+    },
+    "Interaccion.dc.html": {
+      "x": 2720,
+      "y": 3320,
+      "w": 1500,
+      "h": 3400,
+      "title": "Especificación de interacción",
+      "page": "sistema"
+    },
+    "Decisiones.dc.html": {
+      "x": 4340,
+      "y": 3320,
+      "w": 1100,
+      "h": 2200,
+      "title": "Decisiones que se apartan del brief",
+      "page": "sistema"
+    }
+  },
+  "order": [
+    "Main.dc.html",
+    "Busqueda.dc.html",
+    "Modulo.dc.html",
+    "Categoria.dc.html",
+    "Entrada.dc.html",
+    "EntradaMuyGrande.dc.html",
+    "Practica.dc.html",
+    "Consola.dc.html",
+    "Editor.dc.html",
+    "Cola.dc.html",
+    "Estructura.dc.html",
+    "Importar.dc.html",
+    "Papelera.dc.html",
+    "Estados.dc.html",
+    "Componentes.dc.html",
+    "Interaccion.dc.html",
+    "Decisiones.dc.html"
+  ],
+  "notes": {
+    "t-lectura": {
+      "x": 0,
+      "y": 0,
+      "text": "Diccionario · Lectura (estudiante y profesor)",
+      "kind": "title1",
+      "maxW": 3630,
+      "page": "lectura"
+    },
+    "t-gestion": {
+      "x": 0,
+      "y": 0,
+      "text": "Diccionario · Gestión (solo administrador)",
+      "kind": "title1",
+      "maxW": 3630,
+      "page": "gestion"
+    },
+    "t-sistema": {
+      "x": 0,
+      "y": 0,
+      "text": "Estados, componentes y especificación",
+      "kind": "title1",
+      "maxW": 5440,
+      "page": "sistema"
+    },
+    "leer": {
+      "x": 3760,
+      "y": 300,
+      "w": 440,
+      "text": "Cómo leer el lienzo: cada artboard muestra la pantalla a 1280 px y 375 px, en tema claro y oscuro (primera fila). La segunda fila, cuando existe, muestra estados: sin resultados, sin video, cargando, error, diálogos. Los videos y miniaturas son marcadores de posición: aún no hay grabaciones reales.",
+      "fill": "blue",
+      "page": "lectura"
+    },
+    "datos": {
+      "x": 3760,
+      "y": 1000,
+      "w": 440,
+      "text": "Datos: las 479 entradas son las del CSV. «86 con seña» en Módulo 1 viene del brief; las cifras de seña de los módulos 2 y 3 (41 y 12) son de ejemplo. Los nombres de unidad de los módulos 2 y 3 no venían en el brief: se muestran como «Unidad N».",
+      "fill": "gray",
+      "page": "lectura"
+    }
+  },
+  "designSystems": []
+}

@@ -86,6 +86,10 @@ aplicadas no se reaplican, y el seed inicial solo hace `upsert` del Admin por em
 Admin existente). **No siembra datos de prueba en ningún entorno** — eso es `seed-demo.ts`, que se
 ejecuta a mano (`npm run db:seed:demo`) y nunca en el deploy.
 
+**Diccionario (una vez por entorno).** La migración crea los módulos, unidades y categorías; las 479
+entradas se cargan a mano tras migrar, con `DATABASE_URL` apuntando al entorno:
+`npm run db:seed:diccionario`. Es idempotente: repetirlo no duplica entradas ni cambia slugs.
+
 Si `ADMIN_EMAIL`/`ADMIN_PASSWORD` no están seteados en el paso 2.2, el seed aborta con un error
 claro y el deploy falla — es intencional, para no arrancar en staging/prod sin Admin.
 

@@ -1594,3 +1594,6 @@ export * from './accesibilidad-clase';
 
 /** Proveedores de videollamada permitidos y `esProveedorPermitido()` (HU-505, D45). */
 export * from './proveedor-reunion';
+
+/** Contrato del diccionario: enums, etiquetas y `normalizarTexto()` (HU-526, D50). */
+export * from './diccionario';

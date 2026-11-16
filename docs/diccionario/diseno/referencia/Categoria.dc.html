@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Diccionario · Acciones en Módulo 1</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="/_blob/8500f8b95e34d7853d88e913eba28e73">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&amp;family=Instrument+Serif:ital@0;1&amp;display=swap">
+<style>
+body{margin:0}
+.cab-cat{display:flex;align-items:center;gap:16px}
+.cab-cat .circulo{width:64px;height:64px;background:var(--muted)}
+.m .cab-cat .circulo{width:52px;height:52px}
+.filtros{display:flex;flex-direction:column;gap:20px;padding:24px 24px 24px 28px}
+.m .filtros{padding:16px 14px 16px 18px;gap:16px}
+.m .filtros .chip{white-space:normal;text-align:left;line-height:1.3;padding:6px 14px}
+.pal{display:flex !important;flex-direction:column}
+.m .pal{flex-direction:row;align-items:stretch}
+.mini{position:relative;aspect-ratio:16/9;background:var(--muted);border-bottom:1px solid var(--border);overflow:hidden;display:grid;place-items:center}
+.m .mini{width:116px;aspect-ratio:auto;min-height:100px;border-bottom:0;border-right:1px solid var(--border);flex:none}
+.mini .play{position:relative;z-index:2;width:44px;height:44px;border-radius:999px;background:var(--card);border:1px solid var(--border);display:grid;place-items:center;color:var(--foreground)}
+.m .mini .play{width:36px;height:36px}
+.mini.prep{background:repeating-linear-gradient(135deg,var(--muted) 0 10px,color-mix(in oklch,var(--muted) 70%,var(--card)) 10px 20px)}
+.prep-et{position:relative;display:flex;flex-direction:column;align-items:center;gap:6px;padding:8px 12px;background:var(--card);border:1px solid var(--border);border-radius:12px;font-size:.8125rem;font-weight:500;color:var(--muted-foreground);text-align:center;line-height:1.3}
+.m .prep-et{padding:6px;border-radius:10px;max-width:96px}
+.pal-txt{display:flex;flex-direction:column;gap:2px;padding:16px 16px 18px 20px}
+.m .pal-txt{padding:12px 12px 12px 14px;justify-content:center;min-width:0}
+.pal-en{font-size:1.375rem;line-height:1.3;font-weight:600}
+.m .pal-en{font-size:1.1875rem}
+.practicar{display:flex;align-items:center;gap:20px;padding:24px 24px 24px 28px;border-style:dashed !important;border-color:var(--input) !important;background:var(--muted) !important}
+.m .practicar{flex-direction:column;align-items:flex-start;padding:18px 16px 18px 20px;gap:14px}
+.sk{background:var(--muted);border-radius:8px}
+</style>
+</helmet>
+<div class="lienzo" style="width: 3630px; min-height: 4000px">
+<sc-for list="{{variantes}}" as="v" hint-placeholder-count="6">
+<div class="marco">
+<p class="marco-etiqueta"><b>{{v.titulo}}</b><span>{{v.medida}}</span></p>
+<div class="{{v.cls}}" style="height: {{v.alto}}">
+
+<header class="barra-sup"><div class="in">
+<a class="marca" href="#"><span class="sello"><span class="ic s i-heart"></span></span>BigHearts</a>
+<nav class="nav solo-d" aria-label="Principal">
+<a href="#"><span class="ic s i-layout-dashboard"></span>Panel</a>
+<a href="#"><span class="ic s i-school"></span>Aulas</a>
+<a href="#"><span class="ic s i-calendar-check"></span>Mis clases</a>
+<a href="#"><span class="ic s i-history"></span>Historial</a>
+<a href="Main.dc.html" aria-current="page"><span class="ic s i-book-a"></span>Diccionario</a>
+</nav>
+<button class="cuenta" type="button"><span class="av">LM</span><span class="solo-d">Mi cuenta</span></button>
+</div></header>
+
+<main class="principal" id="contenido">
+<div class="contenedor">
+
+<nav class="migas" aria-label="Estás en"><a href="Main.dc.html">Diccionario</a><span class="ic s i-chevron-right"></span><a href="Modulo.dc.html">Módulo 1</a><span class="ic s i-chevron-right"></span><span aria-current="page">Acciones</span></nav>
+
+<div class="cabecera" style="gap: 12px; margin-top: -12px">
+<span class="insignia insignia-tramo tramo-1" style="align-self: flex-start"><span class="ic s i-signal-low"></span><b>Módulo 1</b> · Básico</span>
+<div class="cab-cat"><span class="circulo"><span class="ic xl i-activity"></span></span><h1>Acciones</h1></div>
+<p class="contexto">51 palabras · 24 con seña. Toca una palabra para ver su seña.</p>
+</div>
+
+<section class="tarjeta riel tramo-1 filtros" aria-label="Filtros">
+<div class="col g8">
+<p class="etiqueta">Tipo</p>
+<div class="fila g8 envolver" role="group" aria-label="Tipo">
+<button class="chip" type="button" aria-pressed="true"><span class="ic s i-check"></span>Todos <span class="n">51</span></button>
+<button class="chip" type="button" aria-pressed="false">Verbo <span class="n">51</span></button>
+</div>
+<p class="ayuda">Solo aparecen los tipos que hay en esta categoría.</p>
+</div>
+<div class="col g8">
+<p class="etiqueta">Unidad</p>
+<div class="fila g8 envolver" role="group" aria-label="Unidad">
+<sc-for list="{{v.unidades}}" as="u" hint-placeholder-count="6">
+<button class="chip" type="button" aria-pressed="{{u.p}}"><sc-if value="{{u.on}}" hint-placeholder-val="{{ false }}"><span class="ic s i-check"></span></sc-if><span>{{u.t}}<span lang="en">{{u.nom}}</span></span> <span class="n">{{u.c}}</span></button>
+</sc-for>
+</div>
+</div>
+<div class="sep"></div>
+<div class="fila entre g16 envolver">
+<button class="interruptor" type="button" role="switch" aria-checked="{{v.conSena}}"><span class="pista"></span><span class="col"><span class="p5">Solo con seña</span><span class="t-sm apagado">24 de 51 palabras</span></span></button>
+<div class="fila g12 envolver">
+<p class="p5" role="status">{{v.conteo}}</p>
+<sc-if value="{{v.filtrado}}" hint-placeholder-val="{{ false }}"><button class="btn btn-sec" type="button"><span class="ic s i-x"></span>Quitar filtros</button></sc-if>
+</div>
+</div>
+</section>
+
+<sc-if value="{{v.lista}}" hint-placeholder-val="{{ true }}">
+<ul class="r3">
+<sc-for list="{{v.palabras}}" as="p" hint-placeholder-count="9">
+<li><a class="tarjeta riel tramo-1 pal" href="Entrada.dc.html">
+<sc-if value="{{p.sena}}" hint-placeholder-val="{{ true }}">
+<span class="mini"><span class="figura" aria-hidden="true"><span class="cabeza"></span><span class="torso"></span><span class="mano"></span></span><span class="play" aria-hidden="true"><span class="ic s i-play"></span></span><span class="oculto-sr">Tiene seña en LSC</span></span>
+</sc-if>
+<sc-if value="{{p.prep}}" hint-placeholder-val="{{ false }}">
+<span class="mini prep"><span class="prep-et"><span class="ic i-clapperboard"></span>Seña en preparación</span></span>
+</sc-if>
+<span class="pal-txt">
+<span class="pal-en" lang="en">{{p.en}}</span>
+<span>{{p.es}}</span>
+<span class="fila g8 envolver" style="margin-top: 8px"><span class="chip-tipo">Verbo</span><span class="t-xs apagado">{{p.u}}</span></span>
+</span>
+</a></li>
+</sc-for>
+</ul>
+<div class="fila g16 envolver centro">
+<p class="apagado t-sm">{{v.vistos}}</p>
+<sc-if value="{{v.mas}}" hint-placeholder-val="{{ true }}"><button class="btn btn-sec" type="button"><span class="ic s i-chevron-down"></span>Mostrar 12 más</button></sc-if>
+</div>
+</sc-if>
+
+<sc-if value="{{v.vacio}}" hint-placeholder-val="{{ false }}">
+<div class="tarjeta pad32 col g12 inicio" role="status">
+<span class="circulo"><span class="ic l i-list-filter c-apagado"></span></span>
+<p class="serif t-2xl">Ninguna palabra cumple estos filtros.</p>
+<p style="max-width: 60ch">En Acciones, la Unidad 4 tiene 1 palabra, y todavía no tiene seña.</p>
+<div class="fila g8 envolver"><button class="btn btn-primario" type="button"><span class="ic s i-x"></span>Quitar filtros</button><button class="btn btn-sec" type="button">Ver también sin seña</button></div>
+</div>
+</sc-if>
+
+<sc-if value="{{v.cargando}}" hint-placeholder-val="{{ false }}">
+<div class="col g12" role="status" aria-live="polite">
+<p class="fila g8 p5"><span class="ic i-loader-circle c-apagado"></span>Cargando las palabras de Acciones…</p>
+<div class="r3">
+<div class="tarjeta col"><div class="sk" style="height: 100px; border-radius: 0"></div><div class="col g8 pad16"><div class="sk" style="height: 18px; width: 60%"></div><div class="sk" style="height: 14px; width: 40%"></div></div></div>
+<div class="tarjeta col"><div class="sk" style="height: 100px; border-radius: 0"></div><div class="col g8 pad16"><div class="sk" style="height: 18px; width: 50%"></div><div class="sk" style="height: 14px; width: 35%"></div></div></div>
+<div class="tarjeta col"><div class="sk" style="height: 100px; border-radius: 0"></div><div class="col g8 pad16"><div class="sk" style="height: 18px; width: 55%"></div><div class="sk" style="height: 14px; width: 45%"></div></div></div>
+</div>
+</div>
+</sc-if>
+
+<section class="tarjeta riel tramo-1 practicar" aria-labelledby="pr-{{$index}}">
+<span class="circulo"><span class="ic l i-book-open-check c-apagado"></span></span>
+<div class="col g4 crece">
+<div class="fila g8 envolver"><h2 class="h3" id="pr-{{$index}}">Practicar Acciones</h2><span class="estado estado-proximo"><span class="ic s i-clock"></span>Próximamente</span></div>
+<p class="apagado t-sm">Verás la seña y adivinarás la palabra. Llegará en una próxima versión.</p>
+</div>
+<a class="btn btn-sec" href="Practica.dc.html" aria-disabled="true" aria-describedby="pr-{{$index}}">Practicar Acciones</a>
+</section>
+
+</div>
+</main>
+
+<nav class="barra-inf solo-m" aria-label="Principal">
+<a href="#"><span class="ic i-layout-dashboard"></span>Panel</a>
+<a href="#"><span class="ic i-school"></span>Aulas</a>
+<a href="#"><span class="ic i-calendar-check"></span>Mis clases</a>
+<a href="#"><span class="ic i-history"></span>Historial</a>
+<a href="Main.dc.html" aria-current="page"><span class="ic i-book-a"></span>Diccionario</a>
+</nav>
+</div>
+</div>
+</sc-for>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":3630,"height":4000}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const U = [['Unidad 1 · ', 'Need, Want', 16, 1], ['Unidad 3 · ', 'Wish', 15, 3], ['Unidad 4 · ', 'Then and to do', 1, 4], ['Unidad 5 · ', 'Have', 14, 5], ['Unidad 6 · ', 'Talking about my family and me', 5, 6]];
+    const unidades = (sel) => [{ t: 'Todas', nom: '', c: 51, p: String(sel === 0), on: sel === 0 }].concat(U.map(([t, nom, c, n]) => ({ t, nom, c, p: String(n === sel), on: n === sel })));
+    const P = (en, es, u, s) => ({ en, es, u, sena: s, prep: !s });
+    const u1 = 'Unidad 1';
+    const todas = [P('To eat', 'Comer', u1, true), P('To drink', 'Tomar, beber', u1, true), P('To read', 'Leer', u1, true), P('To sleep', 'Dormir', u1, true), P('To work', 'Trabajar', u1, false), P('To write', 'Escribir', u1, true), P('To ask', 'Preguntar, pedir', u1, false), P('To study', 'Estudiar', u1, true), P('To answer', 'Contestar, responder', u1, false)];
+    const filtr = [P('To eat', 'Comer', u1, true), P('To drink', 'Tomar, beber', u1, true), P('To read', 'Leer', u1, true), P('To sleep', 'Dormir', u1, true), P('To write', 'Escribir', u1, true), P('To study', 'Estudiar', u1, true), P('To rest', 'Descansar', u1, true), P('To get up', 'Levantarse', u1, true), P('To cook', 'Cocinar', u1, true)];
+    const base = { alto: 'auto', lista: true, vacio: false, cargando: false, mas: true };
+    const A = { unidades: unidades(0), conSena: 'false', filtrado: false, conteo: 'Mostrando 51 palabras', palabras: todas, vistos: 'Ves 9 de 51 palabras.' };
+    const B = { unidades: unidades(1), conSena: 'true', filtrado: true, conteo: '9 de 51 palabras', palabras: filtr, vistos: 'Ves las 9 palabras.', mas: false };
+    const C = { unidades: unidades(4), conSena: 'true', filtrado: true, conteo: '0 de 51 palabras', lista: false, vacio: true };
+    const L = { unidades: unidades(0), conSena: 'false', filtrado: false, conteo: 'Contando palabras…', lista: false, cargando: true };
+    const x = (o, p) => Object.assign({}, base, p, o);
+    return {
+      variantes: [
+        x({ cls: 'bh t-claro d', titulo: 'Escritorio · claro', medida: '1280 px · sin filtros' }, A),
+        x({ cls: 'bh t-claro m', titulo: 'Móvil · claro', medida: '375 px · sin filtros' }, A),
+        x({ cls: 'bh t-oscuro d', titulo: 'Escritorio · oscuro', medida: '1280 px · Unidad 1 + Solo con seña' }, B),
+        x({ cls: 'bh t-oscuro m', titulo: 'Móvil · oscuro', medida: '375 px · Unidad 1 + Solo con seña' }, B),
+        x({ cls: 'bh t-claro d', titulo: 'Filtros sin resultados · escritorio · claro', medida: 'Unidad 4 + Solo con seña', alto: '1180px' }, C),
+        x({ cls: 'bh t-oscuro m', titulo: 'Cargando · móvil · oscuro', medida: '375 × 1100 (recortada)', alto: '1100px' }, L)
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

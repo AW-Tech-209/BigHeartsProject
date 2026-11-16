@@ -1,0 +1,242 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Diccionario · Consola del administrador</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="/_blob/8500f8b95e34d7853d88e913eba28e73">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&amp;family=Instrument+Serif:ital@0;1&amp;display=swap">
+<style>
+body{margin:0}
+.cab-acc{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap}
+.acceso{display:flex !important;align-items:center;gap:14px;padding:16px 16px 16px 18px;min-height:80px}
+.acceso .circulo{width:44px;height:44px;background:var(--muted)}
+.r4a{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.d .r4a{grid-template-columns:repeat(2,minmax(0,1fr))}
+.m .r4a{grid-template-columns:minmax(0,1fr);gap:8px}
+.avance{display:grid;grid-template-columns:200px minmax(0,1fr) 190px;gap:16px;align-items:center;padding:14px 0;border-bottom:1px solid var(--border)}
+.avance:last-of-type{border-bottom:0}
+.m .avance{grid-template-columns:minmax(0,1fr) auto;gap:8px 12px}
+.m .avance .barra{grid-column:1 / -1;grid-row:2}
+.filtros-a{display:grid;grid-template-columns:minmax(0,2fr) repeat(5,minmax(0,1fr));gap:12px;align-items:end}
+.m .filtros-a{grid-template-columns:repeat(2,minmax(0,1fr))}
+.m .filtros-a .busca{grid-column:1 / -1}
+select.input{appearance:auto;padding:0 10px}
+.lote{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:10px 12px 10px 16px;border-radius:14px;background:var(--primary-soft);border:1px solid var(--primary);color:var(--primary-soft-foreground)}
+.lote .btn{min-height:40px;padding:0 12px}
+.m .lote{position:relative;margin:0;border-radius:14px}
+.dt{border:1px solid var(--border);border-radius:16px;background:var(--card);overflow:hidden}
+.dt-f{display:grid;grid-template-columns:44px minmax(0,1fr) minmax(0,1fr) 104px 96px 132px 136px 76px 112px 92px;align-items:center;column-gap:12px;padding:0 12px;border-bottom:1px solid var(--border);min-height:60px;font-size:.9375rem}
+.dt-f:last-child{border-bottom:0}
+.dt-cab{background:var(--muted);min-height:44px;font-size:.8125rem;font-weight:500;color:var(--muted-foreground)}
+.dt-f.sel{background:var(--primary-soft)}
+.dt-f.edit{background:var(--accent);padding-top:12px;padding-bottom:12px;row-gap:10px;box-shadow:inset 3px 0 0 var(--primary)}
+.dt-f .tira{grid-column:2 / -1;display:flex;justify-content:flex-end;gap:8px;align-items:center;flex-wrap:wrap}
+.dt-f .btn{min-height:40px;padding:0 12px}
+.celda{min-height:40px;height:40px;font-size:.9375rem;padding:0 10px}
+.tarj-m{display:flex;flex-direction:column;gap:10px;padding:14px 14px 14px 12px;border-bottom:1px solid var(--border)}
+.tarj-m.sel{background:var(--primary-soft)}
+.tarj-m:last-child{border-bottom:0}
+.paginas{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.toast-pos{position:absolute;right:24px;bottom:24px;width:440px;z-index:7}
+.m .toast-pos{left:12px;right:12px;bottom:84px;width:auto}
+</style>
+</helmet>
+<div class="lienzo" style="width: 3630px; min-height: 3000px">
+<sc-for list="{{variantes}}" as="v" hint-placeholder-count="4">
+<div class="marco">
+<p class="marco-etiqueta"><b>{{v.titulo}}</b><span>{{v.medida}}</span></p>
+<div class="{{v.cls}}">
+
+<header class="barra-sup"><div class="in">
+<a class="marca" href="#"><span class="sello"><span class="ic s i-heart"></span></span>BigHearts</a>
+<nav class="nav solo-d" aria-label="Principal">
+<a href="#"><span class="ic s i-layout-dashboard"></span>Panel</a>
+<a href="#"><span class="ic s i-school"></span>Aulas</a>
+<a href="Consola.dc.html" aria-current="page"><span class="ic s i-book-a"></span>Diccionario</a>
+</nav>
+<div class="fila g12"><span class="rol solo-d">Administrador</span><button class="cuenta" type="button"><span class="av">AD</span><span class="solo-d">Mi cuenta</span></button></div>
+</div></header>
+
+<main class="principal" id="contenido">
+<div class="contenedor">
+
+<div class="cab-acc">
+<div class="cabecera">
+<h1>Diccionario</h1>
+<p class="contexto">Administra las 479 entradas y sus señas en LSC.</p>
+</div>
+<a class="btn btn-primario" href="Editor.dc.html"><span class="ic i-plus"></span>Crear entrada</a>
+</div>
+
+<div class="r2" style="gap: 24px; align-items: start">
+<section class="tarjeta pad24 col g4" aria-labelledby="av-{{$index}}">
+<h2 class="h3" id="av-{{$index}}">Avance de señas</h2>
+<p class="t-sm apagado">Señas listas por módulo. Los módulos 4 a 9 todavía no tienen entradas.</p>
+<div class="col" style="margin-top: 8px">
+<div class="avance tramo-1"><span class="fila g8 envolver"><span class="insignia insignia-tramo"><span class="ic s i-signal-low"></span><b>Módulo 1</b></span></span><div class="barra" role="progressbar" aria-valuemin="0" aria-valuemax="203" aria-valuenow="86" aria-valuetext="86 de 203 con seña"><span style="width: 42.4%"></span></div><span class="t-sm num"><b class="p6">86 de 203</b> con seña</span></div>
+<div class="avance tramo-1"><span class="fila g8 envolver"><span class="insignia insignia-tramo"><span class="ic s i-signal-low"></span><b>Módulo 2</b></span></span><div class="barra" role="progressbar" aria-valuemin="0" aria-valuemax="167" aria-valuenow="41" aria-valuetext="41 de 167 con seña"><span style="width: 24.6%"></span></div><span class="t-sm num"><b class="p6">41 de 167</b> con seña</span></div>
+<div class="avance tramo-1"><span class="fila g8 envolver"><span class="insignia insignia-tramo"><span class="ic s i-signal-low"></span><b>Módulo 3</b></span></span><div class="barra" role="progressbar" aria-valuemin="0" aria-valuemax="109" aria-valuenow="12" aria-valuetext="12 de 109 con seña"><span style="width: 11%"></span></div><span class="t-sm num"><b class="p6">12 de 109</b> con seña</span></div>
+</div>
+</section>
+<nav class="r4a" aria-label="Herramientas del diccionario">
+<a class="tarjeta acceso" href="Cola.dc.html"><span class="circulo"><span class="ic i-list-video"></span></span><span class="col crece"><span class="p6">Cola de grabación</span><span class="t-sm apagado">335 sin seña · subir videos</span></span><span class="ic s i-chevron-right c-apagado"></span></a>
+<a class="tarjeta acceso" href="Estructura.dc.html"><span class="circulo"><span class="ic i-layers"></span></span><span class="col crece"><span class="p6">Estructura</span><span class="t-sm apagado">9 módulos · 19 categorías</span></span><span class="ic s i-chevron-right c-apagado"></span></a>
+<a class="tarjeta acceso" href="Importar.dc.html"><span class="circulo"><span class="ic i-file-spreadsheet"></span></span><span class="col crece"><span class="p6">Importar CSV</span><span class="t-sm apagado">Agregar entradas desde un archivo</span></span><span class="ic s i-chevron-right c-apagado"></span></a>
+<a class="tarjeta acceso" href="Papelera.dc.html"><span class="circulo"><span class="ic i-trash-2"></span></span><span class="col crece"><span class="p6">Papelera</span><span class="t-sm apagado">{{v.papelera}}</span></span><span class="ic s i-chevron-right c-apagado"></span></a>
+</nav>
+</div>
+
+<section class="col g16" aria-labelledby="en-{{$index}}">
+<h2 class="h2" id="en-{{$index}}">Entradas</h2>
+<div class="filtros-a">
+<div class="campo busca"><label class="etiqueta" for="bq-{{$index}}">Buscar</label><div class="input"><span class="ic s i-search c-apagado"></span><input id="bq-{{$index}}" type="search" placeholder="Inglés o español"></div></div>
+<div class="campo"><label class="etiqueta" for="fm-{{$index}}">Módulo</label><select class="input" id="fm-{{$index}}"><option>Módulo 1</option></select></div>
+<div class="campo"><label class="etiqueta" for="fc-{{$index}}">Categoría</label><select class="input" id="fc-{{$index}}"><option>Acciones</option></select></div>
+<div class="campo"><label class="etiqueta" for="ft-{{$index}}">Tipo</label><select class="input" id="ft-{{$index}}"><option>Todos</option></select></div>
+<div class="campo"><label class="etiqueta" for="fu-{{$index}}">Unidad</label><select class="input" id="fu-{{$index}}"><option>Todas</option></select></div>
+<div class="campo"><label class="etiqueta" for="fi-{{$index}}">Imagen</label><select class="input" id="fi-{{$index}}"><option>Todas</option></select></div>
+</div>
+<div class="col g8">
+<p class="etiqueta">Seña</p>
+<div class="fila g8 envolver" role="group" aria-label="Filtrar por seña">
+<button class="chip" type="button" aria-pressed="true"><span class="ic s i-check"></span>Todas <span class="n">51</span></button>
+<button class="chip" type="button" aria-pressed="false"><span class="ic s i-circle-check c-exito"></span>Lista <span class="n">24</span></button>
+<button class="chip" type="button" aria-pressed="false"><span class="ic s i-hourglass c-tiempo"></span>Procesando <span class="n">1</span></button>
+<button class="chip" type="button" aria-pressed="false"><span class="ic s i-circle-alert c-error"></span>Error <span class="n">1</span></button>
+<button class="chip" type="button" aria-pressed="false"><span class="ic s i-video-off c-apagado"></span>Sin seña <span class="n">25</span></button>
+</div>
+</div>
+<div class="fila entre g12 envolver">
+<p class="t-sm" role="status"><b class="p6">51 entradas</b> · Módulo 1 · Acciones</p>
+<button class="btn btn-fantasma" type="button"><span class="ic s i-x"></span>Quitar filtros</button>
+</div>
+
+<sc-if value="{{v.sel}}" hint-placeholder-val="{{ true }}">
+<div class="lote" role="region" aria-label="Acciones en lote">
+<span class="p6 fila g8"><span class="ic s i-square-check"></span>2 seleccionadas</span>
+<span class="crece solo-d"></span>
+<button class="btn btn-sec" type="button"><span class="ic s i-folder-input"></span>Mover de categoría</button>
+<button class="btn btn-sec" type="button"><span class="ic s i-move"></span>Mover de módulo o unidad</button>
+<button class="btn btn-sec" type="button"><span class="ic s i-eye-off"></span>Ocultar</button>
+<button class="btn btn-peligro-sec" type="button"><span class="ic s i-trash-2"></span>Enviar a la papelera</button>
+<button class="btn btn-fantasma" type="button">Quitar selección</button>
+</div>
+</sc-if>
+
+<div class="dt solo-d" role="table" aria-label="Entradas de Acciones, Módulo 1">
+<div class="dt-f dt-cab" role="row">
+<span role="columnheader"><input class="marcar" type="checkbox" aria-label="Seleccionar todas"></span>
+<span role="columnheader">Inglés</span><span role="columnheader">Español</span><span role="columnheader">Tipo</span><span role="columnheader">Módulo</span><span role="columnheader">Categoría</span><span role="columnheader">Seña</span><span role="columnheader">Imagen</span><span role="columnheader">Visible</span><span role="columnheader"><span class="oculto-sr">Acciones</span></span>
+</div>
+<sc-for list="{{v.filas}}" as="r" hint-placeholder-count="10">
+<div class="dt-f {{r.cls}}" role="row">
+<span role="cell"><input class="marcar" type="checkbox" checked="{{r.marcada}}" aria-label="Seleccionar {{r.en}}"></span>
+<sc-if value="{{r.edit}}" hint-placeholder-val="{{ false }}">
+<span role="cell"><label class="oculto-sr" for="ei-{{$index}}">Inglés</label><input class="input celda foco-in" id="ei-{{$index}}" value="{{r.en}}" lang="en"></span>
+<span role="cell"><label class="oculto-sr" for="ee-{{$index}}">Español</label><input class="input celda" id="ee-{{$index}}" value="{{r.es}}"></span>
+<span role="cell"><label class="oculto-sr" for="et-{{$index}}">Tipo</label><select class="input celda" id="et-{{$index}}"><option>Verbo</option><option>Palabra</option><option>Frase</option><option>Expresión</option></select></span>
+</sc-if>
+<sc-if value="{{r.ver}}" hint-placeholder-val="{{ true }}">
+<span role="cell" class="p6" lang="en">{{r.en}}</span>
+<span role="cell">{{r.es}}</span>
+<span role="cell"><span class="chip-tipo">Verbo</span></span>
+</sc-if>
+<span role="cell" class="t-sm">M1 · {{r.u}}</span>
+<span role="cell" class="t-sm fila g6"><span class="ic s i-activity c-apagado"></span>Acciones</span>
+<span role="cell"><span class="estado {{r.sCls}}"><span class="ic s {{r.sIc}}"></span>{{r.sTxt}}</span></span>
+<span role="cell" class="t-sm fila g6"><span class="ic s {{r.imgIc}} c-apagado"></span>{{r.img}}</span>
+<span role="cell"><span class="estado {{r.pCls}}"><span class="ic s {{r.pIc}}"></span>{{r.pTxt}}</span></span>
+<span role="cell" class="fila g4"><button class="btn btn-icono btn-fantasma" type="button" aria-label="Editar {{r.en}} aquí"><span class="ic s i-pencil"></span></button><a class="btn btn-icono btn-fantasma" href="Editor.dc.html" aria-label="Abrir {{r.en}} en el editor"><span class="ic s i-external-link"></span></a></span>
+<sc-if value="{{r.edit}}" hint-placeholder-val="{{ false }}">
+<div class="tira"><span class="t-xs apagado">Edición rápida · <b>Enter</b> guarda · <b>Esc</b> cancela</span><button class="btn btn-sec" type="button">Cancelar</button><button class="btn btn-primario" type="button" style="min-height: 40px"><span class="ic s i-check"></span>Guardar cambios</button></div>
+</sc-if>
+</div>
+</sc-for>
+</div>
+
+<div class="dt solo-m" role="list" aria-label="Entradas de Acciones, Módulo 1">
+<sc-for list="{{v.filasM}}" as="r" hint-placeholder-count="6">
+<div class="tarj-m {{r.cls}}" role="listitem">
+<div class="fila g12 inicio">
+<input class="marcar" type="checkbox" checked="{{r.marcada}}" aria-label="Seleccionar {{r.en}}" style="margin-top: 4px">
+<div class="col crece"><span class="p6 t-lg" lang="en">{{r.en}}</span><span>{{r.es}}</span><span class="t-xs apagado">Verbo · Módulo 1 · {{r.u}} · Acciones</span></div>
+<a class="btn btn-icono btn-sec" href="Editor.dc.html" aria-label="Editar {{r.en}}"><span class="ic s i-pencil"></span></a>
+</div>
+<div class="fila g6 envolver" style="padding-left: 34px"><span class="estado {{r.sCls}}"><span class="ic s {{r.sIc}}"></span>{{r.sTxt}}</span><span class="estado {{r.pCls}}"><span class="ic s {{r.pIc}}"></span>{{r.pTxt}}</span><span class="estado estado-inactivo"><span class="ic s {{r.imgIc}}"></span>Imagen: {{r.img}}</span></div>
+</div>
+</sc-for>
+</div>
+
+<div class="paginas">
+<p class="t-sm apagado num">{{v.rango}}</p>
+<div class="fila g8"><button class="btn btn-sec" type="button" aria-disabled="true" aria-describedby="pg-{{$index}}"><span class="ic s i-chevron-left"></span>Anterior</button><span class="t-sm p5 num" id="pg-{{$index}}">Página 1 de 6</span><button class="btn btn-sec" type="button">Siguiente<span class="ic s i-chevron-right"></span></button></div>
+</div>
+</section>
+
+</div>
+</main>
+
+<sc-if value="{{v.toast}}" hint-placeholder-val="{{ false }}">
+<div class="toast toast-pos" role="status" aria-live="polite">
+<span class="ic i-trash-2 c-apagado" style="margin-top: 2px"></span>
+<div class="col g4 crece"><p class="p6">2 entradas enviadas a la papelera.</p><p class="t-sm apagado">Quedan ahí 30 días. Puedes restaurarlas desde la Papelera.</p><div class="fila g8" style="margin-top: 6px"><button class="btn btn-sec" type="button"><span class="ic s i-undo-2"></span>Deshacer</button><a class="btn btn-fantasma" href="Papelera.dc.html">Ir a la papelera</a></div></div>
+<button class="btn btn-icono btn-fantasma" type="button" aria-label="Cerrar aviso"><span class="ic s i-x"></span></button>
+</div>
+</sc-if>
+
+<nav class="barra-inf tres solo-m" aria-label="Principal">
+<a href="#"><span class="ic i-layout-dashboard"></span>Panel</a>
+<a href="#"><span class="ic i-school"></span>Aulas</a>
+<a href="Consola.dc.html" aria-current="page"><span class="ic i-book-a"></span>Diccionario</a>
+</nav>
+</div>
+</div>
+</sc-for>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":3630,"height":3000}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const S = {
+      lista: { sCls: 'estado-exito', sIc: 'i-circle-check', sTxt: 'Lista' },
+      proc: { sCls: 'estado-tiempo', sIc: 'i-hourglass', sTxt: 'Procesando' },
+      err: { sCls: 'estado-error', sIc: 'i-circle-alert', sTxt: 'Error' },
+      sin: { sCls: 'estado-inactivo', sIc: 'i-video-off', sTxt: 'Sin seña' }
+    };
+    const base = [
+      ['To eat', 'Comer', 'U1', 'lista', true, true], ['To drink', 'Tomar, beber', 'U1', 'lista', true, true],
+      ['To read', 'Leer', 'U1', 'lista', false, true], ['To sleep', 'Dormir', 'U1', 'lista', false, true],
+      ['To work', 'Trabajar', 'U1', 'proc', false, true], ['To write', 'Escribir', 'U1', 'lista', true, true],
+      ['To ask', 'Preguntar, pedir', 'U1', 'err', false, true], ['To study', 'Estudiar', 'U1', 'lista', false, true],
+      ['To answer', 'Contestar, responder', 'U1', 'sin', false, true], ['To rest', 'Descansar', 'U1', 'lista', false, false]
+    ];
+    const filas = (modo) => base.map(([en, es, u, s, img, pub], i) => {
+      const sel = modo === 'sel' && (i === 4 || i === 8);
+      const edit = modo === 'sel' && i === 1;
+      const quitada = modo === 'toast' && (i === 4 || i === 8);
+      return Object.assign({ en, es, u, img: img ? 'Sí' : 'No', imgIc: img ? 'i-image' : 'i-x', marcada: sel, edit, ver: !edit, quitada,
+        cls: sel ? 'sel' : (edit ? 'edit' : ''),
+        pCls: pub ? 'estado-exito' : 'estado-inactivo', pIc: pub ? 'i-eye' : 'i-eye-off', pTxt: pub ? 'Publicada' : 'Oculta' }, S[s]);
+    }).filter((r) => !r.quitada);
+    const A = { sel: true, toast: false, filas: filas('sel'), papelera: '4 entradas · 30 días para restaurar', rango: '1 a 10 de 51' };
+    const B = { sel: false, toast: true, filas: filas('toast'), papelera: '6 entradas · 30 días para restaurar', rango: '1 a 8 de 49' };
+    A.filasM = A.filas.slice(0, 6); B.filasM = B.filas.slice(0, 6);
+    return {
+      variantes: [
+        Object.assign({ cls: 'bh t-claro d', titulo: 'Escritorio · claro', medida: '1280 px · 2 seleccionadas + edición rápida en «To drink»' }, A),
+        Object.assign({ cls: 'bh t-claro m', titulo: 'Móvil · claro', medida: '375 px · aviso «Deshacer» tras enviar a la papelera' }, B),
+        Object.assign({ cls: 'bh t-oscuro d', titulo: 'Escritorio · oscuro', medida: '1280 px · aviso «Deshacer»' }, B),
+        Object.assign({ cls: 'bh t-oscuro m', titulo: 'Móvil · oscuro', medida: '375 px · 2 seleccionadas' }, A)
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

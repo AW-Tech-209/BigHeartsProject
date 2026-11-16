@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Diccionario · Decisiones</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="/_blob/8500f8b95e34d7853d88e913eba28e73">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&amp;family=Instrument+Serif:ital@0;1&amp;display=swap">
+<style>
+body{margin:0}
+.doc h1{font-family:'Instrument Serif',Georgia,serif;font-weight:400;font-size:52px;line-height:1.1;margin:0 0 12px}
+.dec{border-top:1px solid #e1e6ee;padding:16px 0}
+.dec b{display:block;font-size:17px;margin-bottom:4px}
+.dec p{margin:0;color:#3d4757}
+</style>
+</helmet>
+<div class="lienzo-doc" style="width: 1100px; min-height: 2200px">
+<article class="doc">
+<h1>Decisiones que se apartan del brief</h1>
+<p>Cada una con su porqué. Todas se pueden revertir sin tocar el resto.</p>
+
+<div class="dec"><b>1. «Ver la seña» va sobre una pastilla opaca encima de la miniatura.</b><p>El brief pide miniatura + botón, y prohíbe texto sobre imagen. El texto queda sobre un fondo sólido (primario), con contraste fijo sin importar el fotograma.</p></div>
+<div class="dec"><b>2. El estudiante solo ve dos estados de seña: «Seña lista» y «Seña en preparación».</b><p>«Procesando» y «Error» son estados de trabajo del administrador. Para quien aprende, la única pregunta es si puede ver la seña o no.</p></div>
+<div class="dec"><b>3. La insignia de tramo suma un ícono de barras (1, 2 o 3).</b><p>El tramo es categórico, pero índigo y teal se confunden con algunos tipos de daltonismo. Con el ícono y el nombre, el tramo nunca depende del color.</p></div>
+<div class="dec"><b>4. «Próximamente» usa un reloj en gris, no ámbar.</b><p>El ámbar significa urgencia. Un módulo futuro no es urgente. El ámbar solo aparece en «Procesando», en la subida en curso y en «Quedan 2 días» de la papelera.</p></div>
+<div class="dec"><b>5. En móvil, los módulos van en una columna de tarjetas compactas.</b><p>La rejilla 3 × 3 se mantiene en escritorio. En 375 px, 9 tarjetas altas ocupaban tres pantallas; la versión compacta (número a la izquierda) cabe en una y media.</p></div>
+<div class="dec"><b>6. La Entrada en escritorio usa dos columnas: video y ficha juntos.</b><p>A 1280 px la seña y la palabra se ven a la vez, sin desplazarse. En móvil el video va arriba, como pide el brief.</p></div>
+<div class="dec"><b>7. El filtro de tipo solo muestra los tipos que existen en la categoría.</b><p>En Acciones del Módulo 1 todo es Verbo. Un chip con «0» es un callejón sin salida; una línea de ayuda explica por qué faltan los otros.</p></div>
+<div class="dec"><b>8. «Enviar a la papelera» no pide confirmación.</b><p>Es reversible 30 días y deja un aviso con «Deshacer». Sí piden confirmación «Eliminar para siempre», «Vaciar papelera» y «Eliminar categoría».</p></div>
+<div class="dec"><b>9. En la consola, Módulo, Categoría, Tipo, Unidad e Imagen son selectores visibles; Seña son chips.</b><p>Con 19 categorías y 15 unidades, los chips ocuparían media pantalla. Los selectores están siempre a la vista, con etiqueta. Seña va en chips porque es un estado con color y conteo.</p></div>
+<div class="dec"><b>10. En Práctica, «La sabía» y «Repetir luego» son botones neutros.</b><p>No saber una palabra no es un error ni una pérdida: no lleva rojo ni verde. Tampoco hay puntajes.</p></div>
+<div class="dec"><b>11. En «Muy grande», la barra inferior baja sus etiquetas a 0.75 rem (15 px reales).</b><p>Cinco destinos en 375 px no caben a 16 px. Siguen siendo más grandes que los 13 px del tamaño Normal. Alternativa: dejar 4 destinos y mover Historial al Panel.</p></div>
+<div class="dec"><b>12. El riel se usa en todas las tarjetas del diccionario.</b><p>Las guías generales desaconsejan bordes laterales de color; aquí es la firma del producto y marca el tramo, siempre junto a una insignia con texto.</p></div>
+<div class="dec"><b>13. Propuesta (no aplicada): con <code>prefers-reduced-motion</code>, el bucle se detiene tras 3 repeticiones.</b><p>Un movimiento que se repite sin fin puede molestar. La seña se detiene con el texto «Se detuvo tras 3 repeticiones. Pulsa Reproducir para verla otra vez». Necesita validación con estudiantes.</p></div>
+
+<h2 style="margin-top: 32px">Datos y marcadores</h2>
+<ul>
+<li>Las palabras y conteos de módulos, categorías y unidades salen del CSV (479 entradas: 203 / 167 / 109).</li>
+<li>«86 con seña» viene del brief. Las cifras de seña de los módulos 2 y 3 (41 y 12) y qué palabra tiene seña son de ejemplo.</li>
+<li>Los nombres de unidad de los módulos 2 y 3 no venían en el brief: aparecen como «Unidad N».</li>
+<li>Videos, miniaturas, imagen del concepto y nota del profesor son marcadores de posición.</li>
+<li>El archivo de ejemplo de «Importar» usa las 16 filas reales de Módulo 3 · Unidad 5, con 2 errores y 2 duplicados agregados para mostrar los casos.</li>
+<li>El logotipo se representa con el ícono <code>heart</code> de Lucide: reemplazar por el real.</li>
+</ul>
+</article>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1100,"height":2200}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>

@@ -154,8 +154,8 @@ model User {
   status    UserStatus @default(ACTIVE)
 
   /// Cuenta creada por el admin con contraseña temporal: debe cambiarla al entrar.
-  mustChangePassword          Boolean   @default(false) @map("must_change_password")
-  temporaryPasswordExpiresAt  DateTime? @map("temporary_password_expires_at")
+  mustChangePassword         Boolean   @default(false) @map("must_change_password")
+  temporaryPasswordExpiresAt DateTime? @map("temporary_password_expires_at")
 
   /// Preferencias de accesibilidad. Opcionales: `null` si no se declararon.
   hearingLossLevel HearingLossLevel? @map("hearing_loss_level")
@@ -183,6 +183,9 @@ model User {
 
   /// Reservas hechas como estudiante. Ver la nota de borrado en `Booking`.
   bookings Booking[]
+
+  /// Señas del diccionario que subió (admin).
+  signVideos SignVideo[]
 
   @@map("users")
 }
@@ -395,4 +398,146 @@ model ClassFeedback {
   createdAt DateTime @default(now()) @map("created_at")
 
   @@map("class_feedback")
+}
+
+// ── Diccionario (D50, docs/diccionario/ESTRATEGIA.md §2) ──────────────────────
+
+enum TramoModulo {
+  BASICO
+  INTERMEDIO
+  AVANZADO
+}
+
+enum EstadoModulo {
+  DISPONIBLE
+  PROXIMAMENTE
+}
+
+enum TipoEntrada {
+  PALABRA
+  VERBO
+  FRASE
+  EXPRESION
+}
+
+enum LenguaSenas {
+  LSC
+}
+
+enum EstadoVideo {
+  SUBIENDO
+  PROCESANDO
+  LISTO
+  ERROR
+}
+
+/// Módulo 1–9. Dato de referencia: lo inserta la migración, no un seed.
+model DictionaryModule {
+  id     String       @id @default(uuid()) @db.Uuid
+  numero Int          @unique
+  nombre String
+  tramo  TramoModulo
+  estado EstadoModulo
+  orden  Int
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  unidades DictionaryUnit[]
+  entradas DictionaryEntry[]
+
+  @@map("dictionary_modules")
+}
+
+model DictionaryUnit {
+  id       String           @id @default(uuid()) @db.Uuid
+  moduleId String           @map("module_id") @db.Uuid
+  module   DictionaryModule @relation(fields: [moduleId], references: [id], onDelete: Restrict)
+  codigo   String
+  nombre   String
+  orden    Int
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  entradas DictionaryEntry[]
+
+  @@unique([moduleId, codigo])
+  @@map("dictionary_units")
+}
+
+/// Categoría compartida entre módulos; `icono` es un nombre de Lucide en kebab-case.
+model DictionaryCategory {
+  id          String  @id @default(uuid()) @db.Uuid
+  nombre      String
+  slug        String  @unique
+  icono       String
+  descripcion String?
+  orden       Int
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  entradas DictionaryEntry[]
+
+  @@map("dictionary_categories")
+}
+
+/// `slug` nace del inglés y no cambia aunque se edite. `inglesNorm`/`espanolNorm`
+/// salen de `normalizarTexto()` y sustituyen a `unaccent` (D50).
+model DictionaryEntry {
+  id          String      @id @default(uuid()) @db.Uuid
+  slug        String      @unique
+  ingles      String
+  espanol     String
+  inglesNorm  String      @map("ingles_norm")
+  espanolNorm String      @map("espanol_norm")
+  tipo        TipoEntrada
+
+  moduleId   String             @map("module_id") @db.Uuid
+  module     DictionaryModule   @relation(fields: [moduleId], references: [id], onDelete: Restrict)
+  unitId     String?            @map("unit_id") @db.Uuid
+  unit       DictionaryUnit?    @relation(fields: [unitId], references: [id], onDelete: Restrict)
+  categoryId String             @map("category_id") @db.Uuid
+  category   DictionaryCategory @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+
+  imagenKey String?   @map("imagen_key")
+  nota      String?
+  /// Orden del material del profe; las entradas nuevas van al final.
+  orden     Int
+  publicada Boolean   @default(true)
+  deletedAt DateTime? @map("deleted_at")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  videos SignVideo[]
+
+  /// El índice parcial `(module_id, category_id) WHERE deleted_at IS NULL` vive
+  /// solo en SQL (migración `20261116000000_diccionario`): Prisma no modela `WHERE`.
+  @@index([inglesNorm(ops: raw("gin_trgm_ops"))], type: Gin, map: "dictionary_entries_ingles_norm_trgm_idx")
+  @@index([espanolNorm(ops: raw("gin_trgm_ops"))], type: Gin, map: "dictionary_entries_espanol_norm_trgm_idx")
+  @@map("dictionary_entries")
+}
+
+/// Video de la seña. El activo es el `LISTO`: uno por entrada y lengua, por el
+/// índice único parcial `sign_videos_activo_uniq` (solo en SQL, igual que `bookings`).
+model SignVideo {
+  id           String          @id @default(uuid()) @db.Uuid
+  entryId      String          @map("entry_id") @db.Uuid
+  entry        DictionaryEntry @relation(fields: [entryId], references: [id], onDelete: Restrict)
+  lengua       LenguaSenas     @default(LSC)
+  videoKey     String          @map("video_key")
+  miniaturaKey String          @map("miniatura_key")
+  duracionMs   Int             @map("duracion_ms")
+  bytes        Int
+  estado       EstadoVideo     @default(SUBIENDO)
+  subidoPorId  String          @map("subido_por_id") @db.Uuid
+  subidoPor    User            @relation(fields: [subidoPorId], references: [id], onDelete: Restrict)
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([entryId])
+  @@map("sign_videos")
 }

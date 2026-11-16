@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Diccionario · Cola de grabación y subida masiva</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="/_blob/8500f8b95e34d7853d88e913eba28e73">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&amp;family=Instrument+Serif:ital@0;1&amp;display=swap">
+<style>
+body{margin:0}
+.cab-acc{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap}
+.dos{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(0,1fr);gap:24px;align-items:start}
+.m .dos{grid-template-columns:minmax(0,1fr)}
+.mono{font-family:ui-monospace,'SFMono-Regular','Liberation Mono',monospace;font-size:.875rem}
+.emp{border:1px solid var(--border);border-radius:16px;background:var(--card);overflow:hidden}
+.emp-f{display:grid;grid-template-columns:minmax(0,1fr) 20px minmax(0,1.15fr) 168px;gap:12px;align-items:center;padding:12px 16px;border-bottom:1px solid var(--border);font-size:.9375rem}
+.emp-f:last-child{border-bottom:0}
+.emp-cab{background:var(--muted);font-size:.8125rem;font-weight:500;color:var(--muted-foreground);padding-top:10px;padding-bottom:10px}
+.emp-f.sin{background:color-mix(in oklch,var(--info-soft) 75%,var(--card));box-shadow:inset 3px 0 0 var(--info)}
+.emp-f.mal{background:color-mix(in oklch,var(--destructive-soft) 70%,var(--card));box-shadow:inset 3px 0 0 var(--destructive)}
+.emp-f .sub{grid-column:1 / -1}
+.m .emp-f{grid-template-columns:minmax(0,1fr);gap:6px;padding:12px 14px}
+.m .emp-f .flecha{display:none}
+.m .emp-cab{display:none}
+select.input{appearance:auto}
+.grupo-b{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;min-height:52px;padding:10px 16px;background:none;border:0;border-bottom:1px solid var(--border);cursor:pointer;text-align:left}
+.pend{display:flex;align-items:center;gap:12px;padding:10px 16px 10px 32px;border-bottom:1px solid var(--border)}
+.resumen-n{display:flex;gap:12px;flex-wrap:wrap}
+</style>
+</helmet>
+<div class="lienzo" style="width: 3630px; min-height: 3400px">
+<sc-for list="{{variantes}}" as="v" hint-placeholder-count="4">
+<div class="marco">
+<p class="marco-etiqueta"><b>{{v.titulo}}</b><span>{{v.medida}}</span></p>
+<div class="{{v.cls}}">
+
+<header class="barra-sup"><div class="in">
+<a class="marca" href="#"><span class="sello"><span class="ic s i-heart"></span></span>BigHearts</a>
+<nav class="nav solo-d" aria-label="Principal">
+<a href="#"><span class="ic s i-layout-dashboard"></span>Panel</a>
+<a href="#"><span class="ic s i-school"></span>Aulas</a>
+<a href="Consola.dc.html" aria-current="page"><span class="ic s i-book-a"></span>Diccionario</a>
+</nav>
+<div class="fila g12"><span class="rol solo-d">Administrador</span><button class="cuenta" type="button"><span class="av">AD</span><span class="solo-d">Mi cuenta</span></button></div>
+</div></header>
+
+<main class="principal" id="contenido">
+<div class="contenedor">
+<nav class="migas" aria-label="Estás en"><a href="Consola.dc.html">Diccionario</a><span class="ic s i-chevron-right"></span><span aria-current="page">Cola de grabación</span></nav>
+<div class="cab-acc" style="margin-top: -12px">
+<div class="cabecera">
+<h1>Cola de grabación</h1>
+<p class="contexto">340 entradas todavía no tienen seña lista. Nombra cada video como la palabra y súbelos juntos.</p>
+</div>
+<button class="btn btn-sec" type="button"><span class="ic s i-download"></span>Descargar lista de nombres</button>
+</div>
+
+<div class="dos">
+<section class="col g16" aria-labelledby="sm-{{$index}}">
+<h2 class="h2" id="sm-{{$index}}">Subir videos</h2>
+
+<div class="{{v.zonaCls}}">
+<span class="circulo"><span class="ic l i-upload"></span></span>
+<p class="p6 t-lg">{{v.zonaTit}}</p>
+<button class="btn btn-sec" type="button"><span class="ic s i-files"></span>Elegir videos</button>
+<p class="ayuda" style="max-width: 52ch">Nombre del archivo = la palabra en inglés, con guiones: <span class="mono">to-eat.mp4</span> → «To eat». MP4 o MOV, de 3 a 8 segundos, sin audio.</p>
+</div>
+
+<sc-if value="{{v.progreso}}" hint-placeholder-val="{{ true }}">
+<div class="fila entre g12 envolver">
+<p class="t-sm" role="status" aria-live="polite"><b class="p6">9 archivos</b> · 6 emparejados · 2 sin emparejar · 1 con error</p>
+<p class="t-sm apagado">Subiendo 1 de 6 · los demás esperan</p>
+</div>
+<div class="aviso aviso-info"><span class="ic i-info" style="margin-top: 3px"></span><p class="t-sm"><b class="p6">2 archivos sin emparejar.</b> Elige su entrada en la lista. Hasta entonces no se suben.</p></div>
+<div class="emp" role="table" aria-label="Emparejamiento de archivos con entradas">
+<div class="emp-f emp-cab" role="row"><span role="columnheader">Archivo</span><span class="flecha" role="columnheader"></span><span role="columnheader">Entrada</span><span role="columnheader">Estado</span></div>
+<sc-for list="{{filas}}" as="f" hint-placeholder-count="9">
+<div class="emp-f {{f.cls}}" role="row">
+<span role="cell" class="fila g8"><span class="ic s i-file-video c-apagado"></span><span class="mono" style="overflow-wrap: anywhere">{{f.archivo}}</span></span>
+<span role="cell" class="flecha ic s i-arrow-right c-apagado"></span>
+<span role="cell">
+<sc-if value="{{f.ok}}" hint-placeholder-val="{{ true }}"><span class="col"><span class="p6" lang="en">{{f.en}}</span><span class="t-xs apagado">{{f.donde}}</span></span></sc-if>
+<sc-if value="{{f.manual}}" hint-placeholder-val="{{ false }}"><span class="col g4"><label class="t-xs p5" for="as-{{$index}}">{{f.pide}}</label><select class="input celda" id="as-{{$index}}" style="min-height: 44px"><option>{{f.opcion}}</option></select></span></sc-if>
+</span>
+<span role="cell"><span class="estado {{f.eCls}}"><span class="ic s {{f.eIc}}"></span>{{f.eTxt}}</span></span>
+<sc-if value="{{f.subiendo}}" hint-placeholder-val="{{ false }}"><div class="sub fila g12"><div class="barra tiempo fina crece" role="progressbar" aria-valuemin="0" aria-valuemax="5.8" aria-valuenow="3.1" aria-valuetext="3,1 de 5,8 MB"><span style="width: 53%"></span></div><span class="t-xs apagado num">3,1 de 5,8 MB</span></div></sc-if>
+<sc-if value="{{f.error}}" hint-placeholder-val="{{ false }}"><div class="sub fila entre g8 envolver"><p class="msg-error"><span class="ic s i-circle-alert" style="margin-top: 3px"></span>Dura 12 segundos. El máximo es 8.</p><button class="btn btn-sec" type="button" style="min-height: 40px">Reemplazar archivo</button></div></sc-if>
+<sc-if value="{{f.sugiere}}" hint-placeholder-val="{{ false }}"><div class="sub fila g8 envolver"><span class="t-sm">¿Quisiste decir <b lang="en">To wash</b>?</span><button class="btn btn-sec" type="button" style="min-height: 40px">Usar «To wash»</button></div></sc-if>
+</div>
+</sc-for>
+</div>
+<div class="fila g8 fin envolver"><button class="btn btn-fantasma" type="button">Cancelar todo</button><button class="btn btn-sec" type="button">Pausar subida</button></div>
+</sc-if>
+
+<sc-if value="{{v.final}}" hint-placeholder-val="{{ false }}">
+<div class="aviso aviso-exito" role="status"><span class="ic i-circle-check" style="margin-top: 3px"></span><div class="col g4"><p class="p6 t-lg">38 listas · 2 con error</p><p class="t-sm">Las 38 señas ya se ven en el diccionario. Corrige los 2 archivos de abajo y súbelos otra vez.</p></div></div>
+<div class="emp" role="table" aria-label="Archivos con error">
+<div class="emp-f mal" role="row"><span role="cell" class="fila g8"><span class="ic s i-file-video c-apagado"></span><span class="mono">to-sell.mov</span></span><span class="flecha ic s i-arrow-right c-apagado" role="cell"></span><span role="cell" class="col"><span class="p6" lang="en">To sell</span><span class="t-xs apagado">Módulo 1 · Unidad 3 · Acciones</span></span><span role="cell"><span class="estado estado-error"><span class="ic s i-circle-alert"></span>Error</span></span><div class="sub fila entre g8 envolver"><p class="msg-error"><span class="ic s i-circle-alert" style="margin-top: 3px"></span>Dura 12 segundos. El máximo es 8.</p><button class="btn btn-sec" type="button" style="min-height: 40px">Reemplazar archivo</button></div></div>
+<div class="emp-f mal" role="row"><span role="cell" class="fila g8"><span class="ic s i-file-video c-apagado"></span><span class="mono">to-spend.mp4</span></span><span class="flecha ic s i-arrow-right c-apagado" role="cell"></span><span role="cell" class="col"><span class="p6" lang="en">To spend</span><span class="t-xs apagado">Módulo 1 · Unidad 3 · Acciones</span></span><span role="cell"><span class="estado estado-error"><span class="ic s i-circle-alert"></span>Error</span></span><div class="sub fila entre g8 envolver"><p class="msg-error"><span class="ic s i-circle-alert" style="margin-top: 3px"></span>El video tiene audio. Quítalo y súbelo otra vez.</p><button class="btn btn-sec" type="button" style="min-height: 40px">Reemplazar archivo</button></div></div>
+</div>
+<div class="fila g8 envolver"><button class="btn btn-primario" type="button"><span class="ic s i-upload"></span>Subir más videos</button><a class="btn btn-sec" href="Consola.dc.html">Ver en la consola</a></div>
+</sc-if>
+</section>
+
+<section class="tarjeta" aria-labelledby="ss-{{$index}}">
+<div class="pad20 col g4" style="border-bottom: 1px solid var(--border)">
+<h2 class="h3" id="ss-{{$index}}">Sin seña lista</h2>
+<p class="t-sm apagado">335 sin video · 3 procesando · 2 con error</p>
+</div>
+<button class="grupo-b" type="button" aria-expanded="true"><span class="fila g8"><span class="ic s i-chevron-down"></span><span class="insignia insignia-tramo tramo-1"><span class="ic s i-signal-low"></span><b>Módulo 1</b></span></span><span class="t-sm num"><b class="p6">117</b> sin seña</span></button>
+<button class="grupo-b" type="button" aria-expanded="true" style="padding-left: 32px"><span class="fila g8 p5"><span class="ic s i-chevron-down"></span>Unidad 1 · <span lang="en">Need, Want</span></span><span class="t-sm apagado num">15</span></button>
+<ul>
+<li class="pend"><span class="col crece"><span class="p5" lang="en">To work</span><span class="mono apagado">to-work.mp4</span></span><span class="estado estado-tiempo"><span class="ic s i-hourglass"></span>Procesando</span></li>
+<li class="pend"><span class="col crece"><span class="p5" lang="en">To ask</span><span class="mono apagado">to-ask.mp4</span></span><span class="estado estado-error"><span class="ic s i-circle-alert"></span>Error</span></li>
+<li class="pend"><span class="col crece"><span class="p5" lang="en">To answer</span><span class="mono apagado">to-answer.mp4</span></span><span class="estado estado-inactivo"><span class="ic s i-video-off"></span>Sin seña</span></li>
+<li class="pend"><span class="col crece"><span class="p5" lang="en">To get</span><span class="mono apagado">to-get.mp4</span></span><span class="estado estado-inactivo"><span class="ic s i-video-off"></span>Sin seña</span></li>
+<li class="pend"><span class="col crece"><span class="p5" lang="en">I</span><span class="mono apagado">i.mp4</span></span><span class="estado estado-inactivo"><span class="ic s i-video-off"></span>Sin seña</span></li>
+<li class="pend" style="justify-content: center"><button class="btn btn-fantasma" type="button">Ver 10 más</button></li>
+</ul>
+<button class="grupo-b" type="button" aria-expanded="false" style="padding-left: 32px"><span class="fila g8 p5"><span class="ic s i-chevron-right"></span>Unidad 2 · <span lang="en">What, Where, When</span></span><span class="t-sm apagado num">19</span></button>
+<button class="grupo-b" type="button" aria-expanded="false" style="padding-left: 32px"><span class="fila g8 p5"><span class="ic s i-chevron-right"></span>Unidad 3 · <span lang="en">Wish</span></span><span class="t-sm apagado num">21</span></button>
+<button class="grupo-b" type="button" aria-expanded="false" style="padding-left: 32px"><span class="fila g8 p5"><span class="ic s i-chevron-right"></span>Unidades 4 a 6</span><span class="t-sm apagado num">62</span></button>
+<button class="grupo-b" type="button" aria-expanded="false"><span class="fila g8"><span class="ic s i-chevron-right"></span><span class="insignia insignia-tramo tramo-1"><span class="ic s i-signal-low"></span><b>Módulo 2</b></span></span><span class="t-sm num"><b class="p6">126</b> sin seña</span></button>
+<button class="grupo-b" type="button" aria-expanded="false" style="border-bottom: 0"><span class="fila g8"><span class="ic s i-chevron-right"></span><span class="insignia insignia-tramo tramo-1"><span class="ic s i-signal-low"></span><b>Módulo 3</b></span></span><span class="t-sm num"><b class="p6">97</b> sin seña</span></button>
+</section>
+</div>
+
+</div>
+</main>
+
+<nav class="barra-inf tres solo-m" aria-label="Principal">
+<a href="#"><span class="ic i-layout-dashboard"></span>Panel</a>
+<a href="#"><span class="ic i-school"></span>Aulas</a>
+<a href="Consola.dc.html" aria-current="page"><span class="ic i-book-a"></span>Diccionario</a>
+</nav>
+</div>
+</div>
+</sc-for>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":3630,"height":3400}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const E = {
+      lista: { eCls: 'estado-exito', eIc: 'i-circle-check', eTxt: 'Lista' },
+      sube: { eCls: 'estado-tiempo', eIc: 'i-upload', eTxt: 'Subiendo', subiendo: true },
+      proc: { eCls: 'estado-tiempo', eIc: 'i-hourglass', eTxt: 'Procesando' },
+      esp: { eCls: 'estado-inactivo', eIc: 'i-clock', eTxt: 'En espera' },
+      sin: { eCls: 'estado-info', eIc: 'i-link-2', eTxt: 'Sin emparejar' },
+      err: { eCls: 'estado-error', eIc: 'i-circle-alert', eTxt: 'Error', error: true }
+    };
+    const F = (archivo, en, donde, e, extra) => Object.assign({ archivo, en, donde, ok: true, manual: false, subiendo: false, error: false, sugiere: false, cls: '' }, E[e], extra || {});
+    const d1 = 'Módulo 1 · Unidad 1 · Acciones', d3 = 'Módulo 1 · Unidad 3 · Acciones';
+    return {
+      filas: [
+        F('to-answer.mp4', 'To answer', d1, 'lista'),
+        F('to-get.mp4', 'To get', d1, 'lista'),
+        F('to-drive.mp4', 'To drive', d3, 'proc'),
+        F('to-prepare.mp4', 'To prepare', d1, 'sube'),
+        F('to-clean.mp4', 'To clean', d1, 'esp'),
+        F('to-bring.mp4', 'To bring', d1, 'esp'),
+        F('to-sell.mov', 'To sell', d3, 'err', { cls: 'mal' }),
+        F('to-wach.mp4', '', '', 'sin', { ok: false, manual: true, sugiere: true, cls: 'sin', pide: 'No hay una entrada con este nombre', opcion: 'Elige la entrada…' }),
+        F('IMG_2041.mp4', '', '', 'sin', { ok: false, manual: true, cls: 'sin', pide: 'Elige a qué entrada pertenece', opcion: 'Elige la entrada…' })
+      ],
+      variantes: [
+        { cls: 'bh t-claro d', titulo: 'Escritorio · claro', medida: '1280 px · subida en curso', progreso: true, final: false, zonaCls: 'zona activa', zonaTit: 'Suelta más videos aquí' },
+        { cls: 'bh t-claro m', titulo: 'Móvil · claro', medida: '375 px · subida en curso', progreso: true, final: false, zonaCls: 'zona', zonaTit: 'Elige los videos' },
+        { cls: 'bh t-oscuro d', titulo: 'Escritorio · oscuro', medida: '1280 px · resumen final', progreso: false, final: true, zonaCls: 'zona', zonaTit: 'Arrastra los videos aquí' },
+        { cls: 'bh t-oscuro m', titulo: 'Móvil · oscuro', medida: '375 px · resumen final', progreso: false, final: true, zonaCls: 'zona', zonaTit: 'Elige los videos' }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

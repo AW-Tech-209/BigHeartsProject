@@ -1,0 +1,216 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Diccionario · Inicio</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="/_blob/8500f8b95e34d7853d88e913eba28e73">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&amp;family=Instrument+Serif:ital@0;1&amp;display=swap">
+<style>
+body{margin:0}
+.tm{display:grid !important;grid-template-columns:1fr auto;grid-template-areas:"n ins" "lvl lvl" "sep sep" "cnt cnt";gap:10px 12px;padding:24px 24px 20px 28px;align-items:start}
+.m .tm{grid-template-columns:64px 1fr;grid-template-areas:"n ins" "n lvl" "n cnt";padding:14px 16px 14px 20px;gap:2px 14px}
+.m .tm .tm-sep{display:none}
+.tm-n{grid-area:n;display:flex;flex-direction:column;line-height:1.2}
+.m .tm-n{align-self:center}
+.tm-num{font-size:3.5rem;line-height:1;font-weight:600;letter-spacing:-.03em;font-variant-numeric:tabular-nums;margin-top:6px}
+.m .tm-num{font-size:2.5rem}
+.tm-ins{grid-area:ins;justify-self:end}
+.m .tm-ins{justify-self:start;margin-bottom:4px}
+.tm-lvl{grid-area:lvl;font-size:1.1875rem;font-weight:500}
+.m .tm-lvl{font-size:1.0625rem}
+.tm-sep{grid-area:sep;display:block}
+.tm-cnt{grid-area:cnt;display:flex;flex-wrap:wrap;gap:6px 16px;font-size:.9375rem;align-items:center}
+.prox{background:var(--muted) !important;border-style:dashed !important;border-color:var(--input) !important}
+.prox .tm-num,.prox .tm-lvl{color:var(--muted-foreground)}
+.prox[aria-expanded=true]{border-style:solid !important;border-color:var(--primary) !important;box-shadow:0 0 0 1px var(--primary)}
+.rec{display:flex !important;align-items:center;gap:12px;padding:12px 14px 12px 20px;min-height:76px}
+.tramo-tit{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
+</style>
+</helmet>
+<div class="lienzo" style="width: 3630px; min-height: 2700px">
+<sc-for list="{{variantes}}" as="v" hint-placeholder-count="4">
+<div class="marco">
+<p class="marco-etiqueta"><b>{{v.titulo}}</b><span>{{v.medida}}</span></p>
+<div class="{{v.cls}}">
+
+<header class="barra-sup"><div class="in">
+<a class="marca" href="#"><span class="sello"><span class="ic s i-heart"></span></span>BigHearts</a>
+<nav class="nav solo-d" aria-label="Principal">
+<a href="#"><span class="ic s i-layout-dashboard"></span>Panel</a>
+<a href="#"><span class="ic s i-school"></span>Aulas</a>
+<a href="#"><span class="ic s i-calendar-check"></span>Mis clases</a>
+<a href="#"><span class="ic s i-history"></span>Historial</a>
+<a href="Main.dc.html" aria-current="page"><span class="ic s i-book-a"></span>Diccionario</a>
+</nav>
+<button class="cuenta" type="button"><span class="av">LM</span><span class="solo-d">Mi cuenta</span><span class="oculto-sr">Abrir mi cuenta</span></button>
+</div></header>
+
+<main class="principal" id="contenido">
+<div class="contenedor">
+
+<div class="cabecera hero">
+<h1>Diccionario</h1>
+<p class="contexto">Inglés, español y Lengua de Señas Colombiana (LSC). Busca una palabra o entra a un módulo.</p>
+</div>
+
+<form class="campo buscador" role="search" style="gap: 10px; max-width: 820px">
+<label class="etiqueta t-lg p6" for="buscar-{{$index}}">Busca en inglés o en español</label>
+<div class="caja">
+<span class="ic l i-search c-apagado"></span>
+<input id="buscar-{{$index}}" type="search" placeholder="Por ejemplo: To eat o Comer" autocomplete="off">
+<a class="btn btn-primario solo-d" href="Busqueda.dc.html">Buscar</a>
+</div>
+<p class="ayuda">Escribe 2 letras o más. Al elegir una sugerencia se abre la palabra.</p>
+</form>
+
+<section class="col g16" aria-labelledby="t1-{{$index}}">
+<div class="tramo-tit">
+<h2 class="h2 fila g8" id="t1-{{$index}}"><span class="ic i-signal-low" style="color: var(--accent-indigo)"></span>Básico</h2>
+<span class="apagado t-sm">Módulos 1 a 3 · 479 palabras</span>
+</div>
+<ul class="r3">
+<sc-for list="{{basico}}" as="mo" hint-placeholder-count="3">
+<li><a class="tarjeta riel tramo-1 tm" href="Modulo.dc.html">
+<span class="tm-n"><span class="t-sm apagado">Módulo</span><span class="tm-num">{{mo.n}}</span></span>
+<span class="tm-ins insignia insignia-tramo"><span class="ic s i-signal-low"></span>Básico</span>
+<span class="tm-lvl" lang="en">{{mo.level}}</span>
+<span class="tm-sep sep"></span>
+<span class="tm-cnt">
+<span class="fila g6"><span class="ic s i-book-a c-apagado"></span><span><b class="p6 num">{{mo.palabras}}</b> palabras</span></span>
+<span class="fila g6"><span class="ic s i-hand c-apagado"></span><span><b class="p6 num">{{mo.sena}}</b> con seña</span></span>
+</span>
+</a></li>
+</sc-for>
+</ul>
+</section>
+
+<section class="col g16" aria-labelledby="t2-{{$index}}">
+<div class="tramo-tit">
+<h2 class="h2 fila g8" id="t2-{{$index}}"><span class="ic i-signal-medium" style="color: var(--accent-teal)"></span>Intermedio</h2>
+<span class="apagado t-sm">Módulos 4 a 6 · Próximamente</span>
+</div>
+<ul class="r3">
+<li><button class="tarjeta riel tramo-2 tm prox" type="button" aria-expanded="{{v.exp}}" aria-controls="expl-{{$index}}">
+<span class="tm-n"><span class="t-sm apagado">Módulo</span><span class="tm-num">4</span></span>
+<span class="tm-ins insignia insignia-tramo"><span class="ic s i-signal-medium"></span>Intermedio</span>
+<span class="tm-lvl" lang="en">Level IV</span>
+<span class="tm-sep sep"></span>
+<span class="tm-cnt"><span class="estado estado-proximo"><span class="ic s i-clock"></span>Próximamente</span><span class="apagado">Toca para saber más</span></span>
+</button></li>
+<li><button class="tarjeta riel tramo-2 tm prox" type="button" aria-expanded="false">
+<span class="tm-n"><span class="t-sm apagado">Módulo</span><span class="tm-num">5</span></span>
+<span class="tm-ins insignia insignia-tramo"><span class="ic s i-signal-medium"></span>Intermedio</span>
+<span class="tm-lvl" lang="en">Level V</span>
+<span class="tm-sep sep"></span>
+<span class="tm-cnt"><span class="estado estado-proximo"><span class="ic s i-clock"></span>Próximamente</span><span class="apagado">Toca para saber más</span></span>
+</button></li>
+<li><button class="tarjeta riel tramo-2 tm prox" type="button" aria-expanded="false">
+<span class="tm-n"><span class="t-sm apagado">Módulo</span><span class="tm-num">6</span></span>
+<span class="tm-ins insignia insignia-tramo"><span class="ic s i-signal-medium"></span>Intermedio</span>
+<span class="tm-lvl" lang="en">Level VI</span>
+<span class="tm-sep sep"></span>
+<span class="tm-cnt"><span class="estado estado-proximo"><span class="ic s i-clock"></span>Próximamente</span><span class="apagado">Toca para saber más</span></span>
+</button></li>
+</ul>
+<sc-if value="{{v.expandido}}" hint-placeholder-val="{{ false }}">
+<div class="aviso aviso-neutro" id="expl-{{$index}}" role="region" aria-label="Sobre el Módulo 4">
+<span class="ic i-info c-primario" style="margin-top: 3px"></span>
+<div class="col g8 crece">
+<p class="p6">El Módulo 4 todavía no tiene palabras.</p>
+<p>Llegará cuando el profesor entregue el material. Mientras tanto, puedes estudiar los módulos 1, 2 y 3.</p>
+<div class="fila g8 envolver"><a class="btn btn-sec" href="Modulo.dc.html">Ir al Módulo 3</a><button class="btn btn-fantasma" type="button">Cerrar</button></div>
+</div>
+</div>
+</sc-if>
+</section>
+
+<section class="col g16" aria-labelledby="t3-{{$index}}">
+<div class="tramo-tit">
+<h2 class="h2 fila g8" id="t3-{{$index}}"><span class="ic i-signal-high" style="color: var(--accent-rose)"></span>Avanzado</h2>
+<span class="apagado t-sm">Módulos 7 a 9 · Próximamente</span>
+</div>
+<ul class="r3">
+<sc-for list="{{avanzado}}" as="mo" hint-placeholder-count="3">
+<li><button class="tarjeta riel tramo-3 tm prox" type="button" aria-expanded="false">
+<span class="tm-n"><span class="t-sm apagado">Módulo</span><span class="tm-num">{{mo.n}}</span></span>
+<span class="tm-ins insignia insignia-tramo"><span class="ic s i-signal-high"></span>Avanzado</span>
+<span class="tm-lvl" lang="en">{{mo.level}}</span>
+<span class="tm-sep sep"></span>
+<span class="tm-cnt"><span class="estado estado-proximo"><span class="ic s i-clock"></span>Próximamente</span><span class="apagado">Toca para saber más</span></span>
+</button></li>
+</sc-for>
+</ul>
+</section>
+
+<section class="col g16" aria-labelledby="t4-{{$index}}">
+<div class="fila entre g12 envolver">
+<h2 class="h2" id="t4-{{$index}}">Visto recientemente</h2>
+<button class="btn btn-fantasma" type="button"><span class="ic s i-rotate-ccw"></span>Borrar esta lista</button>
+</div>
+<ul class="r3">
+<sc-for list="{{recientes}}" as="r" hint-placeholder-count="6">
+<li><a class="tarjeta riel {{r.tramo}} rec" href="Entrada.dc.html">
+<span class="col crece">
+<span class="p6" lang="en">{{r.en}}</span>
+<span class="t-sm">{{r.es}}</span>
+<span class="t-xs apagado fila g6" style="margin-top: 4px"><span class="ic s {{r.icono}}"></span>{{r.meta}}</span>
+</span>
+<span class="ic i-chevron-right c-apagado"></span>
+</a></li>
+</sc-for>
+</ul>
+</section>
+
+</div>
+</main>
+
+<nav class="barra-inf solo-m" aria-label="Principal">
+<a href="#"><span class="ic i-layout-dashboard"></span>Panel</a>
+<a href="#"><span class="ic i-school"></span>Aulas</a>
+<a href="#"><span class="ic i-calendar-check"></span>Mis clases</a>
+<a href="#"><span class="ic i-history"></span>Historial</a>
+<a href="Main.dc.html" aria-current="page"><span class="ic i-book-a"></span>Diccionario</a>
+</nav>
+</div>
+</div>
+</sc-for>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":3630,"height":2700}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {
+      variantes: [
+        { cls: 'bh t-claro d', titulo: 'Escritorio · claro', medida: '1280 px', exp: 'false', expandido: false },
+        { cls: 'bh t-claro m', titulo: 'Móvil · claro', medida: '375 px', exp: 'false', expandido: false },
+        { cls: 'bh t-oscuro d', titulo: 'Escritorio · oscuro', medida: '1280 px · Módulo 4 tocado', exp: 'true', expandido: true },
+        { cls: 'bh t-oscuro m', titulo: 'Móvil · oscuro', medida: '375 px · Módulo 4 tocado', exp: 'true', expandido: true }
+      ],
+      basico: [
+        { n: 1, level: 'Level I', palabras: 203, sena: 86 },
+        { n: 2, level: 'Level II', palabras: 167, sena: 41 },
+        { n: 3, level: 'Level III', palabras: 109, sena: 12 }
+      ],
+      avanzado: [
+        { n: 7, level: 'Level VII' }, { n: 8, level: 'Level VIII' }, { n: 9, level: 'Level IX' }
+      ],
+      recientes: [
+        { en: 'To drink', es: 'Tomar, beber', meta: 'Módulo 1 · Acciones', icono: 'i-activity', tramo: 'tramo-1' },
+        { en: 'At home', es: 'En casa', meta: 'Módulo 1 · Lugares', icono: 'i-map-pin', tramo: 'tramo-1' },
+        { en: 'Glasses', es: 'Gafas, vasos', meta: 'Módulo 1 · Objetos', icono: 'i-lamp', tramo: 'tramo-1' },
+        { en: 'She is fifteen years old', es: 'Ella tiene quince años', meta: 'Módulo 1 · Expresiones', icono: 'i-quote', tramo: 'tramo-1' },
+        { en: 'To apply for', es: 'Solicitar', meta: 'Módulo 2 · Acciones', icono: 'i-activity', tramo: 'tramo-1' },
+        { en: 'Which one? / Which ones?', es: '¿Cuál? / ¿Cuáles?', meta: 'Módulo 3 · Preguntas', icono: 'i-message-circle-question', tramo: 'tramo-1' }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>
