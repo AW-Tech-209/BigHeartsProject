@@ -1,9 +1,11 @@
 import { randomUUID } from 'node:crypto';
 
-import { EstadoVideo, UserRole, UserStatus } from '@academia/types';
+import { ApiErrorCode, EstadoVideo, TipoEntrada, UserRole, UserStatus } from '@academia/types';
 import { Prisma, PrismaClient } from '@prisma/client';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
+import { DiccionarioService } from '../src/diccionario/diccionario.service';
+import type { PrismaService } from '../src/prisma/prisma.service';
 import { sembrarDiccionario } from './seed-diccionario';
 
 /** Contra la BD real con las migraciones aplicadas (igual que `bookings-index`). */
@@ -118,5 +120,176 @@ describe('diccionario contra la base de datos real', () => {
     await expect(
       prisma.signVideo.create({ data: video(EstadoVideo.LISTO) }),
     ).rejects.toBeInstanceOf(Prisma.PrismaClientKnownRequestError);
+  });
+
+  describe('lectura (cualquier rol con sesión)', () => {
+    const servicio = new DiccionarioService(prisma as unknown as PrismaService);
+
+    class Revertir extends Error {}
+    /** Crea datos dentro de una transacción que se revierte: no ensucia los conteos de otros tests. */
+    async function conDatosTemporales(
+      fn: (svc: DiccionarioService, tx: Prisma.TransactionClient) => Promise<void>,
+    ): Promise<void> {
+      await prisma
+        .$transaction(async (tx) => {
+          await fn(new DiccionarioService(tx as unknown as PrismaService), tx);
+          throw new Revertir();
+        })
+        .catch((e: unknown) => {
+          if (!(e instanceof Revertir)) throw e;
+        });
+    }
+
+    async function codigoDe(promesa: Promise<unknown>): Promise<string | undefined> {
+      const error = await promesa.then(
+        () => undefined,
+        (e: { getResponse?: () => { code?: string } }) => e,
+      );
+      return error?.getResponse?.().code;
+    }
+
+    it('el inicio trae los 9 módulos; el 1 con 203 palabras y los próximos en 0', async () => {
+      const { modulos } = await servicio.inicio();
+
+      expect(modulos.map((m) => m.numero)).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9]);
+      expect(modulos[0]?.palabras).toBe(203);
+      expect(modulos[3]?.palabras).toBe(0);
+    });
+
+    it('el módulo ordena sus categorías por cantidad y un módulo próximo responde MODULE_NOT_AVAILABLE', async () => {
+      const modulo = await servicio.modulo(1, {});
+
+      expect(modulo.categorias[0]).toMatchObject({ slug: 'acciones', palabras: 51 });
+      const conteos = modulo.categorias.map((c) => c.palabras);
+      expect(conteos).toEqual([...conteos].sort((a, b) => b - a));
+      expect(modulo.unidades).toHaveLength(6);
+      expect(await codigoDe(servicio.modulo(4, {}))).toBe(ApiErrorCode.MODULE_NOT_AVAILABLE);
+    });
+
+    it('Módulo 1 · Acciones: solo VERBO 51, y la unidad U1 deja 16', async () => {
+      const todas = await servicio.categoria(1, 'acciones', {});
+      const u1 = await servicio.categoria(1, 'acciones', { unidad: 'U1' });
+
+      expect(todas.filtros.tipos).toEqual({ [TipoEntrada.VERBO]: 51 });
+      expect(u1.entradas).toHaveLength(16);
+      expect(todas.entradas.slice(0, 3).map((e) => e.slug)).toEqual([
+        'to-eat',
+        'to-drink',
+        'to-read',
+      ]);
+    });
+
+    it('la entrada trae su posición y sus vecinas en el mismo orden', async () => {
+      const drink = await servicio.entrada('to-drink');
+      const eat = await servicio.entrada('to-eat');
+
+      expect(drink.posicion).toEqual({ actual: 2, total: 51 });
+      expect(drink.anterior?.ingles).toBe('To eat');
+      expect(drink.siguiente?.ingles).toBe('To read');
+      expect(eat.anterior).toBeNull();
+    });
+
+    it.each([
+      ['comer', 'To eat'],
+      ['lapiz', 'Pencil'],
+      ['to eet', 'To eat'],
+    ])('buscar «%s» encuentra «%s»', async (q, ingles) => {
+      const { resultados } = await servicio.buscar({ q });
+
+      expect(resultados.map((r) => r.ingles)).toContain(ingles);
+    });
+
+    it('lo de la papelera, lo oculto y lo de un módulo próximo no aparece en ninguna lectura', async () => {
+      await conDatosTemporales(async (svc, tx) => {
+        const [m1, m4, acciones] = await Promise.all([
+          tx.dictionaryModule.findUniqueOrThrow({ where: { numero: 1 } }),
+          tx.dictionaryModule.findUniqueOrThrow({ where: { numero: 4 } }),
+          tx.dictionaryCategory.findUniqueOrThrow({ where: { slug: 'acciones' } }),
+        ]);
+        const base = {
+          espanol: 'Oculta',
+          espanolNorm: 'oculta',
+          tipo: TipoEntrada.VERBO,
+          categoryId: acciones.id,
+          orden: 0,
+        };
+        await tx.dictionaryEntry.createMany({
+          data: [
+            {
+              ...base,
+              slug: 'zzoculta-papelera',
+              ingles: 'Zzoculta papelera',
+              inglesNorm: 'zzoculta papelera',
+              moduleId: m1.id,
+              deletedAt: new Date(),
+            },
+            {
+              ...base,
+              slug: 'zzoculta-no-publicada',
+              ingles: 'Zzoculta no publicada',
+              inglesNorm: 'zzoculta no publicada',
+              moduleId: m1.id,
+              publicada: false,
+            },
+            {
+              ...base,
+              slug: 'zzoculta-proxima',
+              ingles: 'Zzoculta proxima',
+              inglesNorm: 'zzoculta proxima',
+              moduleId: m4.id,
+            },
+          ],
+        });
+
+        expect((await svc.inicio()).modulos.map((m) => m.palabras).slice(0, 4)).toEqual([
+          203, 167, 109, 0,
+        ]);
+        expect((await svc.categoria(1, 'acciones', {})).filtros.total).toBe(51);
+        expect((await svc.modulo(1, {})).modulo.palabras).toBe(203);
+        expect((await svc.buscar({ q: 'zzoculta' })).resultados).toEqual([]);
+        for (const slug of ['zzoculta-papelera', 'zzoculta-no-publicada', 'zzoculta-proxima']) {
+          expect(await codigoDe(svc.entrada(slug))).toBe(ApiErrorCode.ENTRY_NOT_FOUND);
+        }
+      });
+    });
+
+    it('ninguna respuesta filtra campos internos ni estados del video que no sean «lista»', async () => {
+      await conDatosTemporales(async (svc, tx) => {
+        const read = await tx.dictionaryEntry.findUniqueOrThrow({ where: { slug: 'to-read' } });
+        await tx.signVideo.create({
+          data: {
+            entryId: read.id,
+            videoKey: 'secreto.mp4',
+            miniaturaKey: 'secreto.jpg',
+            duracionMs: 3000,
+            bytes: 1,
+            estado: EstadoVideo.PROCESANDO,
+            subidoPorId: adminId,
+          },
+        });
+
+        const entrada = await svc.entrada('to-read');
+        const respuestas = JSON.stringify([
+          await svc.inicio(),
+          await svc.modulo(1, {}),
+          await svc.categoria(1, 'acciones', {}),
+          entrada,
+          await svc.buscar({ q: 'read' }),
+        ]);
+
+        expect(entrada.sena.estado).toBe('en-preparacion');
+        for (const prohibido of [
+          'deletedAt',
+          'publicada',
+          'Key',
+          'secreto',
+          'PROCESANDO',
+          'ERROR',
+          'SUBIENDO',
+        ]) {
+          expect(respuestas).not.toContain(prohibido);
+        }
+      });
+    });
   });
 });

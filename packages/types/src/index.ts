@@ -1514,6 +1514,14 @@ export const ApiErrorCode = {
   FEEDBACK_ALREADY_SENT: 'FEEDBACK_ALREADY_SENT',
   /** Fuera de la ventana para valorar: la clase no terminó o pasaron más de 7 días (HU-515). */
   FEEDBACK_WINDOW_CLOSED: 'FEEDBACK_WINDOW_CLOSED',
+  /** El número de módulo del diccionario no existe (HU-527). */
+  MODULE_NOT_FOUND: 'MODULE_NOT_FOUND',
+  /** El módulo existe pero está «Próximamente»: aún no tiene contenido visible (HU-527). */
+  MODULE_NOT_AVAILABLE: 'MODULE_NOT_AVAILABLE',
+  /** La categoría del diccionario no existe (HU-527). */
+  CATEGORY_NOT_FOUND: 'CATEGORY_NOT_FOUND',
+  /** La entrada no existe, está en la papelera, oculta o en un módulo no disponible (HU-527). */
+  ENTRY_NOT_FOUND: 'ENTRY_NOT_FOUND',
   /** Se superó el límite de peticiones (rate limiting). */
   TOO_MANY_REQUESTS: 'TOO_MANY_REQUESTS',
   DATABASE_UNAVAILABLE: 'DATABASE_UNAVAILABLE',
