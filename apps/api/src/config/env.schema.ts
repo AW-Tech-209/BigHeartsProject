@@ -266,6 +266,9 @@ const camposEnv = z.object({
   DICCIONARIO_VIDEO_MIN_S: z.coerce.number().int().positive().default(2),
   DICCIONARIO_VIDEO_MAX_S: z.coerce.number().int().positive().default(15),
   DICCIONARIO_IMAGEN_MAX_KB: z.coerce.number().int().positive().default(800),
+
+  /** Días que una entrada pasa en la papelera antes de eliminarse para siempre (D52). */
+  DICCIONARIO_PAPELERA_DIAS: z.coerce.number().int().positive().default(30),
 });
 
 /**

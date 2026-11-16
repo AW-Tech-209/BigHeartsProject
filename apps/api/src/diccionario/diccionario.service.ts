@@ -73,7 +73,7 @@ export class DiccionarioService {
 
     const [unidades, entradas] = await Promise.all([
       this.prisma.dictionaryUnit.findMany({
-        where: { moduleId: modulo.id },
+        where: { moduleId: modulo.id, deletedAt: null },
         orderBy: { orden: 'asc' },
       }),
       this.prisma.dictionaryEntry.findMany({
@@ -124,7 +124,9 @@ export class DiccionarioService {
     query: CategoriaQueryDto,
   ): Promise<CategoriaDetalleResponse> {
     const modulo = await this.moduloDisponible(numero);
-    const categoria = await this.prisma.dictionaryCategory.findUnique({ where: { slug } });
+    const categoria = await this.prisma.dictionaryCategory.findFirst({
+      where: { slug, deletedAt: null },
+    });
     if (!categoria) throw categoriaNotFound();
 
     const todas = (

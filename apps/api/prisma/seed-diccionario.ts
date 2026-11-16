@@ -29,8 +29,14 @@ export async function sembrarDiccionario(
 ): Promise<ResultadoSeedDiccionario> {
   const [modulos, unidades, categorias, existentes] = await Promise.all([
     prisma.dictionaryModule.findMany({ select: { id: true, numero: true } }),
-    prisma.dictionaryUnit.findMany({ select: { id: true, moduleId: true, codigo: true } }),
-    prisma.dictionaryCategory.findMany({ select: { id: true, nombre: true } }),
+    prisma.dictionaryUnit.findMany({
+      where: { deletedAt: null },
+      select: { id: true, moduleId: true, codigo: true },
+    }),
+    prisma.dictionaryCategory.findMany({
+      where: { deletedAt: null },
+      select: { id: true, nombre: true },
+    }),
     prisma.dictionaryEntry.findMany({
       select: { slug: true, moduleId: true, inglesNorm: true, tipo: true },
     }),

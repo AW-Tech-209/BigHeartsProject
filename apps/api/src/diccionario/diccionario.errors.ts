@@ -4,7 +4,7 @@ import {
   NotFoundException,
   ParseUUIDPipe,
 } from '@nestjs/common';
-import { ApiErrorCode } from '@academia/types';
+import { ApiErrorCode, type DestinoFaltante } from '@academia/types';
 
 export const moduloNotFound = (): NotFoundException =>
   new NotFoundException({
@@ -81,3 +81,33 @@ export const videoNotFound = (): NotFoundException =>
   });
 
 export const idDeVideo = new ParseUUIDPipe({ exceptionFactory: () => videoNotFound() });
+
+export const unidadNotFound = (): NotFoundException =>
+  new NotFoundException({
+    code: ApiErrorCode.UNIT_NOT_FOUND,
+    message: 'No encontramos esa unidad.',
+  });
+
+export const destinoDeRestaurarFaltante = (details: DestinoFaltante): ConflictException =>
+  new ConflictException({
+    code: ApiErrorCode.RESTORE_TARGET_MISSING,
+    message: 'Su categoría o unidad ya no existe. Elige a dónde restaurarla.',
+    details,
+  });
+
+export const tieneEntradas = (entradas: number): ConflictException =>
+  new ConflictException({
+    code: ApiErrorCode.HAS_ENTRIES,
+    message: `Tiene ${entradas} ${entradas === 1 ? 'entrada' : 'entradas'}. Elige a dónde van antes de eliminar.`,
+    details: { entradas },
+  });
+
+export const ordenNoCoincide = (): BadRequestException =>
+  new BadRequestException({
+    code: ApiErrorCode.ORDER_MISMATCH,
+    message: 'La lista no coincide con los elementos actuales. Recarga e inténtalo de nuevo.',
+  });
+
+export const idDeUnidad = new ParseUUIDPipe({ exceptionFactory: () => unidadNotFound() });
+export const idDeCategoria = new ParseUUIDPipe({ exceptionFactory: () => categoriaNotFound() });
+export const idDeModulo = new ParseUUIDPipe({ exceptionFactory: () => moduloNotFound() });

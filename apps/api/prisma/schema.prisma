@@ -460,6 +460,9 @@ model DictionaryUnit {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
+  /// Eliminada con entradas en la papelera: se conserva para detectar el restaurar huérfano (D52).
+  deletedAt DateTime? @map("deleted_at")
+
   entradas DictionaryEntry[]
 
   @@unique([moduleId, codigo])
@@ -477,6 +480,9 @@ model DictionaryCategory {
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
+
+  /// Igual que en la unidad; al eliminarla, el slug se libera con un sufijo (D52).
+  deletedAt DateTime? @map("deleted_at")
 
   entradas DictionaryEntry[]
 

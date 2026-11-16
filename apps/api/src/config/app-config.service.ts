@@ -154,6 +154,10 @@ export class AppConfigService {
     return this.config.get('PASSWORD_RESET_EXPIRY_MINUTES', { infer: true });
   }
 
+  get papeleraDias(): number {
+    return this.config.get('DICCIONARIO_PAPELERA_DIAS', { infer: true });
+  }
+
   get supabaseUrl(): string | undefined {
     return this.config.get('SUPABASE_URL', { infer: true });
   }

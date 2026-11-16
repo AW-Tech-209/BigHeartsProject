@@ -1536,6 +1536,14 @@ export const ApiErrorCode = {
   UPLOAD_NOT_FOUND: 'UPLOAD_NOT_FOUND',
   /** El video no existe, no es de esa entrada o ya no está pendiente (HU-538). */
   VIDEO_NOT_FOUND: 'VIDEO_NOT_FOUND',
+  /** La categoría o unidad de la entrada ya no existe; `details` dice cuál (HU-532, D52). */
+  RESTORE_TARGET_MISSING: 'RESTORE_TARGET_MISSING',
+  /** Eliminar una unidad o categoría con entradas exige `destino`; `details.entradas` (HU-532). */
+  HAS_ENTRIES: 'HAS_ENTRIES',
+  /** La unidad del diccionario no existe (HU-532). */
+  UNIT_NOT_FOUND: 'UNIT_NOT_FOUND',
+  /** La lista de `ids` para reordenar no coincide con los elementos actuales (HU-532). */
+  ORDER_MISMATCH: 'ORDER_MISMATCH',
   /** Se superó el límite de peticiones (rate limiting). */
   TOO_MANY_REQUESTS: 'TOO_MANY_REQUESTS',
   DATABASE_UNAVAILABLE: 'DATABASE_UNAVAILABLE',

@@ -75,7 +75,9 @@ export class LocalAlmacenamientoService extends AlmacenamientoMedios {
   }
 
   async borrar(claves: readonly string[]): Promise<void> {
-    await Promise.all(claves.map((clave) => rm(this.ruta(clave), { force: true })));
+    // Una clave inválida no puede existir en disco: no hay nada que borrar.
+    const validas = claves.filter((clave) => CLAVE_VALIDA.test(clave));
+    await Promise.all(validas.map((clave) => rm(this.ruta(clave), { force: true })));
   }
 
   /** Escribe lo que llega por la URL de subida, cortando si pasa del máximo firmado. */

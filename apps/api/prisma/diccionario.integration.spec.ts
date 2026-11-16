@@ -16,7 +16,10 @@ import { Prisma, PrismaClient } from '@prisma/client';
 import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest';
 
 import { AdminDiccionarioService } from '../src/admin/diccionario/admin-diccionario.service';
+import { EstructuraService } from '../src/admin/diccionario/estructura.service';
 import { MediosService, SUBIDA_ABANDONADA_MS } from '../src/admin/diccionario/medios.service';
+import { PapeleraService } from '../src/admin/diccionario/papelera.service';
+import { PurgaPapeleraService } from '../src/admin/diccionario/purga-papelera.service';
 import { LocalAlmacenamientoService } from '../src/almacenamiento/local-almacenamiento.service';
 import type { AppConfigService } from '../src/config/app-config.service';
 import { DiccionarioService } from '../src/diccionario/diccionario.service';
@@ -599,6 +602,213 @@ describe('diccionario contra la base de datos real', () => {
       expect((await prisma.signVideo.findUniqueOrThrow({ where: { id: videoId } })).estado).toBe(
         EstadoVideo.ERROR,
       );
+    });
+  });
+
+  describe('papelera y estructura (D52)', () => {
+    const DIA = 24 * 60 * 60 * 1000;
+    const config = {
+      papeleraDias: 30,
+      limitesMedios: {
+        videoMaxBytes: 20 * 1024 * 1024,
+        videoMinMs: 2000,
+        videoMaxMs: 15000,
+        imagenMaxBytes: 800 * 1024,
+      },
+    } as unknown as AppConfigService;
+    const db = prisma as unknown as PrismaService;
+    const medios = new MediosService(db, almacenamiento, config);
+    const papelera = new PapeleraService(db, medios, config);
+    const purga = new PurgaPapeleraService(db, papelera, config);
+    const estructura = new EstructuraService(db);
+    const lectura = new DiccionarioService(db, almacenamiento);
+    const entradasTemporales: string[] = [];
+    const categoriasTemporales: string[] = [];
+
+    afterEach(async () => {
+      await prisma.dictionaryEntry.deleteMany({
+        where: { id: { in: entradasTemporales.splice(0) } },
+      });
+      await prisma.dictionaryCategory.deleteMany({
+        where: { id: { in: categoriasTemporales.splice(0) } },
+      });
+    });
+
+    async function error(promesa: Promise<unknown>) {
+      return promesa.then(
+        () => undefined,
+        (e: {
+          getStatus: () => number;
+          getResponse: () => { code?: string; details?: unknown };
+        }) => ({
+          status: e.getStatus(),
+          code: e.getResponse().code,
+          details: e.getResponse().details,
+        }),
+      );
+    }
+
+    async function temporal(
+      categoryId: string,
+      extra: Partial<Prisma.DictionaryEntryUncheckedCreateInput> = {},
+    ) {
+      const m1 = await prisma.dictionaryModule.findUniqueOrThrow({ where: { numero: 1 } });
+      const id = randomUUID();
+      await prisma.dictionaryEntry.create({
+        data: {
+          id,
+          slug: `zz-${id}`,
+          ingles: `Zz ${id}`,
+          espanol: 'Temporal',
+          inglesNorm: `zz ${id}`,
+          espanolNorm: 'temporal',
+          tipo: TipoEntrada.PALABRA,
+          moduleId: m1.id,
+          categoryId,
+          orden: 9999,
+          ...extra,
+        },
+      });
+      entradasTemporales.push(id);
+      return id;
+    }
+
+    async function categoriaTemporal(nombre: string) {
+      const c = await estructura.crearCategoria({ nombre, icono: 'gift' });
+      categoriasTemporales.push(c.id);
+      return c;
+    }
+
+    it('enviar a la papelera la oculta de lectura, búsqueda y consola; restaurar la devuelve igual', async () => {
+      const antes = await lectura.entrada('to-eat');
+      const id = (await prisma.dictionaryEntry.findUniqueOrThrow({ where: { slug: 'to-eat' } })).id;
+      const admin = new AdminDiccionarioService(db);
+
+      await papelera.enviar(id);
+      try {
+        expect((await error(lectura.entrada('to-eat')))?.code).toBe(ApiErrorCode.ENTRY_NOT_FOUND);
+        expect((await lectura.buscar({ q: 'to eat' })).resultados.map((r) => r.slug)).not.toContain(
+          'to-eat',
+        );
+        expect(
+          (await admin.listar({ q: 'to eat', pageSize: 100 })).items.map((e) => e.slug),
+        ).not.toContain('to-eat');
+        expect(
+          (await papelera.listar()).entradas.find((e) => e.slug === 'to-eat')?.quedanDias,
+        ).toBe(30);
+      } finally {
+        await papelera.restaurar(id, {});
+      }
+
+      const despues = await lectura.entrada('to-eat');
+      expect({ ...despues, sena: despues.sena.estado }).toEqual({
+        ...antes,
+        sena: antes.sena.estado,
+      });
+    });
+
+    it('el barrido no toca la de 29 días y sí elimina la de 31', async () => {
+      const objetos = await prisma.dictionaryCategory.findUniqueOrThrow({
+        where: { slug: 'objetos' },
+      });
+      const ahora = new Date();
+      const de29 = await temporal(objetos.id, { deletedAt: new Date(ahora.getTime() - 29 * DIA) });
+      const de31 = await temporal(objetos.id, { deletedAt: new Date(ahora.getTime() - 31 * DIA) });
+
+      await purga.purgarVencidas(ahora);
+
+      expect(await prisma.dictionaryEntry.findUnique({ where: { id: de29 } })).not.toBeNull();
+      expect(await prisma.dictionaryEntry.findUnique({ where: { id: de31 } })).toBeNull();
+    });
+
+    it('eliminar una categoría con entradas sin destino responde 409 con el conteo; con destino mueve todo', async () => {
+      const objetos = await prisma.dictionaryCategory.findUniqueOrThrow({
+        where: { slug: 'objetos' },
+      });
+      const ropaDePrueba = await categoriaTemporal('Ropa de prueba');
+      for (let i = 0; i < 3; i++) await temporal(ropaDePrueba.id);
+      const enObjetos = await prisma.dictionaryEntry.count({ where: { categoryId: objetos.id } });
+
+      expect(await error(estructura.eliminarCategoria(ropaDePrueba.id, {}))).toMatchObject({
+        status: 409,
+        code: ApiErrorCode.HAS_ENTRIES,
+        details: { entradas: 3 },
+      });
+      expect(
+        (
+          await error(
+            estructura.eliminarCategoria(ropaDePrueba.id, {
+              destino: 'mover',
+              haciaId: randomUUID(),
+            }),
+          )
+        )?.code,
+      ).toBe(ApiErrorCode.CATEGORY_NOT_FOUND);
+      expect(await prisma.dictionaryEntry.count({ where: { categoryId: ropaDePrueba.id } })).toBe(
+        3,
+      );
+
+      await estructura.eliminarCategoria(ropaDePrueba.id, {
+        destino: 'mover',
+        haciaId: objetos.id,
+      });
+
+      expect(await prisma.dictionaryEntry.count({ where: { categoryId: ropaDePrueba.id } })).toBe(
+        0,
+      );
+      expect(await prisma.dictionaryEntry.count({ where: { categoryId: objetos.id } })).toBe(
+        enObjetos + 3,
+      );
+      expect(
+        await prisma.dictionaryCategory.findUnique({ where: { id: ropaDePrueba.id } }),
+      ).toBeNull();
+    });
+
+    it('restaurar a una categoría eliminada responde 409 RESTORE_TARGET_MISSING; con destino nuevo, restaura', async () => {
+      const objetos = await prisma.dictionaryCategory.findUniqueOrThrow({
+        where: { slug: 'objetos' },
+      });
+      const efimera = await categoriaTemporal('Efímera');
+      const id = await temporal(efimera.id);
+
+      await estructura.eliminarCategoria(efimera.id, { destino: 'papelera' });
+
+      expect(await error(papelera.restaurar(id, {}))).toMatchObject({
+        status: 409,
+        code: ApiErrorCode.RESTORE_TARGET_MISSING,
+        details: { categoria: { nombre: 'Efímera' } },
+      });
+      await papelera.restaurar(id, { categoriaId: objetos.id });
+      expect((await prisma.dictionaryEntry.findUniqueOrThrow({ where: { id } })).categoryId).toBe(
+        objetos.id,
+      );
+    });
+
+    it('renombrar la unidad 4 se ve en la lectura, en los chips y en la ficha', async () => {
+      const m1 = await prisma.dictionaryModule.findUniqueOrThrow({ where: { numero: 1 } });
+      const u4 = await prisma.dictionaryUnit.findFirstOrThrow({
+        where: { moduleId: m1.id, codigo: 'U4' },
+      });
+      const entrada = await prisma.dictionaryEntry.findFirstOrThrow({
+        where: { unitId: u4.id, deletedAt: null },
+        include: { category: true },
+      });
+      try {
+        await estructura.editarUnidad(u4.id, 'Then and to do (revisada)');
+
+        const modulo = await lectura.modulo(1, {});
+        const categoria = await lectura.categoria(1, entrada.category.slug, {});
+        const ficha = await lectura.entrada(entrada.slug);
+        expect(modulo.unidades.find((u) => u.codigo === 'U4')?.nombre).toBe(
+          'Then and to do (revisada)',
+        );
+        expect(categoria.filtros.unidades.find((u) => u.codigo === 'U4')?.nombre).toBe(
+          'Then and to do (revisada)',
+        );
+        expect(ficha.unidad?.nombre).toBe('Then and to do (revisada)');
+      } finally {
+        await estructura.editarUnidad(u4.id, u4.nombre);
+      }
     });
   });
 });

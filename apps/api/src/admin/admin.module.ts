@@ -12,8 +12,13 @@ import { AdminController } from './admin.controller';
 import { AdminService } from './admin.service';
 import { AdminDiccionarioController } from './diccionario/admin-diccionario.controller';
 import { AdminDiccionarioService } from './diccionario/admin-diccionario.service';
+import { EstructuraController } from './diccionario/estructura.controller';
+import { EstructuraService } from './diccionario/estructura.service';
 import { MediosController } from './diccionario/medios.controller';
 import { MediosService } from './diccionario/medios.service';
+import { PapeleraController } from './diccionario/papelera.controller';
+import { PapeleraService } from './diccionario/papelera.service';
+import { PurgaPapeleraService } from './diccionario/purga-papelera.service';
 
 /**
  * Operaciones de back-office reservadas al rol ADMIN.
@@ -34,6 +39,8 @@ import { MediosService } from './diccionario/medios.service';
     AdminUsuariosController,
     AdminDiccionarioController,
     MediosController,
+    PapeleraController,
+    EstructuraController,
   ],
   providers: [
     AdminService,
@@ -42,6 +49,9 @@ import { MediosService } from './diccionario/medios.service';
     AdminUsuariosService,
     AdminDiccionarioService,
     MediosService,
+    PapeleraService,
+    PurgaPapeleraService,
+    EstructuraService,
   ],
 })
 export class AdminModule {}

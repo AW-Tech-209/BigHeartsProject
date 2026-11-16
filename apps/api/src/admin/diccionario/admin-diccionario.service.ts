@@ -258,7 +258,9 @@ export class AdminDiccionarioService {
           break;
         case AccionLote.MOVER_CATEGORIA: {
           const categoryId = dto.categoriaId as string;
-          if (!(await tx.dictionaryCategory.findUnique({ where: { id: categoryId } }))) {
+          if (
+            !(await tx.dictionaryCategory.findFirst({ where: { id: categoryId, deletedAt: null } }))
+          ) {
             throw categoriaNotFound();
           }
           for (const e of entradas) {
@@ -298,9 +300,15 @@ export class AdminDiccionarioService {
   ): Promise<void> {
     const [modulo, categoria, unidad] = await Promise.all([
       db.dictionaryModule.findUnique({ where: { id: moduleId }, select: { id: true } }),
-      db.dictionaryCategory.findUnique({ where: { id: categoryId }, select: { id: true } }),
+      db.dictionaryCategory.findFirst({
+        where: { id: categoryId, deletedAt: null },
+        select: { id: true },
+      }),
       unitId
-        ? db.dictionaryUnit.findUnique({ where: { id: unitId }, select: { moduleId: true } })
+        ? db.dictionaryUnit.findFirst({
+            where: { id: unitId, deletedAt: null },
+            select: { moduleId: true },
+          })
         : null,
     ]);
     if (!modulo) throw moduloNotFound();

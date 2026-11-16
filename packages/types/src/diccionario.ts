@@ -428,3 +428,159 @@ export interface EntradaSinSena {
 export interface SinSenaResponse {
   entradas: EntradaSinSena[];
 }
+
+// ── Papelera y estructura (solo ADMIN, D52) ───────────────────────────────────
+
+/** Íconos de Lucide que se pueden elegir para una categoría (kebab-case). */
+export const ICONOS_CATEGORIA = [
+  'activity',
+  'map-pin',
+  'puzzle',
+  'sparkles',
+  'clock',
+  'quote',
+  'lamp',
+  'link',
+  'users',
+  'graduation-cap',
+  'party-popper',
+  'briefcase',
+  'wallet',
+  'apple',
+  'bus',
+  'message-circle-question',
+  'palette',
+  'hash',
+  'shirt',
+  'book-open',
+  'house',
+  'heart',
+  'hand',
+  'smile',
+  'calendar',
+  'sun',
+  'cloud',
+  'leaf',
+  'dog',
+  'car',
+  'plane',
+  'music',
+  'gamepad-2',
+  'dumbbell',
+  'stethoscope',
+  'hammer',
+  'utensils',
+  'gift',
+  'globe',
+  'laptop',
+] as const;
+export type IconoCategoria = (typeof ICONOS_CATEGORIA)[number];
+
+/** `GET /admin/diccionario/papelera` */
+export interface EntradaPapelera {
+  id: string;
+  slug: string;
+  ingles: string;
+  espanol: string;
+  tipo: TipoEntrada;
+  modulo: ModuloRef;
+  unidad: UnidadRef | null;
+  categoria: CategoriaRef;
+  eliminadaEl: string;
+  /** Días que faltan para que se elimine para siempre (0 = hoy). */
+  quedanDias: number;
+}
+
+export interface PapeleraResponse {
+  entradas: EntradaPapelera[];
+  diasDeRetencion: number;
+}
+
+/** `POST /admin/diccionario/papelera/:id/restaurar`. Destino nuevo si el original ya no existe. */
+export interface RestaurarEntradaInput {
+  categoriaId?: string;
+  unidadId?: string | null;
+}
+
+/** `details` del 409 `RESTORE_TARGET_MISSING`: qué falta y cómo se llamaba. */
+export interface DestinoFaltante {
+  categoria?: { nombre: string };
+  unidad?: { codigo: string; nombre: string };
+}
+
+export interface PurgaResponse {
+  eliminadas: number;
+}
+
+/** Eliminar una unidad o categoría con entradas exige decir a dónde van. */
+export type DestinoEntradas = { destino: 'mover'; haciaId: string } | { destino: 'papelera' };
+
+export interface EliminarConEntradasInput {
+  destino?: 'mover' | 'papelera';
+  haciaId?: string;
+}
+
+/** `details` del 409 `HAS_ENTRIES`. */
+export interface ConteoEntradas {
+  entradas: number;
+}
+
+/** `PATCH …/orden`: la lista completa de ids en el orden nuevo. */
+export interface ReordenarInput {
+  ids: string[];
+}
+
+export interface UnidadAdmin extends UnidadRef {
+  id: string;
+  orden: number;
+  palabras: number;
+}
+
+export interface ModuloAdmin extends ModuloRef {
+  id: string;
+  estado: EstadoModulo;
+  orden: number;
+  palabras: number;
+  unidades: UnidadAdmin[];
+}
+
+/** `GET /admin/diccionario/modulos` */
+export interface ModulosAdminResponse {
+  modulos: ModuloAdmin[];
+}
+
+/** `PATCH /admin/diccionario/modulos/:id`. No se crean módulos más allá de los 9. */
+export interface EditarModuloInput {
+  nombre?: string;
+  tramo?: TramoModulo;
+  estado?: EstadoModulo;
+}
+
+/** `POST /admin/diccionario/modulos/:id/unidades`. El código («U5») lo pone el servidor. */
+export interface CrearUnidadInput {
+  nombre: string;
+}
+
+export interface EditarUnidadInput {
+  nombre: string;
+}
+
+export interface CategoriaAdmin extends CategoriaRef {
+  id: string;
+  descripcion: string | null;
+  orden: number;
+  palabras: number;
+}
+
+/** `GET /admin/diccionario/categorias` */
+export interface CategoriasAdminResponse {
+  categorias: CategoriaAdmin[];
+}
+
+export interface CrearCategoriaInput {
+  nombre: string;
+  icono: IconoCategoria;
+  descripcion?: string | null;
+}
+
+export type EditarCategoriaInput = Partial<CrearCategoriaInput>;
