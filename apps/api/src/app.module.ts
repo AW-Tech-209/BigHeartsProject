@@ -12,6 +12,7 @@ import { AppConfigModule } from './config/config.module';
 import { AppConfigService } from './config/app-config.service';
 import { ConfigPublicaModule } from './config-publica/config-publica.module';
 import { HealthModule } from './health/health.module';
+import { AlmacenamientoModule } from './almacenamiento/almacenamiento.module';
 import { DiccionarioModule } from './diccionario/diccionario.module';
 import { HistorialModule } from './historial/historial.module';
 import { NotificationsModule } from './notifications/notifications.module';
@@ -44,6 +45,7 @@ import { UsersModule } from './users/users.module';
     RemindersModule,
     AdminModule,
     HistorialModule,
+    AlmacenamientoModule,
     DiccionarioModule,
     PanelModule,
   ],

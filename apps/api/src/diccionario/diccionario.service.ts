@@ -13,6 +13,10 @@ import {
 } from '@academia/types';
 import { Prisma } from '@prisma/client';
 
+import {
+  AlmacenamientoMedios,
+  TTL_LECTURA_SEGUNDOS,
+} from '../almacenamiento/almacenamiento-medios';
 import { PrismaService } from '../prisma/prisma.service';
 import {
   categoriaNotFound,
@@ -21,6 +25,7 @@ import {
   moduloNotFound,
 } from './diccionario.errors';
 import {
+  clavesDeVideos,
   compararEntradas,
   ENTRADA_VISIBLE,
   SELECT_ENTRADA,
@@ -40,7 +45,10 @@ const CON_SENA = { videos: { some: VIDEO_LISTO.where } } satisfies Prisma.Dictio
 
 @Injectable()
 export class DiccionarioService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly almacenamiento: AlmacenamientoMedios,
+  ) {}
 
   async inicio(): Promise<DiccionarioInicioResponse> {
     const [modulos, palabras, conSena] = await Promise.all([
@@ -149,10 +157,12 @@ export class DiccionarioService {
         (!query.conSena || e.videos.length > 0),
     );
 
+    const urls = await this.firmar(entradas.flatMap((e) => clavesDeVideos(e.videos)));
+
     return {
       modulo: toModuloRef(modulo),
       categoria: { ...toCategoriaRef(categoria), descripcion: categoria.descripcion },
-      entradas: entradas.map(toEntradaResumen),
+      entradas: entradas.map((e) => toEntradaResumen(e, urls)),
       filtros: {
         tipos,
         unidades: [...unidades.values()],
@@ -182,6 +192,10 @@ export class DiccionarioService {
       })
     ).sort(compararEntradas);
     const i = hermanas.findIndex((h) => h.slug === entrada.slug);
+    const urls = await this.firmar([
+      ...clavesDeVideos(entrada.videos),
+      ...(entrada.imagenKey ? [entrada.imagenKey] : []),
+    ]);
 
     return {
       slug: entrada.slug,
@@ -192,8 +206,8 @@ export class DiccionarioService {
       unidad: toUnidadRef(entrada.unit),
       categoria: toCategoriaRef(entrada.category),
       nota: entrada.nota,
-      imagenUrl: null,
-      sena: toSena(entrada.videos),
+      imagenUrl: entrada.imagenKey ? (urls.get(entrada.imagenKey) ?? null) : null,
+      sena: toSena(entrada.videos, urls),
       posicion: { actual: i + 1, total: hermanas.length },
       anterior: toVecina(hermanas[i - 1]),
       siguiente: toVecina(hermanas[i + 1]),
@@ -231,6 +245,7 @@ export class DiccionarioService {
       include: { module: true, category: true, videos: VIDEO_LISTO },
     });
     const porId = new Map(entradas.map((e) => [e.id, e]));
+    const urls = await this.firmar(entradas.flatMap((e) => clavesDeVideos(e.videos)));
 
     return {
       q,
@@ -245,11 +260,15 @@ export class DiccionarioService {
             tipo: e.tipo as TipoEntrada,
             modulo: toModuloRef(e.module),
             categoria: toCategoriaRef(e.category),
-            sena: toSena(e.videos),
+            sena: toSena(e.videos, urls),
           },
         ];
       }),
     };
+  }
+
+  private firmar(claves: string[]): Promise<Map<string, string>> {
+    return this.almacenamiento.urlsDeLectura(claves, TTL_LECTURA_SEGUNDOS);
   }
 
   private async moduloDisponible(numero: number) {

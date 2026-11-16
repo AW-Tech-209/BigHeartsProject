@@ -23,7 +23,7 @@ export const ENTRADA_VISIBLE = {
 /** Solo el video activo; `PROCESANDO`/`ERROR` nunca salen de la lectura. */
 export const VIDEO_LISTO = {
   where: { estado: EstadoVideo.LISTO, lengua: LenguaSenas.LSC },
-  select: { id: true },
+  select: { id: true, videoKey: true, miniaturaKey: true },
   take: 1,
 } satisfies Prisma.DictionaryEntry$videosArgs;
 
@@ -51,9 +51,27 @@ export function compararEntradas(a: Ordenable, b: Ordenable): number {
   return ua - ub || a.orden - b.orden;
 }
 
-// Las URLs firmadas llegan con el almacenamiento; hasta entonces van en null.
-export function toSena(videos: readonly { id: string }[]): SenaEntrada {
-  return { estado: videos.length > 0 ? 'lista' : 'en-preparacion', url: null, miniaturaUrl: null };
+interface VideoFirmable {
+  videoKey: string;
+  miniaturaKey: string;
+}
+
+/** Claves a firmar en lote para una respuesta: nunca salen tal cual, solo como URL firmada. */
+export function clavesDeVideos(videos: readonly VideoFirmable[]): string[] {
+  return videos.flatMap((v) => [v.videoKey, v.miniaturaKey]);
+}
+
+export function toSena(
+  videos: readonly VideoFirmable[],
+  urls: ReadonlyMap<string, string>,
+): SenaEntrada {
+  const video = videos[0];
+  if (!video) return { estado: 'en-preparacion', url: null, miniaturaUrl: null };
+  return {
+    estado: 'lista',
+    url: urls.get(video.videoKey) ?? null,
+    miniaturaUrl: urls.get(video.miniaturaKey) ?? null,
+  };
 }
 
 export function toModuloRef(m: { numero: number; nombre: string; tramo: string }): ModuloRef {
@@ -68,14 +86,17 @@ export function toUnidadRef(u: { codigo: string; nombre: string } | null): Unida
   return u ? { codigo: u.codigo, nombre: u.nombre } : null;
 }
 
-export function toEntradaResumen(e: FilaEntrada): EntradaResumen {
+export function toEntradaResumen(
+  e: FilaEntrada,
+  urls: ReadonlyMap<string, string>,
+): EntradaResumen {
   return {
     slug: e.slug,
     ingles: e.ingles,
     espanol: e.espanol,
     tipo: e.tipo as TipoEntrada,
     unidad: toUnidadRef(e.unit),
-    sena: toSena(e.videos),
+    sena: toSena(e.videos, urls),
   };
 }
 

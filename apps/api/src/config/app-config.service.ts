@@ -154,6 +154,33 @@ export class AppConfigService {
     return this.config.get('PASSWORD_RESET_EXPIRY_MINUTES', { infer: true });
   }
 
+  get supabaseUrl(): string | undefined {
+    return this.config.get('SUPABASE_URL', { infer: true });
+  }
+
+  get supabaseServiceRoleKey(): string | undefined {
+    return this.config.get('SUPABASE_SERVICE_ROLE_KEY', { infer: true });
+  }
+
+  get supabaseStorageBucket(): string {
+    return this.config.get('SUPABASE_STORAGE_BUCKET', { infer: true });
+  }
+
+  /** Límites de los medios del diccionario, ya en bytes y milisegundos. */
+  get limitesMedios(): {
+    videoMaxBytes: number;
+    videoMinMs: number;
+    videoMaxMs: number;
+    imagenMaxBytes: number;
+  } {
+    return {
+      videoMaxBytes: this.config.get('DICCIONARIO_VIDEO_MAX_MB', { infer: true }) * 1024 * 1024,
+      videoMinMs: this.config.get('DICCIONARIO_VIDEO_MIN_S', { infer: true }) * 1000,
+      videoMaxMs: this.config.get('DICCIONARIO_VIDEO_MAX_S', { infer: true }) * 1000,
+      imagenMaxBytes: this.config.get('DICCIONARIO_IMAGEN_MAX_KB', { infer: true }) * 1024,
+    };
+  }
+
   get isProduction(): boolean {
     return this.nodeEnv === 'production';
   }

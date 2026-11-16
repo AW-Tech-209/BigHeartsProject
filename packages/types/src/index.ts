@@ -1524,6 +1524,18 @@ export const ApiErrorCode = {
   ENTRY_NOT_FOUND: 'ENTRY_NOT_FOUND',
   /** La unidad elegida no pertenece al módulo de la entrada (HU-531). */
   UNIT_NOT_IN_MODULE: 'UNIT_NOT_IN_MODULE',
+  /** El archivo supera el tamaño máximo; el límite va en `details.maxBytes` (HU-538). */
+  FILE_TOO_LARGE: 'FILE_TOO_LARGE',
+  /** Tipo de archivo no admitido (solo MP4, miniatura JPEG, imagen WebP/JPEG) (HU-538). */
+  FILE_TYPE_NOT_ALLOWED: 'FILE_TYPE_NOT_ALLOWED',
+  /** La seña dura más que `details.maxMs` (HU-538). */
+  VIDEO_TOO_LONG: 'VIDEO_TOO_LONG',
+  /** La seña dura menos que `details.minMs` (HU-538). */
+  VIDEO_TOO_SHORT: 'VIDEO_TOO_SHORT',
+  /** Se pidió confirmar una subida cuyo archivo no llegó al almacenamiento (HU-538). */
+  UPLOAD_NOT_FOUND: 'UPLOAD_NOT_FOUND',
+  /** El video no existe, no es de esa entrada o ya no está pendiente (HU-538). */
+  VIDEO_NOT_FOUND: 'VIDEO_NOT_FOUND',
   /** Se superó el límite de peticiones (rate limiting). */
   TOO_MANY_REQUESTS: 'TOO_MANY_REQUESTS',
   DATABASE_UNAVAILABLE: 'DATABASE_UNAVAILABLE',

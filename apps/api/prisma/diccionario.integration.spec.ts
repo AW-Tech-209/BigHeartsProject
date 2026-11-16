@@ -1,4 +1,8 @@
 import { randomUUID } from 'node:crypto';
+import { mkdtempSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { Readable } from 'node:stream';
 
 import {
   AccionLote,
@@ -12,6 +16,9 @@ import { Prisma, PrismaClient } from '@prisma/client';
 import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest';
 
 import { AdminDiccionarioService } from '../src/admin/diccionario/admin-diccionario.service';
+import { MediosService, SUBIDA_ABANDONADA_MS } from '../src/admin/diccionario/medios.service';
+import { LocalAlmacenamientoService } from '../src/almacenamiento/local-almacenamiento.service';
+import type { AppConfigService } from '../src/config/app-config.service';
 import { DiccionarioService } from '../src/diccionario/diccionario.service';
 import type { PrismaService } from '../src/prisma/prisma.service';
 import { sembrarDiccionario } from './seed-diccionario';
@@ -23,6 +30,14 @@ if (!url)
     'Falta DIRECT_URL: estos tests requieren una BD real con las migraciones aplicadas.',
   );
 const prisma = new PrismaClient({ datasources: { db: { url } } });
+
+/** Medios en una carpeta temporal con el adaptador local (D51). */
+const carpetaMedios = mkdtempSync(join(tmpdir(), 'bighearts-medios-'));
+const almacenamiento = new LocalAlmacenamientoService(
+  'secreto-de-prueba',
+  'http://localhost:3000',
+  carpetaMedios,
+);
 
 const ENTRADAS_POR_MODULO = { 1: 203, 2: 167, 3: 109 };
 
@@ -52,6 +67,7 @@ describe('diccionario contra la base de datos real', () => {
     await prisma.signVideo.deleteMany({ where: { subidoPorId: adminId } });
     await prisma.user.delete({ where: { id: adminId } });
     await prisma.$disconnect();
+    rmSync(carpetaMedios, { recursive: true, force: true });
   });
 
   it('la migración deja 9 módulos, 15 unidades y 19 categorías', async () => {
@@ -131,7 +147,7 @@ describe('diccionario contra la base de datos real', () => {
   });
 
   describe('lectura (cualquier rol con sesión)', () => {
-    const servicio = new DiccionarioService(prisma as unknown as PrismaService);
+    const servicio = new DiccionarioService(prisma as unknown as PrismaService, almacenamiento);
 
     class Revertir extends Error {}
     /** Crea datos dentro de una transacción que se revierte: no ensucia los conteos de otros tests. */
@@ -140,7 +156,7 @@ describe('diccionario contra la base de datos real', () => {
     ): Promise<void> {
       await prisma
         .$transaction(async (tx) => {
-          await fn(new DiccionarioService(tx as unknown as PrismaService), tx);
+          await fn(new DiccionarioService(tx as unknown as PrismaService, almacenamiento), tx);
           throw new Revertir();
         })
         .catch((e: unknown) => {
@@ -289,7 +305,9 @@ describe('diccionario contra la base de datos real', () => {
         for (const prohibido of [
           'deletedAt',
           'publicada',
-          'Key',
+          '"videoKey"',
+          '"miniaturaKey"',
+          '"imagenKey"',
           'secreto',
           'PROCESANDO',
           'ERROR',
@@ -303,7 +321,7 @@ describe('diccionario contra la base de datos real', () => {
 
   describe('gestión (solo ADMIN)', () => {
     const admin = new AdminDiccionarioService(prisma as unknown as PrismaService);
-    const lectura = new DiccionarioService(prisma as unknown as PrismaService);
+    const lectura = new DiccionarioService(prisma as unknown as PrismaService, almacenamiento);
     const creadas: string[] = [];
 
     afterEach(async () => {
@@ -447,6 +465,140 @@ describe('diccionario contra la base de datos real', () => {
       await admin.lote({ ids: [e.id], accion: AccionLote.OCULTAR });
 
       expect(await codigo(lectura.entrada(e.slug))).toBe(ApiErrorCode.ENTRY_NOT_FOUND);
+    });
+  });
+
+  describe('medios: señas e imágenes (adaptador local)', () => {
+    const MB = 1024 * 1024;
+    const config = {
+      limitesMedios: {
+        videoMaxBytes: 20 * MB,
+        videoMinMs: 2000,
+        videoMaxMs: 15000,
+        imagenMaxBytes: 800 * 1024,
+      },
+    } as unknown as AppConfigService;
+    const medios = new MediosService(prisma as unknown as PrismaService, almacenamiento, config);
+    const lectura = new DiccionarioService(prisma as unknown as PrismaService, almacenamiento);
+    let drinkId: string;
+
+    beforeAll(async () => {
+      drinkId = (await prisma.dictionaryEntry.findUniqueOrThrow({ where: { slug: 'to-drink' } }))
+        .id;
+    });
+
+    afterEach(async () => {
+      await medios.quitarVideo(drinkId);
+      await medios.quitarImagen(drinkId);
+    });
+
+    async function error(promesa: Promise<unknown>) {
+      return promesa.then(
+        () => undefined,
+        (e: { getStatus: () => number; getResponse: () => { code?: string } }) => ({
+          status: e.getStatus(),
+          code: e.getResponse().code,
+        }),
+      );
+    }
+
+    const pedido = (bytes: number, duracionMs = 4000) =>
+      ({ tipo: 'video/mp4', bytes, duracionMs, miniaturaTipo: 'image/jpeg' }) as const;
+
+    async function subirA(url: string, bytes: number): Promise<void> {
+      const permiso = almacenamiento.verificar(new URL(url).searchParams.get('t') ?? '', 'subir');
+      if (!permiso) throw new Error('permiso de subida inválido');
+      await almacenamiento.guardar(permiso, Readable.from([Buffer.alloc(bytes)]));
+    }
+
+    /** Lo que haría el navegador con las URLs firmadas: subir los dos archivos. */
+    async function subirArchivos(urls: { video: { url: string }; miniatura: { url: string } }) {
+      await subirA(urls.video.url, 2048);
+      await subirA(urls.miniatura.url, 512);
+    }
+
+    it('admite 19 MB y rechaza 21 MB (FILE_TOO_LARGE) y 16 s (VIDEO_TOO_LONG)', async () => {
+      await expect(
+        medios.iniciarSubidaVideo(drinkId, pedido(19 * MB), adminId),
+      ).resolves.toHaveProperty('videoId');
+      expect(await error(medios.iniciarSubidaVideo(drinkId, pedido(21 * MB), adminId))).toEqual({
+        status: 400,
+        code: ApiErrorCode.FILE_TOO_LARGE,
+      });
+      expect(await error(medios.iniciarSubidaVideo(drinkId, pedido(MB, 16000), adminId))).toEqual({
+        status: 400,
+        code: ApiErrorCode.VIDEO_TOO_LONG,
+      });
+    });
+
+    it('confirmar sin que el archivo haya llegado responde 409 UPLOAD_NOT_FOUND', async () => {
+      const { videoId } = await medios.iniciarSubidaVideo(drinkId, pedido(MB), adminId);
+
+      expect(await error(medios.confirmarVideo(drinkId, videoId))).toEqual({
+        status: 409,
+        code: ApiErrorCode.UPLOAD_NOT_FOUND,
+      });
+    });
+
+    it('subir y confirmar deja la seña lista con URL firmada y sube conSena del Módulo 1 en 1', async () => {
+      const antes = (await lectura.inicio()).modulos[0]?.conSena ?? 0;
+      const subida = await medios.iniciarSubidaVideo(drinkId, pedido(MB), adminId);
+      await subirArchivos(subida);
+
+      await medios.confirmarVideo(drinkId, subida.videoId);
+      const entrada = await lectura.entrada('to-drink');
+
+      expect(entrada.sena.estado).toBe('lista');
+      const token = new URL(entrada.sena.url ?? 'http://x').searchParams.get('t') ?? '';
+      const permiso = almacenamiento.verificar(token, 'leer');
+      expect(await almacenamiento.metadatos(permiso?.clave ?? '')).toEqual({ bytes: 2048 });
+      expect((await lectura.inicio()).modulos[0]?.conSena).toBe(antes + 1);
+      expect(JSON.stringify(entrada)).not.toMatch(/"(videoKey|miniaturaKey|imagenKey)"/);
+    });
+
+    it('reemplazar deja un solo video activo y borra los archivos anteriores', async () => {
+      const primera = await medios.iniciarSubidaVideo(drinkId, pedido(MB), adminId);
+      await subirArchivos(primera);
+      await medios.confirmarVideo(drinkId, primera.videoId);
+      const vieja = await prisma.signVideo.findUniqueOrThrow({ where: { id: primera.videoId } });
+
+      const segunda = await medios.iniciarSubidaVideo(drinkId, pedido(MB), adminId);
+      await subirArchivos(segunda);
+      await medios.confirmarVideo(drinkId, segunda.videoId);
+
+      const activos = await prisma.signVideo.findMany({
+        where: { entryId: drinkId, estado: EstadoVideo.LISTO },
+      });
+      expect(activos.map((v) => v.id)).toEqual([segunda.videoId]);
+      expect(await almacenamiento.metadatos(vieja.videoKey)).toBeNull();
+      expect(await almacenamiento.metadatos(vieja.miniaturaKey)).toBeNull();
+    });
+
+    it('la imagen se confirma solo si llegó, y la lectura la firma', async () => {
+      const { clave, imagen } = await medios.iniciarSubidaImagen(drinkId, {
+        tipo: 'image/webp',
+        bytes: 1000,
+      });
+      expect((await error(medios.confirmarImagen(drinkId, clave)))?.code).toBe(
+        ApiErrorCode.UPLOAD_NOT_FOUND,
+      );
+
+      await subirA(imagen.url, 1000);
+      await medios.confirmarImagen(drinkId, clave);
+
+      expect((await lectura.entrada('to-drink')).imagenUrl).toContain(
+        '/almacenamiento-local/leer?t=',
+      );
+    });
+
+    it('el barrido pasa a ERROR lo que sigue SUBIENDO tras 1 h', async () => {
+      const { videoId } = await medios.iniciarSubidaVideo(drinkId, pedido(MB), adminId);
+
+      await medios.barrerSubidasAbandonadas(new Date(Date.now() + SUBIDA_ABANDONADA_MS + 1000));
+
+      expect((await prisma.signVideo.findUniqueOrThrow({ where: { id: videoId } })).estado).toBe(
+        EstadoVideo.ERROR,
+      );
     });
   });
 });

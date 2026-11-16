@@ -358,3 +358,73 @@ export interface LoteEntradasInput {
 export interface LoteEntradasResponse {
   actualizadas: number;
 }
+
+// ── Medios: señas e imágenes (solo ADMIN, D51) ────────────────────────────────
+
+export const VIDEO_TIPOS_PERMITIDOS = ['video/mp4'] as const;
+export const MINIATURA_TIPOS_PERMITIDOS = ['image/jpeg'] as const;
+export const IMAGEN_TIPOS_PERMITIDOS = ['image/webp', 'image/jpeg'] as const;
+export type TipoImagen = (typeof IMAGEN_TIPOS_PERMITIDOS)[number];
+
+/** El navegador sube el archivo DIRECTO al almacenamiento con esta petición firmada. */
+export interface UrlDeSubida {
+  url: string;
+  metodo: 'PUT';
+  headers: Record<string, string>;
+}
+
+/** `POST /admin/diccionario/entradas/:id/video/subida` */
+export interface SubidaVideoInput {
+  tipo: 'video/mp4';
+  bytes: number;
+  duracionMs: number;
+  miniaturaTipo: 'image/jpeg';
+}
+
+export interface SubidaVideoResponse {
+  videoId: string;
+  video: UrlDeSubida;
+  miniatura: UrlDeSubida;
+}
+
+/** `POST …/video/:videoId/confirmar`: la seña queda `lista`. */
+export interface ConfirmarVideoResponse {
+  videoId: string;
+  estado: EstadoSenaAdmin;
+}
+
+/** `POST /admin/diccionario/entradas/:id/imagen/subida` */
+export interface SubidaImagenInput {
+  tipo: TipoImagen;
+  bytes: number;
+}
+
+/** `clave` se devuelve tal cual en `POST …/imagen/confirmar`. */
+export interface SubidaImagenResponse {
+  clave: string;
+  imagen: UrlDeSubida;
+}
+
+export interface ConfirmarImagenInput {
+  clave: string;
+}
+
+/** `GET /admin/diccionario/sin-sena?modulo=`: lo que aún no tiene seña lista (Cola de grabación). */
+export interface SinSenaQuery {
+  modulo?: number;
+}
+
+export interface EntradaSinSena {
+  id: string;
+  slug: string;
+  ingles: string;
+  inglesNorm: string;
+  modulo: ModuloRef;
+  unidad: UnidadRef | null;
+  categoria: CategoriaRef;
+  sena: { estado: Exclude<EstadoSenaAdmin, 'lista'> };
+}
+
+export interface SinSenaResponse {
+  entradas: EntradaSinSena[];
+}

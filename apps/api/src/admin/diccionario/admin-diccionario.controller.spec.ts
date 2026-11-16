@@ -7,6 +7,7 @@ import { describe, expect, it } from 'vitest';
 import { RolesGuard } from '../../auth/guards/roles.guard';
 import { AdminDiccionarioController } from './admin-diccionario.controller';
 import { estadoSenaAdmin } from './admin-diccionario.mapper';
+import { MediosController } from './medios.controller';
 
 const RUTAS = ['avance', 'listar', 'duplicados', 'lote', 'obtener', 'crear', 'editar'] as const;
 
@@ -43,4 +44,36 @@ describe('estadoSenaAdmin', () => {
     expect(estadoSenaAdmin([EstadoVideo.ERROR])).toBe('error');
     expect(estadoSenaAdmin([])).toBe('sin-sena');
   });
+});
+
+describe('MediosController — autorización', () => {
+  const guard = new RolesGuard(new Reflector());
+  const rutas = [
+    'sinSena',
+    'sinSenaCsv',
+    'subirVideo',
+    'confirmarVideo',
+    'quitarVideo',
+    'subirImagen',
+    'confirmarImagen',
+    'quitarImagen',
+  ] as const;
+  const ctx = (ruta: (typeof rutas)[number], role: UserRole) =>
+    ({
+      getHandler: () => MediosController.prototype[ruta],
+      getClass: () => MediosController,
+      switchToHttp: () => ({
+        getRequest: () => ({
+          user: { id: 'u', email: 'u@a.local', role, status: UserStatus.ACTIVE },
+        }),
+      }),
+    }) as unknown as ExecutionContext;
+
+  it.each([UserRole.STUDENT, UserRole.TEACHER])(
+    '%s recibe 403 en todas las rutas de medios',
+    (role) => {
+      for (const ruta of rutas)
+        expect(() => guard.canActivate(ctx(ruta, role))).toThrowError(ForbiddenException);
+    },
+  );
 });

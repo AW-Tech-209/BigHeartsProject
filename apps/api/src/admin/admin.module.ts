@@ -12,6 +12,8 @@ import { AdminController } from './admin.controller';
 import { AdminService } from './admin.service';
 import { AdminDiccionarioController } from './diccionario/admin-diccionario.controller';
 import { AdminDiccionarioService } from './diccionario/admin-diccionario.service';
+import { MediosController } from './diccionario/medios.controller';
+import { MediosService } from './diccionario/medios.service';
 
 /**
  * Operaciones de back-office reservadas al rol ADMIN.
@@ -31,6 +33,7 @@ import { AdminDiccionarioService } from './diccionario/admin-diccionario.service
     AdminMetricasController,
     AdminUsuariosController,
     AdminDiccionarioController,
+    MediosController,
   ],
   providers: [
     AdminService,
@@ -38,6 +41,7 @@ import { AdminDiccionarioService } from './diccionario/admin-diccionario.service
     AdminMetricasService,
     AdminUsuariosService,
     AdminDiccionarioService,
+    MediosService,
   ],
 })
 export class AdminModule {}

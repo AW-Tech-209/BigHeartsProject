@@ -32,3 +32,5 @@ Thumbs.db
 #Specific docs
 docs/BigHearts-Marca-y-Producto.html
 docs-ignoregit/
+# Medios del diccionario con el adaptador local (D51)
+apps/api/storage/
