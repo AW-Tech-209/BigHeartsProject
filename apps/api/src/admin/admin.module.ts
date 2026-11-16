@@ -10,6 +10,8 @@ import { AdminUsuariosController } from './admin-usuarios.controller';
 import { AdminUsuariosService } from './admin-usuarios.service';
 import { AdminController } from './admin.controller';
 import { AdminService } from './admin.service';
+import { AdminDiccionarioController } from './diccionario/admin-diccionario.controller';
+import { AdminDiccionarioService } from './diccionario/admin-diccionario.service';
 
 /**
  * Operaciones de back-office reservadas al rol ADMIN.
@@ -28,7 +30,14 @@ import { AdminService } from './admin.service';
     AdminClassroomsController,
     AdminMetricasController,
     AdminUsuariosController,
+    AdminDiccionarioController,
   ],
-  providers: [AdminService, AdminClassroomsService, AdminMetricasService, AdminUsuariosService],
+  providers: [
+    AdminService,
+    AdminClassroomsService,
+    AdminMetricasService,
+    AdminUsuariosService,
+    AdminDiccionarioService,
+  ],
 })
 export class AdminModule {}

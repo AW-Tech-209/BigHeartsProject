@@ -1522,6 +1522,8 @@ export const ApiErrorCode = {
   CATEGORY_NOT_FOUND: 'CATEGORY_NOT_FOUND',
   /** La entrada no existe, está en la papelera, oculta o en un módulo no disponible (HU-527). */
   ENTRY_NOT_FOUND: 'ENTRY_NOT_FOUND',
+  /** La unidad elegida no pertenece al módulo de la entrada (HU-531). */
+  UNIT_NOT_IN_MODULE: 'UNIT_NOT_IN_MODULE',
   /** Se superó el límite de peticiones (rate limiting). */
   TOO_MANY_REQUESTS: 'TOO_MANY_REQUESTS',
   DATABASE_UNAVAILABLE: 'DATABASE_UNAVAILABLE',

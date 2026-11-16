@@ -1,9 +1,17 @@
 import { randomUUID } from 'node:crypto';
 
-import { ApiErrorCode, EstadoVideo, TipoEntrada, UserRole, UserStatus } from '@academia/types';
+import {
+  AccionLote,
+  ApiErrorCode,
+  EstadoVideo,
+  TipoEntrada,
+  UserRole,
+  UserStatus,
+} from '@academia/types';
 import { Prisma, PrismaClient } from '@prisma/client';
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest';
 
+import { AdminDiccionarioService } from '../src/admin/diccionario/admin-diccionario.service';
 import { DiccionarioService } from '../src/diccionario/diccionario.service';
 import type { PrismaService } from '../src/prisma/prisma.service';
 import { sembrarDiccionario } from './seed-diccionario';
@@ -290,6 +298,155 @@ describe('diccionario contra la base de datos real', () => {
           expect(respuestas).not.toContain(prohibido);
         }
       });
+    });
+  });
+
+  describe('gestión (solo ADMIN)', () => {
+    const admin = new AdminDiccionarioService(prisma as unknown as PrismaService);
+    const lectura = new DiccionarioService(prisma as unknown as PrismaService);
+    const creadas: string[] = [];
+
+    afterEach(async () => {
+      await prisma.dictionaryEntry.deleteMany({ where: { id: { in: creadas.splice(0) } } });
+    });
+
+    async function codigo(promesa: Promise<unknown>): Promise<string | undefined> {
+      const error = await promesa.then(
+        () => undefined,
+        (e: { getResponse?: () => { code?: string } }) => e,
+      );
+      return error?.getResponse?.().code;
+    }
+
+    async function referencias() {
+      const [m1, m2, acciones, lugares] = await Promise.all([
+        prisma.dictionaryModule.findUniqueOrThrow({
+          where: { numero: 1 },
+          include: { unidades: true },
+        }),
+        prisma.dictionaryModule.findUniqueOrThrow({
+          where: { numero: 2 },
+          include: { unidades: true },
+        }),
+        prisma.dictionaryCategory.findUniqueOrThrow({ where: { slug: 'acciones' } }),
+        prisma.dictionaryCategory.findUniqueOrThrow({ where: { slug: 'lugares' } }),
+      ]);
+      return { m1, m2, acciones, lugares };
+    }
+
+    async function crear(ingles: string, moduloId: string, categoriaId: string) {
+      const e = await admin.crear({
+        ingles,
+        espanol: 'Prueba',
+        tipo: TipoEntrada.VERBO,
+        moduloId,
+        categoriaId,
+      });
+      creadas.push(e.id);
+      return e;
+    }
+
+    it('filtra por módulo, categoría y seña, y los chips suman el total de la categoría', async () => {
+      const r = await admin.listar({
+        modulo: 1,
+        categoria: 'acciones',
+        sena: 'sin-sena',
+        pageSize: 100,
+      });
+      const suma = Object.values(r.conteosSena).reduce((a, b) => a + b, 0);
+
+      expect(
+        r.items.every((e) => e.sena.estado === 'sin-sena' && e.categoria.slug === 'acciones'),
+      ).toBe(true);
+      expect(r.total).toBe(r.conteosSena['sin-sena']);
+      expect(suma).toBe(51);
+    });
+
+    it('una unidad de otro módulo responde UNIT_NOT_IN_MODULE', async () => {
+      const { m1, m2, acciones } = await referencias();
+      const unidadDelM1 = m1.unidades[0]?.id;
+
+      expect(
+        await codigo(
+          admin.crear({
+            ingles: 'Zz',
+            espanol: 'Zz',
+            tipo: TipoEntrada.VERBO,
+            moduloId: m2.id,
+            unidadId: unidadDelM1,
+            categoriaId: acciones.id,
+          }),
+        ),
+      ).toBe(ApiErrorCode.UNIT_NOT_IN_MODULE);
+    });
+
+    it('editar el inglés no cambia el slug y la lectura lo ve al instante', async () => {
+      const drink = await prisma.dictionaryEntry.findUniqueOrThrow({ where: { slug: 'to-drink' } });
+      try {
+        const editada = await admin.editar(drink.id, { ingles: 'To drink (water)' });
+
+        expect(editada.slug).toBe('to-drink');
+        expect((await lectura.entrada('to-drink')).ingles).toBe('To drink (water)');
+        expect((await lectura.buscar({ q: 'water' })).resultados.map((r) => r.slug)).toContain(
+          'to-drink',
+        );
+      } finally {
+        await admin.editar(drink.id, { ingles: drink.ingles });
+      }
+    });
+
+    it('crear «To drink» en el Módulo 2 funciona y duplicados avisa del Módulo 1', async () => {
+      const { m2, acciones } = await referencias();
+      const nueva = await crear('To drink', m2.id, acciones.id);
+      const { duplicados } = await admin.duplicados({ ingles: 'to  DRINK', excluir: nueva.id });
+
+      expect(nueva.slug).toBe('to-drink-2');
+      expect(duplicados.map((d) => d.modulo.numero)).toEqual([1]);
+    });
+
+    it('una entrada nueva va al final del orden de su categoría y módulo', async () => {
+      const { m1, acciones } = await referencias();
+      const nueva = await crear('Zz to last', m1.id, acciones.id);
+      const { _max } = await prisma.dictionaryEntry.aggregate({
+        where: { moduleId: m1.id, categoryId: acciones.id, id: { not: nueva.id } },
+        _max: { orden: true },
+      });
+
+      expect(nueva.orden).toBe((_max.orden ?? 0) + 1);
+    });
+
+    it('el lote mueve las dos o, si una no existe, ninguna', async () => {
+      const { m1, acciones, lugares } = await referencias();
+      const a = await crear('Zz lote a', m1.id, acciones.id);
+      const b = await crear('Zz lote b', m1.id, acciones.id);
+
+      expect(
+        await codigo(
+          admin.lote({
+            ids: [a.id, b.id, randomUUID()],
+            accion: AccionLote.MOVER_CATEGORIA,
+            categoriaId: lugares.id,
+          }),
+        ),
+      ).toBe(ApiErrorCode.ENTRY_NOT_FOUND);
+      expect((await admin.obtener(a.id)).categoria.slug).toBe('acciones');
+
+      await admin.lote({
+        ids: [a.id, b.id],
+        accion: AccionLote.MOVER_CATEGORIA,
+        categoriaId: lugares.id,
+      });
+      expect((await admin.obtener(a.id)).categoria.slug).toBe('lugares');
+      expect((await admin.obtener(b.id)).categoria.slug).toBe('lugares');
+    });
+
+    it('una entrada oculta deja de verse en la lectura', async () => {
+      const { m1, acciones } = await referencias();
+      const e = await crear('Zz oculta', m1.id, acciones.id);
+
+      await admin.lote({ ids: [e.id], accion: AccionLote.OCULTAR });
+
+      expect(await codigo(lectura.entrada(e.slug))).toBe(ApiErrorCode.ENTRY_NOT_FOUND);
     });
   });
 });

@@ -1,4 +1,4 @@
-import { NotFoundException } from '@nestjs/common';
+import { BadRequestException, NotFoundException, ParseUUIDPipe } from '@nestjs/common';
 import { ApiErrorCode } from '@academia/types';
 
 export const moduloNotFound = (): NotFoundException =>
@@ -25,3 +25,12 @@ export const entradaNotFound = (): NotFoundException =>
     code: ApiErrorCode.ENTRY_NOT_FOUND,
     message: 'No encontramos esta palabra en el diccionario.',
   });
+
+export const unidadNoEsDelModulo = (): BadRequestException =>
+  new BadRequestException({
+    code: ApiErrorCode.UNIT_NOT_IN_MODULE,
+    message: 'Esa unidad no pertenece al módulo elegido.',
+  });
+
+/** Un id sin forma de UUID equivale a «no existe». */
+export const idDeEntrada = new ParseUUIDPipe({ exceptionFactory: () => entradaNotFound() });

@@ -217,3 +217,144 @@ export interface BusquedaResponse {
   q: string;
   resultados: ResultadoBusqueda[];
 }
+
+// ── Gestión (solo ADMIN) ──────────────────────────────────────────────────────
+
+/** Estado de la seña para el admin. Prioridad: lista > procesando > error > sin-sena. */
+export type EstadoSenaAdmin = 'lista' | 'procesando' | 'error' | 'sin-sena';
+
+export const ESTADOS_SENA_ADMIN: readonly EstadoSenaAdmin[] = [
+  'lista',
+  'procesando',
+  'error',
+  'sin-sena',
+];
+
+export const ESTADO_SENA_ADMIN_LABELS: Record<EstadoSenaAdmin, string> = {
+  lista: 'Lista',
+  procesando: 'Procesando',
+  error: 'Error',
+  'sin-sena': 'Sin seña',
+};
+
+/** `GET /admin/diccionario/avance` */
+export interface AvanceModulo extends ModuloRef {
+  palabras: number;
+  conSena: number;
+  procesando: number;
+  conError: number;
+  sinSena: number;
+}
+
+export interface AvanceDiccionarioResponse {
+  modulos: AvanceModulo[];
+  totales: { sinSena: number; enPapelera: number };
+}
+
+export const ENTRADAS_ADMIN_PAGE_SIZE_DEFAULT = 25;
+export const ENTRADAS_ADMIN_PAGE_SIZE_MAX = 100;
+
+/** `GET /admin/diccionario/entradas`. Nunca trae las de la papelera. */
+export interface EntradasAdminQuery {
+  q?: string;
+  /** Número del módulo (1–9). */
+  modulo?: number;
+  /** Slug de la categoría. */
+  categoria?: string;
+  tipo?: TipoEntrada;
+  /** Código de la unidad («U1»). */
+  unidad?: string;
+  sena?: EstadoSenaAdmin;
+  imagen?: 'con' | 'sin';
+  publicada?: boolean;
+  page?: number;
+  pageSize?: number;
+}
+
+export interface EntradaAdmin {
+  id: string;
+  slug: string;
+  ingles: string;
+  espanol: string;
+  tipo: TipoEntrada;
+  nota: string | null;
+  publicada: boolean;
+  orden: number;
+  modulo: ModuloRef & { id: string };
+  unidad: (UnidadRef & { id: string }) | null;
+  categoria: CategoriaRef & { id: string };
+  sena: { estado: EstadoSenaAdmin };
+  tieneImagen: boolean;
+  updatedAt: string;
+}
+
+/** `conteosSena` cuenta con todos los filtros salvo `sena`: los chips suman `total` sin filtro de seña. */
+export interface EntradasAdminResponse {
+  items: EntradaAdmin[];
+  total: number;
+  page: number;
+  pageSize: number;
+  conteosSena: Record<EstadoSenaAdmin, number>;
+}
+
+/** `POST /admin/diccionario/entradas`. La unidad, si viene, debe ser del módulo. */
+export interface CrearEntradaInput {
+  ingles: string;
+  espanol: string;
+  tipo: TipoEntrada;
+  moduloId: string;
+  unidadId?: string | null;
+  categoriaId: string;
+  nota?: string | null;
+  publicada?: boolean;
+}
+
+/** `PATCH /admin/diccionario/entradas/:id`. El slug no cambia aunque cambie el inglés. */
+export type EditarEntradaInput = Partial<CrearEntradaInput>;
+
+/** `GET /admin/diccionario/entradas/duplicados?ingles=&tipo=&excluir=`. Avisa, no bloquea. */
+export interface DuplicadosQuery {
+  ingles: string;
+  tipo?: TipoEntrada;
+  /** Id de la entrada que se edita, para no avisarse a sí misma. */
+  excluir?: string;
+}
+
+export interface DuplicadoEntrada {
+  id: string;
+  slug: string;
+  ingles: string;
+  espanol: string;
+  tipo: TipoEntrada;
+  modulo: ModuloRef;
+}
+
+export interface DuplicadosResponse {
+  duplicados: DuplicadoEntrada[];
+}
+
+export enum AccionLote {
+  MOVER_CATEGORIA = 'mover-categoria',
+  MOVER_MODULO = 'mover-modulo',
+  OCULTAR = 'ocultar',
+  PUBLICAR = 'publicar',
+  ENVIAR_PAPELERA = 'enviar-papelera',
+}
+
+export const LOTE_MAX_IDS = 200;
+
+/** `POST /admin/diccionario/entradas/lote`. Atómico: si una falla, ninguna cambia. */
+export interface LoteEntradasInput {
+  ids: string[];
+  accion: AccionLote;
+  /** Obligatorio con `mover-categoria`. */
+  categoriaId?: string;
+  /** Obligatorio con `mover-modulo`. */
+  moduloId?: string;
+  /** Opcional con `mover-modulo`; sin ella, las entradas quedan sin unidad. */
+  unidadId?: string | null;
+}
+
+export interface LoteEntradasResponse {
+  actualizadas: number;
+}
