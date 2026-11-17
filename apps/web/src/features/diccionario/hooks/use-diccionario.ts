@@ -1,8 +1,18 @@
-import { BUSQUEDA_MIN_CARACTERES, normalizarTexto } from '@academia/types';
+import {
+  BUSQUEDA_MIN_CARACTERES,
+  type CategoriaQuery,
+  type ModuloQuery,
+  normalizarTexto,
+} from '@academia/types';
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import { useEffect, useState, useSyncExternalStore } from 'react';
 
-import { buscarEnDiccionario, getDiccionarioInicio } from '../api/diccionario';
+import {
+  buscarEnDiccionario,
+  getCategoria,
+  getDiccionarioInicio,
+  getModulo,
+} from '../api/diccionario';
 import { borrarRecientes, leerRecientes, suscribirRecientes } from '../lib/recientes';
 
 export const ESPERA_BUSQUEDA_MS = 150;
@@ -50,4 +60,22 @@ function instantanea() {
 export function useRecientes() {
   const recientes = useSyncExternalStore(suscribirRecientes, instantanea);
   return { recientes, borrar: borrarRecientes };
+}
+
+export function useModulo(numero: number, query: ModuloQuery) {
+  return useQuery({
+    queryKey: ['diccionario', 'modulo', numero, query],
+    queryFn: () => getModulo(numero, query),
+    enabled: Number.isInteger(numero),
+    placeholderData: keepPreviousData,
+  });
+}
+
+export function useCategoria(numero: number, slug: string, query: CategoriaQuery) {
+  return useQuery({
+    queryKey: ['diccionario', 'categoria', numero, slug, query],
+    queryFn: () => getCategoria(numero, slug, query),
+    enabled: Number.isInteger(numero) && slug !== '',
+    placeholderData: keepPreviousData,
+  });
 }

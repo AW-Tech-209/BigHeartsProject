@@ -8,6 +8,8 @@ import { AulaDetallePage } from '@/pages/AulaDetallePage';
 import { AulasPage } from '@/pages/AulasPage';
 import { CompletarAccesibilidadPage } from '@/pages/CompletarAccesibilidadPage';
 import { CrearAulaPage } from '@/pages/CrearAulaPage';
+import { DiccionarioCategoriaPage } from '@/pages/DiccionarioCategoriaPage';
+import { DiccionarioModuloPage } from '@/pages/DiccionarioModuloPage';
 import { DiccionarioPage } from '@/pages/DiccionarioPage';
 import { EditarAulaPage } from '@/pages/EditarAulaPage';
 import { HistorialPage } from '@/pages/HistorialPage';
@@ -278,6 +280,22 @@ export function AppRoutes() {
         element={
           <RequireAuth>
             <DiccionarioPage />
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/diccionario/modulo/:numero"
+        element={
+          <RequireAuth>
+            <DiccionarioModuloPage />
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/diccionario/modulo/:numero/:categoria"
+        element={
+          <RequireAuth>
+            <DiccionarioCategoriaPage />
           </RequireAuth>
         }
       />
