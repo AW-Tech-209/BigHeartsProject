@@ -33,6 +33,11 @@ export function tipoDesdeEtiqueta(etiqueta: string): TipoEntrada | null {
 
 /** CSV con comillas dobles (RFC 4180): devuelve filas de celdas, sin la cabecera. */
 export function parsearCsv(texto: string): string[][] {
+  return filasCsv(texto).slice(1);
+}
+
+/** Todas las filas no vacías, cabecera incluida. Excel en español separa con `;`. */
+export function filasCsv(texto: string, separador: ',' | ';' = ','): string[][] {
   const filas: string[][] = [];
   let fila: string[] = [];
   let celda = '';
@@ -51,7 +56,7 @@ export function parsearCsv(texto: string): string[][] {
       }
     } else if (c === '"') {
       entreComillas = true;
-    } else if (c === ',') {
+    } else if (c === separador) {
       fila.push(celda);
       celda = '';
     } else if (c === '\n' || c === '\r') {
@@ -69,5 +74,5 @@ export function parsearCsv(texto: string): string[][] {
     filas.push(fila);
   }
 
-  return filas.filter((f) => f.some((c) => c.trim() !== '')).slice(1);
+  return filas.filter((f) => f.some((c) => c.trim() !== ''));
 }

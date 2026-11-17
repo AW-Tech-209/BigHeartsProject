@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto';
-import { mkdtempSync, rmSync } from 'node:fs';
+import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { Readable } from 'node:stream';
@@ -17,14 +17,22 @@ import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest';
 
 import { AdminDiccionarioService } from '../src/admin/diccionario/admin-diccionario.service';
 import { EstructuraService } from '../src/admin/diccionario/estructura.service';
+import {
+  ImportacionService,
+  VISTA_PREVIA_TTL_MS,
+} from '../src/admin/diccionario/importacion.service';
 import { MediosService, SUBIDA_ABANDONADA_MS } from '../src/admin/diccionario/medios.service';
 import { PapeleraService } from '../src/admin/diccionario/papelera.service';
 import { PurgaPapeleraService } from '../src/admin/diccionario/purga-papelera.service';
 import { LocalAlmacenamientoService } from '../src/almacenamiento/local-almacenamiento.service';
 import type { AppConfigService } from '../src/config/app-config.service';
+import {
+  CargaEntradasService,
+  leerCsvDiccionario,
+} from '../src/diccionario/carga-entradas.service';
 import { DiccionarioService } from '../src/diccionario/diccionario.service';
 import type { PrismaService } from '../src/prisma/prisma.service';
-import { sembrarDiccionario } from './seed-diccionario';
+import { CSV_DICCIONARIO, sembrarDiccionario } from './seed-diccionario';
 
 /** Contra la BD real con las migraciones aplicadas (igual que `bookings-index`). */
 const url = process.env.DIRECT_URL;
@@ -809,6 +817,128 @@ describe('diccionario contra la base de datos real', () => {
       } finally {
         await estructura.editarUnidad(u4.id, u4.nombre);
       }
+    });
+  });
+
+  describe('importación CSV', () => {
+    const db = prisma as unknown as PrismaService;
+    const carga = new CargaEntradasService();
+    const importacion = new ImportacionService(db, carga);
+    const CABECERA = 'modulo,unidad,unidad_nombre,categoria,tipo,ingles,espanol';
+
+    afterEach(async () => {
+      const m4 = await prisma.dictionaryModule.findUniqueOrThrow({ where: { numero: 4 } });
+      await prisma.dictionaryEntry.deleteMany({ where: { moduleId: m4.id } });
+      await prisma.dictionaryUnit.deleteMany({ where: { moduleId: m4.id } });
+    });
+
+    const conteos = async () => ({
+      entradas: await prisma.dictionaryEntry.count(),
+      unidades: await prisma.dictionaryUnit.count(),
+    });
+
+    /** 12 nuevas en el Módulo 4, 2 duplicadas del Módulo 1 y 2 errores. */
+    function csvDe16Filas(separador = ','): string {
+      const filas = [
+        ...Array.from(
+          { length: 12 },
+          (_, i) => `4,U1,Daily routines,Acciones,Verbo,To import ${i},Importar ${i}`,
+        ),
+        '1,U1,,Acciones,Verbo,To eat,Comer',
+        '1,U1,,Acciones,Verbo,To drink,Beber',
+        '4,,,Comidas,Palabra,Bread,Pan',
+        '4,,,Objetos,Sustantivo,Chair,Silla',
+      ];
+      return [CABECERA, ...filas].map((f) => f.split(',').join(separador)).join('\r\n');
+    }
+
+    it('el CSV real de M1–M3 da 479 duplicadas sobre la base cargada y la vista previa no escribe nada', async () => {
+      const antes = await conteos();
+      const vista = await importacion.vistaPrevia(readFileSync(CSV_DICCIONARIO));
+
+      expect(vista.resumen).toMatchObject({ total: 479, duplicadas: 479, nuevas: 0, errores: 0 });
+      expect(await conteos()).toEqual(antes);
+    });
+
+    it('el CSV real de M1–M3 da 479 nuevas sobre una base vacía', async () => {
+      class Revertir extends Error {}
+      let nuevas = 0;
+      await prisma
+        .$transaction(async (tx) => {
+          await tx.signVideo.deleteMany({});
+          await tx.dictionaryEntry.deleteMany({});
+          const filas = await carga.analizar(
+            tx,
+            leerCsvDiccionario(readFileSync(CSV_DICCIONARIO, 'utf8')),
+          );
+          nuevas = filas.filter((f) => f.estado === 'nueva').length;
+          throw new Revertir();
+        })
+        .catch((e: unknown) => {
+          if (!(e instanceof Revertir)) throw e;
+        });
+
+      expect(nuevas).toBe(479);
+    });
+
+    it('16 filas con 2 errores y 2 duplicadas: 12 nuevas, cada error con su fila y su motivo', async () => {
+      const vista = await importacion.vistaPrevia(Buffer.from(csvDe16Filas()));
+
+      expect(vista.resumen).toMatchObject({ total: 16, nuevas: 12, duplicadas: 2, errores: 2 });
+      expect(vista.resumen.unidadesNuevas).toEqual([
+        { modulo: 4, codigo: 'U1', nombre: 'Daily routines' },
+      ]);
+      expect(
+        vista.filas.filter((f) => f.estado === 'error').map((f) => [f.fila, f.motivo]),
+      ).toEqual([
+        [16, 'La categoría “Comidas” no existe.'],
+        [17, 'El tipo debe ser Palabra, Verbo, Frase o Expresión.'],
+      ]);
+    });
+
+    it('confirmar importa exactamente las nuevas, crea la unidad y no publica el módulo', async () => {
+      const { token } = await importacion.vistaPrevia(Buffer.from(csvDe16Filas()));
+      const antes = await conteos();
+
+      const resultado = await importacion.confirmar(token, false);
+
+      const m4 = await prisma.dictionaryModule.findUniqueOrThrow({ where: { numero: 4 } });
+      expect(resultado).toEqual({ creadas: 12, actualizadas: 0, unidadesCreadas: 1 });
+      expect((await conteos()).entradas).toBe(antes.entradas + 12);
+      expect(m4.estado).toBe('PROXIMAMENTE');
+    });
+
+    it('si falla una inserción no queda ninguna', async () => {
+      const antes = await conteos();
+      const filas = await carga.analizar(prisma, leerCsvDiccionario(csvDe16Filas()));
+      const rota = filas.map((f, i) => (i === 5 ? { ...f, categoryId: randomUUID() } : f));
+
+      await expect(prisma.$transaction((tx) => carga.aplicar(tx, rota, false))).rejects.toThrow();
+      expect(await conteos()).toEqual(antes);
+    });
+
+    it('lee un CSV de Excel en español (separador ; y BOM)', async () => {
+      const excel = Buffer.concat([
+        Buffer.from([0xef, 0xbb, 0xbf]),
+        Buffer.from(csvDe16Filas(';')),
+      ]);
+
+      const vista = await importacion.vistaPrevia(excel);
+
+      expect(vista.resumen).toMatchObject({ nuevas: 12, duplicadas: 2, errores: 2 });
+    });
+
+    it('confirmar con una vista previa caducada responde 410', async () => {
+      const { token } = await importacion.vistaPrevia(Buffer.from(csvDe16Filas()));
+      const despues = new Date(Date.now() + VISTA_PREVIA_TTL_MS + 1000);
+
+      const error = await importacion
+        .confirmar(token, false, despues)
+        .catch((e: { getStatus: () => number; getResponse: () => { code: string } }) => e);
+      expect((error as { getStatus: () => number }).getStatus()).toBe(410);
+      expect((error as { getResponse: () => { code: string } }).getResponse().code).toBe(
+        ApiErrorCode.IMPORT_PREVIEW_EXPIRED,
+      );
     });
   });
 });

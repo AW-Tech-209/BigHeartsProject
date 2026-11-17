@@ -584,3 +584,62 @@ export interface CrearCategoriaInput {
 }
 
 export type EditarCategoriaInput = Partial<CrearCategoriaInput>;
+
+// ── Importación CSV (solo ADMIN) ──────────────────────────────────────────────
+
+/** Columnas del CSV; `unidad_nombre` es opcional y permite crear unidades nuevas. */
+export const COLUMNAS_IMPORTACION = [
+  'modulo',
+  'unidad',
+  'unidad_nombre',
+  'categoria',
+  'tipo',
+  'ingles',
+  'espanol',
+] as const;
+export const IMPORTACION_MAX_BYTES = 1024 * 1024;
+
+export type EstadoFilaImportacion = 'nueva' | 'duplicada' | 'error';
+
+/** Una fila tal como vino, con su estado. `fila` cuenta la cabecera como 1. */
+export interface FilaImportacion {
+  fila: number;
+  estado: EstadoFilaImportacion;
+  motivo: string | null;
+  modulo: string;
+  unidad: string;
+  categoria: string;
+  tipo: string;
+  ingles: string;
+  espanol: string;
+  /** La unidad no existe y se creará al confirmar. */
+  unidadNueva: boolean;
+}
+
+export interface ResumenImportacion {
+  total: number;
+  nuevas: number;
+  duplicadas: number;
+  errores: number;
+  unidadesNuevas: { modulo: number; codigo: string; nombre: string }[];
+}
+
+/** `POST /admin/diccionario/importacion/vista-previa` (multipart, campo `archivo`). No escribe nada. */
+export interface VistaPreviaImportacionResponse {
+  token: string;
+  expiraEl: string;
+  filas: FilaImportacion[];
+  resumen: ResumenImportacion;
+}
+
+/** `POST /admin/diccionario/importacion/confirmar`. Token caducado → 410. */
+export interface ConfirmarImportacionInput {
+  token: string;
+  incluirDuplicadas?: boolean;
+}
+
+export interface ConfirmarImportacionResponse {
+  creadas: number;
+  actualizadas: number;
+  unidadesCreadas: number;
+}

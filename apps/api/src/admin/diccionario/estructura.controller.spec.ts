@@ -9,6 +9,7 @@ import { describe, expect, it } from 'vitest';
 import { RolesGuard } from '../../auth/guards/roles.guard';
 import { CrearCategoriaDto } from './dto/estructura.dto';
 import { EstructuraController } from './estructura.controller';
+import { ImportacionController } from './importacion.controller';
 import { PapeleraController } from './papelera.controller';
 import { quedanDias } from './papelera.service';
 
@@ -26,11 +27,11 @@ const metodos = (clase: { prototype: object }) =>
     .filter((m) => m !== 'constructor')
     .map((m) => (clase.prototype as Record<string, unknown>)[m]);
 
-describe('papelera y estructura — autorización', () => {
+describe('papelera, estructura e importación — autorización', () => {
   const guard = new RolesGuard(new Reflector());
 
   it.each([UserRole.STUDENT, UserRole.TEACHER])('%s recibe 403 en todas las rutas', (role) => {
-    for (const clase of [PapeleraController, EstructuraController]) {
+    for (const clase of [PapeleraController, EstructuraController, ImportacionController]) {
       for (const handler of metodos(clase)) {
         expect(() => guard.canActivate(contexto(clase, handler, role))).toThrowError(
           ForbiddenException,

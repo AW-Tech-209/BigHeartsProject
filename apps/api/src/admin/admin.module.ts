@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 
 import { AuthModule } from '../auth/auth.module';
+import { CargaEntradasService } from '../diccionario/carga-entradas.service';
 import { NotificationsModule } from '../notifications/notifications.module';
 import { AdminClassroomsController } from './admin-classrooms.controller';
 import { AdminClassroomsService } from './admin-classrooms.service';
@@ -14,6 +15,8 @@ import { AdminDiccionarioController } from './diccionario/admin-diccionario.cont
 import { AdminDiccionarioService } from './diccionario/admin-diccionario.service';
 import { EstructuraController } from './diccionario/estructura.controller';
 import { EstructuraService } from './diccionario/estructura.service';
+import { ImportacionController } from './diccionario/importacion.controller';
+import { ImportacionService } from './diccionario/importacion.service';
 import { MediosController } from './diccionario/medios.controller';
 import { MediosService } from './diccionario/medios.service';
 import { PapeleraController } from './diccionario/papelera.controller';
@@ -41,6 +44,7 @@ import { PurgaPapeleraService } from './diccionario/purga-papelera.service';
     MediosController,
     PapeleraController,
     EstructuraController,
+    ImportacionController,
   ],
   providers: [
     AdminService,
@@ -52,6 +56,8 @@ import { PurgaPapeleraService } from './diccionario/purga-papelera.service';
     PapeleraService,
     PurgaPapeleraService,
     EstructuraService,
+    ImportacionService,
+    CargaEntradasService,
   ],
 })
 export class AdminModule {}

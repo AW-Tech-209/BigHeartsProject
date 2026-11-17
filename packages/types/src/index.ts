@@ -1544,6 +1544,10 @@ export const ApiErrorCode = {
   UNIT_NOT_FOUND: 'UNIT_NOT_FOUND',
   /** La lista de `ids` para reordenar no coincide con los elementos actuales (HU-532). */
   ORDER_MISMATCH: 'ORDER_MISMATCH',
+  /** El CSV no se puede leer: no es UTF-8, está vacío o le faltan columnas (HU-533). */
+  CSV_INVALID: 'CSV_INVALID',
+  /** La vista previa de la importación caducó o no existe: hay que volver a subir el CSV (HU-533). */
+  IMPORT_PREVIEW_EXPIRED: 'IMPORT_PREVIEW_EXPIRED',
   /** Se superó el límite de peticiones (rate limiting). */
   TOO_MANY_REQUESTS: 'TOO_MANY_REQUESTS',
   DATABASE_UNAVAILABLE: 'DATABASE_UNAVAILABLE',

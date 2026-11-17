@@ -34,30 +34,30 @@ CSV trae su nombre (columna opcional `unidad_nombre`).
 
 ## Tasks
 
-- [ ] **T1** — `POST /admin/diccionario/importacion/vista-previa` (multipart, CSV ≤ 1 MB, UTF-8 con o sin
+- [x] **T1** — `POST /admin/diccionario/importacion/vista-previa` (multipart, CSV ≤ 1 MB, UTF-8 con o sin
       BOM, separador `,` o `;`): devuelve cada fila como `nueva`, `duplicada` (ya existe ese inglés+tipo
       en ese módulo) o `error` con su motivo en español («La categoría “Comidas” no existe»; «El tipo
       debe ser Palabra, Verbo, Frase o Expresión»; «Falta el español»), más el resumen y un `token` de
       la vista previa (válido 30 min, guardado en memoria/BD).
-- [ ] **T2** — `POST /admin/diccionario/importacion/confirmar` `{ token, incluirDuplicadas: false }`:
+- [x] **T2** — `POST /admin/diccionario/importacion/confirmar` `{ token, incluirDuplicadas: false }`:
       inserta las `nueva` (y actualiza las duplicadas solo si se pide) en **una transacción**, y crea las
       unidades nuevas declaradas. Si el módulo estaba `PROXIMAMENTE`, **no** lo cambia (eso es decisión
       del admin en Estructura).
-- [ ] **T3** — `carga-entradas.service.ts`: resolución de módulo/unidad/categoría por nombre o código,
+- [x] **T3** — `carga-entradas.service.ts`: resolución de módulo/unidad/categoría por nombre o código,
       normalización, slug y `orden`. El seed de HU-526 lo usa también (un solo camino de carga).
-- [ ] **T4** — `GET /admin/diccionario/importacion/plantilla`: CSV de ejemplo con las cabeceras y 3 filas.
-- [ ] **T5** — Tests: el CSV real de M1–M3 sobre una base vacía da 479 `nueva`; sobre la base ya cargada,
+- [x] **T4** — `GET /admin/diccionario/importacion/plantilla`: CSV de ejemplo con las cabeceras y 3 filas.
+- [x] **T5** — Tests: el CSV real de M1–M3 sobre una base vacía da 479 `nueva`; sobre la base ya cargada,
       479 `duplicada`; una fila con categoría inventada da `error` con su motivo; confirmar con un
       token caducado → 410.
 
 ## Criterios de aceptación
 
-- [ ] **AC1** — La vista previa no escribe nada en la base (verificado contando filas antes y después).
-- [ ] **AC2** — Un CSV de 16 filas con 2 errores y 2 duplicadas devuelve 12 nuevas, 2 duplicadas y 2
+- [x] **AC1** — La vista previa no escribe nada en la base (verificado contando filas antes y después).
+- [x] **AC2** — Un CSV de 16 filas con 2 errores y 2 duplicadas devuelve 12 nuevas, 2 duplicadas y 2
       errores, cada error con su fila y su motivo.
-- [ ] **AC3** — Confirmar importa exactamente las nuevas, y si falla una inserción no queda ninguna.
-- [ ] **AC4** — Un CSV guardado desde Excel en español (separador `;`, BOM) se lee bien.
-- [ ] **AC5** — Seed e importación comparten el mismo servicio (no hay dos implementaciones).
+- [x] **AC3** — Confirmar importa exactamente las nuevas, y si falla una inserción no queda ninguna.
+- [x] **AC4** — Un CSV guardado desde Excel en español (separador `;`, BOM) se lee bien.
+- [x] **AC5** — Seed e importación comparten el mismo servicio (no hay dos implementaciones).
 
 ## Fuera de alcance
 
@@ -65,4 +65,6 @@ CSV trae su nombre (columna opcional `unidad_nombre`).
 
 ## Notas de implementación
 
-_Se rellena al cerrar: máximo 3 líneas o «Sin desviaciones»._
+El token guarda el CSV en memoria 30 min (una sola instancia en Render); confirmar lo re-analiza dentro de la transacción por si la base cambió.
+Una fila que repite otra del mismo CSV es `error` («Repite la fila N»). Las duplicadas se detectan contra entradas vivas (no la papelera).
+El seed ahora asigna `orden` por categoría (máx. + 1) en vez de número de fila; el orden relativo es el mismo. Códigos nuevos: `CSV_INVALID`, `IMPORT_PREVIEW_EXPIRED` (410).
