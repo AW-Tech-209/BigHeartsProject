@@ -148,7 +148,7 @@ function EnlaceSuperior({ destino }: { destino: Destino }) {
       to={destino.to}
       className={({ isActive }) =>
         cn(
-          'inline-flex min-h-[3.625rem] items-center gap-2 border-b-2 px-3 text-sm transicion-suave',
+          'inline-flex min-h-[3.625rem] shrink-0 items-center gap-2 border-b-2 px-2.5 text-sm whitespace-nowrap transicion-suave xl:px-3',
           isActive
             ? 'border-brand-foreground font-medium text-brand-foreground'
             : 'border-transparent text-brand-foreground/70 hover:text-brand-foreground',
@@ -200,7 +200,8 @@ function EnlaceInferior({ destino }: { destino: Destino }) {
  *
  * El avatar va `aria-hidden`: son dos iniciales, no información. El nombre y el
  * rol viajan en texto, y bajo 640px siguen en el árbol accesible aunque no se
- * vean (`sr-only sm:not-sr-only`) — ocultarlos con `hidden` los borraría también
+ * vean (`sr-only sm:not-sr-only`, y otra vez entre `lg` y `xl`, donde la barra superior
+ * necesita el ancho para sus 5 destinos) — ocultarlos con `hidden` los borraría también
  * para el lector de pantalla, que es a quien menos podemos permitirnos borrar.
  */
 function CuentaDelShell({ user }: { user: User }) {
@@ -240,7 +241,7 @@ function CuentaDelShell({ user }: { user: User }) {
           {iniciales}
         </span>
 
-        <p className="sr-only min-w-0 text-sm leading-tight sm:not-sr-only sm:block">
+        <p className="sr-only min-w-0 text-sm leading-tight sm:not-sr-only sm:block lg:sr-only xl:not-sr-only xl:block">
           <span className="block truncate font-medium text-brand-foreground">
             {user.firstName} {user.lastName}
           </span>
@@ -257,12 +258,14 @@ function CuentaDelShell({ user }: { user: User }) {
         {logout.isPending ? (
           <>
             <LoaderCircle aria-hidden="true" strokeWidth={2} className="size-4 animate-spin" />
-            <span className="sr-only sm:not-sr-only">Cerrando tu sesión…</span>
+            <span className="sr-only sm:not-sr-only lg:sr-only xl:not-sr-only">
+              Cerrando tu sesión…
+            </span>
           </>
         ) : (
           <>
             <LogOut aria-hidden="true" strokeWidth={2} className="size-4" />
-            <span className="sr-only sm:not-sr-only">Cerrar sesión</span>
+            <span className="sr-only sm:not-sr-only lg:sr-only xl:not-sr-only">Cerrar sesión</span>
           </>
         )}
       </Button>

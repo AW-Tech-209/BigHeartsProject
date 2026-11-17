@@ -38,7 +38,11 @@ export function BotonAyuda({ className, soporte = SOPORTE }: BotonAyudaProps) {
   return (
     <Dialog.Root>
       <Dialog.Trigger
-        className={cn(buttonVariants({ variant: 'outline' }), 'h-11 gap-2 px-3 text-sm', className)}
+        className={cn(
+          buttonVariants({ variant: 'outline' }),
+          'h-11 gap-2 px-3 text-sm whitespace-nowrap',
+          className,
+        )}
       >
         <LifeBuoy aria-hidden="true" strokeWidth={2} className="size-4" />
         ¿Necesitas ayuda?
