@@ -7,7 +7,7 @@ import {
   CircleAlert,
   CircleCheck,
   CircleDashed,
-  Clock,
+  Clapperboard,
   Hand,
   Hourglass,
   type LucideIcon,
@@ -19,7 +19,7 @@ type Tono = 'success' | 'neutral' | 'attention' | 'destructive';
 
 const ESTUDIANTE: Record<EstadoSenaEstudiante, { icono: LucideIcon; tono: Tono; texto: string }> = {
   lista: { icono: Hand, tono: 'success', texto: 'Seña lista' },
-  'en-preparacion': { icono: Clock, tono: 'neutral', texto: 'Seña en preparación' },
+  'en-preparacion': { icono: Clapperboard, tono: 'neutral', texto: 'Seña en preparación' },
 };
 
 // Ámbar solo en «Procesando»: es tiempo, lo único que el ámbar significa.

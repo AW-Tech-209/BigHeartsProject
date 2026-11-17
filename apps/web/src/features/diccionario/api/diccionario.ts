@@ -4,6 +4,7 @@ import {
   type CategoriaDetalleResponse,
   type CategoriaQuery,
   type DiccionarioInicioResponse,
+  type EntradaDetalleResponse,
   type ModuloDetalleResponse,
   type ModuloQuery,
 } from '@academia/types';
@@ -33,5 +34,11 @@ export function getCategoria(
   return httpClient.get<CategoriaDetalleResponse>(
     `/diccionario/modulos/${numero}/categorias/${encodeURIComponent(slug)}`,
     { params: query },
+  );
+}
+
+export function getEntrada(slug: string): Promise<EntradaDetalleResponse> {
+  return httpClient.get<EntradaDetalleResponse>(
+    `/diccionario/entradas/${encodeURIComponent(slug)}`,
   );
 }

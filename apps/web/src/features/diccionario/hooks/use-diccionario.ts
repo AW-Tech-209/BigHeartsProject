@@ -11,6 +11,7 @@ import {
   buscarEnDiccionario,
   getCategoria,
   getDiccionarioInicio,
+  getEntrada,
   getModulo,
 } from '../api/diccionario';
 import { borrarRecientes, leerRecientes, suscribirRecientes } from '../lib/recientes';
@@ -77,5 +78,13 @@ export function useCategoria(numero: number, slug: string, query: CategoriaQuery
     queryFn: () => getCategoria(numero, slug, query),
     enabled: Number.isInteger(numero) && slug !== '',
     placeholderData: keepPreviousData,
+  });
+}
+
+export function useEntrada(slug: string) {
+  return useQuery({
+    queryKey: ['diccionario', 'entrada', slug],
+    queryFn: () => getEntrada(slug),
+    enabled: slug !== '',
   });
 }

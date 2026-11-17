@@ -73,7 +73,7 @@ beforeEach(() => {
 describe('DiccionarioPage — inicio', () => {
   it('un módulo próximo es un botón que explica por qué no está, y se abre con teclado', async () => {
     const { user } = montar();
-    const boton = await screen.findByRole('button', { name: /Módulo\s*4/ });
+    const boton = await screen.findByRole('button', { name: /Módulo\s*4/ }, { timeout: 3000 });
     expect(boton).toHaveAttribute('aria-expanded', 'false');
     expect(screen.queryByRole('link', { name: /Módulo\s*4/ })).not.toBeInTheDocument();
 

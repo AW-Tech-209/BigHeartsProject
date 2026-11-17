@@ -9,6 +9,7 @@ import { AulasPage } from '@/pages/AulasPage';
 import { CompletarAccesibilidadPage } from '@/pages/CompletarAccesibilidadPage';
 import { CrearAulaPage } from '@/pages/CrearAulaPage';
 import { DiccionarioCategoriaPage } from '@/pages/DiccionarioCategoriaPage';
+import { DiccionarioEntradaPage } from '@/pages/DiccionarioEntradaPage';
 import { DiccionarioModuloPage } from '@/pages/DiccionarioModuloPage';
 import { DiccionarioPage } from '@/pages/DiccionarioPage';
 import { EditarAulaPage } from '@/pages/EditarAulaPage';
@@ -296,6 +297,14 @@ export function AppRoutes() {
         element={
           <RequireAuth>
             <DiccionarioCategoriaPage />
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/diccionario/entrada/:slug"
+        element={
+          <RequireAuth>
+            <DiccionarioEntradaPage />
           </RequireAuth>
         }
       />
