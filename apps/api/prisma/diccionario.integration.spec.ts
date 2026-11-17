@@ -1,0 +1,944 @@
+import { randomUUID } from 'node:crypto';
+import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { Readable } from 'node:stream';
+
+import {
+  AccionLote,
+  ApiErrorCode,
+  EstadoVideo,
+  TipoEntrada,
+  UserRole,
+  UserStatus,
+} from '@academia/types';
+import { Prisma, PrismaClient } from '@prisma/client';
+import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest';
+
+import { AdminDiccionarioService } from '../src/admin/diccionario/admin-diccionario.service';
+import { EstructuraService } from '../src/admin/diccionario/estructura.service';
+import {
+  ImportacionService,
+  VISTA_PREVIA_TTL_MS,
+} from '../src/admin/diccionario/importacion.service';
+import { MediosService, SUBIDA_ABANDONADA_MS } from '../src/admin/diccionario/medios.service';
+import { PapeleraService } from '../src/admin/diccionario/papelera.service';
+import { PurgaPapeleraService } from '../src/admin/diccionario/purga-papelera.service';
+import { LocalAlmacenamientoService } from '../src/almacenamiento/local-almacenamiento.service';
+import type { AppConfigService } from '../src/config/app-config.service';
+import {
+  CargaEntradasService,
+  leerCsvDiccionario,
+} from '../src/diccionario/carga-entradas.service';
+import { DiccionarioService } from '../src/diccionario/diccionario.service';
+import type { PrismaService } from '../src/prisma/prisma.service';
+import { CSV_DICCIONARIO, sembrarDiccionario } from './seed-diccionario';
+
+/** Contra la BD real con las migraciones aplicadas (igual que `bookings-index`). */
+const url = process.env.DIRECT_URL;
+if (!url)
+  throw new Error(
+    'Falta DIRECT_URL: estos tests requieren una BD real con las migraciones aplicadas.',
+  );
+const prisma = new PrismaClient({ datasources: { db: { url } } });
+
+/** Medios en una carpeta temporal con el adaptador local (D51). */
+const carpetaMedios = mkdtempSync(join(tmpdir(), 'bighearts-medios-'));
+const almacenamiento = new LocalAlmacenamientoService(
+  'secreto-de-prueba',
+  'http://localhost:3000',
+  carpetaMedios,
+);
+
+const ENTRADAS_POR_MODULO = { 1: 203, 2: 167, 3: 109 };
+
+describe('diccionario contra la base de datos real', () => {
+  const adminId = randomUUID();
+  let slugsTrasPrimera: string[];
+
+  beforeAll(async () => {
+    await sembrarDiccionario(prisma);
+    slugsTrasPrimera = (
+      await prisma.dictionaryEntry.findMany({ select: { slug: true }, orderBy: { slug: 'asc' } })
+    ).map((e) => e.slug);
+    await prisma.user.create({
+      data: {
+        id: adminId,
+        email: `admin-${adminId}@academia.local`,
+        password: 'irrelevante',
+        firstName: 'Ada',
+        lastName: 'Admin',
+        role: UserRole.ADMIN,
+        status: UserStatus.ACTIVE,
+      },
+    });
+  });
+
+  afterAll(async () => {
+    await prisma.signVideo.deleteMany({ where: { subidoPorId: adminId } });
+    await prisma.user.delete({ where: { id: adminId } });
+    await prisma.$disconnect();
+    rmSync(carpetaMedios, { recursive: true, force: true });
+  });
+
+  it('la migración deja 9 módulos, 15 unidades y 19 categorías', async () => {
+    expect(await prisma.dictionaryModule.count()).toBe(9);
+    expect(await prisma.dictionaryUnit.count()).toBe(15);
+    expect(await prisma.dictionaryCategory.count()).toBe(19);
+  });
+
+  it('carga 479 entradas, 203 / 167 / 109 por módulo', async () => {
+    expect(slugsTrasPrimera).toHaveLength(479);
+    for (const [numero, total] of Object.entries(ENTRADAS_POR_MODULO)) {
+      expect(
+        await prisma.dictionaryEntry.count({ where: { module: { numero: Number(numero) } } }),
+      ).toBe(total);
+    }
+    const acciones = await Promise.all(
+      [1, 2, 3].map((numero) =>
+        prisma.dictionaryEntry.count({
+          where: { module: { numero }, category: { slug: 'acciones' } },
+        }),
+      ),
+    );
+    expect(acciones).toEqual([51, 42, 9]);
+  });
+
+  it('una segunda corrida no crea filas ni cambia slugs', async () => {
+    const resultado = await sembrarDiccionario(prisma);
+
+    expect(resultado).toEqual({ creadas: 0, existentes: 479 });
+    const slugs = (
+      await prisma.dictionaryEntry.findMany({ select: { slug: true }, orderBy: { slug: 'asc' } })
+    ).map((e) => e.slug);
+    expect(slugs).toEqual(slugsTrasPrimera);
+  });
+
+  it('la búsqueda trigram usa el índice y tolera errores y tildes', async () => {
+    const [plan, eat, lapiz] = await prisma
+      .$transaction([
+        prisma.$executeRaw`SET LOCAL enable_seqscan = off`,
+        prisma.$queryRaw<
+          { 'QUERY PLAN': string }[]
+        >`EXPLAIN SELECT id FROM dictionary_entries WHERE ingles_norm % 'to eet'`,
+        prisma.$queryRaw<
+          { ingles: string }[]
+        >`SELECT ingles FROM dictionary_entries WHERE ingles_norm % 'to eet'`,
+        prisma.$queryRaw<
+          { espanol: string }[]
+        >`SELECT espanol FROM dictionary_entries WHERE espanol_norm % 'lapiz'`,
+      ])
+      .then(([, p, e, l]) => [p, e, l] as const);
+
+    expect(plan.map((f) => f['QUERY PLAN']).join('\n')).toContain(
+      'dictionary_entries_ingles_norm_trgm_idx',
+    );
+    expect(eat.map((f) => f.ingles)).toContain('To eat');
+    expect(lapiz.map((f) => f.espanol)).toContain('Lápiz');
+  });
+
+  it('no admite dos videos activos para la misma entrada y lengua', async () => {
+    const entrada = await prisma.dictionaryEntry.findFirstOrThrow({ where: { slug: 'to-eat' } });
+    const video = (estado: EstadoVideo) => ({
+      entryId: entrada.id,
+      videoKey: `${randomUUID()}.mp4`,
+      miniaturaKey: `${randomUUID()}.jpg`,
+      duracionMs: 3000,
+      bytes: 1000,
+      estado,
+      subidoPorId: adminId,
+    });
+
+    await prisma.signVideo.create({ data: video(EstadoVideo.LISTO) });
+    await prisma.signVideo.create({ data: video(EstadoVideo.SUBIENDO) });
+
+    await expect(
+      prisma.signVideo.create({ data: video(EstadoVideo.LISTO) }),
+    ).rejects.toBeInstanceOf(Prisma.PrismaClientKnownRequestError);
+  });
+
+  describe('lectura (cualquier rol con sesión)', () => {
+    const servicio = new DiccionarioService(prisma as unknown as PrismaService, almacenamiento);
+
+    class Revertir extends Error {}
+    /** Crea datos dentro de una transacción que se revierte: no ensucia los conteos de otros tests. */
+    async function conDatosTemporales(
+      fn: (svc: DiccionarioService, tx: Prisma.TransactionClient) => Promise<void>,
+    ): Promise<void> {
+      await prisma
+        .$transaction(async (tx) => {
+          await fn(new DiccionarioService(tx as unknown as PrismaService, almacenamiento), tx);
+          throw new Revertir();
+        })
+        .catch((e: unknown) => {
+          if (!(e instanceof Revertir)) throw e;
+        });
+    }
+
+    async function codigoDe(promesa: Promise<unknown>): Promise<string | undefined> {
+      const error = await promesa.then(
+        () => undefined,
+        (e: { getResponse?: () => { code?: string } }) => e,
+      );
+      return error?.getResponse?.().code;
+    }
+
+    it('el inicio trae los 9 módulos; el 1 con 203 palabras y los próximos en 0', async () => {
+      const { modulos } = await servicio.inicio();
+
+      expect(modulos.map((m) => m.numero)).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9]);
+      expect(modulos[0]?.palabras).toBe(203);
+      expect(modulos[3]?.palabras).toBe(0);
+    });
+
+    it('el módulo ordena sus categorías por cantidad y un módulo próximo responde MODULE_NOT_AVAILABLE', async () => {
+      const modulo = await servicio.modulo(1, {});
+
+      expect(modulo.categorias[0]).toMatchObject({ slug: 'acciones', palabras: 51 });
+      const conteos = modulo.categorias.map((c) => c.palabras);
+      expect(conteos).toEqual([...conteos].sort((a, b) => b - a));
+      expect(modulo.unidades).toHaveLength(6);
+      expect(await codigoDe(servicio.modulo(4, {}))).toBe(ApiErrorCode.MODULE_NOT_AVAILABLE);
+    });
+
+    it('Módulo 1 · Acciones: solo VERBO 51, y la unidad U1 deja 16', async () => {
+      const todas = await servicio.categoria(1, 'acciones', {});
+      const u1 = await servicio.categoria(1, 'acciones', { unidad: 'U1' });
+
+      expect(todas.filtros.tipos).toEqual({ [TipoEntrada.VERBO]: 51 });
+      expect(u1.entradas).toHaveLength(16);
+      expect(todas.entradas.slice(0, 3).map((e) => e.slug)).toEqual([
+        'to-eat',
+        'to-drink',
+        'to-read',
+      ]);
+    });
+
+    it('la entrada trae su posición y sus vecinas en el mismo orden', async () => {
+      const drink = await servicio.entrada('to-drink');
+      const eat = await servicio.entrada('to-eat');
+
+      expect(drink.posicion).toEqual({ actual: 2, total: 51 });
+      expect(drink.anterior?.ingles).toBe('To eat');
+      expect(drink.siguiente?.ingles).toBe('To read');
+      expect(eat.anterior).toBeNull();
+    });
+
+    it.each([
+      ['comer', 'To eat'],
+      ['lapiz', 'Pencil'],
+      ['to eet', 'To eat'],
+    ])('buscar «%s» encuentra «%s»', async (q, ingles) => {
+      const { resultados } = await servicio.buscar({ q });
+
+      expect(resultados.map((r) => r.ingles)).toContain(ingles);
+    });
+
+    it('lo de la papelera, lo oculto y lo de un módulo próximo no aparece en ninguna lectura', async () => {
+      await conDatosTemporales(async (svc, tx) => {
+        const [m1, m4, acciones] = await Promise.all([
+          tx.dictionaryModule.findUniqueOrThrow({ where: { numero: 1 } }),
+          tx.dictionaryModule.findUniqueOrThrow({ where: { numero: 4 } }),
+          tx.dictionaryCategory.findUniqueOrThrow({ where: { slug: 'acciones' } }),
+        ]);
+        const base = {
+          espanol: 'Oculta',
+          espanolNorm: 'oculta',
+          tipo: TipoEntrada.VERBO,
+          categoryId: acciones.id,
+          orden: 0,
+        };
+        await tx.dictionaryEntry.createMany({
+          data: [
+            {
+              ...base,
+              slug: 'zzoculta-papelera',
+              ingles: 'Zzoculta papelera',
+              inglesNorm: 'zzoculta papelera',
+              moduleId: m1.id,
+              deletedAt: new Date(),
+            },
+            {
+              ...base,
+              slug: 'zzoculta-no-publicada',
+              ingles: 'Zzoculta no publicada',
+              inglesNorm: 'zzoculta no publicada',
+              moduleId: m1.id,
+              publicada: false,
+            },
+            {
+              ...base,
+              slug: 'zzoculta-proxima',
+              ingles: 'Zzoculta proxima',
+              inglesNorm: 'zzoculta proxima',
+              moduleId: m4.id,
+            },
+          ],
+        });
+
+        expect((await svc.inicio()).modulos.map((m) => m.palabras).slice(0, 4)).toEqual([
+          203, 167, 109, 0,
+        ]);
+        expect((await svc.categoria(1, 'acciones', {})).filtros.total).toBe(51);
+        expect((await svc.modulo(1, {})).modulo.palabras).toBe(203);
+        expect((await svc.buscar({ q: 'zzoculta' })).resultados).toEqual([]);
+        for (const slug of ['zzoculta-papelera', 'zzoculta-no-publicada', 'zzoculta-proxima']) {
+          expect(await codigoDe(svc.entrada(slug))).toBe(ApiErrorCode.ENTRY_NOT_FOUND);
+        }
+      });
+    });
+
+    it('ninguna respuesta filtra campos internos ni estados del video que no sean «lista»', async () => {
+      await conDatosTemporales(async (svc, tx) => {
+        const read = await tx.dictionaryEntry.findUniqueOrThrow({ where: { slug: 'to-read' } });
+        await tx.signVideo.create({
+          data: {
+            entryId: read.id,
+            videoKey: 'secreto.mp4',
+            miniaturaKey: 'secreto.jpg',
+            duracionMs: 3000,
+            bytes: 1,
+            estado: EstadoVideo.PROCESANDO,
+            subidoPorId: adminId,
+          },
+        });
+
+        const entrada = await svc.entrada('to-read');
+        const respuestas = JSON.stringify([
+          await svc.inicio(),
+          await svc.modulo(1, {}),
+          await svc.categoria(1, 'acciones', {}),
+          entrada,
+          await svc.buscar({ q: 'read' }),
+        ]);
+
+        expect(entrada.sena.estado).toBe('en-preparacion');
+        for (const prohibido of [
+          'deletedAt',
+          'publicada',
+          '"videoKey"',
+          '"miniaturaKey"',
+          '"imagenKey"',
+          'secreto',
+          'PROCESANDO',
+          'ERROR',
+          'SUBIENDO',
+        ]) {
+          expect(respuestas).not.toContain(prohibido);
+        }
+      });
+    });
+  });
+
+  describe('gestión (solo ADMIN)', () => {
+    const admin = new AdminDiccionarioService(prisma as unknown as PrismaService);
+    const lectura = new DiccionarioService(prisma as unknown as PrismaService, almacenamiento);
+    const creadas: string[] = [];
+
+    afterEach(async () => {
+      await prisma.dictionaryEntry.deleteMany({ where: { id: { in: creadas.splice(0) } } });
+    });
+
+    async function codigo(promesa: Promise<unknown>): Promise<string | undefined> {
+      const error = await promesa.then(
+        () => undefined,
+        (e: { getResponse?: () => { code?: string } }) => e,
+      );
+      return error?.getResponse?.().code;
+    }
+
+    async function referencias() {
+      const [m1, m2, acciones, lugares] = await Promise.all([
+        prisma.dictionaryModule.findUniqueOrThrow({
+          where: { numero: 1 },
+          include: { unidades: true },
+        }),
+        prisma.dictionaryModule.findUniqueOrThrow({
+          where: { numero: 2 },
+          include: { unidades: true },
+        }),
+        prisma.dictionaryCategory.findUniqueOrThrow({ where: { slug: 'acciones' } }),
+        prisma.dictionaryCategory.findUniqueOrThrow({ where: { slug: 'lugares' } }),
+      ]);
+      return { m1, m2, acciones, lugares };
+    }
+
+    async function crear(ingles: string, moduloId: string, categoriaId: string) {
+      const e = await admin.crear({
+        ingles,
+        espanol: 'Prueba',
+        tipo: TipoEntrada.VERBO,
+        moduloId,
+        categoriaId,
+      });
+      creadas.push(e.id);
+      return e;
+    }
+
+    it('filtra por módulo, categoría y seña, y los chips suman el total de la categoría', async () => {
+      const r = await admin.listar({
+        modulo: 1,
+        categoria: 'acciones',
+        sena: 'sin-sena',
+        pageSize: 100,
+      });
+      const suma = Object.values(r.conteosSena).reduce((a, b) => a + b, 0);
+
+      expect(
+        r.items.every((e) => e.sena.estado === 'sin-sena' && e.categoria.slug === 'acciones'),
+      ).toBe(true);
+      expect(r.total).toBe(r.conteosSena['sin-sena']);
+      expect(suma).toBe(51);
+    });
+
+    it('una unidad de otro módulo responde UNIT_NOT_IN_MODULE', async () => {
+      const { m1, m2, acciones } = await referencias();
+      const unidadDelM1 = m1.unidades[0]?.id;
+
+      expect(
+        await codigo(
+          admin.crear({
+            ingles: 'Zz',
+            espanol: 'Zz',
+            tipo: TipoEntrada.VERBO,
+            moduloId: m2.id,
+            unidadId: unidadDelM1,
+            categoriaId: acciones.id,
+          }),
+        ),
+      ).toBe(ApiErrorCode.UNIT_NOT_IN_MODULE);
+    });
+
+    it('editar el inglés no cambia el slug y la lectura lo ve al instante', async () => {
+      const drink = await prisma.dictionaryEntry.findUniqueOrThrow({ where: { slug: 'to-drink' } });
+      try {
+        const editada = await admin.editar(drink.id, { ingles: 'To drink (water)' });
+
+        expect(editada.slug).toBe('to-drink');
+        expect((await lectura.entrada('to-drink')).ingles).toBe('To drink (water)');
+        expect((await lectura.buscar({ q: 'water' })).resultados.map((r) => r.slug)).toContain(
+          'to-drink',
+        );
+      } finally {
+        await admin.editar(drink.id, { ingles: drink.ingles });
+      }
+    });
+
+    it('crear «To drink» en el Módulo 2 funciona y duplicados avisa del Módulo 1', async () => {
+      const { m2, acciones } = await referencias();
+      const nueva = await crear('To drink', m2.id, acciones.id);
+      const { duplicados } = await admin.duplicados({ ingles: 'to  DRINK', excluir: nueva.id });
+
+      expect(nueva.slug).toBe('to-drink-2');
+      expect(duplicados.map((d) => d.modulo.numero)).toEqual([1]);
+    });
+
+    it('una entrada nueva va al final del orden de su categoría y módulo', async () => {
+      const { m1, acciones } = await referencias();
+      const nueva = await crear('Zz to last', m1.id, acciones.id);
+      const { _max } = await prisma.dictionaryEntry.aggregate({
+        where: { moduleId: m1.id, categoryId: acciones.id, id: { not: nueva.id } },
+        _max: { orden: true },
+      });
+
+      expect(nueva.orden).toBe((_max.orden ?? 0) + 1);
+    });
+
+    it('el lote mueve las dos o, si una no existe, ninguna', async () => {
+      const { m1, acciones, lugares } = await referencias();
+      const a = await crear('Zz lote a', m1.id, acciones.id);
+      const b = await crear('Zz lote b', m1.id, acciones.id);
+
+      expect(
+        await codigo(
+          admin.lote({
+            ids: [a.id, b.id, randomUUID()],
+            accion: AccionLote.MOVER_CATEGORIA,
+            categoriaId: lugares.id,
+          }),
+        ),
+      ).toBe(ApiErrorCode.ENTRY_NOT_FOUND);
+      expect((await admin.obtener(a.id)).categoria.slug).toBe('acciones');
+
+      await admin.lote({
+        ids: [a.id, b.id],
+        accion: AccionLote.MOVER_CATEGORIA,
+        categoriaId: lugares.id,
+      });
+      expect((await admin.obtener(a.id)).categoria.slug).toBe('lugares');
+      expect((await admin.obtener(b.id)).categoria.slug).toBe('lugares');
+    });
+
+    it('una entrada oculta deja de verse en la lectura', async () => {
+      const { m1, acciones } = await referencias();
+      const e = await crear('Zz oculta', m1.id, acciones.id);
+
+      await admin.lote({ ids: [e.id], accion: AccionLote.OCULTAR });
+
+      expect(await codigo(lectura.entrada(e.slug))).toBe(ApiErrorCode.ENTRY_NOT_FOUND);
+    });
+  });
+
+  describe('medios: señas e imágenes (adaptador local)', () => {
+    const MB = 1024 * 1024;
+    const config = {
+      limitesMedios: {
+        videoMaxBytes: 20 * MB,
+        videoMinMs: 2000,
+        videoMaxMs: 15000,
+        imagenMaxBytes: 800 * 1024,
+      },
+    } as unknown as AppConfigService;
+    const medios = new MediosService(prisma as unknown as PrismaService, almacenamiento, config);
+    const lectura = new DiccionarioService(prisma as unknown as PrismaService, almacenamiento);
+    let drinkId: string;
+
+    beforeAll(async () => {
+      drinkId = (await prisma.dictionaryEntry.findUniqueOrThrow({ where: { slug: 'to-drink' } }))
+        .id;
+    });
+
+    afterEach(async () => {
+      await medios.quitarVideo(drinkId);
+      await medios.quitarImagen(drinkId);
+    });
+
+    async function error(promesa: Promise<unknown>) {
+      return promesa.then(
+        () => undefined,
+        (e: { getStatus: () => number; getResponse: () => { code?: string } }) => ({
+          status: e.getStatus(),
+          code: e.getResponse().code,
+        }),
+      );
+    }
+
+    const pedido = (bytes: number, duracionMs = 4000) =>
+      ({ tipo: 'video/mp4', bytes, duracionMs, miniaturaTipo: 'image/jpeg' }) as const;
+
+    async function subirA(url: string, bytes: number): Promise<void> {
+      const permiso = almacenamiento.verificar(new URL(url).searchParams.get('t') ?? '', 'subir');
+      if (!permiso) throw new Error('permiso de subida inválido');
+      await almacenamiento.guardar(permiso, Readable.from([Buffer.alloc(bytes)]));
+    }
+
+    /** Lo que haría el navegador con las URLs firmadas: subir los dos archivos. */
+    async function subirArchivos(urls: { video: { url: string }; miniatura: { url: string } }) {
+      await subirA(urls.video.url, 2048);
+      await subirA(urls.miniatura.url, 512);
+    }
+
+    it('admite 19 MB y rechaza 21 MB (FILE_TOO_LARGE) y 16 s (VIDEO_TOO_LONG)', async () => {
+      await expect(
+        medios.iniciarSubidaVideo(drinkId, pedido(19 * MB), adminId),
+      ).resolves.toHaveProperty('videoId');
+      expect(await error(medios.iniciarSubidaVideo(drinkId, pedido(21 * MB), adminId))).toEqual({
+        status: 400,
+        code: ApiErrorCode.FILE_TOO_LARGE,
+      });
+      expect(await error(medios.iniciarSubidaVideo(drinkId, pedido(MB, 16000), adminId))).toEqual({
+        status: 400,
+        code: ApiErrorCode.VIDEO_TOO_LONG,
+      });
+    });
+
+    it('confirmar sin que el archivo haya llegado responde 409 UPLOAD_NOT_FOUND', async () => {
+      const { videoId } = await medios.iniciarSubidaVideo(drinkId, pedido(MB), adminId);
+
+      expect(await error(medios.confirmarVideo(drinkId, videoId))).toEqual({
+        status: 409,
+        code: ApiErrorCode.UPLOAD_NOT_FOUND,
+      });
+    });
+
+    it('subir y confirmar deja la seña lista con URL firmada y sube conSena del Módulo 1 en 1', async () => {
+      const antes = (await lectura.inicio()).modulos[0]?.conSena ?? 0;
+      const subida = await medios.iniciarSubidaVideo(drinkId, pedido(MB), adminId);
+      await subirArchivos(subida);
+
+      await medios.confirmarVideo(drinkId, subida.videoId);
+      const entrada = await lectura.entrada('to-drink');
+
+      expect(entrada.sena.estado).toBe('lista');
+      const token = new URL(entrada.sena.url ?? 'http://x').searchParams.get('t') ?? '';
+      const permiso = almacenamiento.verificar(token, 'leer');
+      expect(await almacenamiento.metadatos(permiso?.clave ?? '')).toEqual({ bytes: 2048 });
+      expect((await lectura.inicio()).modulos[0]?.conSena).toBe(antes + 1);
+      expect(JSON.stringify(entrada)).not.toMatch(/"(videoKey|miniaturaKey|imagenKey)"/);
+    });
+
+    it('reemplazar deja un solo video activo y borra los archivos anteriores', async () => {
+      const primera = await medios.iniciarSubidaVideo(drinkId, pedido(MB), adminId);
+      await subirArchivos(primera);
+      await medios.confirmarVideo(drinkId, primera.videoId);
+      const vieja = await prisma.signVideo.findUniqueOrThrow({ where: { id: primera.videoId } });
+
+      const segunda = await medios.iniciarSubidaVideo(drinkId, pedido(MB), adminId);
+      await subirArchivos(segunda);
+      await medios.confirmarVideo(drinkId, segunda.videoId);
+
+      const activos = await prisma.signVideo.findMany({
+        where: { entryId: drinkId, estado: EstadoVideo.LISTO },
+      });
+      expect(activos.map((v) => v.id)).toEqual([segunda.videoId]);
+      expect(await almacenamiento.metadatos(vieja.videoKey)).toBeNull();
+      expect(await almacenamiento.metadatos(vieja.miniaturaKey)).toBeNull();
+    });
+
+    it('la imagen se confirma solo si llegó, y la lectura la firma', async () => {
+      const { clave, imagen } = await medios.iniciarSubidaImagen(drinkId, {
+        tipo: 'image/webp',
+        bytes: 1000,
+      });
+      expect((await error(medios.confirmarImagen(drinkId, clave)))?.code).toBe(
+        ApiErrorCode.UPLOAD_NOT_FOUND,
+      );
+
+      await subirA(imagen.url, 1000);
+      await medios.confirmarImagen(drinkId, clave);
+
+      expect((await lectura.entrada('to-drink')).imagenUrl).toContain(
+        '/almacenamiento-local/leer?t=',
+      );
+    });
+
+    it('el barrido pasa a ERROR lo que sigue SUBIENDO tras 1 h', async () => {
+      const { videoId } = await medios.iniciarSubidaVideo(drinkId, pedido(MB), adminId);
+
+      await medios.barrerSubidasAbandonadas(new Date(Date.now() + SUBIDA_ABANDONADA_MS + 1000));
+
+      expect((await prisma.signVideo.findUniqueOrThrow({ where: { id: videoId } })).estado).toBe(
+        EstadoVideo.ERROR,
+      );
+    });
+  });
+
+  describe('papelera y estructura (D52)', () => {
+    const DIA = 24 * 60 * 60 * 1000;
+    const config = {
+      papeleraDias: 30,
+      limitesMedios: {
+        videoMaxBytes: 20 * 1024 * 1024,
+        videoMinMs: 2000,
+        videoMaxMs: 15000,
+        imagenMaxBytes: 800 * 1024,
+      },
+    } as unknown as AppConfigService;
+    const db = prisma as unknown as PrismaService;
+    const medios = new MediosService(db, almacenamiento, config);
+    const papelera = new PapeleraService(db, medios, config);
+    const purga = new PurgaPapeleraService(db, papelera, config);
+    const estructura = new EstructuraService(db);
+    const lectura = new DiccionarioService(db, almacenamiento);
+    const entradasTemporales: string[] = [];
+    const categoriasTemporales: string[] = [];
+
+    afterEach(async () => {
+      await prisma.dictionaryEntry.deleteMany({
+        where: { id: { in: entradasTemporales.splice(0) } },
+      });
+      await prisma.dictionaryCategory.deleteMany({
+        where: { id: { in: categoriasTemporales.splice(0) } },
+      });
+    });
+
+    async function error(promesa: Promise<unknown>) {
+      return promesa.then(
+        () => undefined,
+        (e: {
+          getStatus: () => number;
+          getResponse: () => { code?: string; details?: unknown };
+        }) => ({
+          status: e.getStatus(),
+          code: e.getResponse().code,
+          details: e.getResponse().details,
+        }),
+      );
+    }
+
+    async function temporal(
+      categoryId: string,
+      extra: Partial<Prisma.DictionaryEntryUncheckedCreateInput> = {},
+    ) {
+      const m1 = await prisma.dictionaryModule.findUniqueOrThrow({ where: { numero: 1 } });
+      const id = randomUUID();
+      await prisma.dictionaryEntry.create({
+        data: {
+          id,
+          slug: `zz-${id}`,
+          ingles: `Zz ${id}`,
+          espanol: 'Temporal',
+          inglesNorm: `zz ${id}`,
+          espanolNorm: 'temporal',
+          tipo: TipoEntrada.PALABRA,
+          moduleId: m1.id,
+          categoryId,
+          orden: 9999,
+          ...extra,
+        },
+      });
+      entradasTemporales.push(id);
+      return id;
+    }
+
+    async function categoriaTemporal(nombre: string) {
+      const c = await estructura.crearCategoria({ nombre, icono: 'gift' });
+      categoriasTemporales.push(c.id);
+      return c;
+    }
+
+    it('enviar a la papelera la oculta de lectura, búsqueda y consola; restaurar la devuelve igual', async () => {
+      const antes = await lectura.entrada('to-eat');
+      const id = (await prisma.dictionaryEntry.findUniqueOrThrow({ where: { slug: 'to-eat' } })).id;
+      const admin = new AdminDiccionarioService(db);
+
+      await papelera.enviar(id);
+      try {
+        expect((await error(lectura.entrada('to-eat')))?.code).toBe(ApiErrorCode.ENTRY_NOT_FOUND);
+        expect((await lectura.buscar({ q: 'to eat' })).resultados.map((r) => r.slug)).not.toContain(
+          'to-eat',
+        );
+        expect(
+          (await admin.listar({ q: 'to eat', pageSize: 100 })).items.map((e) => e.slug),
+        ).not.toContain('to-eat');
+        expect(
+          (await papelera.listar()).entradas.find((e) => e.slug === 'to-eat')?.quedanDias,
+        ).toBe(30);
+      } finally {
+        await papelera.restaurar(id, {});
+      }
+
+      const despues = await lectura.entrada('to-eat');
+      expect({ ...despues, sena: despues.sena.estado }).toEqual({
+        ...antes,
+        sena: antes.sena.estado,
+      });
+    });
+
+    it('el barrido no toca la de 29 días y sí elimina la de 31', async () => {
+      const objetos = await prisma.dictionaryCategory.findUniqueOrThrow({
+        where: { slug: 'objetos' },
+      });
+      const ahora = new Date();
+      const de29 = await temporal(objetos.id, { deletedAt: new Date(ahora.getTime() - 29 * DIA) });
+      const de31 = await temporal(objetos.id, { deletedAt: new Date(ahora.getTime() - 31 * DIA) });
+
+      await purga.purgarVencidas(ahora);
+
+      expect(await prisma.dictionaryEntry.findUnique({ where: { id: de29 } })).not.toBeNull();
+      expect(await prisma.dictionaryEntry.findUnique({ where: { id: de31 } })).toBeNull();
+    });
+
+    it('eliminar una categoría con entradas sin destino responde 409 con el conteo; con destino mueve todo', async () => {
+      const objetos = await prisma.dictionaryCategory.findUniqueOrThrow({
+        where: { slug: 'objetos' },
+      });
+      const ropaDePrueba = await categoriaTemporal('Ropa de prueba');
+      for (let i = 0; i < 3; i++) await temporal(ropaDePrueba.id);
+      const enObjetos = await prisma.dictionaryEntry.count({ where: { categoryId: objetos.id } });
+
+      expect(await error(estructura.eliminarCategoria(ropaDePrueba.id, {}))).toMatchObject({
+        status: 409,
+        code: ApiErrorCode.HAS_ENTRIES,
+        details: { entradas: 3 },
+      });
+      expect(
+        (
+          await error(
+            estructura.eliminarCategoria(ropaDePrueba.id, {
+              destino: 'mover',
+              haciaId: randomUUID(),
+            }),
+          )
+        )?.code,
+      ).toBe(ApiErrorCode.CATEGORY_NOT_FOUND);
+      expect(await prisma.dictionaryEntry.count({ where: { categoryId: ropaDePrueba.id } })).toBe(
+        3,
+      );
+
+      await estructura.eliminarCategoria(ropaDePrueba.id, {
+        destino: 'mover',
+        haciaId: objetos.id,
+      });
+
+      expect(await prisma.dictionaryEntry.count({ where: { categoryId: ropaDePrueba.id } })).toBe(
+        0,
+      );
+      expect(await prisma.dictionaryEntry.count({ where: { categoryId: objetos.id } })).toBe(
+        enObjetos + 3,
+      );
+      expect(
+        await prisma.dictionaryCategory.findUnique({ where: { id: ropaDePrueba.id } }),
+      ).toBeNull();
+    });
+
+    it('restaurar a una categoría eliminada responde 409 RESTORE_TARGET_MISSING; con destino nuevo, restaura', async () => {
+      const objetos = await prisma.dictionaryCategory.findUniqueOrThrow({
+        where: { slug: 'objetos' },
+      });
+      const efimera = await categoriaTemporal('Efímera');
+      const id = await temporal(efimera.id);
+
+      await estructura.eliminarCategoria(efimera.id, { destino: 'papelera' });
+
+      expect(await error(papelera.restaurar(id, {}))).toMatchObject({
+        status: 409,
+        code: ApiErrorCode.RESTORE_TARGET_MISSING,
+        details: { categoria: { nombre: 'Efímera' } },
+      });
+      await papelera.restaurar(id, { categoriaId: objetos.id });
+      expect((await prisma.dictionaryEntry.findUniqueOrThrow({ where: { id } })).categoryId).toBe(
+        objetos.id,
+      );
+    });
+
+    it('renombrar la unidad 4 se ve en la lectura, en los chips y en la ficha', async () => {
+      const m1 = await prisma.dictionaryModule.findUniqueOrThrow({ where: { numero: 1 } });
+      const u4 = await prisma.dictionaryUnit.findFirstOrThrow({
+        where: { moduleId: m1.id, codigo: 'U4' },
+      });
+      const entrada = await prisma.dictionaryEntry.findFirstOrThrow({
+        where: { unitId: u4.id, deletedAt: null },
+        include: { category: true },
+      });
+      try {
+        await estructura.editarUnidad(u4.id, 'Then and to do (revisada)');
+
+        const modulo = await lectura.modulo(1, {});
+        const categoria = await lectura.categoria(1, entrada.category.slug, {});
+        const ficha = await lectura.entrada(entrada.slug);
+        expect(modulo.unidades.find((u) => u.codigo === 'U4')?.nombre).toBe(
+          'Then and to do (revisada)',
+        );
+        expect(categoria.filtros.unidades.find((u) => u.codigo === 'U4')?.nombre).toBe(
+          'Then and to do (revisada)',
+        );
+        expect(ficha.unidad?.nombre).toBe('Then and to do (revisada)');
+      } finally {
+        await estructura.editarUnidad(u4.id, u4.nombre);
+      }
+    });
+  });
+
+  describe('importación CSV', () => {
+    const db = prisma as unknown as PrismaService;
+    const carga = new CargaEntradasService();
+    const importacion = new ImportacionService(db, carga);
+    const CABECERA = 'modulo,unidad,unidad_nombre,categoria,tipo,ingles,espanol';
+
+    afterEach(async () => {
+      const m4 = await prisma.dictionaryModule.findUniqueOrThrow({ where: { numero: 4 } });
+      await prisma.dictionaryEntry.deleteMany({ where: { moduleId: m4.id } });
+      await prisma.dictionaryUnit.deleteMany({ where: { moduleId: m4.id } });
+    });
+
+    const conteos = async () => ({
+      entradas: await prisma.dictionaryEntry.count(),
+      unidades: await prisma.dictionaryUnit.count(),
+    });
+
+    /** 12 nuevas en el Módulo 4, 2 duplicadas del Módulo 1 y 2 errores. */
+    function csvDe16Filas(separador = ','): string {
+      const filas = [
+        ...Array.from(
+          { length: 12 },
+          (_, i) => `4,U1,Daily routines,Acciones,Verbo,To import ${i},Importar ${i}`,
+        ),
+        '1,U1,,Acciones,Verbo,To eat,Comer',
+        '1,U1,,Acciones,Verbo,To drink,Beber',
+        '4,,,Comidas,Palabra,Bread,Pan',
+        '4,,,Objetos,Sustantivo,Chair,Silla',
+      ];
+      return [CABECERA, ...filas].map((f) => f.split(',').join(separador)).join('\r\n');
+    }
+
+    it('el CSV real de M1–M3 da 479 duplicadas sobre la base cargada y la vista previa no escribe nada', async () => {
+      const antes = await conteos();
+      const vista = await importacion.vistaPrevia(readFileSync(CSV_DICCIONARIO));
+
+      expect(vista.resumen).toMatchObject({ total: 479, duplicadas: 479, nuevas: 0, errores: 0 });
+      expect(await conteos()).toEqual(antes);
+    });
+
+    it('el CSV real de M1–M3 da 479 nuevas sobre una base vacía', async () => {
+      class Revertir extends Error {}
+      let nuevas = 0;
+      await prisma
+        .$transaction(async (tx) => {
+          await tx.signVideo.deleteMany({});
+          await tx.dictionaryEntry.deleteMany({});
+          const filas = await carga.analizar(
+            tx,
+            leerCsvDiccionario(readFileSync(CSV_DICCIONARIO, 'utf8')),
+          );
+          nuevas = filas.filter((f) => f.estado === 'nueva').length;
+          throw new Revertir();
+        })
+        .catch((e: unknown) => {
+          if (!(e instanceof Revertir)) throw e;
+        });
+
+      expect(nuevas).toBe(479);
+    });
+
+    it('16 filas con 2 errores y 2 duplicadas: 12 nuevas, cada error con su fila y su motivo', async () => {
+      const vista = await importacion.vistaPrevia(Buffer.from(csvDe16Filas()));
+
+      expect(vista.resumen).toMatchObject({ total: 16, nuevas: 12, duplicadas: 2, errores: 2 });
+      expect(vista.resumen.unidadesNuevas).toEqual([
+        { modulo: 4, codigo: 'U1', nombre: 'Daily routines' },
+      ]);
+      expect(
+        vista.filas.filter((f) => f.estado === 'error').map((f) => [f.fila, f.motivo]),
+      ).toEqual([
+        [16, 'La categoría “Comidas” no existe.'],
+        [17, 'El tipo debe ser Palabra, Verbo, Frase o Expresión.'],
+      ]);
+    });
+
+    it('confirmar importa exactamente las nuevas, crea la unidad y no publica el módulo', async () => {
+      const { token } = await importacion.vistaPrevia(Buffer.from(csvDe16Filas()));
+      const antes = await conteos();
+
+      const resultado = await importacion.confirmar(token, false);
+
+      const m4 = await prisma.dictionaryModule.findUniqueOrThrow({ where: { numero: 4 } });
+      expect(resultado).toEqual({ creadas: 12, actualizadas: 0, unidadesCreadas: 1 });
+      expect((await conteos()).entradas).toBe(antes.entradas + 12);
+      expect(m4.estado).toBe('PROXIMAMENTE');
+    });
+
+    it('si falla una inserción no queda ninguna', async () => {
+      const antes = await conteos();
+      const filas = await carga.analizar(prisma, leerCsvDiccionario(csvDe16Filas()));
+      const rota = filas.map((f, i) => (i === 5 ? { ...f, categoryId: randomUUID() } : f));
+
+      await expect(prisma.$transaction((tx) => carga.aplicar(tx, rota, false))).rejects.toThrow();
+      expect(await conteos()).toEqual(antes);
+    });
+
+    it('lee un CSV de Excel en español (separador ; y BOM)', async () => {
+      const excel = Buffer.concat([
+        Buffer.from([0xef, 0xbb, 0xbf]),
+        Buffer.from(csvDe16Filas(';')),
+      ]);
+
+      const vista = await importacion.vistaPrevia(excel);
+
+      expect(vista.resumen).toMatchObject({ nuevas: 12, duplicadas: 2, errores: 2 });
+    });
+
+    it('confirmar con una vista previa caducada responde 410', async () => {
+      const { token } = await importacion.vistaPrevia(Buffer.from(csvDe16Filas()));
+      const despues = new Date(Date.now() + VISTA_PREVIA_TTL_MS + 1000);
+
+      const error = await importacion
+        .confirmar(token, false, despues)
+        .catch((e: { getStatus: () => number; getResponse: () => { code: string } }) => e);
+      expect((error as { getStatus: () => number }).getStatus()).toBe(410);
+      expect((error as { getResponse: () => { code: string } }).getResponse().code).toBe(
+        ApiErrorCode.IMPORT_PREVIEW_EXPIRED,
+      );
+    });
+  });
+});

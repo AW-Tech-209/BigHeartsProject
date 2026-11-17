@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Diccionario · Módulo 1</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="/_blob/8500f8b95e34d7853d88e913eba28e73">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&amp;family=Instrument+Serif:ital@0;1&amp;display=swap">
+<style>
+body{margin:0}
+.cat{display:flex !important;align-items:center;gap:16px;padding:18px 18px 18px 24px;min-height:88px}
+.m .cat{flex-direction:column;align-items:flex-start;gap:10px;padding:14px 12px 14px 18px;min-height:132px}
+.cat .circulo{width:48px;height:48px;background:var(--muted)}
+.m .cat .circulo{width:40px;height:40px}
+.cat-n{font-size:1.1875rem;font-weight:600;line-height:1.3}
+.m .cat-n{font-size:1.0625rem}
+.cab-mod{display:grid;grid-template-columns:1fr auto;gap:16px 32px;align-items:end;padding:28px 28px 28px 32px}
+.m .cab-mod{grid-template-columns:1fr;padding:20px 16px 20px 20px}
+.datos-mod{display:flex;gap:24px;flex-wrap:wrap}
+.datos-mod div{display:flex;flex-direction:column}
+.datos-mod b{font-size:1.75rem;line-height:1.2;font-weight:600;font-variant-numeric:tabular-nums}
+.m .datos-mod{gap:16px}
+.m .datos-mod b{font-size:1.375rem}
+.chip .un{font-weight:400}
+.m .unidades .chip{white-space:normal;text-align:left;min-height:48px;padding:6px 16px;line-height:1.3}
+.sig{display:flex !important;align-items:center;justify-content:space-between;gap:16px;padding:20px 20px 20px 24px}
+</style>
+</helmet>
+<div class="lienzo" style="width: 3630px; min-height: 2600px">
+<sc-for list="{{variantes}}" as="v" hint-placeholder-count="4">
+<div class="marco">
+<p class="marco-etiqueta"><b>{{v.titulo}}</b><span>{{v.medida}}</span></p>
+<div class="{{v.cls}}">
+
+<header class="barra-sup"><div class="in">
+<a class="marca" href="#"><span class="sello"><span class="ic s i-heart"></span></span>BigHearts</a>
+<nav class="nav solo-d" aria-label="Principal">
+<a href="#"><span class="ic s i-layout-dashboard"></span>Panel</a>
+<a href="#"><span class="ic s i-school"></span>Aulas</a>
+<a href="#"><span class="ic s i-calendar-check"></span>Mis clases</a>
+<a href="#"><span class="ic s i-history"></span>Historial</a>
+<a href="Main.dc.html" aria-current="page"><span class="ic s i-book-a"></span>Diccionario</a>
+</nav>
+<button class="cuenta" type="button"><span class="av">LM</span><span class="solo-d">Mi cuenta</span></button>
+</div></header>
+
+<main class="principal" id="contenido">
+<div class="contenedor">
+
+<nav class="migas" aria-label="Estás en"><a href="Main.dc.html">Diccionario</a><span class="ic s i-chevron-right"></span><span aria-current="page">Módulo 1</span></nav>
+
+<div class="tarjeta riel tramo-1 cab-mod" style="margin-top: -12px">
+<div class="cabecera">
+<span class="insignia insignia-tramo" style="align-self: flex-start"><span class="ic s i-signal-low"></span><b>Módulo 1</b> · Básico</span>
+<h1>Módulo 1 · Básico</h1>
+<p class="t-xl p5" lang="en">Level I</p>
+</div>
+<div class="datos-mod">
+<div><b>203</b><span class="t-sm apagado">palabras</span></div>
+<div><b>86</b><span class="t-sm apagado">con seña</span></div>
+<div><b>6</b><span class="t-sm apagado">unidades</span></div>
+<div><b>18</b><span class="t-sm apagado">categorías</span></div>
+</div>
+</div>
+
+<section class="col g12 unidades" aria-labelledby="u-{{$index}}">
+<h2 class="h2" id="u-{{$index}}">Unidades</h2>
+<p class="ayuda">Elige una unidad para ver solo sus categorías.</p>
+<div class="fila g8 envolver" role="group" aria-label="Filtrar por unidad">
+<button class="chip" type="button" aria-pressed="{{v.todas}}"><sc-if value="{{v.todasB}}" hint-placeholder-val="{{ true }}"><span class="ic s i-check"></span></sc-if>Todas <span class="n">203</span></button>
+<sc-for list="{{v.unidades}}" as="u" hint-placeholder-count="6">
+<button class="chip" type="button" aria-pressed="{{u.p}}"><sc-if value="{{u.on}}" hint-placeholder-val="{{ false }}"><span class="ic s i-check"></span></sc-if><span>Unidad {{u.n}} · <span class="un" lang="en">{{u.nom}}</span></span> <span class="n">{{u.c}}</span></button>
+</sc-for>
+</div>
+</section>
+
+<section class="col g16" aria-labelledby="c-{{$index}}">
+<div class="fila entre g12 envolver">
+<div class="col g4">
+<h2 class="h2" id="c-{{$index}}">Categorías</h2>
+<p class="ayuda" aria-live="polite">{{v.resumen}}</p>
+</div>
+<sc-if value="{{v.filtrado}}" hint-placeholder-val="{{ false }}"><button class="btn btn-sec" type="button"><span class="ic s i-x"></span>Quitar filtro</button></sc-if>
+</div>
+<ul class="r3 r2-m">
+<sc-for list="{{v.cats}}" as="c" hint-placeholder-count="9">
+<li><a class="tarjeta riel tramo-1 cat" href="Categoria.dc.html">
+<span class="circulo"><span class="ic l {{c.i}}"></span></span>
+<span class="col crece"><span class="cat-n">{{c.n}}</span><span class="t-sm apagado num">{{c.c}}</span></span>
+<span class="ic s i-chevron-right c-apagado solo-d"></span>
+</a></li>
+</sc-for>
+</ul>
+</section>
+
+<a class="tarjeta riel tramo-1 sig" href="Modulo.dc.html">
+<span class="col"><span class="t-sm apagado">Siguiente módulo</span><span class="h3">Módulo 2 · <span lang="en">Level II</span></span></span>
+<span class="ic i-arrow-right c-primario"></span>
+</a>
+
+</div>
+</main>
+
+<nav class="barra-inf solo-m" aria-label="Principal">
+<a href="#"><span class="ic i-layout-dashboard"></span>Panel</a>
+<a href="#"><span class="ic i-school"></span>Aulas</a>
+<a href="#"><span class="ic i-calendar-check"></span>Mis clases</a>
+<a href="#"><span class="ic i-history"></span>Historial</a>
+<a href="Main.dc.html" aria-current="page"><span class="ic i-book-a"></span>Diccionario</a>
+</nav>
+</div>
+</div>
+</sc-for>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":3630,"height":2600}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const U = [[1, 'Need, Want', 24], [2, 'What, Where, When', 39], [3, 'Wish', 36], [4, 'Then and to do', 3], [5, 'Have', 48], [6, 'Talking about my family and me', 53]];
+    const unidades = (sel) => U.map(([n, nom, c]) => ({ n, nom, c, p: String(n === sel), on: n === sel }));
+    const p = (n) => n === 1 ? '1 palabra' : n + ' palabras';
+    const C = (n, i, c) => ({ n, i, c: p(c) });
+    const todas = [
+      C('Acciones', 'i-activity', 51), C('Objetos', 'i-lamp', 20), C('Lugares', 'i-map-pin', 18),
+      C('Tiempo y fechas', 'i-clock', 17), C('Pronombres e ideas', 'i-puzzle', 17), C('Expresiones', 'i-quote', 13),
+      C('Palabras de enlace', 'i-link', 12), C('Escuela e idiomas', 'i-graduation-cap', 10), C('Dinero y compras', 'i-wallet', 9),
+      C('Comida y frutas', 'i-apple', 7), C('Familia y personas', 'i-users', 7), C('Fiestas y deportes', 'i-party-popper', 4),
+      C('Transporte y viajes', 'i-bus', 4), C('Cómo es', 'i-sparkles', 4), C('Profesiones y trabajo', 'i-briefcase', 3),
+      C('Números', 'i-hash', 3), C('Preguntas', 'i-message-circle-question', 3), C('Ropa', 'i-shirt', 1)
+    ];
+    const u2 = [
+      C('Tiempo y fechas', 'i-clock', 11), C('Lugares', 'i-map-pin', 9), C('Objetos', 'i-lamp', 7),
+      C('Escuela e idiomas', 'i-graduation-cap', 5), C('Comida y frutas', 'i-apple', 4), C('Preguntas', 'i-message-circle-question', 3)
+    ];
+    const todo = { todas: 'true', todasB: true, unidades: unidades(0), cats: todas, filtrado: false, resumen: '18 categorías. Primero las que tienen más palabras.' };
+    const fil = { todas: 'false', todasB: false, unidades: unidades(2), cats: u2, filtrado: true, resumen: 'Unidad 2: 6 de 18 categorías, 39 palabras.' };
+    return {
+      variantes: [
+        Object.assign({ cls: 'bh t-claro d', titulo: 'Escritorio · claro', medida: '1280 px · todas las unidades' }, todo),
+        Object.assign({ cls: 'bh t-claro m', titulo: 'Móvil · claro', medida: '375 px · todas las unidades' }, todo),
+        Object.assign({ cls: 'bh t-oscuro d', titulo: 'Escritorio · oscuro', medida: '1280 px · Unidad 2 elegida' }, fil),
+        Object.assign({ cls: 'bh t-oscuro m', titulo: 'Móvil · oscuro', medida: '375 px · Unidad 2 elegida' }, fil)
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

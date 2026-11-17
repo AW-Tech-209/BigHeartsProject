@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 
 import { AuthModule } from '../auth/auth.module';
+import { CargaEntradasService } from '../diccionario/carga-entradas.service';
 import { NotificationsModule } from '../notifications/notifications.module';
 import { AdminClassroomsController } from './admin-classrooms.controller';
 import { AdminClassroomsService } from './admin-classrooms.service';
@@ -10,6 +11,17 @@ import { AdminUsuariosController } from './admin-usuarios.controller';
 import { AdminUsuariosService } from './admin-usuarios.service';
 import { AdminController } from './admin.controller';
 import { AdminService } from './admin.service';
+import { AdminDiccionarioController } from './diccionario/admin-diccionario.controller';
+import { AdminDiccionarioService } from './diccionario/admin-diccionario.service';
+import { EstructuraController } from './diccionario/estructura.controller';
+import { EstructuraService } from './diccionario/estructura.service';
+import { ImportacionController } from './diccionario/importacion.controller';
+import { ImportacionService } from './diccionario/importacion.service';
+import { MediosController } from './diccionario/medios.controller';
+import { MediosService } from './diccionario/medios.service';
+import { PapeleraController } from './diccionario/papelera.controller';
+import { PapeleraService } from './diccionario/papelera.service';
+import { PurgaPapeleraService } from './diccionario/purga-papelera.service';
 
 /**
  * Operaciones de back-office reservadas al rol ADMIN.
@@ -28,7 +40,24 @@ import { AdminService } from './admin.service';
     AdminClassroomsController,
     AdminMetricasController,
     AdminUsuariosController,
+    AdminDiccionarioController,
+    MediosController,
+    PapeleraController,
+    EstructuraController,
+    ImportacionController,
   ],
-  providers: [AdminService, AdminClassroomsService, AdminMetricasService, AdminUsuariosService],
+  providers: [
+    AdminService,
+    AdminClassroomsService,
+    AdminMetricasService,
+    AdminUsuariosService,
+    AdminDiccionarioService,
+    MediosService,
+    PapeleraService,
+    PurgaPapeleraService,
+    EstructuraService,
+    ImportacionService,
+    CargaEntradasService,
+  ],
 })
 export class AdminModule {}

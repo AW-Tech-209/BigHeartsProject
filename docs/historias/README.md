@@ -235,3 +235,40 @@ HU-520 (comentarios al profesor) ── sin dependencias
 
 **Antes de invitar a nadie tienen que estar las cuatro de alta en `main`** (HU-522, 523, 524 y 525):
 sin HU-525, la contraseña temporal que viajó por WhatsApp se quedaría como definitiva.
+
+## Post-Fase 1 · Diccionario (HU-526 – HU-540)
+
+El diccionario inglés ↔ español ↔ LSC: 479 entradas de los módulos 1–3, gestionado solo por el admin.
+Estrategia en [`docs/diccionario/ESTRATEGIA.md`](../diccionario/ESTRATEGIA.md); diseño en
+[`docs/diccionario/diseno/`](../diccionario/diseno/DISENO.md). Decisiones nuevas: **D50** (modelo y
+acceso), **D51** (almacenamiento de medios), **D52** (papelera).
+
+| HU                                                       | Título                                    | Capa     | Estado       |
+| -------------------------------------------------------- | ----------------------------------------- | -------- | ------------ |
+| [HU-526](./HU-526-modelo-del-diccionario.md)             | Modelo y carga de las 479 entradas (D50)  | backend  | ⬜ Pendiente |
+| [HU-527](./HU-527-api-de-lectura-del-diccionario.md)     | API de lectura y búsqueda                 | backend  | ⬜ Pendiente |
+| [HU-528](./HU-528-inicio-y-busqueda-del-diccionario.md)  | Inicio y búsqueda (destino en la barra)   | frontend | ⬜ Pendiente |
+| [HU-529](./HU-529-modulo-y-categoria.md)                 | Módulo y categoría                        | frontend | ⬜ Pendiente |
+| [HU-530](./HU-530-entrada-y-reproductor-de-sena.md)      | Entrada y reproductor de la seña          | frontend | ⬜ Pendiente |
+| [HU-531](./HU-531-api-de-gestion-de-entradas.md)         | API de gestión de entradas                | backend  | ⬜ Pendiente |
+| [HU-532](./HU-532-api-de-papelera-y-estructura.md)       | API de papelera y estructura (D52)        | backend  | ⬜ Pendiente |
+| [HU-533](./HU-533-api-de-importacion-csv.md)             | API de importación CSV                    | backend  | ⬜ Pendiente |
+| [HU-534](./HU-534-consola-y-papelera.md)                 | Consola y papelera                        | frontend | ⬜ Pendiente |
+| [HU-535](./HU-535-editor-de-entrada.md)                  | Editor de entrada                         | frontend | ⬜ Pendiente |
+| [HU-536](./HU-536-estructura-del-diccionario.md)         | Estructura: módulos, unidades, categorías | frontend | ⬜ Pendiente |
+| [HU-537](./HU-537-importar-csv.md)                       | Importar CSV (pantalla)                   | frontend | ⬜ Pendiente |
+| [HU-538](./HU-538-almacenamiento-de-senas-e-imagenes.md) | Almacenamiento de señas e imágenes (D51)  | backend  | ⬜ Pendiente |
+| [HU-539](./HU-539-subir-sena-e-imagen-en-el-editor.md)   | Subir seña e imagen desde el editor       | frontend | ⬜ Pendiente |
+| [HU-540](./HU-540-cola-de-grabacion.md)                  | Cola de grabación con subida masiva       | frontend | ⬜ Pendiente |
+
+```
+Dev A (backend)                          Dev B (frontend)
+HU-526 ─► HU-527 ──────────────────────► HU-528 ─► HU-529 ─► HU-530      (A · lectura)
+   └────► HU-531 ─► HU-532 ─► HU-533     HU-534 ─► HU-535 ─► HU-536 ─► HU-537   (B · gestión)
+             └────► HU-538 ─────────────────────► HU-539 ─► HU-540      (C · señas)
+```
+
+Dev B puede empezar cada pantalla en cuanto el **contrato** de su API esté en `main` (la API se mockea,
+como siempre). **Hito 1** (tras HU-530): los estudiantes consultan las 479 palabras. **Hito 2** (tras
+HU-537): el admin gestiona todo el contenido. **Hito 3** (tras HU-540): las señas en video. Fuera de
+este lote: práctica, favoritos y vocabulario de la clase.

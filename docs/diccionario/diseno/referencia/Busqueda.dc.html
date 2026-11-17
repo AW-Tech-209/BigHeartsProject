@@ -1,0 +1,204 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Diccionario · Búsqueda</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="/_blob/8500f8b95e34d7853d88e913eba28e73">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&amp;family=Instrument+Serif:ital@0;1&amp;display=swap">
+<style>
+body{margin:0}
+.lb{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:2px}
+.opc-meta{display:flex;align-items:center;gap:10px;flex:none}
+.m .opcion{flex-direction:column;align-items:stretch;gap:2px;padding:10px 12px}
+.m .opc-meta{gap:8px;flex-wrap:wrap}
+.pista-tec{display:flex;justify-content:space-between;gap:12px;padding:6px 12px 10px;font-size:.8125rem;color:var(--muted-foreground);border-bottom:1px solid var(--border);margin-bottom:6px}
+kbd{font-family:inherit;font-size:.8125rem;border:1px solid var(--input);border-bottom-width:2px;border-radius:6px;padding:0 6px;background:var(--card);color:var(--foreground)}
+.fantasma-mod{height:200px;background:var(--card);border:1px solid var(--border);border-radius:16px;padding:24px 24px 24px 28px}
+.res{display:grid;grid-template-columns:minmax(0,1.3fr) 96px 150px 190px 196px 20px;gap:16px;align-items:center;padding:14px 20px 14px 24px;border-bottom:1px solid var(--border);text-decoration:none;color:inherit;min-height:72px}
+.res:last-child{border-bottom:0}
+.res-meta{display:contents}
+.m .res{grid-template-columns:minmax(0,1fr) 20px;gap:8px 8px;padding:14px 14px 14px 18px}
+.m .res-meta{display:flex;flex-wrap:wrap;gap:6px 8px;grid-column:1;grid-row:2;align-items:center}
+.m .res > .ic{grid-column:2;grid-row:1 / span 2}
+.vacio-caja{display:flex;flex-direction:column;align-items:flex-start;gap:12px;padding:24px}
+</style>
+</helmet>
+<div class="lienzo" style="width: 3630px; min-height: 3600px">
+<sc-for list="{{variantes}}" as="v" hint-placeholder-count="8">
+<div class="marco">
+<p class="marco-etiqueta"><b>{{v.titulo}}</b><span>{{v.medida}}</span></p>
+<div class="{{v.cls}}" style="height: {{v.alto}}">
+
+<header class="barra-sup"><div class="in">
+<a class="marca" href="#"><span class="sello"><span class="ic s i-heart"></span></span>BigHearts</a>
+<nav class="nav solo-d" aria-label="Principal">
+<a href="#"><span class="ic s i-layout-dashboard"></span>Panel</a>
+<a href="#"><span class="ic s i-school"></span>Aulas</a>
+<a href="#"><span class="ic s i-calendar-check"></span>Mis clases</a>
+<a href="#"><span class="ic s i-history"></span>Historial</a>
+<a href="Main.dc.html" aria-current="page"><span class="ic s i-book-a"></span>Diccionario</a>
+</nav>
+<button class="cuenta" type="button"><span class="av">LM</span><span class="solo-d">Mi cuenta</span></button>
+</div></header>
+
+<main class="principal" id="contenido">
+<div class="contenedor">
+
+<sc-if value="{{v.res}}" hint-placeholder-val="{{ false }}">
+<a class="volver" href="Main.dc.html"><span class="ic s i-arrow-left"></span>Volver al diccionario</a>
+<div class="cabecera" style="margin-top: -16px">
+<h1>14 resultados para “to s”</h1>
+<p class="contexto">Ordenados por módulo. Toca una palabra para abrirla.</p>
+</div>
+</sc-if>
+<sc-if value="{{v.noRes}}" hint-placeholder-val="{{ true }}">
+<div class="cabecera hero solo-d">
+<h1>Diccionario</h1>
+<p class="contexto">Inglés, español y Lengua de Señas Colombiana (LSC). Busca una palabra o entra a un módulo.</p>
+</div>
+</sc-if>
+
+<form class="campo buscador" role="search" style="gap: 10px; max-width: 820px">
+<label class="etiqueta t-lg p6" for="q-{{$index}}">Busca en inglés o en español</label>
+<div class="{{v.cajaCls}}">
+<span class="ic l i-search c-apagado"></span>
+<input id="q-{{$index}}" type="search" value="{{v.q}}" role="combobox" aria-expanded="{{v.abierto}}" aria-controls="lb-{{$index}}" aria-autocomplete="list" autocomplete="off">
+<button class="btn btn-icono btn-fantasma" type="button" aria-label="Borrar la búsqueda"><span class="ic i-x"></span></button>
+<a class="btn btn-primario solo-d" href="Busqueda.dc.html">Buscar</a>
+</div>
+
+<sc-if value="{{v.sug}}" hint-placeholder-val="{{ true }}">
+<div class="sugerencias">
+<div class="pista-tec"><span aria-live="polite">8 de 14 sugerencias</span><span class="solo-d"><kbd>↑</kbd> <kbd>↓</kbd> para moverte · <kbd>Enter</kbd> para abrir · <kbd>Esc</kbd> para cerrar</span></div>
+<ul class="lb" role="listbox" id="lb-{{$index}}" aria-label="Sugerencias">
+<sc-for list="{{sugerencias}}" as="s" hint-placeholder-count="8">
+<li class="opcion" role="option" aria-selected="{{s.sel}}">
+<span class="col crece"><span class="p6" lang="en"><mark>To s</mark>{{s.resto}}</span><span class="t-sm">{{s.es}}</span></span>
+<span class="opc-meta">
+<span class="insignia insignia-tramo tramo-1"><span class="ic s i-signal-low"></span>Módulo {{s.m}}</span>
+<span class="fila g6 t-sm apagado"><span class="ic s i-activity"></span>Acciones</span>
+</span>
+</li>
+</sc-for>
+</ul>
+<div class="sug-pie"><a href="Busqueda.dc.html" class="p5">Ver los 14 resultados</a><span class="apagado t-xs solo-d">Busca en inglés y en español a la vez</span></div>
+</div>
+</sc-if>
+
+<sc-if value="{{v.vacio}}" hint-placeholder-val="{{ false }}">
+<div class="sugerencias">
+<div class="vacio-caja" role="status">
+<span class="circulo"><span class="ic l i-scan-search c-apagado"></span></span>
+<p class="serif t-2xl">No encontramos “sombrero”.</p>
+<p>Prueba en inglés o en español.</p>
+<ul class="col g4 t-sm apagado" style="list-style: disc; padding-left: 20px">
+<li>Revisa que la palabra esté bien escrita.</li>
+<li>Prueba con una sola palabra.</li>
+<li>Hoy hay palabras de los módulos 1, 2 y 3.</li>
+</ul>
+<a class="btn btn-sec" href="Main.dc.html">Ver los módulos</a>
+</div>
+</div>
+</sc-if>
+</form>
+
+<sc-if value="{{v.noRes}}" hint-placeholder-val="{{ true }}">
+<section class="col g16" aria-hidden="true">
+<h2 class="h2 fila g8"><span class="ic i-signal-low" style="color: var(--accent-indigo)"></span>Básico</h2>
+<div class="r3"><div class="fantasma-mod riel tramo-1 tarjeta"><span class="t-sm apagado">Módulo</span><p class="t-4xl p6">1</p></div><div class="fantasma-mod riel tramo-1 tarjeta"><span class="t-sm apagado">Módulo</span><p class="t-4xl p6">2</p></div><div class="fantasma-mod riel tramo-1 tarjeta"><span class="t-sm apagado">Módulo</span><p class="t-4xl p6">3</p></div></div>
+</section>
+</sc-if>
+
+<sc-if value="{{v.res}}" hint-placeholder-val="{{ false }}">
+<div class="col g12">
+<p class="etiqueta">Filtrar por módulo</p>
+<div class="fila g8 envolver" role="group" aria-label="Filtrar por módulo">
+<button class="chip" type="button" aria-pressed="true"><span class="ic s i-check"></span>Todos <span class="n">14</span></button>
+<button class="chip" type="button" aria-pressed="false">Módulo 1 <span class="n">7</span></button>
+<button class="chip" type="button" aria-pressed="false">Módulo 2 <span class="n">6</span></button>
+<button class="chip" type="button" aria-pressed="false">Módulo 3 <span class="n">1</span></button>
+</div>
+</div>
+<sc-for list="{{grupos}}" as="g" hint-placeholder-count="3">
+<section class="col g12">
+<div class="fila g12 envolver base"><h2 class="h2">Módulo {{g.m}}</h2><span class="insignia insignia-tramo tramo-1"><span class="ic s i-signal-low"></span>Básico</span><span class="apagado t-sm">{{g.n}}</span></div>
+<ul class="tarjeta riel tramo-1">
+<sc-for list="{{g.items}}" as="r" hint-placeholder-count="5">
+<li><a class="res" href="Entrada.dc.html">
+<span class="col"><span class="p6 t-lg" lang="en"><mark>To s</mark>{{r.resto}}</span><span>{{r.es}}</span></span>
+<span class="res-meta">
+<span><span class="chip-tipo">Verbo</span></span>
+<span class="fila g6 t-sm"><span class="ic s i-activity c-apagado"></span>Acciones</span>
+<span class="t-sm apagado">{{r.u}}</span>
+<span><sc-if value="{{r.sena}}" hint-placeholder-val="{{ true }}"><span class="estado estado-exito"><span class="ic s i-hand"></span>Con seña</span></sc-if><sc-if value="{{r.sinSena}}" hint-placeholder-val="{{ false }}"><span class="estado estado-inactivo"><span class="ic s i-clapperboard"></span>Seña en preparación</span></sc-if></span>
+</span>
+<span class="ic s i-chevron-right c-apagado"></span>
+</a></li>
+</sc-for>
+</ul>
+</section>
+</sc-for>
+</sc-if>
+
+</div>
+</main>
+
+<nav class="barra-inf solo-m" aria-label="Principal">
+<a href="#"><span class="ic i-layout-dashboard"></span>Panel</a>
+<a href="#"><span class="ic i-school"></span>Aulas</a>
+<a href="#"><span class="ic i-calendar-check"></span>Mis clases</a>
+<a href="#"><span class="ic i-history"></span>Historial</a>
+<a href="Main.dc.html" aria-current="page"><span class="ic i-book-a"></span>Diccionario</a>
+</nav>
+</div>
+</div>
+</sc-for>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":3630,"height":3600}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const base = { sug: false, vacio: false, res: false, noRes: true, abierto: 'false', cajaCls: 'caja', alto: 'auto' };
+    const v = (o) => Object.assign({}, base, o);
+    const sug = { sug: true, q: 'to s', abierto: 'true', cajaCls: 'caja activa' };
+    const vac = { vacio: true, q: 'sombrero', abierto: 'true', cajaCls: 'caja activa' };
+    const res = { res: true, noRes: false, q: 'to s' };
+    const R = (resto, es, u, sena) => ({ resto, es, u, sena, sinSena: !sena });
+    return {
+      variantes: [
+        v(Object.assign({ cls: 'bh t-claro d', titulo: 'Sugerencias · escritorio · claro', medida: '1280 × 900 (vista recortada)', alto: '900px' }, sug)),
+        v(Object.assign({ cls: 'bh t-claro m', titulo: 'Sugerencias · móvil · claro', medida: '375 × 812', alto: '812px' }, sug)),
+        v(Object.assign({ cls: 'bh t-oscuro d', titulo: 'Sugerencias · escritorio · oscuro', medida: '1280 × 900', alto: '900px' }, sug)),
+        v(Object.assign({ cls: 'bh t-oscuro m', titulo: 'Sugerencias · móvil · oscuro', medida: '375 × 812', alto: '812px' }, sug)),
+        v(Object.assign({ cls: 'bh t-oscuro d', titulo: 'Sin resultados · escritorio · oscuro', medida: '1280 × 900', alto: '900px' }, vac)),
+        v(Object.assign({ cls: 'bh t-claro m', titulo: 'Sin resultados · móvil · claro', medida: '375 × 812', alto: '812px' }, vac)),
+        v(Object.assign({ cls: 'bh t-claro d', titulo: 'Lista completa de resultados · escritorio · claro', medida: '1280 px' }, res)),
+        v(Object.assign({ cls: 'bh t-oscuro m', titulo: 'Lista completa · móvil · oscuro', medida: '375 px' }, res))
+      ],
+      sugerencias: [
+        { resto: 'leep', es: 'Dormir', m: 1, sel: 'false' },
+        { resto: 'tudy', es: 'Estudiar', m: 1, sel: 'true' },
+        { resto: 'ell', es: 'Vender', m: 1, sel: 'false' },
+        { resto: 'ee', es: 'Ver', m: 1, sel: 'false' },
+        { resto: 'pend', es: 'Gastar, pasar', m: 1, sel: 'false' },
+        { resto: 'tart', es: 'Comenzar', m: 1, sel: 'false' },
+        { resto: 'end', es: 'Enviar', m: 1, sel: 'false' },
+        { resto: 'ay', es: 'Decir', m: 2, sel: 'false' }
+      ],
+      grupos: [
+        { m: 1, n: '7 resultados', items: [R('leep', 'Dormir', 'Unidad 1 · Need, Want', true), R('tudy', 'Estudiar', 'Unidad 1 · Need, Want', true), R('ell', 'Vender', 'Unidad 3 · Wish', false), R('ee', 'Ver', 'Unidad 3 · Wish', true), R('pend', 'Gastar, pasar', 'Unidad 3 · Wish', false), R('tart', 'Comenzar', 'Unidad 3 · Wish', true), R('end', 'Enviar', 'Unidad 5 · Have', false)] },
+        { m: 2, n: '6 resultados', items: [R('ay', 'Decir', 'Unidad 1', true), R('peak', 'Hablar (un idioma)', 'Unidad 1', true), R('it', 'Sentarse', 'Unidad 1', false), R('ave', 'Ahorrar, salvar', 'Unidad 2', false), R('ing', 'Cantar', 'Unidad 3', true), R('tay', 'Quedarse, permanecer', 'Unidad 4', false)] },
+        { m: 3, n: '1 resultado', items: [R('erve', 'Servir', 'Unidad 5', false)] }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

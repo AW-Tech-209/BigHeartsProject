@@ -62,18 +62,22 @@ Para que **un fallo bloquee el merge**, hay que activar la protección de rama (
 
 En el servicio → **Environment**, rellena las marcadas `sync: false` en el blueprint:
 
-| Variable           | Valor                                                                                                                                                                                                                                                                   |
-| ------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `DATABASE_URL`     | Supabase → pooler (6543, `?pgbouncer=true`). La misma de tu `.env` local.                                                                                                                                                                                               |
-| `DIRECT_URL`       | Supabase → conexión directa (5432).                                                                                                                                                                                                                                     |
-| `JWT_SECRET`       | Genera uno nuevo: `openssl rand -base64 48`.                                                                                                                                                                                                                            |
-| `MEETING_LINK_KEY` | Clave AES-256-GCM del enlace de reunión: `openssl rand -hex 32` (64 hex exactos). **Guárdala**: cambiarla deja ilegibles los enlaces ya creados.                                                                                                                        |
-| `CORS_ORIGIN`      | Orígenes del frontend permitidos, **separados por comas**: dominio propio, su `www`, la URL de Vercel, previews. Cada uno exacto, sin barra final; con `credentials` no vale `*`. Ej: `https://tudominio.com,https://www.tudominio.com,https://academia-web.vercel.app` |
-| `FRONTEND_URL`     | **Una sola** URL, el dominio canónico. Es la base de los enlaces que la API mete en correos (recuperación de contraseña) y recordatorios. Ej: `https://tudominio.com`                                                                                                   |
-| `ADMIN_EMAIL`      | Email del Admin que crea el seed. **No uses el de dev** (`admin@academia.local`).                                                                                                                                                                                       |
-| `ADMIN_PASSWORD`   | Contraseña del Admin del seed. Genera una fuerte, no la de dev.                                                                                                                                                                                                         |
-| `RESEND_API_KEY`   | Clave de API de Resend (resend.com → API Keys). Sin ella la API arranca igual pero solo registra los avisos en el log, no los envía (D32).                                                                                                                              |
-| `EMAIL_FROM`       | Dirección remitente de los correos. Obligatoria si defines `RESEND_API_KEY`.                                                                                                                                                                                            |
+| Variable                                                                                                         | Valor                                                                                                                                                                                                                                                                   |
+| ---------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `DATABASE_URL`                                                                                                   | Supabase → pooler (6543, `?pgbouncer=true`). La misma de tu `.env` local.                                                                                                                                                                                               |
+| `DIRECT_URL`                                                                                                     | Supabase → conexión directa (5432).                                                                                                                                                                                                                                     |
+| `JWT_SECRET`                                                                                                     | Genera uno nuevo: `openssl rand -base64 48`.                                                                                                                                                                                                                            |
+| `MEETING_LINK_KEY`                                                                                               | Clave AES-256-GCM del enlace de reunión: `openssl rand -hex 32` (64 hex exactos). **Guárdala**: cambiarla deja ilegibles los enlaces ya creados.                                                                                                                        |
+| `CORS_ORIGIN`                                                                                                    | Orígenes del frontend permitidos, **separados por comas**: dominio propio, su `www`, la URL de Vercel, previews. Cada uno exacto, sin barra final; con `credentials` no vale `*`. Ej: `https://tudominio.com,https://www.tudominio.com,https://academia-web.vercel.app` |
+| `FRONTEND_URL`                                                                                                   | **Una sola** URL, el dominio canónico. Es la base de los enlaces que la API mete en correos (recuperación de contraseña) y recordatorios. Ej: `https://tudominio.com`                                                                                                   |
+| `ADMIN_EMAIL`                                                                                                    | Email del Admin que crea el seed. **No uses el de dev** (`admin@academia.local`).                                                                                                                                                                                       |
+| `ADMIN_PASSWORD`                                                                                                 | Contraseña del Admin del seed. Genera una fuerte, no la de dev.                                                                                                                                                                                                         |
+| `RESEND_API_KEY`                                                                                                 | Clave de API de Resend (resend.com → API Keys). Sin ella la API arranca igual pero solo registra los avisos en el log, no los envía (D32).                                                                                                                              |
+| `EMAIL_FROM`                                                                                                     | Dirección remitente de los correos. Obligatoria si defines `RESEND_API_KEY`.                                                                                                                                                                                            |
+| `SUPABASE_URL`                                                                                                   | URL del proyecto de Supabase (Settings → API). Con `SUPABASE_SERVICE_ROLE_KEY`, activa el almacenamiento de señas e imágenes del diccionario (D51).                                                                                                                     |
+| `SUPABASE_SERVICE_ROLE_KEY`                                                                                      | Service role key (Settings → API). **Solo en Render**: nunca en Vercel ni en el frontend.                                                                                                                                                                               |
+| `SUPABASE_STORAGE_BUCKET`                                                                                        | Opcional, por defecto `diccionario`. Debe existir y ser **privado** (ver 2.4).                                                                                                                                                                                          |
+| `DICCIONARIO_VIDEO_MAX_MB` · `DICCIONARIO_VIDEO_MIN_S` · `DICCIONARIO_VIDEO_MAX_S` · `DICCIONARIO_IMAGEN_MAX_KB` | Opcionales: límites de las señas (20 MB, 2–15 s) y de las imágenes (800 KB).                                                                                                                                                                                            |
 
 `NODE_ENV=staging`, `NODE_VERSION=22` y `PORT` ya los gestiona Render (los dos primeros vía el
 blueprint, `PORT` lo inyecta Render solo).
@@ -85,6 +89,10 @@ No hay que hacer nada: el `startCommand` corre `prisma migrate deploy` y luego e
 aplicadas no se reaplican, y el seed inicial solo hace `upsert` del Admin por email (nunca pisa un
 Admin existente). **No siembra datos de prueba en ningún entorno** — eso es `seed-demo.ts`, que se
 ejecuta a mano (`npm run db:seed:demo`) y nunca en el deploy.
+
+**Diccionario (una vez por entorno).** La migración crea los módulos, unidades y categorías; las 479
+entradas se cargan a mano tras migrar, con `DATABASE_URL` apuntando al entorno:
+`npm run db:seed:diccionario`. Es idempotente: repetirlo no duplica entradas ni cambia slugs.
 
 Si `ADMIN_EMAIL`/`ADMIN_PASSWORD` no están seteados en el paso 2.2, el seed aborta con un error
 claro y el deploy falla — es intencional, para no arrancar en staging/prod sin Admin.
@@ -99,6 +107,21 @@ claro y el deploy falla — es intencional, para no arrancar en staging/prod sin
 Cuando termine, anota la URL pública: `https://bighearts-backend-staging.onrender.com` (o la que asigne).
 
 ---
+
+### 2.4. Bucket de señas e imágenes (D51)
+
+1. Supabase → **Storage** → **New bucket** → nombre `diccionario` → **Public bucket: desactivado**.
+   El bucket es privado: solo se lee con URLs firmadas que caducan en 1 h.
+2. Opcional: en el bucket, _File size limit_ = 20 MB y _Allowed MIME types_ = `video/mp4, image/jpeg, image/webp`.
+3. Define `SUPABASE_URL` y `SUPABASE_SERVICE_ROLE_KEY` en Render (tabla de 2.2).
+
+> **Staging también.** En `production` la API no arranca sin esas dos variables. Render corre con
+> `NODE_ENV=staging`, donde no se exigen: sin ellas, las señas irían al disco del servidor, que se
+> borra en cada deploy. El log de arranque dice qué adaptador quedó activo.
+
+**Verificación (AC3):** sube una seña, copia su URL firmada y ábrela (reproduce); quítale el
+`?token=` (o espera 1 h) y debe responder 400/403. La URL pública
+`…/storage/v1/object/public/diccionario/…` tampoco debe dar acceso.
 
 ## 3. Frontend en Vercel
 

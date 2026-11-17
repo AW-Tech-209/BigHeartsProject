@@ -161,3 +161,25 @@ describe('validateEnv — adaptador de email (D32)', () => {
     ).toThrow(/EMAIL_FROM/);
   });
 });
+
+// D51: en production las señas no pueden ir al disco del servidor.
+describe('almacenamiento de medios del diccionario', () => {
+  it('en development arranca sin Supabase', () => {
+    expect(validateEnv(entornoValido()).SUPABASE_URL).toBeUndefined();
+  });
+
+  it('en production no arranca sin SUPABASE_URL y SUPABASE_SERVICE_ROLE_KEY, y dice por qué', () => {
+    expect(() => validateEnv(entornoValido({ NODE_ENV: 'production' }))).toThrow(/SUPABASE_URL/);
+  });
+
+  it('en production arranca con las dos variables de Supabase', () => {
+    const env = validateEnv(
+      entornoValido({
+        NODE_ENV: 'production',
+        SUPABASE_URL: 'https://proyecto.supabase.co',
+        SUPABASE_SERVICE_ROLE_KEY: 'clave-de-servicio',
+      }),
+    );
+    expect(env.SUPABASE_STORAGE_BUCKET).toBe('diccionario');
+  });
+});

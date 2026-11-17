@@ -17,7 +17,9 @@
     "prisma:deploy": "prisma migrate deploy",
     "prisma:studio": "prisma studio",
     "db:seed": "prisma db seed",
-    "db:seed:demo": "ts-node --transpile-only prisma/seed-demo.ts"
+    "db:seed:demo": "ts-node --transpile-only prisma/seed-demo.ts",
+    "db:seed:showcase": "ts-node --transpile-only prisma/seed-showcase.ts",
+    "db:seed:diccionario": "ts-node --transpile-only prisma/seed-diccionario.ts"
   },
   "prisma": {
     "seed": "ts-node --transpile-only prisma/seed.ts"
@@ -32,6 +34,7 @@
     "@nestjs/schedule": "^12.0.1",
     "@nestjs/throttler": "^6.5.0",
     "@prisma/client": "^6.19.3",
+    "@supabase/supabase-js": "^2.119.0",
     "bcryptjs": "^3.0.3",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.15.1",

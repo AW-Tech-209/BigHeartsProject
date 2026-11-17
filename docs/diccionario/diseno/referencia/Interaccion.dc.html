@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Diccionario · Especificación de interacción</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="/_blob/8500f8b95e34d7853d88e913eba28e73">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&amp;family=Instrument+Serif:ital@0;1&amp;display=swap">
+<style>
+body{margin:0}
+.doc h1{font-family:'Instrument Serif',Georgia,serif;font-weight:400;font-size:52px;line-height:1.1;margin:0 0 12px}
+.doc h2{margin-top:40px}
+.doc .nota{background:#F3F6FA;border:1px solid #dde3eb;border-radius:12px;padding:14px 18px;margin:12px 0}
+</style>
+</helmet>
+<div class="lienzo-doc" style="width: 1500px; min-height: 3400px">
+<article class="doc">
+<h1>Especificación de interacción</h1>
+<p>Reproductor de la seña y subida masiva. Regla de fondo: <b>todo lo que cambia se ve en pantalla</b>; ningún aviso depende de sonido ni de verse en 3 segundos.</p>
+
+<h2>1 · Reproductor de la seña (<code>&lt;ReproductorSena&gt;</code>)</h2>
+<h3>Elemento de video</h3>
+<ul>
+<li><code>&lt;video muted playsinline loop preload="none" poster="…"&gt;</code>. <b>Nunca</b> <code>autoplay</code>. Sin pista de audio (el servidor la elimina al procesar).</li>
+<li><code>aria-label="Seña en LSC de To drink"</code>. La miniatura es un botón con el mismo nombre: «Ver la seña de To drink».</li>
+<li>Velocidad = <code>playbackRate</code> (0.5 / 0.75 / 1). Espejo = <code>transform: scaleX(-1)</code> sobre el video, no sobre los controles. Ambos se recuerdan por usuario.</li>
+<li>Pantalla completa sobre el contenedor (video + controles + línea de estado), no sobre el <code>&lt;video&gt;</code>: los controles con texto siguen visibles.</li>
+</ul>
+
+<h3>Orden de foco (Tab)</h3>
+<table>
+<tr><th>#</th><th>Elemento</th><th>Rol</th><th>Notas</th></tr>
+<tr><td>1</td><td>«Ver la seña» (miniatura)</td><td>button</td><td>Solo en reposo. Al pulsarlo desaparece y el foco pasa a «Pausa» (no se pierde).</td></tr>
+<tr><td>2</td><td>Reproducir / Pausa</td><td>button</td><td>El texto cambia con el estado. <code>aria-pressed</code> no: el nombre ya dice la acción.</td></tr>
+<tr><td>3</td><td>Velocidad</td><td>radiogroup</td><td>Tab entra en la opción marcada; ← → cambian. Un solo paso de Tab para el grupo.</td></tr>
+<tr><td>4</td><td>Ver como en un espejo</td><td>switch</td><td><code>aria-checked</code>. Espacio alterna.</td></tr>
+<tr><td>5</td><td>Pantalla completa</td><td>button</td><td>Al salir (Esc o botón), el foco vuelve aquí.</td></tr>
+<tr><td>6</td><td>Ficha: enlace «Acciones»</td><td>link</td><td>El <code>&lt;h1&gt;</code> (inglés) tiene <code>tabIndex=-1</code> y recibe el foco al cambiar de entrada.</td></tr>
+<tr><td>7–8</td><td>Anterior · Siguiente</td><td>link</td><td>En móvil van fijos abajo, pero en el DOM siguen a la ficha y van antes de la barra inferior.</td></tr>
+</table>
+
+<h3>Atajos de teclado</h3>
+<p>Solo cuando el foco está en la página y <b>no</b> hay un campo de texto activo. Se muestran escritos bajo los controles en escritorio.</p>
+<table>
+<tr><th>Tecla</th><th>Acción</th></tr>
+<tr><td><kbd>Espacio</kbd> o <kbd>K</kbd></td><td>Reproducir o pausar</td></tr>
+<tr><td><kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd></td><td>Velocidad 0.5×, 0.75×, 1×</td></tr>
+<tr><td><kbd>E</kbd></td><td>Espejo sí / no</td></tr>
+<tr><td><kbd>F</kbd> · <kbd>Esc</kbd></td><td>Entrar · salir de pantalla completa</td></tr>
+<tr><td><kbd>←</kbd> <kbd>→</kbd></td><td>Entrada anterior / siguiente (dentro del grupo Velocidad, las flechas cambian la velocidad)</td></tr>
+</table>
+
+<h3>Qué se anuncia</h3>
+<p>Una sola línea de estado bajo el video, visible y con <code>aria-live="polite"</code>. Lo que se lee es lo que se ve.</p>
+<table>
+<tr><th>Momento</th><th>Texto visible y anunciado</th></tr>
+<tr><td>Reposo</td><td>«Lista para ver. No se reproduce sola. Se repite en bucle.»</td></tr>
+<tr><td>Reproducir</td><td>«Reproduciendo en bucle · Velocidad 1×»</td></tr>
+<tr><td>Pausa</td><td>«En pausa.»</td></tr>
+<tr><td>Velocidad</td><td>«Velocidad 0.75×.»</td></tr>
+<tr><td>Espejo</td><td>«Espejo activado.» / «Espejo desactivado.»</td></tr>
+<tr><td>Cargando (si pasa de 400 ms)</td><td>«Cargando la seña…» · si pasa de 10 s: «Con conexión lenta puede tardar unos segundos.»</td></tr>
+<tr><td>Error (<code>role="alert"</code>, una vez)</td><td>«No pudimos cargar la seña. Revisa tu conexión e inténtalo otra vez.» + «Reintentar»</td></tr>
+<tr><td>Cambio de entrada</td><td>Foco al <code>&lt;h1&gt;</code>; título del documento: «To read · Acciones · Diccionario».</td></tr>
+</table>
+<div class="nota"><b>Táctil:</b> tocar el video pausa o reanuda. Sin doble toque ni gestos ocultos. Todos los controles miden 48 px de alto en móvil.</div>
+
+<h2>2 · Subida masiva (Cola de grabación)</h2>
+<h3>Flujo</h3>
+<ol>
+<li><b>Elegir o soltar</b> varios archivos. La zona es un botón (Enter/Espacio abre el selector); arrastrar es un atajo.</li>
+<li><b>Validar en el navegador</b>, antes de subir: tipo (MP4/MOV), tamaño (≤ 20 MB), duración por metadatos (3 a 8 s). Si falla: error en la fila con la causa («Dura 12 segundos. El máximo es 8.»). El audio se detecta en el servidor.</li>
+<li><b>Emparejar por nombre:</b> sin extensión → minúsculas → sin tildes → guiones, guiones bajos y espacios iguales. Se compara con el inglés normalizado de las entradas. <code>to-eat.mp4</code> → «To eat».
+<ul>
+<li>1 coincidencia exacta → <i>emparejada</i>.</li>
+<li>Ninguna exacta y 1 parecida (2 letras de diferencia o menos) → <i>sin emparejar</i> con sugerencia: «¿Quisiste decir To wash?».</li>
+<li>2 o más entradas con el mismo inglés → <i>ambigua</i>: se elige el módulo.</li>
+<li>Ninguna → <i>sin emparejar</i>: selector con búsqueda.</li>
+<li>Si la entrada ya tiene seña lista → aviso en la fila: «Reemplaza la seña actual».</li>
+</ul></li>
+<li><b>Subir</b> 2 a la vez; el resto «En espera». Progreso en MB («3,1 de 5,8 MB»), nunca porcentaje. Lo sin emparejar no bloquea a los demás.</li>
+<li><b>Procesar</b> en el servidor (quitar audio, comprimir, miniatura). La fila pasa a «Procesando…» (ámbar: es tiempo) y luego a «Lista».</li>
+<li><b>Resumen final</b>: «38 listas · 2 con error», y solo los errores debajo, cada uno con su causa y «Reemplazar archivo».</li>
+</ol>
+
+<h3>Foco y anuncios</h3>
+<ul>
+<li>Al soltar archivos, el foco va al resumen («9 archivos · 6 emparejados · 2 sin emparejar · 1 con error», <code>role="status"</code>).</li>
+<li>Si hay archivos sin emparejar, el aviso informativo va justo después y el siguiente Tab llega al primer selector.</li>
+<li>Orden de cada fila: nombre de archivo → selector de entrada (si hace falta) → estado → acción.</li>
+<li>Anuncios por hitos, agrupados cada 5 s: «3 listas más · 5 de 9». Cada error se anuncia una vez (<code>role="alert"</code>). Las filas no se reordenan mientras se suben: el ojo no pierde su sitio.</li>
+<li>Salir con subidas en curso abre un <code>AlertDialog</code>: «Hay 3 videos subiendo. Si sales, se cancelan.» Foco inicial en «Seguir aquí».</li>
+<li>«Descargar lista de nombres» genera un CSV con <code>modulo, unidad, ingles, nombre_de_archivo</code> solo de las entradas sin seña lista.</li>
+</ul>
+
+<h2>3 · Otras interacciones</h2>
+<ul>
+<li><b>Buscador:</b> combobox ARIA (<code>aria-activedescendant</code>). Desde 2 letras, con 150 ms de espera. ↑ ↓ mueven, Enter abre la entrada, Esc cierra. La línea «8 de 14 sugerencias» está visible y es la región viva.</li>
+<li><b>Edición rápida en la tabla:</b> Enter guarda, Esc cancela, Tab recorre inglés → español → tipo. Al guardar, el foco vuelve al botón «Editar» de la fila y aparece «To drink guardada» (8 s, con cerrar). Sin mutación optimista: la fila muestra «Guardando…» hasta la respuesta.</li>
+<li><b>Lote:</b> la barra de acciones aparece al marcar la primera casilla y anuncia «2 seleccionadas». «Enviar a la papelera» no pide confirmación (es reversible 30 días) y muestra «Deshacer».</li>
+<li><b>Eliminar categoría:</b> foco inicial en «Volver». «Eliminar» queda inactivo, con el motivo escrito, hasta que el nombre coincida exactamente.</li>
+<li><b>Importar CSV:</b> el foco va al título de cada paso. Nada se escribe en la base hasta «Importar 14 entradas».</li>
+</ul>
+</article>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1500,"height":3400}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>

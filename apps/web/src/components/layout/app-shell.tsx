@@ -25,6 +25,8 @@ type AppShellProps = {
    * que ofrecer. La pantalla se queda con la marca y el contenedor.
    */
   conNavegacion?: boolean;
+  /** En móvil, la pantalla fija un dock propio sobre la barra inferior: la ayuda sube por encima. */
+  conDock?: boolean;
 };
 
 /**
@@ -42,7 +44,7 @@ type AppShellProps = {
  *  3. **El estado de la sesión está siempre a la vista.** Quién eres y cómo
  *     salir no viven detrás de un menú de avatar.
  */
-export function AppShell({ children, conNavegacion = true }: AppShellProps) {
+export function AppShell({ children, conNavegacion = true, conDock = false }: AppShellProps) {
   const { user, isAuthenticated } = useAuth();
   const esMovil = useEsMovil();
 
@@ -95,7 +97,7 @@ export function AppShell({ children, conNavegacion = true }: AppShellProps) {
       <main
         id="contenido"
         tabIndex={-1}
-        className={cn('flex-1 outline-none', navegacionAbajo && 'pb-40')}
+        className={cn('flex-1 outline-none', navegacionAbajo && (conDock ? 'pb-60' : 'pb-40'))}
       >
         <Contenedor className="space-y-8 py-8">
           {user?.role === UserRole.STUDENT && <AvisoAperturaDeClase />}
@@ -104,7 +106,14 @@ export function AppShell({ children, conNavegacion = true }: AppShellProps) {
       </main>
 
       {navegacionAbajo && (
-        <BotonAyuda className="fixed right-4 bottom-[calc(4.5rem+env(safe-area-inset-bottom))] z-40 h-12 bg-background shadow-lg" />
+        <BotonAyuda
+          className={cn(
+            'fixed right-4 z-40 h-12 bg-background shadow-lg',
+            conDock
+              ? 'bottom-[calc(9rem+env(safe-area-inset-bottom))]'
+              : 'bottom-[calc(4.5rem+env(safe-area-inset-bottom))]',
+          )}
+        />
       )}
 
       {navegacionAbajo && (
@@ -168,7 +177,7 @@ function EnlaceInferior({ destino }: { destino: Destino }) {
       to={destino.to}
       className={({ isActive }) =>
         cn(
-          'flex min-h-14 flex-1 flex-col items-center justify-center gap-1 border-t-2 px-2 py-2 text-xs transicion-suave',
+          'flex min-h-14 min-w-0 flex-1 flex-col items-center justify-center gap-1 border-t-2 px-1 py-2 text-center text-xs leading-tight [overflow-wrap:anywhere] transicion-suave',
           isActive
             ? 'border-brand-foreground font-medium text-brand-foreground'
             : 'border-transparent text-brand-foreground/70',

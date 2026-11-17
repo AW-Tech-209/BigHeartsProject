@@ -48,3 +48,18 @@ tono neutro. Sin cupo o ya reservada: botón reemplazado por uno inhabilitado co
 Título que nombra el objeto, consecuencia clara, botones con verbo («Cancelar mi reserva» /
 «Volver»), foco inicial en el seguro. Avisos confirmables del servidor: se reenvía la petición con
 el flag de acuse, y los números salen de `details`, no de constantes locales.
+
+## Diccionario (`features/diccionario/components/`)
+
+- **Riel por tramo** en toda tarjeta del diccionario: `ESTILO_TRAMO[tramo].riel` (`border-l-4`
+  `--accent-indigo` Básico · `--accent-teal` Intermedio · `--accent-rose` Avanzado). Es categórico,
+  nunca estado.
+- **`<InsigniaTramo>`**: color del tramo + barras `signal-low/medium/high` + nombre. Cada tramo se
+  distingue sin color. Con `texto` («Módulo 1») añade el tramo en `sr-only`.
+- **`<EstadoSena vista>`**: estudiante ve solo «Seña lista» / «Seña en preparación» (gris); admin ve
+  Lista · Procesando (ámbar = tiempo) · Error · Sin seña. **`<ChipTipo>`** neutro.
+- Módulo «Próximamente» en gris con borde punteado y botón `aria-expanded` que explica por qué; nunca
+  enlace muerto ni botón inactivo.
+- Coincidencias de búsqueda en **negrita + subrayado** (`<Resaltado>`), nunca solo color.
+- **El video de una seña no lleva subtítulos: la palabra escrita al lado es su equivalente.** Es la
+  excepción a «nunca video sin subtítulos»: el video ya es la lengua, no un audio que traducir.

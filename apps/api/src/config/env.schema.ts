@@ -4,6 +4,7 @@ import {
   CANCELLATION_WINDOW_MINUTES_DEFAULT,
   CLASS_MAX_DURATION_MINUTES_DEFAULT,
   CLASS_MIN_LEAD_MINUTES_DEFAULT,
+  LIMITES_MEDIOS_POR_DEFECTO,
 } from '@academia/types';
 import { z } from 'zod';
 
@@ -250,6 +251,41 @@ const camposEnv = z.object({
       },
       { message: 'debe ser una zona horaria IANA válida, p. ej. America/Bogota' },
     ),
+
+  /**
+   * Supabase Storage para las señas e imágenes del diccionario (D51). Opcionales en
+   * desarrollo (se usa el disco local); obligatorias en `production` (refine abajo).
+   * La service role key solo vive en el servidor: nunca viaja al navegador.
+   */
+  SUPABASE_URL: z.string().url('debe ser una URL válida').optional(),
+  SUPABASE_SERVICE_ROLE_KEY: z.string().min(1).optional(),
+  /** Bucket PRIVADO del diccionario. Opcional: por defecto `diccionario`. */
+  SUPABASE_STORAGE_BUCKET: z.string().min(1).default('diccionario'),
+
+  /** Límites de los archivos del diccionario (D51). */
+  DICCIONARIO_VIDEO_MAX_MB: z.coerce
+    .number()
+    .int()
+    .positive()
+    .default(LIMITES_MEDIOS_POR_DEFECTO.videoMaxMb),
+  DICCIONARIO_VIDEO_MIN_S: z.coerce
+    .number()
+    .int()
+    .positive()
+    .default(LIMITES_MEDIOS_POR_DEFECTO.videoMinS),
+  DICCIONARIO_VIDEO_MAX_S: z.coerce
+    .number()
+    .int()
+    .positive()
+    .default(LIMITES_MEDIOS_POR_DEFECTO.videoMaxS),
+  DICCIONARIO_IMAGEN_MAX_KB: z.coerce
+    .number()
+    .int()
+    .positive()
+    .default(LIMITES_MEDIOS_POR_DEFECTO.imagenMaxKb),
+
+  /** Días que una entrada pasa en la papelera antes de eliminarse para siempre (D52). */
+  DICCIONARIO_PAPELERA_DIAS: z.coerce.number().int().positive().default(30),
 });
 
 /**
@@ -268,6 +304,19 @@ export const envSchema = camposEnv
   .refine((env) => !env.RESEND_API_KEY || !!env.EMAIL_FROM, {
     message: 'EMAIL_FROM es obligatoria cuando se configura RESEND_API_KEY',
     path: ['EMAIL_FROM'],
+  })
+  .refine(
+    (env) =>
+      env.NODE_ENV !== 'production' || (!!env.SUPABASE_URL && !!env.SUPABASE_SERVICE_ROLE_KEY),
+    {
+      message:
+        'SUPABASE_URL y SUPABASE_SERVICE_ROLE_KEY son obligatorias en production: sin ellas las señas del diccionario irían al disco del servidor, que Render borra en cada deploy',
+      path: ['SUPABASE_URL'],
+    },
+  )
+  .refine((env) => env.DICCIONARIO_VIDEO_MIN_S < env.DICCIONARIO_VIDEO_MAX_S, {
+    message: 'DICCIONARIO_VIDEO_MIN_S debe ser menor que DICCIONARIO_VIDEO_MAX_S',
+    path: ['DICCIONARIO_VIDEO_MIN_S'],
   });
 
 /** Variables de entorno ya validadas y con los tipos correctos. */

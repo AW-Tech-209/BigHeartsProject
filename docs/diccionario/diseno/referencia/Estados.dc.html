@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Diccionario · Estados compartidos</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="/_blob/8500f8b95e34d7853d88e913eba28e73">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&amp;family=Instrument+Serif:ital@0;1&amp;display=swap">
+<style>
+body{margin:0}
+.hoja{padding:40px;display:flex;flex-direction:column;gap:24px}
+.m .hoja{padding:20px 16px}
+.bloque{display:flex;flex-direction:column;gap:12px}
+.bloque > .et{font-size:.8125rem;font-weight:600;color:var(--muted-foreground)}
+.sk{background:var(--muted);border-radius:8px}
+.leyenda{display:flex;flex-wrap:wrap;gap:8px}
+</style>
+</helmet>
+<div class="lienzo" style="width: 3630px; min-height: 2900px">
+<sc-for list="{{variantes}}" as="v" hint-placeholder-count="4">
+<div class="marco">
+<p class="marco-etiqueta"><b>{{v.titulo}}</b><span>{{v.medida}}</span></p>
+<div class="{{v.cls}}">
+<div class="hoja">
+<h2 class="h2g">Estados que comparten todas las pantallas</h2>
+<div class="r2" style="gap: 20px; align-items: start">
+
+<section class="bloque"><p class="et">Cargando · siempre con texto</p>
+<div class="tarjeta pad24 col g12" role="status" aria-live="polite">
+<p class="fila g8 p5"><span class="ic i-loader-circle c-apagado"></span>Cargando el Módulo 1…</p>
+<div class="r3" style="gap: 10px"><div class="sk" style="height: 72px"></div><div class="sk" style="height: 72px"></div><div class="sk" style="height: 72px"></div></div>
+<p class="t-sm apagado">El ícono no gira: el texto dice qué pasa. Si tarda más de 10 s: «Sigue cargando. Con conexión lenta puede tardar más».</p>
+</div>
+</section>
+
+<section class="bloque"><p class="et">Error con reintento</p>
+<div class="aviso aviso-error" role="alert"><span class="ic i-circle-alert" style="margin-top: 3px"></span><div class="col g8"><p class="p6">No pudimos cargar las palabras.</p><p class="t-sm">Revisa tu conexión e inténtalo otra vez.</p><button class="btn btn-sec" type="button" style="align-self: flex-start"><span class="ic s i-refresh-cw"></span>Reintentar</button></div></div>
+</section>
+
+<section class="bloque"><p class="et">Vacío · invita a actuar</p>
+<div class="tarjeta pad24 col g12 inicio" role="status">
+<span class="circulo"><span class="ic l i-inbox c-apagado"></span></span>
+<p class="serif t-2xl">Esta categoría todavía no tiene palabras.</p>
+<p class="apagado">El profesor las agrega poco a poco. Mira otra categoría del módulo.</p>
+<a class="btn btn-sec" href="Modulo.dc.html"><span class="ic s i-arrow-left"></span>Volver al Módulo 1</a>
+</div>
+</section>
+
+<section class="bloque"><p class="et">Éxito y error en aviso flotante · mínimo 8 s, con cerrar</p>
+<div class="toast" role="status"><span class="ic i-circle-check c-exito" style="margin-top: 2px"></span><div class="col crece"><p class="p6">Entrada guardada.</p><p class="t-sm apagado"><span lang="en">To drink</span> ya se ve en el diccionario.</p></div><button class="btn btn-icono btn-fantasma" type="button" aria-label="Cerrar aviso"><span class="ic s i-x"></span></button></div>
+<div class="toast" role="alert" style="border-color: var(--destructive-border)"><span class="ic i-circle-alert c-error" style="margin-top: 2px"></span><div class="col g6 crece"><p class="p6">No pudimos guardar los cambios.</p><p class="t-sm apagado">Revisa tu conexión e inténtalo otra vez. Este aviso no se cierra solo.</p><button class="btn btn-sec" type="button" style="align-self: flex-start"><span class="ic s i-refresh-cw"></span>Reintentar</button></div><button class="btn btn-icono btn-fantasma" type="button" aria-label="Cerrar aviso"><span class="ic s i-x"></span></button></div>
+</section>
+
+<section class="bloque"><p class="et">Seña · vista del estudiante</p>
+<div class="leyenda"><span class="estado estado-exito"><span class="ic s i-hand"></span>Seña lista</span><span class="estado estado-inactivo"><span class="ic s i-clapperboard"></span>Seña en preparación</span></div>
+<p class="t-sm apagado">El estudiante nunca ve «Procesando» ni «Error»: para él la seña está lista o en preparación.</p>
+</section>
+
+<section class="bloque"><p class="et">Seña · vista del administrador</p>
+<div class="leyenda"><span class="estado estado-exito"><span class="ic s i-circle-check"></span>Lista</span><span class="estado estado-tiempo"><span class="ic s i-hourglass"></span>Procesando</span><span class="estado estado-error"><span class="ic s i-circle-alert"></span>Error</span><span class="estado estado-inactivo"><span class="ic s i-video-off"></span>Sin seña</span></div>
+<p class="t-sm apagado">Ámbar solo en «Procesando» (es tiempo) y en «Quedan 2 días» de la papelera.</p>
+</section>
+
+<section class="bloque"><p class="et">Módulo y función próximos</p>
+<div class="leyenda"><span class="estado estado-proximo"><span class="ic s i-clock"></span>Próximamente</span><span class="insignia insignia-tramo tramo-1"><span class="ic s i-signal-low"></span>Básico</span><span class="insignia insignia-tramo tramo-2"><span class="ic s i-signal-medium"></span>Intermedio</span><span class="insignia insignia-tramo tramo-3"><span class="ic s i-signal-high"></span>Avanzado</span></div>
+<p class="t-sm apagado">Cada tramo tiene color, ícono de barras (1, 2 o 3) y nombre: se distinguen sin color.</p>
+</section>
+
+<section class="bloque"><p class="et">Botón inactivo · siempre con motivo</p>
+<div class="col g6"><button class="btn btn-primario" type="button" aria-disabled="true" aria-describedby="mot-{{$index}}" style="align-self: flex-start">Guardar</button><p class="ayuda fila g6" id="mot-{{$index}}"><span class="ic s i-info"></span>Escribe el inglés y el español para guardar.</p></div>
+</section>
+
+</div>
+</div>
+</div>
+</div>
+</sc-for>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":3630,"height":2900}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {
+      variantes: [
+        { cls: 'bh t-claro d', titulo: 'Escritorio · claro', medida: '1280 px' },
+        { cls: 'bh t-claro m', titulo: 'Móvil · claro', medida: '375 px' },
+        { cls: 'bh t-oscuro d', titulo: 'Escritorio · oscuro', medida: '1280 px' },
+        { cls: 'bh t-oscuro m', titulo: 'Móvil · oscuro', medida: '375 px' }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

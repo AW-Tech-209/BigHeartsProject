@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Diccionario · Practicar Acciones (concepto)</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="/_blob/8500f8b95e34d7853d88e913eba28e73">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&amp;family=Instrument+Serif:ital@0;1&amp;display=swap">
+<style>
+body{margin:0}
+.flash{width:720px;margin:0 auto;display:flex;flex-direction:column}
+.m .flash{width:auto}
+.flash .pantalla{aspect-ratio:16/9}
+.m .flash .pantalla{aspect-ratio:4/3}
+.cara{display:flex;flex-direction:column;align-items:center;gap:16px;padding:28px 24px 32px;text-align:center;border-top:1px solid var(--border)}
+.m .cara{padding:20px 16px 24px}
+.respuesta{font-family:'Instrument Serif',Georgia,serif;font-size:2.75rem;line-height:1.1}
+.oculta{display:flex;flex-direction:column;align-items:center;gap:8px;width:100%;padding:20px;border:2px dashed var(--input);border-radius:12px;background:var(--muted)}
+.prog{width:720px;margin:0 auto;display:flex;flex-direction:column;gap:8px}
+.m .prog{width:auto}
+</style>
+</helmet>
+<div class="lienzo" style="width: 3630px; min-height: 1600px">
+<sc-for list="{{variantes}}" as="v" hint-placeholder-count="4">
+<div class="marco">
+<p class="marco-etiqueta"><b>{{v.titulo}}</b><span>{{v.medida}}</span></p>
+<div class="{{v.cls}}">
+
+<header class="barra-sup"><div class="in">
+<a class="marca" href="#"><span class="sello"><span class="ic s i-heart"></span></span>BigHearts</a>
+<nav class="nav solo-d" aria-label="Principal">
+<a href="#"><span class="ic s i-layout-dashboard"></span>Panel</a>
+<a href="#"><span class="ic s i-school"></span>Aulas</a>
+<a href="#"><span class="ic s i-calendar-check"></span>Mis clases</a>
+<a href="#"><span class="ic s i-history"></span>Historial</a>
+<a href="Main.dc.html" aria-current="page"><span class="ic s i-book-a"></span>Diccionario</a>
+</nav>
+<button class="cuenta" type="button"><span class="av">LM</span><span class="solo-d">Mi cuenta</span></button>
+</div></header>
+
+<main class="principal" id="contenido">
+<div class="contenedor" style="gap: 24px">
+<a class="volver" href="Categoria.dc.html"><span class="ic s i-arrow-left"></span>Salir de la práctica</a>
+<div class="cabecera" style="margin-top: -12px; align-items: center; text-align: center">
+<span class="insignia insignia-tramo tramo-1"><span class="ic s i-signal-low"></span><b>Módulo 1</b> · Acciones</span>
+<h1>Practicar Acciones</h1>
+<p class="contexto">Mira la seña. Piensa qué palabra es. Después, muestra la respuesta.</p>
+</div>
+
+<div class="prog">
+<div class="fila entre t-sm"><span class="p5 num">Tarjeta 3 de 10</span><span class="apagado num">{{v.sabidas}}</span></div>
+<div class="barra fina" role="progressbar" aria-valuemin="0" aria-valuemax="10" aria-valuenow="3" aria-valuetext="Tarjeta 3 de 10"><span style="width: 30%; background: var(--primary)"></span></div>
+</div>
+
+<section class="tarjeta riel tramo-1 flash" aria-label="Tarjeta de práctica">
+<button class="pantalla" type="button" aria-label="Ver la seña">
+<span class="figura" aria-hidden="true"><span class="cabeza"></span><span class="torso"></span><span class="mano" style="top: 46%; left: 40%"></span><span class="mano b" style="left: 46%"></span></span>
+<span class="boton-ver"><span class="ic i-play"></span>{{v.verTxt}}</span>
+</button>
+<div class="controles" style="justify-content: center">
+<div class="ctrl-grupo"><span class="ctrl-et">Velocidad</span><div class="segmento" role="radiogroup" aria-label="Velocidad"><button type="button" role="radio" aria-checked="false">0.5×</button><button type="button" role="radio" aria-checked="true">0.75×</button><button type="button" role="radio" aria-checked="false">1×</button></div></div>
+<button class="interruptor" type="button" role="switch" aria-checked="false"><span class="pista"></span><span class="ctrl-et">Espejo</span></button>
+</div>
+
+<sc-if value="{{v.oculta}}" hint-placeholder-val="{{ true }}">
+<div class="cara">
+<div class="oculta"><span class="ic l i-eye-off c-apagado"></span><p class="p6 t-lg">¿Qué palabra es?</p><p class="t-sm apagado">Piénsala en inglés y en español.</p></div>
+<button class="btn btn-primario btn-grande" type="button"><span class="ic i-eye"></span>Mostrar la palabra</button>
+</div>
+</sc-if>
+<sc-if value="{{v.revelada}}" hint-placeholder-val="{{ false }}">
+<div class="cara" aria-live="polite">
+<p class="t-sm apagado">La palabra es</p>
+<p class="respuesta" lang="en">To read</p>
+<p class="t-xl p5">Leer</p>
+<p class="t-sm apagado">¿La sabías?</p>
+<div class="fila g12 envolver centro">
+<button class="btn btn-sec btn-grande" type="button"><span class="ic i-check"></span>Sí, la sabía</button>
+<button class="btn btn-sec btn-grande" type="button"><span class="ic i-rotate-ccw"></span>No, repetir luego</button>
+</div>
+</div>
+</sc-if>
+</section>
+
+<p class="t-sm apagado" style="text-align: center">Concepto para validar la idea. Esta práctica no guarda notas ni puntajes.</p>
+</div>
+</main>
+
+<nav class="barra-inf solo-m" aria-label="Principal">
+<a href="#"><span class="ic i-layout-dashboard"></span>Panel</a>
+<a href="#"><span class="ic i-school"></span>Aulas</a>
+<a href="#"><span class="ic i-calendar-check"></span>Mis clases</a>
+<a href="#"><span class="ic i-history"></span>Historial</a>
+<a href="Main.dc.html" aria-current="page"><span class="ic i-book-a"></span>Diccionario</a>
+</nav>
+</div>
+</div>
+</sc-for>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":3630,"height":1600}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const o = { oculta: true, revelada: false, verTxt: 'Ver la seña', sabidas: '2 sabidas · 0 para repetir' };
+    const r = { oculta: false, revelada: true, verTxt: 'Ver otra vez', sabidas: '2 sabidas · 0 para repetir' };
+    return {
+      variantes: [
+        Object.assign({ cls: 'bh t-claro d', titulo: 'Escritorio · claro', medida: '1280 px · palabra oculta' }, o),
+        Object.assign({ cls: 'bh t-claro m', titulo: 'Móvil · claro', medida: '375 px · palabra revelada' }, r),
+        Object.assign({ cls: 'bh t-oscuro d', titulo: 'Escritorio · oscuro', medida: '1280 px · palabra revelada' }, r),
+        Object.assign({ cls: 'bh t-oscuro m', titulo: 'Móvil · oscuro', medida: '375 px · palabra oculta' }, o)
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

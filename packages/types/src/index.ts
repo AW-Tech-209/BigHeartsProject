@@ -1514,6 +1514,40 @@ export const ApiErrorCode = {
   FEEDBACK_ALREADY_SENT: 'FEEDBACK_ALREADY_SENT',
   /** Fuera de la ventana para valorar: la clase no terminó o pasaron más de 7 días (HU-515). */
   FEEDBACK_WINDOW_CLOSED: 'FEEDBACK_WINDOW_CLOSED',
+  /** El número de módulo del diccionario no existe (HU-527). */
+  MODULE_NOT_FOUND: 'MODULE_NOT_FOUND',
+  /** El módulo existe pero está «Próximamente»: aún no tiene contenido visible (HU-527). */
+  MODULE_NOT_AVAILABLE: 'MODULE_NOT_AVAILABLE',
+  /** La categoría del diccionario no existe (HU-527). */
+  CATEGORY_NOT_FOUND: 'CATEGORY_NOT_FOUND',
+  /** La entrada no existe, está en la papelera, oculta o en un módulo no disponible (HU-527). */
+  ENTRY_NOT_FOUND: 'ENTRY_NOT_FOUND',
+  /** La unidad elegida no pertenece al módulo de la entrada (HU-531). */
+  UNIT_NOT_IN_MODULE: 'UNIT_NOT_IN_MODULE',
+  /** El archivo supera el tamaño máximo; el límite va en `details.maxBytes` (HU-538). */
+  FILE_TOO_LARGE: 'FILE_TOO_LARGE',
+  /** Tipo de archivo no admitido (solo MP4, miniatura JPEG, imagen WebP/JPEG) (HU-538). */
+  FILE_TYPE_NOT_ALLOWED: 'FILE_TYPE_NOT_ALLOWED',
+  /** La seña dura más que `details.maxMs` (HU-538). */
+  VIDEO_TOO_LONG: 'VIDEO_TOO_LONG',
+  /** La seña dura menos que `details.minMs` (HU-538). */
+  VIDEO_TOO_SHORT: 'VIDEO_TOO_SHORT',
+  /** Se pidió confirmar una subida cuyo archivo no llegó al almacenamiento (HU-538). */
+  UPLOAD_NOT_FOUND: 'UPLOAD_NOT_FOUND',
+  /** El video no existe, no es de esa entrada o ya no está pendiente (HU-538). */
+  VIDEO_NOT_FOUND: 'VIDEO_NOT_FOUND',
+  /** La categoría o unidad de la entrada ya no existe; `details` dice cuál (HU-532, D52). */
+  RESTORE_TARGET_MISSING: 'RESTORE_TARGET_MISSING',
+  /** Eliminar una unidad o categoría con entradas exige `destino`; `details.entradas` (HU-532). */
+  HAS_ENTRIES: 'HAS_ENTRIES',
+  /** La unidad del diccionario no existe (HU-532). */
+  UNIT_NOT_FOUND: 'UNIT_NOT_FOUND',
+  /** La lista de `ids` para reordenar no coincide con los elementos actuales (HU-532). */
+  ORDER_MISMATCH: 'ORDER_MISMATCH',
+  /** El CSV no se puede leer: no es UTF-8, está vacío o le faltan columnas (HU-533). */
+  CSV_INVALID: 'CSV_INVALID',
+  /** La vista previa de la importación caducó o no existe: hay que volver a subir el CSV (HU-533). */
+  IMPORT_PREVIEW_EXPIRED: 'IMPORT_PREVIEW_EXPIRED',
   /** Se superó el límite de peticiones (rate limiting). */
   TOO_MANY_REQUESTS: 'TOO_MANY_REQUESTS',
   DATABASE_UNAVAILABLE: 'DATABASE_UNAVAILABLE',
@@ -1594,3 +1628,6 @@ export * from './accesibilidad-clase';
 
 /** Proveedores de videollamada permitidos y `esProveedorPermitido()` (HU-505, D45). */
 export * from './proveedor-reunion';
+
+/** Contrato del diccionario: enums, etiquetas y `normalizarTexto()` (HU-526, D50). */
+export * from './diccionario';

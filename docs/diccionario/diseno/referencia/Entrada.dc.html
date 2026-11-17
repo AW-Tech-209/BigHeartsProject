@@ -1,0 +1,207 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Diccionario · To drink</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="/_blob/8500f8b95e34d7853d88e913eba28e73">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&amp;family=Instrument+Serif:ital@0;1&amp;display=swap">
+<style>
+body{margin:0}
+.ent-nav{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.ent{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(0,1fr);gap:32px;align-items:start}
+.m .ent{grid-template-columns:minmax(0,1fr);gap:20px}
+.estado-rep{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:10px 16px;border-top:1px solid var(--border);font-size:.9375rem;background:var(--card)}
+.m .estado-rep{padding:10px 12px}
+.m .controles{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px}
+.m .controles .ctrl-grupo{grid-column:1 / -1;justify-content:space-between}
+.m .controles .ctrl-grupo .segmento{flex:1;display:grid;grid-template-columns:repeat(3,minmax(0,1fr))}
+.m .controles .btn-play{width:100%}
+.atajos{display:flex;flex-wrap:wrap;gap:6px 14px;padding:10px 16px 14px;border-top:1px solid var(--border);font-size:.8125rem;color:var(--muted-foreground)}
+kbd{font-family:inherit;font-size:.8125rem;border:1px solid var(--input);border-bottom-width:2px;border-radius:6px;padding:0 6px;background:var(--card);color:var(--foreground)}
+.sin-video{display:flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:12px;padding:40px;aspect-ratio:16/10;background:var(--muted);border:1px dashed var(--input);border-radius:16px}
+.m .sin-video{aspect-ratio:auto;padding:24px 20px}
+.ficha{display:flex;flex-direction:column;gap:20px;padding:28px 28px 28px 32px}
+.m .ficha{padding:20px 16px 20px 20px;gap:16px}
+.ficha h1{font-family:'Instrument Serif',Georgia,serif;font-weight:400;font-size:2.75rem;line-height:1.1;letter-spacing:-.01em;overflow-wrap:anywhere}
+.m .ficha h1{font-size:2.125rem}
+.ficha .es{font-size:1.75rem;line-height:1.3;font-weight:500}
+.m .ficha .es{font-size:1.375rem}
+.dl{display:flex;flex-direction:column;gap:14px}
+.dl div{display:flex;flex-direction:column;gap:2px}
+.dl dt{font-size:.8125rem;color:var(--muted-foreground);font-weight:500}
+.img-ph{aspect-ratio:3/2;border-radius:12px;background:var(--muted);border:1px solid var(--border);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;color:var(--muted-foreground);font-size:.9375rem}
+.nota{padding:14px 16px;border-radius:12px;background:var(--muted);border:1px solid var(--border)}
+.pn{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.pn a{display:flex;align-items:center;gap:16px;padding:18px 20px 18px 24px;text-decoration:none;color:inherit}
+.pn a.sig{justify-content:flex-end;text-align:right}
+.dock{position:relative;background:var(--card);border-top:1px solid var(--border);padding:10px 12px;display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);gap:8px;align-items:center;box-shadow:0 -8px 24px -12px oklch(0.235 0.038 258 / .25)}
+.dock .btn{min-height:52px;padding:0 10px;justify-content:flex-start;overflow:hidden}
+.dock .btn.der{justify-content:flex-end}
+.dock .btn span.txt{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+</style>
+</helmet>
+<div class="lienzo" style="width: {{ancho}}; min-height: {{alto}}">
+<sc-for list="{{variantes}}" as="v" hint-placeholder-count="4">
+<div class="marco">
+<p class="marco-etiqueta"><b>{{v.titulo}}</b><span>{{v.medida}}</span></p>
+<div class="{{v.cls}}">
+
+<header class="barra-sup"><div class="in">
+<a class="marca" href="#"><span class="sello"><span class="ic s i-heart"></span></span>BigHearts</a>
+<nav class="nav solo-d" aria-label="Principal">
+<a href="#"><span class="ic s i-layout-dashboard"></span>Panel</a>
+<a href="#"><span class="ic s i-school"></span>Aulas</a>
+<a href="#"><span class="ic s i-calendar-check"></span>Mis clases</a>
+<a href="#"><span class="ic s i-history"></span>Historial</a>
+<a href="Main.dc.html" aria-current="page"><span class="ic s i-book-a"></span>Diccionario</a>
+</nav>
+<button class="cuenta" type="button"><span class="av">LM</span><span class="solo-d">Mi cuenta</span></button>
+</div></header>
+
+<main class="principal" id="contenido">
+<div class="contenedor" style="gap: 24px">
+
+<nav class="migas solo-d" aria-label="Estás en"><a href="Main.dc.html">Diccionario</a><span class="ic s i-chevron-right"></span><a href="Modulo.dc.html">Módulo 1</a><span class="ic s i-chevron-right"></span><a href="Categoria.dc.html">Acciones</a><span class="ic s i-chevron-right"></span><span aria-current="page" lang="en">To drink</span></nav>
+
+<div class="ent-nav">
+<a class="volver" href="Categoria.dc.html"><span class="ic s i-arrow-left"></span>Volver a Acciones</a>
+<p class="t-sm p5 num">Entrada 2 de 51 en Acciones</p>
+</div>
+
+<div class="ent">
+<div class="col g16">
+
+<sc-if value="{{v.conVideo}}" hint-placeholder-val="{{ true }}">
+<section class="reproductor" aria-label="Seña en LSC de To drink">
+<sc-if value="{{v.reposo}}" hint-placeholder-val="{{ true }}">
+<button class="{{v.pantallaCls}}" type="button" aria-label="Ver la seña de To drink">
+<span class="figura" aria-hidden="true"><span class="cabeza"></span><span class="torso"></span><span class="mano"></span><span class="mano b"></span></span>
+<span class="boton-ver"><span class="ic i-play"></span>Ver la seña</span>
+</button>
+</sc-if>
+<sc-if value="{{v.reproduciendo}}" hint-placeholder-val="{{ false }}">
+<div class="{{v.pantallaCls}}" role="img" aria-label="Video de la seña de To drink, reproduciéndose">
+<span class="figura" aria-hidden="true"><span class="cabeza"></span><span class="torso"></span><span class="mano" style="top: 30%; left: 52%"></span><span class="mano b"></span></span>
+</div>
+</sc-if>
+<sc-if value="{{v.cargando}}" hint-placeholder-val="{{ false }}">
+<div class="pantalla" style="cursor: default">
+<div class="capa-estado" role="status"><span class="ic xl i-loader-circle c-apagado"></span><p class="p6">Cargando la seña…</p><p class="t-sm apagado">Con conexión lenta puede tardar unos segundos.</p></div>
+</div>
+</sc-if>
+<sc-if value="{{v.error}}" hint-placeholder-val="{{ false }}">
+<div class="pantalla" style="cursor: default">
+<div class="capa-estado" role="alert" style="background: var(--destructive-soft); border-color: var(--destructive-border); color: var(--destructive-soft-foreground)"><span class="ic xl i-circle-alert"></span><p class="p6">No pudimos cargar la seña.</p><p class="t-sm">Revisa tu conexión e inténtalo otra vez.</p><button class="btn btn-primario" type="button"><span class="ic s i-refresh-cw"></span>Reintentar</button></div>
+</div>
+</sc-if>
+<p class="estado-rep" aria-live="polite"><span class="{{v.estIcon}}"></span><span class="p5">{{v.estTxt}}</span><span class="apagado">{{v.estDet}}</span></p>
+<div class="controles">
+<button class="btn btn-sec btn-play" type="button" aria-disabled="{{v.bloq}}"><span class="ic {{v.playIcon}}"></span>{{v.playTxt}}</button>
+<div class="ctrl-grupo">
+<span class="ctrl-et" id="vel-{{$index}}">Velocidad</span>
+<div class="segmento" role="radiogroup" aria-labelledby="vel-{{$index}}">
+<button type="button" role="radio" aria-checked="{{v.v05}}">0.5×</button>
+<button type="button" role="radio" aria-checked="{{v.v075}}">0.75×</button>
+<button type="button" role="radio" aria-checked="{{v.v1}}">1×</button>
+</div>
+</div>
+<button class="interruptor" type="button" role="switch" aria-checked="{{v.espejo}}"><span class="pista"></span><span class="ctrl-et">Ver como en un espejo</span></button>
+<button class="btn btn-sec" type="button"><span class="ic i-maximize"></span>Pantalla completa</button>
+</div>
+<div class="atajos solo-d"><span>Atajos:</span><span><kbd>Espacio</kbd> reproducir o pausar</span><span><kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd> velocidad</span><span><kbd>E</kbd> espejo</span><span><kbd>F</kbd> pantalla completa</span><span><kbd>←</kbd> <kbd>→</kbd> anterior y siguiente</span></div>
+</section>
+</sc-if>
+
+<sc-if value="{{v.sinVideo}}" hint-placeholder-val="{{ false }}">
+<section class="sin-video" aria-labelledby="sv-{{$index}}">
+<span class="circulo"><span class="ic l i-clapperboard"></span></span>
+<h2 class="serif t-2xl" id="sv-{{$index}}">La seña de esta palabra se está grabando</h2>
+<p style="max-width: 46ch">El equipo sube las señas poco a poco. El resto de la ficha ya está completo.</p>
+<a class="btn btn-sec" href="Categoria.dc.html"><span class="ic s i-hand"></span>Ver palabras de Acciones con seña</a>
+</section>
+</sc-if>
+
+</div>
+
+<article class="tarjeta riel tramo-1 ficha" aria-labelledby="h-{{$index}}">
+<div class="fila g8 envolver"><span class="insignia insignia-tramo"><span class="ic s i-signal-low"></span><b>Módulo 1</b> · Básico</span><span class="chip-tipo">Verbo</span></div>
+<div class="col g4">
+<h1 id="h-{{$index}}" lang="en">To drink</h1>
+<p class="es">Tomar, beber</p>
+</div>
+<div class="sep"></div>
+<dl class="dl">
+<div><dt>Módulo y unidad</dt><dd>Módulo 1 · Básico · Unidad 1 · <span lang="en">Need, Want</span></dd></div>
+<div><dt>Categoría</dt><dd><a class="fila g6 p5" href="Categoria.dc.html" style="display: inline-flex"><span class="ic s i-activity"></span>Acciones</a></dd></div>
+<div><dt>Seña en LSC</dt><dd><sc-if value="{{v.conVideo}}" hint-placeholder-val="{{ true }}"><span class="estado estado-exito"><span class="ic s i-hand"></span>Seña lista</span></sc-if><sc-if value="{{v.sinVideo}}" hint-placeholder-val="{{ false }}"><span class="estado estado-inactivo"><span class="ic s i-clapperboard"></span>Seña en preparación</span></sc-if></dd></div>
+</dl>
+<figure class="col g6">
+<div class="img-ph" role="img" aria-label="Imagen del concepto: marcador de posición"><span class="ic l i-image"></span>Imagen del concepto (opcional)</div>
+</figure>
+<div class="nota col g4"><p class="t-xs p5 apagado fila g6"><span class="ic s i-sticky-note"></span>Nota del profesor</p><p class="t-sm">[Nota opcional del profesor: un ejemplo de uso o una aclaración. Si no hay nota, este bloque no aparece.]</p></div>
+</article>
+</div>
+
+<nav class="pn solo-d" aria-label="Otras entradas de Acciones">
+<a class="tarjeta riel tramo-1" href="Entrada.dc.html"><span class="ic l i-arrow-left c-primario"></span><span class="col"><span class="t-sm apagado">Anterior · 1 de 51</span><span class="h3" lang="en">To eat</span><span class="t-sm">Comer</span></span></a>
+<a class="tarjeta riel tramo-1 sig" href="Entrada.dc.html"><span class="col"><span class="t-sm apagado">Siguiente · 3 de 51</span><span class="h3" lang="en">To read</span><span class="t-sm">Leer</span></span><span class="ic l i-arrow-right c-primario"></span></a>
+</nav>
+
+</div>
+</main>
+
+<nav class="dock solo-m" aria-label="Otras entradas de Acciones">
+<a class="btn btn-sec" href="Entrada.dc.html"><span class="ic i-arrow-left"></span><span class="col" style="align-items: flex-start; min-width: 0"><span class="t-xs apagado">Anterior</span><span class="txt p6" lang="en">To eat</span></span></a>
+<span class="t-xs apagado num" style="text-align: center">2 de 51</span>
+<a class="btn btn-sec der" href="Entrada.dc.html"><span class="col" style="align-items: flex-end; min-width: 0"><span class="t-xs apagado">Siguiente</span><span class="txt p6" lang="en">To read</span></span><span class="ic i-arrow-right"></span></a>
+</nav>
+<nav class="barra-inf solo-m" aria-label="Principal" style="margin-top: 0">
+<a href="#"><span class="ic i-layout-dashboard"></span>Panel</a>
+<a href="#"><span class="ic i-school"></span>Aulas</a>
+<a href="#"><span class="ic i-calendar-check"></span>Mis clases</a>
+<a href="#"><span class="ic i-history"></span>Historial</a>
+<a href="Main.dc.html" aria-current="page"><span class="ic i-book-a"></span>Diccionario</a>
+</nav>
+</div>
+</div>
+</sc-for>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"modo":{"editor":"enum","options":["todas","muy-grande"],"default":"todas"},"$preview":{"width":3630,"height":4000}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const base = { conVideo: true, sinVideo: false, reposo: false, reproduciendo: false, cargando: false, error: false, bloq: 'false', espejo: 'false', v05: 'false', v075: 'false', v1: 'true', pantallaCls: 'pantalla' };
+    const reposo = { reposo: true, playIcon: 'i-play', playTxt: 'Reproducir', estIcon: 'ic i-video c-apagado', estTxt: 'Lista para ver.', estDet: 'No se reproduce sola. Se repite en bucle.' };
+    const rep = (vel, esp) => ({ reproduciendo: true, playIcon: 'i-pause', playTxt: 'Pausa', estIcon: 'ic i-repeat c-primario', estTxt: 'Reproduciendo en bucle', estDet: 'Velocidad ' + vel + (esp ? ' · espejo activado' : ''), espejo: String(esp), pantallaCls: esp ? 'pantalla espejo' : 'pantalla', v05: 'false', v075: String(vel === '0.75×'), v1: String(vel === '1×') });
+    const carg = { cargando: true, bloq: 'true', playIcon: 'i-play', playTxt: 'Reproducir', estIcon: 'ic i-loader-circle c-apagado', estTxt: 'Cargando.', estDet: 'Los controles funcionan cuando termine de cargar.' };
+    const err = { error: true, bloq: 'true', playIcon: 'i-play', playTxt: 'Reproducir', estIcon: 'ic i-circle-alert c-error', estTxt: 'Error al cargar.', estDet: 'Usa «Reintentar» arriba.' };
+    const sin = { conVideo: false, sinVideo: true };
+    const x = (o, p) => Object.assign({}, base, p, o);
+    const todas = [
+      x({ cls: 'bh t-claro d', titulo: 'Escritorio · claro', medida: '1280 px · reproduciendo a 0.75× con espejo' }, rep('0.75×', true)),
+      x({ cls: 'bh t-claro m', titulo: 'Móvil · claro', medida: '375 px · antes de reproducir' }, reposo),
+      x({ cls: 'bh t-oscuro d', titulo: 'Escritorio · oscuro', medida: '1280 px · antes de reproducir' }, reposo),
+      x({ cls: 'bh t-oscuro m', titulo: 'Móvil · oscuro', medida: '375 px · reproduciendo a 1×' }, rep('1×', false)),
+      x({ cls: 'bh t-claro d', titulo: 'Sin video · escritorio · claro', medida: 'estado normal durante meses' }, sin),
+      x({ cls: 'bh t-oscuro m', titulo: 'Sin video · móvil · oscuro', medida: '375 px' }, sin),
+      x({ cls: 'bh t-oscuro d', titulo: 'Cargando · escritorio · oscuro', medida: '1280 px' }, carg),
+      x({ cls: 'bh t-claro m', titulo: 'Error de carga · móvil · claro', medida: '375 px' }, err)
+    ];
+    const grande = [
+      x({ cls: 'bh t-claro d', titulo: 'Muy grande · escritorio · claro', medida: '1280 px · raíz 125 %' }, rep('0.75×', true)),
+      x({ cls: 'bh t-claro m', titulo: 'Muy grande · móvil · claro', medida: '375 px · raíz 125 %' }, reposo),
+      x({ cls: 'bh t-oscuro m', titulo: 'Muy grande · móvil · oscuro', medida: '375 px · sin video' }, sin)
+    ];
+    const g = this.props.modo === 'muy-grande';
+    return { variantes: g ? grande : todas, ancho: g ? '2286px' : '3630px', alto: g ? '2900px' : '4000px' };
+  }
+}
+</script>
+</body>
+</html>

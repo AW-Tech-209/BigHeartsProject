@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Diccionario · Editor de entrada</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="/_blob/8500f8b95e34d7853d88e913eba28e73">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&amp;family=Instrument+Serif:ital@0;1&amp;display=swap">
+<style>
+body{margin:0}
+.fondo-sk{background:var(--muted);border-radius:12px}
+.m .panel{position:static;width:auto;box-shadow:none;border:0;background:transparent;padding:0 16px}
+.m .principal{flex:0;padding-bottom:4px}
+.p-cab{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:20px 24px;border-bottom:1px solid var(--border)}
+.m .p-cab{padding:0 0 4px;border:0}
+.p-cuerpo{flex:1;overflow:hidden;padding:24px;display:flex;flex-direction:column;gap:22px}
+.m .p-cuerpo{padding:16px 0 24px;overflow:visible}
+.p-pie{display:flex;align-items:center;justify-content:flex-end;gap:8px;padding:16px 24px;border-top:1px solid var(--border);background:var(--card)}
+.m .p-pie{position:relative;margin:0 -16px;padding:12px 16px;flex-wrap:wrap;box-shadow:0 -8px 24px -12px oklch(0.235 0.038 258 / .25)}
+.m .p-pie .btn{flex:1 1 140px}
+.m .p-pie .btn-fantasma{flex:1 1 100%;order:3}
+.par{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.m .par{grid-template-columns:minmax(0,1fr)}
+.radios{display:flex;flex-wrap:wrap;gap:8px}
+.archivo{display:flex;align-items:center;gap:12px;padding:12px 14px;border:1px solid var(--border);border-radius:12px;background:var(--card)}
+.video-caja{display:flex;flex-direction:column;gap:12px;padding:16px;border:1px solid var(--border);border-radius:16px;background:var(--muted)}
+.prev{position:relative;aspect-ratio:16/10;border-radius:12px;overflow:hidden;background:var(--card);border:1px solid var(--border);display:grid;place-items:center}
+select.input{appearance:auto}
+.m-volver{display:flex;flex-direction:column;gap:4px}
+</style>
+</helmet>
+<div class="lienzo" style="width: 3630px; min-height: 2500px">
+<sc-for list="{{variantes}}" as="v" hint-placeholder-count="4">
+<div class="marco">
+<p class="marco-etiqueta"><b>{{v.titulo}}</b><span>{{v.medida}}</span></p>
+<div class="{{v.cls}}" style="min-height: {{v.alto}}">
+
+<header class="barra-sup"><div class="in">
+<a class="marca" href="#"><span class="sello"><span class="ic s i-heart"></span></span>BigHearts</a>
+<nav class="nav solo-d" aria-label="Principal">
+<a href="#"><span class="ic s i-layout-dashboard"></span>Panel</a>
+<a href="#"><span class="ic s i-school"></span>Aulas</a>
+<a href="Consola.dc.html" aria-current="page"><span class="ic s i-book-a"></span>Diccionario</a>
+</nav>
+<div class="fila g12"><span class="rol solo-d">Administrador</span><button class="cuenta" type="button"><span class="av">AD</span><span class="solo-d">Mi cuenta</span></button></div>
+</div></header>
+
+<main class="principal" id="contenido">
+<div class="contenedor">
+<div class="solo-d col g24" aria-hidden="true">
+<div class="cabecera"><h1>Diccionario</h1><p class="contexto">Administra las 479 entradas y sus señas en LSC.</p></div>
+<div class="r2"><div class="fondo-sk" style="height: 220px"></div><div class="fondo-sk" style="height: 220px"></div></div>
+<div class="fondo-sk" style="height: 120px"></div>
+<div class="fondo-sk" style="height: 520px"></div>
+</div>
+
+<div class="solo-m m-volver">
+<a class="volver" href="Consola.dc.html"><span class="ic s i-arrow-left"></span>Volver a la consola</a>
+</div>
+</div>
+</main>
+
+<div class="velo solo-d"></div>
+<section class="panel" role="dialog" aria-modal="true" aria-labelledby="pt-{{$index}}">
+<div class="p-cab">
+<div class="col g4">
+<p class="t-sm apagado">{{v.modoTxt}}</p>
+<h2 class="serif t-3xl" id="pt-{{$index}}" lang="{{v.lang}}">{{v.titEnt}}</h2>
+</div>
+<button class="btn btn-icono btn-sec solo-d" type="button" aria-label="Cerrar el editor"><span class="ic i-x"></span></button>
+</div>
+
+<div class="p-cuerpo">
+<sc-if value="{{v.dup}}" hint-placeholder-val="{{ false }}">
+<div class="aviso aviso-info" role="status"><span class="ic i-copy" style="margin-top: 3px"></span><div class="col g4"><p class="p6">Puede ser un duplicado.</p><p class="t-sm">Ya existe «To drink» en Módulo 1 · Acciones. Revisa que no sea la misma entrada.</p><a class="t-sm p5" href="Entrada.dc.html">Ver la entrada que ya existe</a></div></div>
+</sc-if>
+
+<div class="campo"><label class="etiqueta" for="en-{{$index}}">Inglés</label><input class="input" id="en-{{$index}}" value="To drink" lang="en"></div>
+<div class="campo"><label class="etiqueta" for="es-{{$index}}">Español</label><input class="input" id="es-{{$index}}" value="{{v.es}}" aria-describedby="esa-{{$index}}"><p class="ayuda" id="esa-{{$index}}">Separa varias traducciones con coma.</p></div>
+
+<fieldset class="campo" style="border: 0; padding: 0; margin: 0">
+<legend class="etiqueta" style="margin-bottom: 6px">Tipo</legend>
+<div class="radios" role="radiogroup">
+<button class="chip" type="button" role="radio" aria-checked="false">Palabra</button>
+<button class="chip" type="button" role="radio" aria-checked="true"><span class="ic s i-check"></span>Verbo</button>
+<button class="chip" type="button" role="radio" aria-checked="false">Frase</button>
+<button class="chip" type="button" role="radio" aria-checked="false">Expresión</button>
+</div>
+</fieldset>
+
+<div class="campo">
+<p class="etiqueta">Video de la seña <span class="opc">(opcional, se puede subir después)</span></p>
+
+<sc-if value="{{v.zVacia}}" hint-placeholder-val="{{ false }}">
+<div class="zona">
+<span class="circulo"><span class="ic l i-upload"></span></span>
+<p class="p6">Arrastra el video aquí</p>
+<button class="btn btn-sec" type="button"><span class="ic s i-file-video"></span>Elegir video</button>
+<p class="ayuda">MP4 o MOV · de 3 a 8 segundos · sin audio · máximo 20 MB.</p>
+</div>
+</sc-if>
+
+<sc-if value="{{v.zSubiendo}}" hint-placeholder-val="{{ true }}">
+<div class="video-caja" aria-live="polite">
+<div class="archivo"><span class="ic l i-file-video c-apagado"></span><div class="col crece"><span class="p5">to-drink.mp4</span><span class="t-xs apagado num">4,0 de 6,2 MB subidos</span></div><span class="estado estado-tiempo"><span class="ic s i-upload"></span>Subiendo</span></div>
+<div class="barra tiempo" role="progressbar" aria-valuemin="0" aria-valuemax="6.2" aria-valuenow="4" aria-valuetext="4,0 de 6,2 MB"><span style="width: 64.5%"></span></div>
+<div class="fila entre g8 envolver"><p class="ayuda">No cierres esta ventana hasta que termine.</p><button class="btn btn-fantasma" type="button">Cancelar subida</button></div>
+</div>
+</sc-if>
+
+<sc-if value="{{v.zProc}}" hint-placeholder-val="{{ false }}">
+<div class="video-caja" aria-live="polite">
+<div class="archivo"><span class="ic l i-file-video c-apagado"></span><div class="col crece"><span class="p5">to-drink.mp4</span><span class="t-xs apagado">6,2 MB · subido</span></div><span class="estado estado-tiempo"><span class="ic s i-hourglass"></span>Procesando…</span></div>
+<p class="t-sm">Preparamos el video para que cargue rápido en cualquier conexión. Tarda 1 o 2 minutos.</p>
+<p class="ayuda">Puedes guardar y salir. El estado de la seña cambia a «Lista» en la consola.</p>
+</div>
+</sc-if>
+
+<sc-if value="{{v.zLista}}" hint-placeholder-val="{{ false }}">
+<div class="video-caja">
+<div class="prev"><span class="figura" aria-hidden="true"><span class="cabeza"></span><span class="torso"></span><span class="mano"></span><span class="mano b"></span></span><button class="boton-ver" type="button" style="min-height: 48px; font-size: .9375rem; border: 0"><span class="ic s i-play"></span>Ver vista previa</button></div>
+<div class="fila entre g8 envolver"><span class="estado estado-exito"><span class="ic s i-circle-check"></span>Lista · 5 s · se repite en bucle</span></div>
+<div class="fila g8 envolver"><button class="btn btn-sec" type="button"><span class="ic s i-refresh-cw"></span>Reemplazar video</button><button class="btn btn-peligro-sec" type="button"><span class="ic s i-trash-2"></span>Quitar video</button></div>
+</div>
+</sc-if>
+</div>
+
+<div class="par">
+<div class="campo"><label class="etiqueta" for="mo-{{$index}}">Módulo</label><select class="input" id="mo-{{$index}}"><option>Módulo 1 · Básico</option><option>Módulo 2 · Básico</option><option>Módulo 3 · Básico</option></select></div>
+<div class="campo"><label class="etiqueta" for="un-{{$index}}">Unidad</label><select class="input" id="un-{{$index}}" aria-describedby="una-{{$index}}"><option>Unidad 1 · Need, Want</option></select><p class="ayuda" id="una-{{$index}}">Cambian según el módulo.</p></div>
+</div>
+<div class="campo"><label class="etiqueta" for="ca-{{$index}}">Categoría</label><select class="input" id="ca-{{$index}}"><option>Acciones</option><option>Lugares</option><option>Objetos</option></select></div>
+
+<div class="campo">
+<p class="etiqueta">Imagen del concepto <span class="opc">(opcional)</span></p>
+<div class="zona" style="padding: 16px; flex-direction: row; justify-content: flex-start; text-align: left">
+<span class="circulo chico"><span class="ic i-image"></span></span>
+<div class="col crece"><p class="t-sm p5">Arrastra una imagen o elígela</p><p class="ayuda" style="font-size: .8125rem">JPG o PNG · máximo 2 MB · escribe qué muestra.</p></div>
+<button class="btn btn-sec" type="button">Elegir</button>
+</div>
+</div>
+
+<div class="campo"><label class="etiqueta" for="no-{{$index}}">Nota <span class="opc">(opcional)</span></label><textarea class="input" id="no-{{$index}}" rows="3" placeholder="Por ejemplo: cuándo se usa esta palabra"></textarea><p class="ayuda">Los estudiantes la ven debajo de la palabra.</p></div>
+
+<div class="sep"></div>
+<button class="interruptor" type="button" role="switch" aria-checked="{{v.pub}}"><span class="pista"></span><span class="col"><span class="p5">Publicada</span><span class="t-sm apagado">Apagada: solo la ve el administrador.</span></span></button>
+</div>
+
+<div class="p-pie">
+<button class="btn btn-fantasma" type="button">Cancelar</button>
+<button class="btn btn-sec" type="button">Guardar y crear otra</button>
+<button class="btn btn-primario" type="button"><span class="ic s i-save"></span>Guardar</button>
+</div>
+</section>
+
+<nav class="barra-inf tres solo-m" aria-label="Principal" style="margin-top: 0">
+<a href="#"><span class="ic i-layout-dashboard"></span>Panel</a>
+<a href="#"><span class="ic i-school"></span>Aulas</a>
+<a href="Consola.dc.html" aria-current="page"><span class="ic i-book-a"></span>Diccionario</a>
+</nav>
+</div>
+</div>
+</sc-for>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":3630,"height":2500}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const base = { zVacia: false, zSubiendo: false, zProc: false, zLista: false, dup: false, pub: 'true', modoTxt: 'Editar entrada', titEnt: 'To drink', lang: 'en', es: 'Tomar, beber' };
+    const x = (o) => Object.assign({}, base, o);
+    return {
+      variantes: [
+        x({ cls: 'bh t-claro d', titulo: 'Escritorio · claro', medida: '1280 px · panel lateral · video subiendo', alto: '1600px', zSubiendo: true }),
+        x({ cls: 'bh t-claro m', titulo: 'Móvil · claro', medida: '375 px · página · crear entrada con posible duplicado', alto: 'auto', zVacia: true, dup: true, modoTxt: 'Crear entrada', titEnt: 'Nueva entrada', lang: 'es', es: 'Beber', pub: 'false' }),
+        x({ cls: 'bh t-oscuro d', titulo: 'Escritorio · oscuro', medida: '1280 px · video procesando', alto: '1600px', zProc: true }),
+        x({ cls: 'bh t-oscuro m', titulo: 'Móvil · oscuro', medida: '375 px · video listo, vista previa', alto: 'auto', zLista: true })
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

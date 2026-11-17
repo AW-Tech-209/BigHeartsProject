@@ -4,10 +4,20 @@ import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import { RedirectIfAuthenticated } from '@/features/auth/components/redirect-if-authenticated';
 import { RequireAuth } from '@/features/auth/components/require-auth';
 import { useAuth } from '@/features/auth/hooks/use-auth';
+import { AdminColaGrabacionPage } from '@/pages/AdminColaGrabacionPage';
+import { AdminDiccionarioPage } from '@/pages/AdminDiccionarioPage';
+import { AdminEntradaPage } from '@/pages/AdminEntradaPage';
+import { AdminEstructuraPage } from '@/pages/AdminEstructuraPage';
+import { AdminImportarPage } from '@/pages/AdminImportarPage';
+import { AdminPapeleraPage } from '@/pages/AdminPapeleraPage';
 import { AulaDetallePage } from '@/pages/AulaDetallePage';
 import { AulasPage } from '@/pages/AulasPage';
 import { CompletarAccesibilidadPage } from '@/pages/CompletarAccesibilidadPage';
 import { CrearAulaPage } from '@/pages/CrearAulaPage';
+import { DiccionarioCategoriaPage } from '@/pages/DiccionarioCategoriaPage';
+import { DiccionarioEntradaPage } from '@/pages/DiccionarioEntradaPage';
+import { DiccionarioModuloPage } from '@/pages/DiccionarioModuloPage';
+import { DiccionarioPage } from '@/pages/DiccionarioPage';
 import { EditarAulaPage } from '@/pages/EditarAulaPage';
 import { HistorialPage } from '@/pages/HistorialPage';
 import { HomePage } from '@/pages/HomePage';
@@ -268,6 +278,95 @@ export function AppRoutes() {
         element={
           <RequireAuth roles={[UserRole.TEACHER]}>
             <EditarAulaPage />
+          </RequireAuth>
+        }
+      />
+
+      <Route
+        path="/diccionario"
+        element={
+          <RequireAuth>
+            <DiccionarioPage />
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/diccionario/modulo/:numero"
+        element={
+          <RequireAuth>
+            <DiccionarioModuloPage />
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/diccionario/modulo/:numero/:categoria"
+        element={
+          <RequireAuth>
+            <DiccionarioCategoriaPage />
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/diccionario/entrada/:slug"
+        element={
+          <RequireAuth>
+            <DiccionarioEntradaPage />
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/admin/diccionario"
+        element={
+          <RequireAuth roles={[UserRole.ADMIN]}>
+            <AdminDiccionarioPage />
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/admin/diccionario/entrada/nueva"
+        element={
+          <RequireAuth roles={[UserRole.ADMIN]}>
+            <AdminEntradaPage />
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/admin/diccionario/entrada/:id"
+        element={
+          <RequireAuth roles={[UserRole.ADMIN]}>
+            <AdminEntradaPage key="editar" />
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/admin/diccionario/grabacion"
+        element={
+          <RequireAuth roles={[UserRole.ADMIN]}>
+            <AdminColaGrabacionPage />
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/admin/diccionario/estructura"
+        element={
+          <RequireAuth roles={[UserRole.ADMIN]}>
+            <AdminEstructuraPage />
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/admin/diccionario/importar"
+        element={
+          <RequireAuth roles={[UserRole.ADMIN]}>
+            <AdminImportarPage />
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/admin/diccionario/papelera"
+        element={
+          <RequireAuth roles={[UserRole.ADMIN]}>
+            <AdminPapeleraPage />
           </RequireAuth>
         }
       />

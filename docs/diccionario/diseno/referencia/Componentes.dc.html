@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Diccionario · Inventario de componentes</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="/_blob/8500f8b95e34d7853d88e913eba28e73">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&amp;family=Instrument+Serif:ital@0;1&amp;display=swap">
+<style>
+body{margin:0}
+.inv{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:24px;align-items:start}
+.comp{border-radius:16px;outline:0 !important;border:1px solid #cfd6e0}
+.comp-cab{padding:20px 24px 16px;border-bottom:1px solid var(--border);display:flex;flex-direction:column;gap:4px}
+.comp-cab code,.var code{font-family:ui-monospace,'SFMono-Regular',monospace;font-size:.8125rem;background:var(--muted);padding:1px 6px;border-radius:6px}
+.comp-n{font-family:ui-monospace,'SFMono-Regular',monospace;font-size:1.0625rem;font-weight:600}
+.muestra{padding:24px;display:flex;flex-direction:column;gap:16px;background:var(--background)}
+.var{padding:16px 24px 20px;border-top:1px solid var(--border);font-size:.9375rem;display:flex;flex-direction:column;gap:6px}
+.var p{margin:0}
+.tm{display:grid !important;grid-template-columns:1fr auto;grid-template-areas:"n ins" "lvl lvl" "sep sep" "cnt cnt";gap:10px 12px;padding:20px 20px 18px 24px;align-items:start}
+.tm-n{grid-area:n;display:flex;flex-direction:column;line-height:1.2}
+.tm-num{font-size:3rem;line-height:1;font-weight:600;letter-spacing:-.03em;margin-top:4px}
+.tm-ins{grid-area:ins;justify-self:end}
+.tm-lvl{grid-area:lvl;font-size:1.1875rem;font-weight:500}
+.tm-sep{grid-area:sep;display:block}
+.tm-cnt{grid-area:cnt;display:flex;flex-wrap:wrap;gap:6px 16px;font-size:.9375rem;align-items:center}
+.prox{background:var(--muted) !important;border-style:dashed !important;border-color:var(--input) !important}
+.prox .tm-num,.prox .tm-lvl{color:var(--muted-foreground)}
+.pal{display:flex !important;flex-direction:row;align-items:stretch}
+.mini{position:relative;width:116px;min-height:100px;background:var(--muted);border-right:1px solid var(--border);display:grid;place-items:center;flex:none;overflow:hidden}
+.mini .play{position:relative;z-index:2;width:36px;height:36px;border-radius:999px;background:var(--card);border:1px solid var(--border);display:grid;place-items:center}
+.mini.prep{background:repeating-linear-gradient(135deg,var(--muted) 0 10px,color-mix(in oklch,var(--muted) 70%,var(--card)) 10px 20px)}
+.prep-et{position:relative;display:flex;flex-direction:column;align-items:center;gap:4px;padding:6px;max-width:96px;background:var(--card);border:1px solid var(--border);border-radius:10px;font-size:.8125rem;font-weight:500;color:var(--muted-foreground);text-align:center;line-height:1.3}
+.pal-txt{display:flex;flex-direction:column;gap:2px;padding:12px 14px;justify-content:center;min-width:0}
+.pal-en{font-size:1.1875rem;line-height:1.3;font-weight:600;overflow-wrap:anywhere}
+.cat{display:flex !important;align-items:center;gap:14px;padding:16px 16px 16px 22px}
+.cat .circulo{width:44px;height:44px;background:var(--muted)}
+.mono{font-family:ui-monospace,'SFMono-Regular',monospace;font-size:.875rem}
+</style>
+</helmet>
+<div class="lienzo-doc" style="width: 2600px; min-height: 3400px">
+<div class="col g8" style="margin-bottom: 32px; font-family: Geist, sans-serif">
+<h1 style="margin: 0; font-family: 'Instrument Serif', Georgia, serif; font-weight: 400; font-size: 56px; color: #131E30">Inventario de componentes</h1>
+<p style="margin: 0; font-size: 19px; color: #3d4757; max-width: 90ch">Nombres pensados para <code>apps/web/src/features/diccionario/components/</code>. Cada uno usa los tokens de <code>index.css</code>, CVA para variantes y <code>cn()</code>. Los estados siempre llevan color + ícono + texto.</p>
+</div>
+<div class="inv">
+
+<section class="bh t-claro comp">
+<div class="comp-cab"><span class="comp-n">&lt;TarjetaModulo&gt;</span><span class="t-sm apagado">Rejilla de inicio. Toda la tarjeta es enlace; «próximo» es botón que despliega la explicación.</span></div>
+<div class="muestra">
+<a class="tarjeta riel tramo-1 tm" href="Modulo.dc.html"><span class="tm-n"><span class="t-sm apagado">Módulo</span><span class="tm-num">1</span></span><span class="tm-ins insignia insignia-tramo"><span class="ic s i-signal-low"></span>Básico</span><span class="tm-lvl" lang="en">Level I</span><span class="tm-sep sep"></span><span class="tm-cnt"><span class="fila g6"><span class="ic s i-book-a c-apagado"></span><span><b class="p6">203</b> palabras</span></span><span class="fila g6"><span class="ic s i-hand c-apagado"></span><span><b class="p6">86</b> con seña</span></span></span></a>
+<button class="tarjeta riel tramo-2 tm prox" type="button" aria-expanded="false"><span class="tm-n"><span class="t-sm apagado">Módulo</span><span class="tm-num">4</span></span><span class="tm-ins insignia insignia-tramo"><span class="ic s i-signal-medium"></span>Intermedio</span><span class="tm-lvl" lang="en">Level IV</span><span class="tm-sep sep"></span><span class="tm-cnt"><span class="estado estado-proximo"><span class="ic s i-clock"></span>Próximamente</span><span class="apagado">Toca para saber más</span></span></button>
+</div>
+<div class="var"><p><b>Props:</b> <code>numero</code> <code>level</code> <code>tramo: 'basico' | 'intermedio' | 'avanzado'</code> <code>palabras</code> <code>conSena</code> <code>disponible</code></p><p><b>Variantes:</b> disponible · próximo · próximo expandido (<code>aria-expanded</code>) · <code>layout: 'vertical' | 'compacta'</code> (móvil: número a la izquierda)</p></div>
+</section>
+
+<section class="bh t-claro comp">
+<div class="comp-cab"><span class="comp-n">&lt;InsigniaTramo&gt; · &lt;EstadoSena&gt; · &lt;ChipTipo&gt;</span><span class="t-sm apagado">Insignias pequeñas. La de tramo es categórica (sin estado); la de seña sí es estado.</span></div>
+<div class="muestra">
+<div class="fila g8 envolver"><span class="insignia insignia-tramo tramo-1"><span class="ic s i-signal-low"></span><b>Módulo 1</b> · Básico</span><span class="insignia insignia-tramo tramo-2"><span class="ic s i-signal-medium"></span><b>Módulo 4</b> · Intermedio</span><span class="insignia insignia-tramo tramo-3"><span class="ic s i-signal-high"></span><b>Módulo 7</b> · Avanzado</span></div>
+<div class="fila g8 envolver"><span class="estado estado-exito"><span class="ic s i-hand"></span>Seña lista</span><span class="estado estado-inactivo"><span class="ic s i-clapperboard"></span>Seña en preparación</span></div>
+<div class="fila g8 envolver"><span class="estado estado-exito"><span class="ic s i-circle-check"></span>Lista</span><span class="estado estado-tiempo"><span class="ic s i-hourglass"></span>Procesando</span><span class="estado estado-error"><span class="ic s i-circle-alert"></span>Error</span><span class="estado estado-inactivo"><span class="ic s i-video-off"></span>Sin seña</span></div>
+<div class="fila g8 envolver"><span class="chip-tipo">Palabra</span><span class="chip-tipo">Verbo</span><span class="chip-tipo">Frase</span><span class="chip-tipo">Expresión</span></div>
+</div>
+<div class="var"><p><code>&lt;InsigniaTramo tramo modulo?&gt;</code> · <code>&lt;EstadoSena vista="estudiante" | "admin" estado="lista" | "procesando" | "error" | "sin-sena"&gt;</code> · <code>&lt;ChipTipo tipo&gt;</code></p><p>La vista de estudiante colapsa procesando/error/sin seña en «Seña en preparación».</p></div>
+</section>
+
+<section class="bh t-claro comp">
+<div class="comp-cab"><span class="comp-n">&lt;ChipFiltro&gt; · &lt;GrupoFiltros&gt;</span><span class="t-sm apagado">Filtros siempre visibles, con conteo. Seleccionado = fondo propio + borde + ✓.</span></div>
+<div class="muestra">
+<div class="fila g8 envolver"><button class="chip" type="button" aria-pressed="true"><span class="ic s i-check"></span>Todas <span class="n">51</span></button><button class="chip" type="button" aria-pressed="false">Unidad 1 · <span lang="en">Need, Want</span> <span class="n">16</span></button><button class="chip" type="button" aria-disabled="true">Unidad 2 <span class="n">0</span></button></div>
+<button class="interruptor" type="button" role="switch" aria-checked="true"><span class="pista"></span><span class="col"><span class="p5">Solo con seña</span><span class="t-sm apagado">24 de 51 palabras</span></span></button>
+</div>
+<div class="var"><p><b>Props:</b> <code>pressed</code> <code>count</code> <code>disabled + motivo</code> (un chip en 0 se oculta o explica por qué)</p><p>Grupo con <code>role="group"</code> + <code>aria-label</code>; el total va en <code>role="status"</code>.</p></div>
+</section>
+
+<section class="bh t-claro comp">
+<div class="comp-cab"><span class="comp-n">&lt;TarjetaCategoria&gt;</span><span class="t-sm apagado">Ícono Lucide curado + nombre + cantidad. Orden por cantidad.</span></div>
+<div class="muestra">
+<a class="tarjeta riel tramo-1 cat" href="Categoria.dc.html"><span class="circulo"><span class="ic l i-activity"></span></span><span class="col crece"><span class="p6 t-lg">Acciones</span><span class="t-sm apagado">51 palabras</span></span><span class="ic s i-chevron-right c-apagado"></span></a>
+<a class="tarjeta riel tramo-1 cat" href="Categoria.dc.html"><span class="circulo"><span class="ic l i-message-circle-question"></span></span><span class="col crece"><span class="p6 t-lg">Preguntas</span><span class="t-sm apagado">3 palabras</span></span><span class="ic s i-chevron-right c-apagado"></span></a>
+</div>
+<div class="var"><p><b>Props:</b> <code>categoria</code> <code>icono</code> <code>cantidad</code> <code>tramo</code> · <b>Layout:</b> fila (escritorio) · apilada (móvil, 2 columnas)</p></div>
+</section>
+
+<section class="bh t-claro comp">
+<div class="comp-cab"><span class="comp-n">&lt;TarjetaPalabra&gt;</span><span class="t-sm apagado">Miniatura estática (nunca reproduce). Prueba de textos largos.</span></div>
+<div class="muestra">
+<a class="tarjeta riel tramo-1 pal" href="Entrada.dc.html"><span class="mini"><span class="figura" aria-hidden="true"><span class="cabeza"></span><span class="torso"></span><span class="mano"></span></span><span class="play" aria-hidden="true"><span class="ic s i-play"></span></span></span><span class="pal-txt"><span class="pal-en" lang="en">She is fifteen years old</span><span>Ella tiene quince años</span><span class="fila g8 envolver" style="margin-top: 6px"><span class="chip-tipo">Expresión</span><span class="t-xs apagado">Unidad 6</span></span></span></a>
+<a class="tarjeta riel tramo-1 pal" href="Entrada.dc.html"><span class="mini prep"><span class="prep-et"><span class="ic i-clapperboard"></span>Seña en preparación</span></span><span class="pal-txt"><span class="pal-en" lang="en">Which one? / Which ones?</span><span>¿Cuál? / ¿Cuáles?</span><span class="fila g8 envolver" style="margin-top: 6px"><span class="chip-tipo">Frase</span><span class="t-xs apagado">Unidad 3</span></span></span></a>
+</div>
+<div class="var"><p><b>Props:</b> <code>entrada</code> <code>miniatura?</code> · <b>Estados:</b> con seña · en preparación · <b>Layout:</b> vertical (escritorio) · horizontal (móvil)</p><p>El inglés usa <code>&lt;Ingles&gt;</code> (<code>lang="en"</code>) y parte palabras largas con <code>overflow-wrap:anywhere</code>.</p></div>
+</section>
+
+<section class="bh t-claro comp">
+<div class="comp-cab"><span class="comp-n">&lt;ReproductorSena&gt;</span><span class="t-sm apagado">El componente más importante. Controles siempre visibles y con texto.</span></div>
+<div class="muestra">
+<div class="reproductor">
+<button class="pantalla" type="button" aria-label="Ver la seña de To drink" style="aspect-ratio: 16/9"><span class="figura" aria-hidden="true"><span class="cabeza"></span><span class="torso"></span><span class="mano"></span><span class="mano b"></span></span><span class="boton-ver"><span class="ic i-play"></span>Ver la seña</span></button>
+<p class="fila g8 envolver t-sm" style="padding: 10px 16px; border-top: 1px solid var(--border)"><span class="ic s i-video c-apagado"></span><span class="p5">Lista para ver.</span><span class="apagado">No se reproduce sola.</span></p>
+<div class="controles"><button class="btn btn-sec" type="button"><span class="ic i-play"></span>Reproducir</button><div class="ctrl-grupo"><span class="ctrl-et">Velocidad</span><div class="segmento" role="radiogroup" aria-label="Velocidad"><button type="button" role="radio" aria-checked="false">0.5×</button><button type="button" role="radio" aria-checked="false">0.75×</button><button type="button" role="radio" aria-checked="true">1×</button></div></div><button class="interruptor" type="button" role="switch" aria-checked="false"><span class="pista"></span><span class="ctrl-et">Ver como en un espejo</span></button></div>
+</div>
+</div>
+<div class="var"><p><b>Estados:</b> reposo · cargando · reproduciendo (bucle) · pausado · error · sin video (<code>&lt;SenaEnGrabacion&gt;</code>)</p><p><b>Props:</b> <code>src</code> <code>poster</code> <code>palabra</code> · estado local: <code>velocidad: 0.5 | 0.75 | 1</code>, <code>espejo</code>, <code>pantallaCompleta</code>. Velocidad y espejo se recuerdan por usuario.</p></div>
+</section>
+
+<section class="bh t-claro comp">
+<div class="comp-cab"><span class="comp-n">&lt;BuscadorDiccionario&gt; · &lt;SugerenciaBusqueda&gt;</span><span class="t-sm apagado">Combobox ARIA. Máximo 8 sugerencias; Enter abre la entrada.</span></div>
+<div class="muestra">
+<div class="buscador campo" style="gap: 8px"><label class="etiqueta p6" for="cb1">Busca en inglés o en español</label><div class="caja activa" style="height: 56px"><span class="ic i-search c-apagado"></span><input id="cb1" value="to s" role="combobox" aria-expanded="true"></div></div>
+<div class="tarjeta" style="padding: 6px"><div class="opcion" role="option" aria-selected="true"><span class="col crece"><span class="p6" lang="en"><mark>To s</mark>tudy</span><span class="t-sm">Estudiar</span></span><span class="insignia insignia-tramo tramo-1"><span class="ic s i-signal-low"></span>Módulo 1</span><span class="fila g6 t-sm apagado"><span class="ic s i-activity"></span>Acciones</span></div></div>
+</div>
+<div class="var"><p><b>Estados:</b> vacío · escribiendo (≥ 2 letras) · sugerencias · sin resultados · error de red. La coincidencia se marca con negrita + subrayado, no con color.</p></div>
+</section>
+
+<section class="bh t-claro comp">
+<div class="comp-cab"><span class="comp-n">&lt;NavEntradas&gt;</span><span class="t-sm apagado">Anterior / Siguiente dentro de la categoría del módulo.</span></div>
+<div class="muestra">
+<div class="r2" style="gap: 10px"><a class="tarjeta riel tramo-1 fila g12" href="#" style="padding: 14px 14px 14px 20px; text-decoration: none; color: inherit"><span class="ic i-arrow-left c-primario"></span><span class="col"><span class="t-xs apagado">Anterior · 1 de 51</span><span class="p6" lang="en">To eat</span></span></a><a class="tarjeta riel tramo-1 fila g12 fin" href="#" style="padding: 14px 14px 14px 20px; text-decoration: none; color: inherit; text-align: right"><span class="col"><span class="t-xs apagado">Siguiente · 3 de 51</span><span class="p6" lang="en">To read</span></span><span class="ic i-arrow-right c-primario"></span></a></div>
+</div>
+<div class="var"><p><b>Variantes:</b> <code>tarjetas</code> (escritorio) · <code>dock</code> (móvil, fijo sobre la barra inferior). En el primero y el último, el lado que falta dice «Primera de 51» / «Última de 51», no desaparece.</p></div>
+</section>
+
+<section class="bh t-claro comp">
+<div class="comp-cab"><span class="comp-n">&lt;AvanceSenas&gt;</span><span class="t-sm apagado">Conteo literal + barra. Nunca porcentajes.</span></div>
+<div class="muestra">
+<div class="col g8 tramo-1"><div class="fila entre"><span class="insignia insignia-tramo"><span class="ic s i-signal-low"></span><b>Módulo 1</b></span><span class="t-sm"><b class="p6">86 de 203</b> con seña</span></div><div class="barra" role="progressbar" aria-valuemin="0" aria-valuemax="203" aria-valuenow="86" aria-valuetext="86 de 203 con seña"><span style="width: 42.4%"></span></div></div>
+</div>
+<div class="var"><p><code>role="progressbar"</code> con <code>aria-valuetext</code> = el mismo texto visible. Barra verde: lo que está listo.</p></div>
+</section>
+
+<section class="bh t-claro comp">
+<div class="comp-cab"><span class="comp-n">&lt;FilaEntradaAdmin&gt; · &lt;BarraLote&gt;</span><span class="t-sm apagado">Tabla de la consola. En móvil, cada fila es una tarjeta.</span></div>
+<div class="muestra">
+<div class="lote fila g8 envolver" style="display: flex; padding: 10px 12px; border-radius: 14px; background: var(--primary-soft); border: 1px solid var(--primary); color: var(--primary-soft-foreground)"><span class="p6 fila g6"><span class="ic s i-square-check"></span>2 seleccionadas</span><button class="btn btn-sec" type="button" style="min-height: 40px"><span class="ic s i-folder-input"></span>Mover</button><button class="btn btn-peligro-sec" type="button" style="min-height: 40px"><span class="ic s i-trash-2"></span>Enviar a la papelera</button></div>
+<div class="tabla-caja"><div class="fila g12" style="padding: 10px 12px; background: var(--accent); box-shadow: inset 3px 0 0 var(--primary)"><input class="marcar" type="checkbox" aria-label="Seleccionar To drink"><input class="input celda-in" value="To drink" lang="en" aria-label="Inglés" style="flex: 1"><input class="input celda-in" value="Tomar, beber" aria-label="Español" style="flex: 1"><span class="estado estado-exito"><span class="ic s i-circle-check"></span>Lista</span></div></div>
+</div>
+<div class="var"><p><b>Modos:</b> lectura · seleccionada · edición rápida (inglés, español, tipo; Enter guarda, Esc cancela) · guardando · error de guardado (mensaje bajo la fila)</p><p>Rejilla con roles <code>table/row/cell</code>; cada acción con <code>aria-label</code> que nombra la entrada.</p></div>
+</section>
+
+<section class="bh t-claro comp">
+<div class="comp-cab"><span class="comp-n">&lt;ZonaSubida&gt;</span><span class="t-sm apagado">Un video (editor) o muchos (cola). Arrastrar es atajo; el botón siempre existe.</span></div>
+<div class="muestra">
+<div class="zona activa" style="padding: 20px"><span class="circulo chico"><span class="ic i-upload"></span></span><p class="p6">Suelta los videos aquí</p><button class="btn btn-sec" type="button"><span class="ic s i-files"></span>Elegir videos</button></div>
+<div class="archivo fila g12" style="padding: 12px 14px; border: 1px solid var(--border); border-radius: 12px; background: var(--card)"><span class="ic l i-file-video c-apagado"></span><div class="col crece"><span class="p5">to-drink.mp4</span><span class="t-xs apagado">4,0 de 6,2 MB subidos</span></div><span class="estado estado-tiempo"><span class="ic s i-upload"></span>Subiendo</span></div>
+</div>
+<div class="var"><p><b>Props:</b> <code>multiple</code> <code>accept="video/mp4,video/quicktime"</code> <code>maxSegundos=8</code> · <b>Estados:</b> vacía · arrastrando · subiendo · procesando · lista (vista previa con botón) · error (con causa) · reemplazar · quitar</p></div>
+</section>
+
+<section class="bh t-claro comp">
+<div class="comp-cab"><span class="comp-n">&lt;TablaEmparejamiento&gt; · &lt;FilaEmparejamiento&gt;</span><span class="t-sm apagado">Archivo → entrada. Lo no emparejado se resalta y se asigna a mano.</span></div>
+<div class="muestra">
+<div class="tabla-caja">
+<div class="fila g12" style="padding: 10px 14px; border-bottom: 1px solid var(--border)"><span class="mono crece">to-eat.mp4</span><span class="ic s i-arrow-right c-apagado"></span><span class="p6 crece" lang="en">To eat</span><span class="estado estado-exito"><span class="ic s i-circle-check"></span>Lista</span></div>
+<div class="fila g12" style="padding: 10px 14px; background: var(--info-soft); box-shadow: inset 3px 0 0 var(--info)"><span class="mono crece">IMG_2041.mp4</span><span class="ic s i-arrow-right c-apagado"></span><span class="crece t-sm p5">Elige la entrada</span><span class="estado estado-info"><span class="ic s i-link-2"></span>Sin emparejar</span></div>
+</div>
+</div>
+<div class="var"><p><b>Estados de fila:</b> emparejada · en espera · subiendo · procesando · lista · sin emparejar (con sugerencia si hay una parecida) · ambigua (2 o más entradas con ese nombre) · error</p></div>
+</section>
+
+<section class="bh t-claro comp">
+<div class="comp-cab"><span class="comp-n">&lt;PasosImportacion&gt; · &lt;DialogoEliminarCategoria&gt; · &lt;AvisoDeshacer&gt;</span><span class="t-sm apagado">Piezas de flujo del administrador.</span></div>
+<div class="muestra">
+<div class="fila g8 envolver t-sm"><span class="estado estado-exito"><span class="ic s i-check"></span>1 · Subir</span><span class="estado estado-propio"><span class="ic s i-list"></span>2 · Revisar</span><span class="estado estado-inactivo">3 · Confirmar</span></div>
+<div class="toast"><span class="ic i-trash-2 c-apagado"></span><div class="col crece"><p class="p6">2 entradas enviadas a la papelera.</p><p class="t-sm apagado">Quedan ahí 30 días.</p></div><button class="btn btn-sec" type="button" style="min-height: 40px"><span class="ic s i-undo-2"></span>Deshacer</button></div>
+</div>
+<div class="var"><p><code>&lt;DialogoEliminarCategoria&gt;</code> = <code>AlertDialog</code> de shadcn/Base UI: título serif que nombra el objeto, destino de las entradas (radio), confirmación escribiendo el nombre, foco inicial en «Volver».</p><p><code>&lt;AvisoDeshacer&gt;</code>: mínimo 8 s visibles; si se cierra, la acción sigue reversible desde la Papelera.</p></div>
+</section>
+
+<section class="bh t-claro comp">
+<div class="comp-cab"><span class="comp-n">Tema oscuro · muestras</span><span class="t-sm apagado">Mismos componentes, tokens de <code>.dark</code>.</span></div>
+<div class="muestra bh t-oscuro" style="outline: 0; border-radius: 0">
+<div class="fila g8 envolver"><span class="insignia insignia-tramo tramo-1"><span class="ic s i-signal-low"></span><b>Módulo 1</b> · Básico</span><span class="insignia insignia-tramo tramo-2"><span class="ic s i-signal-medium"></span>Intermedio</span><span class="insignia insignia-tramo tramo-3"><span class="ic s i-signal-high"></span>Avanzado</span></div>
+<div class="fila g8 envolver"><span class="estado estado-exito"><span class="ic s i-circle-check"></span>Lista</span><span class="estado estado-tiempo"><span class="ic s i-hourglass"></span>Procesando</span><span class="estado estado-error"><span class="ic s i-circle-alert"></span>Error</span><span class="estado estado-inactivo"><span class="ic s i-video-off"></span>Sin seña</span></div>
+<div class="fila g8 envolver"><button class="chip" type="button" aria-pressed="true"><span class="ic s i-check"></span>Todas <span class="n">51</span></button><button class="chip" type="button" aria-pressed="false">Verbo <span class="n">51</span></button><button class="btn btn-primario" type="button">Crear entrada</button></div>
+</div>
+<div class="var"><p>Riel y tramo usan los valores claros de <code>--accent-*</code> en oscuro (L 0.72 a 0.78).</p></div>
+</section>
+
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":2600,"height":3400}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>

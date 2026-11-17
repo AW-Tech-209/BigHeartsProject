@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Diccionario · Papelera</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="/_blob/8500f8b95e34d7853d88e913eba28e73">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&amp;family=Instrument+Serif:ital@0;1&amp;display=swap">
+<style>
+body{margin:0}
+.cab-acc{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap}
+.pp{border:1px solid var(--border);border-radius:16px;background:var(--card);overflow:hidden}
+.pp-f{display:grid;grid-template-columns:44px minmax(0,1.3fr) minmax(0,1.2fr) 190px auto;gap:14px;align-items:center;padding:12px 16px;border-bottom:1px solid var(--border);min-height:72px}
+.pp-f:last-child{border-bottom:0}
+.pp-cab{background:var(--muted);min-height:48px;font-size:.8125rem;font-weight:500;color:var(--muted-foreground)}
+.pp-f .btn{min-height:40px;padding:0 12px}
+.m .pp-f{grid-template-columns:32px minmax(0,1fr);gap:8px 10px;padding:14px 14px}
+.m .pp-f > .c-mas{grid-column:2}
+.m .pp-cab .solo-dd{display:none}
+.toast-pos{position:absolute;right:24px;bottom:24px;width:440px;z-index:7}
+.m .toast-pos{left:12px;right:12px;bottom:84px;width:auto}
+.vacio{display:flex;flex-direction:column;align-items:center;gap:14px;text-align:center;padding:48px 24px}
+.ilu{width:120px;height:96px;position:relative}
+.ilu span{position:absolute;border-radius:12px}
+</style>
+</helmet>
+<div class="lienzo" style="width: 3630px; min-height: 2100px">
+<sc-for list="{{variantes}}" as="v" hint-placeholder-count="4">
+<div class="marco">
+<p class="marco-etiqueta"><b>{{v.titulo}}</b><span>{{v.medida}}</span></p>
+<div class="{{v.cls}}">
+
+<header class="barra-sup"><div class="in">
+<a class="marca" href="#"><span class="sello"><span class="ic s i-heart"></span></span>BigHearts</a>
+<nav class="nav solo-d" aria-label="Principal">
+<a href="#"><span class="ic s i-layout-dashboard"></span>Panel</a>
+<a href="#"><span class="ic s i-school"></span>Aulas</a>
+<a href="Consola.dc.html" aria-current="page"><span class="ic s i-book-a"></span>Diccionario</a>
+</nav>
+<div class="fila g12"><span class="rol solo-d">Administrador</span><button class="cuenta" type="button"><span class="av">AD</span><span class="solo-d">Mi cuenta</span></button></div>
+</div></header>
+
+<main class="principal" id="contenido">
+<div class="contenedor">
+<nav class="migas" aria-label="Estás en"><a href="Consola.dc.html">Diccionario</a><span class="ic s i-chevron-right"></span><span aria-current="page">Papelera</span></nav>
+<div class="cab-acc" style="margin-top: -12px">
+<div class="cabecera">
+<h1>Papelera</h1>
+<p class="contexto">Las entradas se guardan aquí 30 días. Después se eliminan para siempre.</p>
+</div>
+<sc-if value="{{v.lista}}" hint-placeholder-val="{{ true }}"><button class="btn btn-peligro-sec" type="button"><span class="ic s i-trash-2"></span>Vaciar papelera</button></sc-if>
+</div>
+
+<sc-if value="{{v.lista}}" hint-placeholder-val="{{ true }}">
+<div class="fila entre g12 envolver">
+<p class="t-sm" role="status"><b class="p6">{{v.cuenta}}</b> en la papelera</p>
+<button class="btn btn-sec" type="button" aria-disabled="true" aria-describedby="rs-{{$index}}"><span class="ic s i-undo-2"></span>Restaurar seleccionadas</button>
+</div>
+<p class="ayuda" id="rs-{{$index}}" style="margin-top: -24px">Marca una o más entradas para restaurarlas juntas.</p>
+<div class="pp" role="table" aria-label="Entradas en la papelera">
+<div class="pp-f pp-cab" role="row"><span role="columnheader"><input class="marcar" type="checkbox" aria-label="Seleccionar todas"></span><span role="columnheader">Entrada</span><span role="columnheader" class="solo-dd solo-d">Estaba en</span><span role="columnheader" class="solo-dd solo-d">Se elimina</span><span role="columnheader" class="solo-dd solo-d"><span class="oculto-sr">Acciones</span></span></div>
+<sc-for list="{{v.items}}" as="it" hint-placeholder-count="6">
+<div class="pp-f" role="row">
+<span role="cell"><input class="marcar" type="checkbox" aria-label="Seleccionar {{it.en}}"></span>
+<span role="cell" class="col"><span class="p6" lang="en">{{it.en}}</span><span class="t-sm">{{it.es}}</span><span class="t-xs apagado">Enviada el {{it.env}}</span></span>
+<span role="cell" class="t-sm c-mas">{{it.donde}}</span>
+<span role="cell" class="c-mas col g4 inicio"><span class="t-sm num">{{it.fin}}</span><span class="estado {{it.eCls}}"><span class="ic s {{it.eIc}}"></span>{{it.queda}}</span></span>
+<span role="cell" class="c-mas fila g8 envolver"><button class="btn btn-sec" type="button"><span class="ic s i-undo-2"></span>Restaurar</button><button class="btn btn-peligro-sec" type="button">Eliminar para siempre</button></span>
+</div>
+</sc-for>
+</div>
+</sc-if>
+
+<sc-if value="{{v.vacia}}" hint-placeholder-val="{{ false }}">
+<div class="tarjeta vacio" role="status">
+<div class="ilu" role="img" aria-label="Papelera vacía"><span style="left: 30px; top: 20px; width: 60px; height: 70px; background: var(--muted); border: 2px solid var(--input)"></span><span style="left: 22px; top: 10px; width: 76px; height: 12px; background: var(--card); border: 2px solid var(--input); border-radius: 6px"></span></div>
+<p class="serif t-2xl">La papelera está vacía.</p>
+<p class="apagado" style="max-width: 40ch">Lo que envíes aquí desde la consola se guarda 30 días. Puedes restaurarlo en ese tiempo.</p>
+<a class="btn btn-sec" href="Consola.dc.html"><span class="ic s i-arrow-left"></span>Volver a la consola</a>
+</div>
+</sc-if>
+</div>
+</main>
+
+<sc-if value="{{v.toast}}" hint-placeholder-val="{{ false }}">
+<div class="toast toast-pos" role="status" aria-live="polite">
+<span class="ic i-circle-check c-exito" style="margin-top: 2px"></span>
+<div class="col g4 crece"><p class="p6"><span lang="en">To work</span> restaurada.</p><p class="t-sm apagado">Volvió a Módulo 1 · Acciones, con su seña.</p><div class="fila g8" style="margin-top: 6px"><a class="btn btn-sec" href="Editor.dc.html">Abrir la entrada</a></div></div>
+<button class="btn btn-icono btn-fantasma" type="button" aria-label="Cerrar aviso"><span class="ic s i-x"></span></button>
+</div>
+</sc-if>
+
+<nav class="barra-inf tres solo-m" aria-label="Principal">
+<a href="#"><span class="ic i-layout-dashboard"></span>Panel</a>
+<a href="#"><span class="ic i-school"></span>Aulas</a>
+<a href="Consola.dc.html" aria-current="page"><span class="ic i-book-a"></span>Diccionario</a>
+</nav>
+</div>
+</div>
+</sc-for>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":3630,"height":2100}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const T = (q) => ({ eCls: 'estado-tiempo', eIc: 'i-triangle-alert', queda: q });
+    const N = (q) => ({ eCls: 'estado-inactivo', eIc: 'i-clock', queda: q });
+    const I = (en, es, donde, env, fin, e) => Object.assign({ en, es, donde, env, fin }, e);
+    const todos = [
+      I('Sleeping bag', 'Bolsa de dormir', 'Módulo 1 · Unidad 2 · Objetos', '12 oct. 2026', '11 nov. 2026', T('Quedan 2 días')),
+      I('Hot dog', 'Perro caliente', 'Módulo 1 · Unidad 2 · Comida y frutas', '20 oct. 2026', '19 nov. 2026', N('Quedan 10 días')),
+      I('Cards', 'Cartas', 'Módulo 2 · Unidad 1 · Fiestas y deportes', '1 nov. 2026', '1 dic. 2026', N('Quedan 22 días')),
+      I('Prayers', 'Oraciones', 'Módulo 2 · Unidad 1 · Fiestas y deportes', '5 nov. 2026', '5 dic. 2026', N('Quedan 26 días')),
+      I('To work', 'Trabajar', 'Módulo 1 · Unidad 1 · Acciones', '9 nov. 2026', '9 dic. 2026', N('Quedan 30 días')),
+      I('To answer', 'Contestar, responder', 'Módulo 1 · Unidad 1 · Acciones', '9 nov. 2026', '9 dic. 2026', N('Quedan 30 días'))
+    ];
+    return {
+      variantes: [
+        { cls: 'bh t-claro d', titulo: 'Escritorio · claro', medida: '1280 px', lista: true, vacia: false, toast: false, items: todos, cuenta: '6 entradas' },
+        { cls: 'bh t-claro m', titulo: 'Móvil · claro', medida: '375 px', lista: true, vacia: false, toast: false, items: todos, cuenta: '6 entradas' },
+        { cls: 'bh t-oscuro d', titulo: 'Escritorio · oscuro', medida: '1280 px · tras restaurar «To work»', lista: true, vacia: false, toast: true, items: todos.filter((i) => i.en !== 'To work'), cuenta: '5 entradas' },
+        { cls: 'bh t-oscuro m', titulo: 'Móvil · oscuro', medida: '375 px · papelera vacía', lista: false, vacia: true, toast: false, items: [], cuenta: '' }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

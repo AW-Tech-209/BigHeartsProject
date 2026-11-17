@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Diccionario · Importar CSV</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="/_blob/8500f8b95e34d7853d88e913eba28e73">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&amp;family=Instrument+Serif:ital@0;1&amp;display=swap">
+<style>
+body{margin:0}
+.pasos{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;list-style:none;margin:0;padding:0}
+.paso{display:flex;align-items:center;gap:12px;padding:12px 14px;border:1px solid var(--border);border-radius:12px;background:var(--card)}
+.paso .nro{width:32px;height:32px;border-radius:999px;display:grid;place-items:center;font-weight:600;border:2px solid var(--input);flex:none;font-size:.9375rem}
+.paso[aria-current]{border:2px solid var(--primary);background:var(--primary-soft)}
+.paso[aria-current] .nro{background:var(--primary);color:var(--primary-foreground);border-color:var(--primary)}
+.paso.hecho .nro{border-color:var(--success);color:var(--success)}
+.m .pasos{grid-template-columns:minmax(0,1fr);gap:6px}
+.m .paso{padding:8px 12px}
+.pv{border:1px solid var(--border);border-radius:16px;background:var(--card);overflow:hidden}
+.pv-f{display:grid;grid-template-columns:56px minmax(0,1fr) minmax(0,1fr) 92px 140px 150px minmax(0,1.5fr);gap:12px;align-items:center;padding:10px 16px;border-bottom:1px solid var(--border);font-size:.9375rem;min-height:56px}
+.pv-f:last-child{border-bottom:0}
+.pv-cab{background:var(--muted);font-size:.8125rem;font-weight:500;color:var(--muted-foreground);min-height:44px}
+.pv-f.dup{background:color-mix(in oklch,var(--muted) 60%,var(--card))}
+.pv-f.err{background:color-mix(in oklch,var(--destructive-soft) 70%,var(--card));box-shadow:inset 3px 0 0 var(--destructive)}
+.m .pv-f{grid-template-columns:44px minmax(0,1fr);gap:4px 10px;padding:12px 14px}
+.m .pv-f > .solo-dc{display:none}
+.m .pv-cab{display:none}
+.m .pv-f .res-c{grid-column:2}
+.resumen{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.m .resumen{grid-template-columns:minmax(0,1fr);gap:8px}
+.res-n{display:flex;align-items:center;gap:12px;padding:16px;border-radius:12px;border:1px solid}
+.res-n b{font-size:1.75rem;line-height:1;font-weight:600;font-variant-numeric:tabular-nums}
+.mono{font-family:ui-monospace,'SFMono-Regular','Liberation Mono',monospace;font-size:.875rem}
+.pie-acc{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;padding-top:8px}
+.m .pie-acc .btn{flex:1 1 100%}
+</style>
+</helmet>
+<div class="lienzo" style="width: 3630px; min-height: 3800px">
+<sc-for list="{{variantes}}" as="v" hint-placeholder-count="7">
+<div class="marco">
+<p class="marco-etiqueta"><b>{{v.titulo}}</b><span>{{v.medida}}</span></p>
+<div class="{{v.cls}}">
+
+<header class="barra-sup"><div class="in">
+<a class="marca" href="#"><span class="sello"><span class="ic s i-heart"></span></span>BigHearts</a>
+<nav class="nav solo-d" aria-label="Principal">
+<a href="#"><span class="ic s i-layout-dashboard"></span>Panel</a>
+<a href="#"><span class="ic s i-school"></span>Aulas</a>
+<a href="Consola.dc.html" aria-current="page"><span class="ic s i-book-a"></span>Diccionario</a>
+</nav>
+<div class="fila g12"><span class="rol solo-d">Administrador</span><button class="cuenta" type="button"><span class="av">AD</span><span class="solo-d">Mi cuenta</span></button></div>
+</div></header>
+
+<main class="principal" id="contenido">
+<div class="contenedor" style="gap: 24px">
+<nav class="migas" aria-label="Estás en"><a href="Consola.dc.html">Diccionario</a><span class="ic s i-chevron-right"></span><span aria-current="page">Importar CSV</span></nav>
+<div class="cabecera" style="margin-top: -8px">
+<h1>Importar CSV</h1>
+<p class="contexto">Agrega muchas entradas a la vez. Nada se guarda hasta que confirmes en el paso 3.</p>
+</div>
+
+<ol class="pasos" aria-label="Pasos">
+<li class="{{v.p1cls}}" aria-current="{{v.p1cur}}"><span class="nro">{{v.p1n}}</span><span class="col"><span class="p6">Subir archivo</span><span class="t-xs apagado">{{v.p1e}}</span></span></li>
+<li class="{{v.p2cls}}" aria-current="{{v.p2cur}}"><span class="nro">{{v.p2n}}</span><span class="col"><span class="p6">Revisar</span><span class="t-xs apagado">{{v.p2e}}</span></span></li>
+<li class="{{v.p3cls}}" aria-current="{{v.p3cur}}"><span class="nro">{{v.p3n}}</span><span class="col"><span class="p6">Confirmar</span><span class="t-xs apagado">{{v.p3e}}</span></span></li>
+</ol>
+
+<sc-if value="{{v.paso1}}" hint-placeholder-val="{{ false }}">
+<div class="zona" style="padding: 48px 24px">
+<span class="circulo"><span class="ic l i-file-up"></span></span>
+<p class="p6 t-lg">Arrastra el archivo CSV aquí</p>
+<button class="btn btn-primario" type="button"><span class="ic s i-file-spreadsheet"></span>Elegir archivo</button>
+<p class="ayuda" style="max-width: 60ch">Columnas, en este orden: <span class="mono">modulo, unidad, categoria, tipo, ingles, espanol</span>. Una entrada por fila. Máximo 2.000 filas.</p>
+<a class="btn btn-fantasma" href="#"><span class="ic s i-download"></span>Descargar plantilla CSV</a>
+</div>
+</sc-if>
+
+<sc-if value="{{v.paso2}}" hint-placeholder-val="{{ true }}">
+<div class="fila g12 envolver"><span class="ic i-file-spreadsheet c-apagado"></span><span class="mono p5">modulo-3-unidad-5.csv</span><span class="t-sm apagado">18 filas</span><button class="btn btn-fantasma" type="button">Cambiar archivo</button></div>
+<div class="resumen">
+<div class="res-n" style="background: var(--info-soft); border-color: transparent; color: var(--info-soft-foreground)"><span class="ic l i-plus"></span><span class="col"><b>14</b><span class="t-sm">nuevas · se crean</span></span></div>
+<div class="res-n" style="background: var(--muted); border-color: var(--border)"><span class="ic l i-copy c-apagado"></span><span class="col"><b>2</b><span class="t-sm">duplicadas · se omiten</span></span></div>
+<div class="res-n" style="background: var(--destructive-soft); border-color: var(--destructive-border); color: var(--destructive-soft-foreground)"><span class="ic l i-circle-alert"></span><span class="col"><b>2</b><span class="t-sm">con errores · se omiten</span></span></div>
+</div>
+<div class="fila g8 envolver" role="group" aria-label="Mostrar">
+<button class="chip" type="button" aria-pressed="true"><span class="ic s i-check"></span>Todas <span class="n">18</span></button>
+<button class="chip" type="button" aria-pressed="false">Nuevas <span class="n">14</span></button>
+<button class="chip" type="button" aria-pressed="false">Duplicadas <span class="n">2</span></button>
+<button class="chip" type="button" aria-pressed="false">Con errores <span class="n">2</span></button>
+</div>
+<div class="pv" role="table" aria-label="Vista previa del archivo">
+<div class="pv-f pv-cab" role="row"><span role="columnheader">Fila</span><span role="columnheader">Inglés</span><span role="columnheader" class="solo-dc">Español</span><span role="columnheader" class="solo-dc">Tipo</span><span role="columnheader" class="solo-dc">Módulo</span><span role="columnheader" class="solo-dc">Categoría</span><span role="columnheader" class="solo-dc">Resultado</span></div>
+<sc-for list="{{filas}}" as="f" hint-placeholder-count="9">
+<div class="pv-f {{f.cls}}" role="row">
+<span role="cell" class="t-sm apagado num">{{f.n}}</span>
+<span role="cell" class="col"><span class="p6" lang="en">{{f.en}}</span><span class="solo-m t-sm">{{f.es}}</span></span>
+<span role="cell" class="solo-dc">{{f.es}}</span>
+<span role="cell" class="solo-dc"><span class="chip-tipo">{{f.tipo}}</span></span>
+<span role="cell" class="solo-dc t-sm">{{f.mod}}</span>
+<span role="cell" class="solo-dc t-sm">{{f.cat}}</span>
+<span role="cell" class="res-c col g4 inicio"><span class="estado {{f.eCls}}"><span class="ic s {{f.eIc}}"></span>{{f.eTxt}}</span><span class="t-xs">{{f.motivo}}</span></span>
+</div>
+</sc-for>
+</div>
+<p class="t-sm apagado">Se muestran 9 de 18 filas. Las filas con error no se importan: corrígelas en el archivo y súbelo otra vez, o sigue sin ellas.</p>
+<div class="pie-acc"><button class="btn btn-sec" type="button"><span class="ic s i-arrow-left"></span>Volver</button><button class="btn btn-primario" type="button">Seguir con 14 entradas<span class="ic s i-arrow-right"></span></button></div>
+</sc-if>
+
+<sc-if value="{{v.paso3}}" hint-placeholder-val="{{ false }}">
+<section class="tarjeta pad24 col g16" aria-labelledby="c3-{{$index}}">
+<h2 class="h2" id="c3-{{$index}}">Vas a crear 14 entradas</h2>
+<dl class="col g8">
+<div class="fila g8 envolver"><dt class="apagado">Destino:</dt><dd class="p5">Módulo 3 · Unidad 5</dd></div>
+<div class="fila g8 envolver"><dt class="apagado">Categorías:</dt><dd>Familia y personas 2 · Profesiones y trabajo 2 · Acciones 3 · Pronombres e ideas 4 · Palabras de enlace 3</dd></div>
+<div class="fila g8 envolver"><dt class="apagado">Se omiten:</dt><dd>2 duplicadas y 2 con errores</dd></div>
+</dl>
+<div class="sep"></div>
+<button class="interruptor" type="button" role="switch" aria-checked="false"><span class="pista"></span><span class="col"><span class="p5">Publicarlas al importar</span><span class="t-sm apagado">Apagado: quedan ocultas hasta que las revises.</span></span></button>
+<div class="aviso aviso-neutro"><span class="ic i-video-off c-apagado" style="margin-top: 3px"></span><p class="t-sm">Llegan sin seña. Aparecerán en la Cola de grabación.</p></div>
+</section>
+<div class="pie-acc"><button class="btn btn-sec" type="button"><span class="ic s i-arrow-left"></span>Volver a revisar</button><button class="btn btn-primario" type="button"><span class="ic s i-check"></span>Importar 14 entradas</button></div>
+</sc-if>
+
+<sc-if value="{{v.exito}}" hint-placeholder-val="{{ false }}">
+<div class="aviso aviso-exito" role="status"><span class="ic l i-circle-check"></span><div class="col g4"><p class="p6 t-lg">14 entradas importadas.</p><p>Están ocultas hasta que las publiques. Ya aparecen en la Cola de grabación.</p></div></div>
+<div class="fila g8 envolver"><a class="btn btn-primario" href="Consola.dc.html">Ver las 14 en la consola</a><a class="btn btn-sec" href="Cola.dc.html">Ir a la Cola de grabación</a><button class="btn btn-fantasma" type="button">Importar otro archivo</button></div>
+</sc-if>
+
+</div>
+</main>
+
+<nav class="barra-inf tres solo-m" aria-label="Principal">
+<a href="#"><span class="ic i-layout-dashboard"></span>Panel</a>
+<a href="#"><span class="ic i-school"></span>Aulas</a>
+<a href="Consola.dc.html" aria-current="page"><span class="ic i-book-a"></span>Diccionario</a>
+</nav>
+</div>
+</div>
+</sc-for>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":3630,"height":3800}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const N = { eCls: 'estado-info', eIc: 'i-plus', eTxt: 'Nueva', motivo: '', cls: '' };
+    const D = (m) => ({ eCls: 'estado-inactivo', eIc: 'i-copy', eTxt: 'Duplicada', motivo: m, cls: 'dup' });
+    const E = (m) => ({ eCls: 'estado-error', eIc: 'i-circle-alert', eTxt: 'Error', motivo: m, cls: 'err' });
+    const F = (n, en, es, tipo, cat, r) => Object.assign({ n, en, es, tipo, cat, mod: 'M3 · U5' }, r);
+    const paso = (k, est) => {
+      const o = {};
+      [1, 2, 3].forEach((i) => {
+        const hecho = i < k;
+        o['p' + i + 'cls'] = 'paso' + (hecho ? ' hecho' : '');
+        o['p' + i + 'cur'] = i === k ? 'step' : 'false';
+        o['p' + i + 'n'] = hecho ? '✓' : String(i);
+        o['p' + i + 'e'] = hecho ? 'Hecho' : (i === k ? 'Paso actual' : 'Pendiente');
+      });
+      return Object.assign(o, { paso1: k === 1, paso2: k === 2, paso3: k === 3 && !est, exito: !!est });
+    };
+    const x = (o, k, est) => Object.assign(paso(k, est), o);
+    return {
+      filas: [
+        F(2, 'Community', 'Comunidad', 'Palabra', 'Familia y personas', N),
+        F(3, 'Society', 'Sociedad', 'Palabra', 'Familia y personas', N),
+        F(4, 'Doctor', 'Médico (a)', 'Palabra', 'Profesion', E('La categoría «Profesion» no existe. ¿Es «Profesiones y trabajo»?')),
+        F(5, 'Professions', 'Profesiones', 'Palabra', 'Profesiones y trabajo', N),
+        F(6, 'To require', 'Requerir', 'Verbo', 'Acciones', N),
+        F(7, 'To happen', 'Pasar, ocurrir', 'Verbo', 'Acciones', N),
+        F(8, 'Our', '', 'Palabra', 'Palabras de enlace', E('Falta el español.')),
+        F(17, 'Money', 'Dinero', 'Palabra', 'Dinero y compras', D('Ya existe en Módulo 1 · Unidad 3.')),
+        F(18, 'Friend', 'Amigo (a)', 'Palabra', 'Familia y personas', D('Ya existe en Módulo 2 · Unidad 4.'))
+      ],
+      variantes: [
+        x({ cls: 'bh t-claro d', titulo: 'Paso 2 · escritorio · claro', medida: '1280 px · vista previa' }, 2),
+        x({ cls: 'bh t-claro m', titulo: 'Paso 2 · móvil · claro', medida: '375 px' }, 2),
+        x({ cls: 'bh t-oscuro d', titulo: 'Paso 2 · escritorio · oscuro', medida: '1280 px' }, 2),
+        x({ cls: 'bh t-oscuro m', titulo: 'Paso 2 · móvil · oscuro', medida: '375 px' }, 2),
+        x({ cls: 'bh t-oscuro d', titulo: 'Paso 1 · escritorio · oscuro', medida: 'subir' }, 1),
+        x({ cls: 'bh t-claro m', titulo: 'Paso 3 · móvil · claro', medida: 'confirmar' }, 3),
+        x({ cls: 'bh t-claro d', titulo: 'Importación terminada · escritorio · claro', medida: 'éxito' }, 3, true)
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>
