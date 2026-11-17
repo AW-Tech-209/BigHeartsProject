@@ -4,6 +4,8 @@ import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import { RedirectIfAuthenticated } from '@/features/auth/components/redirect-if-authenticated';
 import { RequireAuth } from '@/features/auth/components/require-auth';
 import { useAuth } from '@/features/auth/hooks/use-auth';
+import { AdminDiccionarioPage } from '@/pages/AdminDiccionarioPage';
+import { AdminPapeleraPage } from '@/pages/AdminPapeleraPage';
 import { AulaDetallePage } from '@/pages/AulaDetallePage';
 import { AulasPage } from '@/pages/AulasPage';
 import { CompletarAccesibilidadPage } from '@/pages/CompletarAccesibilidadPage';
@@ -308,12 +310,19 @@ export function AppRoutes() {
           </RequireAuth>
         }
       />
-      {/* Hasta que exista la consola del admin, su destino abre la vista de lectura. */}
       <Route
         path="/admin/diccionario"
         element={
           <RequireAuth roles={[UserRole.ADMIN]}>
-            <Navigate to="/diccionario" replace />
+            <AdminDiccionarioPage />
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/admin/diccionario/papelera"
+        element={
+          <RequireAuth roles={[UserRole.ADMIN]}>
+            <AdminPapeleraPage />
           </RequireAuth>
         }
       />
