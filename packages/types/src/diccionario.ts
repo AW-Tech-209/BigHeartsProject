@@ -607,6 +607,15 @@ export const COLUMNAS_IMPORTACION = [
 ] as const;
 export const IMPORTACION_MAX_BYTES = 1024 * 1024;
 
+/** Plantilla que se descarga: la cabecera y tres filas de ejemplo. */
+export const PLANTILLA_IMPORTACION_CSV =
+  [
+    'modulo,unidad,unidad_nombre,categoria,tipo,ingles,espanol',
+    '4,U1,Daily routines,Acciones,Verbo,To wake up,Despertarse',
+    '4,U1,Daily routines,Tiempo y fechas,Palabra,Morning,Mañana',
+    '4,U2,At the doctor,Expresiones,Expresión,I feel sick,"Me siento mal, estoy enfermo"',
+  ].join('\r\n') + '\r\n';
+
 export type EstadoFilaImportacion = 'nueva' | 'duplicada' | 'error';
 
 /** Una fila tal como vino, con su estado. `fila` cuenta la cabecera como 1. */

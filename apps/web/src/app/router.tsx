@@ -8,6 +8,7 @@ import { AdminColaGrabacionPage } from '@/pages/AdminColaGrabacionPage';
 import { AdminDiccionarioPage } from '@/pages/AdminDiccionarioPage';
 import { AdminEntradaPage } from '@/pages/AdminEntradaPage';
 import { AdminEstructuraPage } from '@/pages/AdminEstructuraPage';
+import { AdminImportarPage } from '@/pages/AdminImportarPage';
 import { AdminPapeleraPage } from '@/pages/AdminPapeleraPage';
 import { AulaDetallePage } from '@/pages/AulaDetallePage';
 import { AulasPage } from '@/pages/AulasPage';
@@ -350,6 +351,14 @@ export function AppRoutes() {
         element={
           <RequireAuth roles={[UserRole.ADMIN]}>
             <AdminEstructuraPage />
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/admin/diccionario/importar"
+        element={
+          <RequireAuth roles={[UserRole.ADMIN]}>
+            <AdminImportarPage />
           </RequireAuth>
         }
       />

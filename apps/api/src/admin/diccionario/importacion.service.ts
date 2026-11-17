@@ -5,6 +5,7 @@ import {
   ApiErrorCode,
   type ConfirmarImportacionResponse,
   IMPORTACION_MAX_BYTES,
+  PLANTILLA_IMPORTACION_CSV,
   type VistaPreviaImportacionResponse,
 } from '@academia/types';
 
@@ -20,13 +21,7 @@ import { PrismaService } from '../../prisma/prisma.service';
 
 export const VISTA_PREVIA_TTL_MS = 30 * 60 * 1000;
 
-export const PLANTILLA_CSV =
-  [
-    'modulo,unidad,unidad_nombre,categoria,tipo,ingles,espanol',
-    '4,U1,Daily routines,Acciones,Verbo,To wake up,Despertarse',
-    '4,U1,Daily routines,Tiempo y fechas,Palabra,Morning,Mañana',
-    '4,U2,At the doctor,Expresiones,Expresión,I feel sick,"Me siento mal, estoy enfermo"',
-  ].join('\r\n') + '\r\n';
+export const PLANTILLA_CSV = PLANTILLA_IMPORTACION_CSV;
 
 const vistaPreviaCaducada = (): GoneException =>
   new GoneException({
