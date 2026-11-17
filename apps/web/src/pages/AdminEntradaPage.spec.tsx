@@ -12,6 +12,7 @@ import { AppRoutes } from '@/app/router';
 import {
   buscarDuplicados,
   crearEntrada,
+  getEntradaAdmin,
   getCategoriasAdmin,
   getModulosAdmin,
 } from '@/features/admin/diccionario/api/admin-diccionario';
@@ -203,6 +204,20 @@ describe('AdminEntradaPage — crear', () => {
   it('pasa axe', async () => {
     const { container } = montar();
     await screen.findByLabelText('Inglés');
+    await esperarSinFallosDeAccesibilidad(container);
+  });
+});
+
+describe('AdminEntradaPage — editar con archivos', () => {
+  it('las zonas de video e imagen se usan con botones y la pantalla pasa axe', async () => {
+    vi.mocked(getEntradaAdmin).mockResolvedValue(guardada('To drink'));
+    const { container } = renderConProviders(<AppRoutes />, {
+      ruta: '/admin/diccionario/entrada/id-To drink',
+    });
+
+    expect(await screen.findByRole('button', { name: 'Elegir video' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Elegir imagen' })).toBeInTheDocument();
+    expect(screen.getByText(/de 2 a 15 segundos/)).toBeInTheDocument();
     await esperarSinFallosDeAccesibilidad(container);
   });
 });

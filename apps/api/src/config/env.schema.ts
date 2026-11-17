@@ -4,6 +4,7 @@ import {
   CANCELLATION_WINDOW_MINUTES_DEFAULT,
   CLASS_MAX_DURATION_MINUTES_DEFAULT,
   CLASS_MIN_LEAD_MINUTES_DEFAULT,
+  LIMITES_MEDIOS_POR_DEFECTO,
 } from '@academia/types';
 import { z } from 'zod';
 
@@ -262,10 +263,26 @@ const camposEnv = z.object({
   SUPABASE_STORAGE_BUCKET: z.string().min(1).default('diccionario'),
 
   /** Límites de los archivos del diccionario (D51). */
-  DICCIONARIO_VIDEO_MAX_MB: z.coerce.number().int().positive().default(20),
-  DICCIONARIO_VIDEO_MIN_S: z.coerce.number().int().positive().default(2),
-  DICCIONARIO_VIDEO_MAX_S: z.coerce.number().int().positive().default(15),
-  DICCIONARIO_IMAGEN_MAX_KB: z.coerce.number().int().positive().default(800),
+  DICCIONARIO_VIDEO_MAX_MB: z.coerce
+    .number()
+    .int()
+    .positive()
+    .default(LIMITES_MEDIOS_POR_DEFECTO.videoMaxMb),
+  DICCIONARIO_VIDEO_MIN_S: z.coerce
+    .number()
+    .int()
+    .positive()
+    .default(LIMITES_MEDIOS_POR_DEFECTO.videoMinS),
+  DICCIONARIO_VIDEO_MAX_S: z.coerce
+    .number()
+    .int()
+    .positive()
+    .default(LIMITES_MEDIOS_POR_DEFECTO.videoMaxS),
+  DICCIONARIO_IMAGEN_MAX_KB: z.coerce
+    .number()
+    .int()
+    .positive()
+    .default(LIMITES_MEDIOS_POR_DEFECTO.imagenMaxKb),
 
   /** Días que una entrada pasa en la papelera antes de eliminarse para siempre (D52). */
   DICCIONARIO_PAPELERA_DIAS: z.coerce.number().int().positive().default(30),

@@ -19,6 +19,7 @@ import { Switch } from '@/components/ui/switch';
 import { cn } from '@/lib/utils';
 import { buscarDuplicados } from '../api/admin-diccionario';
 import { useCrearEntrada, useEditarEntrada } from '../hooks/use-admin-diccionario';
+import { ImagenDeEntrada, SenaDeEntrada } from './zona-subida';
 
 const NOTA_MAX = 300;
 
@@ -102,7 +103,13 @@ export function FormularioEntrada({
   const faltanTextos = !valores.ingles.trim() || !valores.espanol.trim();
   const modulo = modulos.find((m) => m.id === valores.moduloId);
 
-  useEffect(() => onSucio(sucio), [sucio, onSucio]);
+  const [subiendoVideo, setSubiendoVideo] = useState(false);
+  const [subiendoImagen, setSubiendoImagen] = useState(false);
+  // Una subida en curso también se pregunta antes de salir: salir la cancela.
+  useEffect(
+    () => onSucio(sucio || subiendoVideo || subiendoImagen),
+    [sucio, subiendoVideo, subiendoImagen, onSucio],
+  );
 
   const cambiar = <K extends keyof Valores>(campo: K, valor: Valores[K]) => {
     setValores((v) => ({ ...v, [campo]: valor }));
@@ -301,7 +308,11 @@ export function FormularioEntrada({
           </div>
         </fieldset>
 
-        <ZonaPendiente titulo="Video de la seña" />
+        {entrada ? (
+          <SenaDeEntrada entrada={entrada} onOcupada={setSubiendoVideo} />
+        ) : (
+          <ZonaPendiente titulo="Video de la seña" />
+        )}
 
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-2">
@@ -375,7 +386,11 @@ export function FormularioEntrada({
           {error('categoriaId')}
         </div>
 
-        <ZonaPendiente titulo="Imagen del concepto" />
+        {entrada ? (
+          <ImagenDeEntrada entrada={entrada} onOcupada={setSubiendoImagen} />
+        ) : (
+          <ZonaPendiente titulo="Imagen del concepto" />
+        )}
 
         <div className="space-y-2">
           <label htmlFor={`${id}-nota`} className="block text-base font-medium">
@@ -498,7 +513,7 @@ function ZonaPendiente({ titulo }: { titulo: string }): ReactNode {
       <div className="flex items-center gap-3 rounded-xl border border-dashed border-muted-foreground/40 bg-muted/60 p-4">
         <Upload aria-hidden="true" strokeWidth={2} className="size-5 text-muted-foreground" />
         <p className="text-base text-muted-foreground">
-          La subida de archivos llega en la siguiente entrega.
+          Guarda la entrada primero; después podrás subir aquí el archivo.
         </p>
       </div>
     </div>

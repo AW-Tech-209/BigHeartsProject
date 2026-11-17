@@ -37,32 +37,32 @@ con un `<canvas>` y reduce la imagen a 800 px en WebP. La lógica de subida qued
 
 ## Tasks
 
-- [ ] **T1** — `validarVideo(file)`: tipo `video/mp4`, tamaño ≤ límite, carga en un `<video>` oculto y
+- [x] **T1** — `validarVideo(file)`: tipo `video/mp4`, tamaño ≤ límite, carga en un `<video>` oculto y
       exige `loadedmetadata` con `videoWidth > 0` y duración entre 2 y 15 s. Cada fallo con su causa en
       español («Dura 18 segundos. El máximo es 15.»; «Este video no se puede reproducir en todos los
       navegadores. Expórtalo en MP4 (H.264).»).
-- [ ] **T2** — `capturarMiniatura(video)`: fotograma al 40 % de la duración, JPEG 720 px de ancho.
+- [x] **T2** — `capturarMiniatura(video)`: fotograma al 40 % de la duración, JPEG 720 px de ancho.
       `reducirImagen(file)`: lado mayor 800 px, WebP (JPEG si el navegador no codifica WebP).
-- [ ] **T3** — `useSubirSena`: pide las URLs (HU-538), sube video y miniatura con progreso en MB («3,1 de
+- [x] **T3** — `useSubirSena`: pide las URLs (HU-538), sube video y miniatura con progreso en MB («3,1 de
       5,8 MB», nunca porcentaje), confirma, y expone los estados de `<ZonaSubida>` (vacía · arrastrando ·
       subiendo · procesando · lista · error). Cancelable. Sin mutación optimista: «Lista» solo tras la
       confirmación del servidor.
-- [ ] **T4** — `<ZonaSubida>` en el editor: botón «Elegir video» (arrastrar es atajo), progreso, vista
+- [x] **T4** — `<ZonaSubida>` en el editor: botón «Elegir video» (arrastrar es atajo), progreso, vista
       previa en bucle **sin autoplay** («Ver la seña»), «Reemplazar» y «Quitar» (confirmación). Igual
       para la imagen con su vista previa. Salir con una subida en curso pregunta antes.
-- [ ] **T5** — Tests: un `.mov` o un video de 18 s se rechazan con su causa sin llamar a la API; el
+- [x] **T5** — Tests: un `.mov` o un video de 18 s se rechazan con su causa sin llamar a la API; el
       progreso se anuncia por hitos; «Lista» no aparece antes de que responda `confirmar`; `axe` limpio.
 
 ## Criterios de aceptación
 
-- [ ] **AC1** — Subir un MP4 de 5 s a «To drink» muestra el progreso en MB, termina en «Lista» y la seña
+- [x] **AC1** — Subir un MP4 de 5 s a «To drink» muestra el progreso en MB, termina en «Lista» y la seña
       se reproduce en `/diccionario/entrada/to-drink` con velocidad y espejo (reproductor de HU-530).
-- [ ] **AC2** — Un video que no cumple (formato, duración, tamaño, no reproducible) se rechaza **antes**
+- [x] **AC2** — Un video que no cumple (formato, duración, tamaño, no reproducible) se rechaza **antes**
       de subir y la persona sabe qué hacer.
-- [ ] **AC3** — La miniatura de la seña aparece en la tarjeta de la palabra en la categoría (HU-529).
-- [ ] **AC4** — Reemplazar un video deja en el diccionario el nuevo, sin pasar por un estado vacío para
+- [x] **AC3** — La miniatura de la seña aparece en la tarjeta de la palabra en la categoría (HU-529).
+- [x] **AC4** — Reemplazar un video deja en el diccionario el nuevo, sin pasar por un estado vacío para
       el estudiante.
-- [ ] **AC5** — Todo el flujo funciona con teclado: elegir archivo, cancelar, reemplazar y quitar.
+- [x] **AC5** — Todo el flujo funciona con teclado: elegir archivo, cancelar, reemplazar y quitar.
 
 ## Fuera de alcance
 
@@ -70,4 +70,4 @@ con un `<canvas>` y reduce la imagen a 800 px en WebP. La lógica de subida qued
 
 ## Notas de implementación
 
-_Se rellena al cerrar: máximo 3 líneas o «Sin desviaciones»._
+Límites por defecto en `@academia/types` (`LIMITES_MEDIOS_POR_DEFECTO`), que también usa `env.schema.ts`; el servidor sigue decidiendo. Al crear, las zonas piden guardar primero (la subida necesita el id). La vista previa de lo ya subido sale de la lectura del estudiante, así que solo se ve si la entrada está publicada; «Quitar» confirma dentro de la zona para no anidar modales.

@@ -364,6 +364,14 @@ export interface LoteEntradasResponse {
 export const VIDEO_TIPOS_PERMITIDOS = ['video/mp4'] as const;
 export const MINIATURA_TIPOS_PERMITIDOS = ['image/jpeg'] as const;
 export const IMAGEN_TIPOS_PERMITIDOS = ['image/webp', 'image/jpeg'] as const;
+
+/** Límites por defecto de los medios. El servidor puede cambiarlos por entorno y decide siempre. */
+export const LIMITES_MEDIOS_POR_DEFECTO = {
+  videoMaxMb: 20,
+  videoMinS: 2,
+  videoMaxS: 15,
+  imagenMaxKb: 800,
+} as const;
 export type TipoImagen = (typeof IMAGEN_TIPOS_PERMITIDOS)[number];
 
 /** El navegador sube el archivo DIRECTO al almacenamiento con esta petición firmada. */

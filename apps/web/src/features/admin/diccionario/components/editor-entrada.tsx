@@ -95,7 +95,7 @@ export function ConfirmarSalida({
     >
       <p className="flex items-center gap-2 text-base font-medium text-attention-soft-foreground">
         <TriangleAlert aria-hidden="true" strokeWidth={2} className="size-5" />
-        Tienes cambios sin guardar. ¿Salir sin guardarlos?
+        Tienes cambios sin guardar o una subida en curso. ¿Salir de todos modos?
       </p>
       <div className="flex flex-wrap gap-3">
         <Button ref={seguir} variant="outline" className="h-11 px-4 text-base" onClick={onSeguir}>

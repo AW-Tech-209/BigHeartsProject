@@ -222,7 +222,9 @@ describe('AdminDiccionarioPage — admin', () => {
     await user.keyboard('{Escape}');
 
     expect(
-      within(panel).getByText('Tienes cambios sin guardar. ¿Salir sin guardarlos?'),
+      within(panel).getByText(
+        'Tienes cambios sin guardar o una subida en curso. ¿Salir de todos modos?',
+      ),
     ).toBeInTheDocument();
     expect(screen.getAllByRole('dialog')).toHaveLength(1);
     expect(within(panel).getByRole('button', { name: 'Seguir editando' })).toHaveFocus();
