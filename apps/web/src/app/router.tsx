@@ -8,6 +8,7 @@ import { AulaDetallePage } from '@/pages/AulaDetallePage';
 import { AulasPage } from '@/pages/AulasPage';
 import { CompletarAccesibilidadPage } from '@/pages/CompletarAccesibilidadPage';
 import { CrearAulaPage } from '@/pages/CrearAulaPage';
+import { DiccionarioPage } from '@/pages/DiccionarioPage';
 import { EditarAulaPage } from '@/pages/EditarAulaPage';
 import { HistorialPage } from '@/pages/HistorialPage';
 import { HomePage } from '@/pages/HomePage';
@@ -268,6 +269,24 @@ export function AppRoutes() {
         element={
           <RequireAuth roles={[UserRole.TEACHER]}>
             <EditarAulaPage />
+          </RequireAuth>
+        }
+      />
+
+      <Route
+        path="/diccionario"
+        element={
+          <RequireAuth>
+            <DiccionarioPage />
+          </RequireAuth>
+        }
+      />
+      {/* Hasta que exista la consola del admin, su destino abre la vista de lectura. */}
+      <Route
+        path="/admin/diccionario"
+        element={
+          <RequireAuth roles={[UserRole.ADMIN]}>
+            <Navigate to="/diccionario" replace />
           </RequireAuth>
         }
       />

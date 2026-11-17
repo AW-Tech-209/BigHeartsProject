@@ -168,7 +168,7 @@ function EnlaceInferior({ destino }: { destino: Destino }) {
       to={destino.to}
       className={({ isActive }) =>
         cn(
-          'flex min-h-14 flex-1 flex-col items-center justify-center gap-1 border-t-2 px-2 py-2 text-xs transicion-suave',
+          'flex min-h-14 min-w-0 flex-1 flex-col items-center justify-center gap-1 border-t-2 px-1 py-2 text-center text-xs leading-tight [overflow-wrap:anywhere] transicion-suave',
           isActive
             ? 'border-brand-foreground font-medium text-brand-foreground'
             : 'border-transparent text-brand-foreground/70',

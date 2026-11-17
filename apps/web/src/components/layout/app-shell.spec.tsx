@@ -17,9 +17,9 @@ import { AppShell } from './app-shell';
 const TEMAS: Tema[] = ['light', 'dark', 'hc'];
 
 const DESTINOS_ESPERADOS: Record<UserRole, string[]> = {
-  [UserRole.STUDENT]: ['Panel', 'Aulas', 'Mis clases', 'Historial'],
-  [UserRole.TEACHER]: ['Panel', 'Aulas', 'Mis aulas', 'Historial'],
-  [UserRole.ADMIN]: ['Panel', 'Aulas', 'Métricas', 'Usuarios'],
+  [UserRole.STUDENT]: ['Panel', 'Aulas', 'Mis clases', 'Historial', 'Diccionario'],
+  [UserRole.TEACHER]: ['Panel', 'Aulas', 'Mis aulas', 'Historial', 'Diccionario'],
+  [UserRole.ADMIN]: ['Panel', 'Aulas', 'Métricas', 'Usuarios', 'Diccionario'],
 };
 
 /**
@@ -76,6 +76,17 @@ describe('AppShell — navegación por rol', () => {
     expect(screen.getByRole('link', { name: 'Aulas' })).toHaveAttribute('href', '/admin/aulas');
   });
 
+  it.each([
+    [UserRole.STUDENT, '/diccionario'],
+    [UserRole.TEACHER, '/diccionario'],
+    [UserRole.ADMIN, '/admin/diccionario'],
+  ])('para un %s, «Diccionario» lleva a %s', (role, ruta) => {
+    darSesion(role);
+    renderConProviders(<AppShell>Contenido</AppShell>);
+
+    expect(screen.getByRole('link', { name: 'Diccionario' })).toHaveAttribute('href', ruta);
+  });
+
   it('sin sesión no ofrece destinos: la home pública solo lleva marca y contenido', () => {
     darSesion(null);
     renderConProviders(<AppShell>Contenido</AppShell>);
@@ -99,7 +110,7 @@ describe('AppShell — sin estado oculto', () => {
 
     // Sin una sola interacción previa: los enlaces ya están ahí.
     const navegacion = screen.getByRole('navigation', { name: 'Secciones' });
-    expect(within(navegacion).getAllByRole('link')).toHaveLength(4);
+    expect(within(navegacion).getAllByRole('link')).toHaveLength(5);
   });
 
   it('no existe ningún control que despliegue la navegación', () => {
@@ -127,7 +138,7 @@ describe('AppShell — sin estado oculto', () => {
       within(navegacion)
         .getAllByRole('link')
         .map((e) => e.textContent),
-    ).toEqual(['Panel', 'Aulas', 'Mis clases', 'Historial']);
+    ).toEqual(['Panel', 'Aulas', 'Mis clases', 'Historial', 'Diccionario']);
     expect(navegacion.className).toContain('fixed');
     expect(navegacion.className).toContain('bottom-0');
     expect(container.querySelector('[aria-expanded]')).toBeNull();

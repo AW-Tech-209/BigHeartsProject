@@ -1,5 +1,6 @@
 import { UserRole } from '@academia/types';
 import {
+  BookA,
   BookOpen,
   CalendarCheck,
   ChartColumn,
@@ -34,6 +35,7 @@ export type Destino = {
 const PANEL: Destino = { to: '/panel', label: 'Panel', icon: LayoutDashboard };
 const AULAS: Destino = { to: '/aulas', label: 'Aulas', icon: BookOpen };
 const HISTORIAL: Destino = { to: '/historial', label: 'Historial', icon: History };
+const DICCIONARIO: Destino = { to: '/diccionario', label: 'Diccionario', icon: BookA };
 
 export const destinosPorRol: Record<UserRole, Destino[]> = {
   [UserRole.STUDENT]: [
@@ -41,12 +43,14 @@ export const destinosPorRol: Record<UserRole, Destino[]> = {
     AULAS,
     { to: '/mis-clases', label: 'Mis clases', icon: CalendarCheck },
     HISTORIAL,
+    DICCIONARIO,
   ],
   [UserRole.TEACHER]: [
     PANEL,
     AULAS,
     { to: '/mis-aulas', label: 'Mis aulas', icon: CalendarCheck },
     HISTORIAL,
+    DICCIONARIO,
   ],
   // Para el admin «Aulas» ES la supervisión (HU-210): todas las aulas de la
   // academia, no el catálogo público. No hay una vista aparte que ofrecer.
@@ -55,5 +59,7 @@ export const destinosPorRol: Record<UserRole, Destino[]> = {
     { to: '/admin/aulas', label: 'Aulas', icon: BookOpen },
     { to: '/admin/metricas', label: 'Métricas', icon: ChartColumn },
     { to: '/admin/usuarios', label: 'Usuarios', icon: Users },
+    // Para el admin lleva a la consola, que enlaza a la vista de lectura.
+    { to: '/admin/diccionario', label: 'Diccionario', icon: BookA },
   ],
 };
