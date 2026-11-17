@@ -4,6 +4,7 @@ import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import { RedirectIfAuthenticated } from '@/features/auth/components/redirect-if-authenticated';
 import { RequireAuth } from '@/features/auth/components/require-auth';
 import { useAuth } from '@/features/auth/hooks/use-auth';
+import { AdminColaGrabacionPage } from '@/pages/AdminColaGrabacionPage';
 import { AdminDiccionarioPage } from '@/pages/AdminDiccionarioPage';
 import { AdminEntradaPage } from '@/pages/AdminEntradaPage';
 import { AdminPapeleraPage } from '@/pages/AdminPapeleraPage';
@@ -332,6 +333,14 @@ export function AppRoutes() {
         element={
           <RequireAuth roles={[UserRole.ADMIN]}>
             <AdminEntradaPage key="editar" />
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/admin/diccionario/grabacion"
+        element={
+          <RequireAuth roles={[UserRole.ADMIN]}>
+            <AdminColaGrabacionPage />
           </RequireAuth>
         }
       />

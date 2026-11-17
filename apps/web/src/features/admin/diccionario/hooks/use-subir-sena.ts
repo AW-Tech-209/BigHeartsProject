@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 
-import { confirmarVideo, pedirSubidaVideo, quitarVideo, subirArchivo } from '../api/medios';
+import { quitarVideo } from '../api/medios';
 import { capturarMiniatura } from '../lib/capturar-miniatura';
+import { subirSena } from '../lib/subir-sena';
 import { validarVideo } from '../lib/validar-video';
 import { useSubida } from './use-subida';
 
@@ -27,29 +28,18 @@ export function useSubirSena(entradaId: string, opciones: Opciones = {}) {
     const resultado = await validar(archivo);
     if (!resultado.ok) return subida.rechazar(resultado.motivo);
 
-    const ok = await subida.ejecutar(async ({ senal, empezar, avanzar, procesando }) => {
-      const miniatura = await capturar(resultado.video);
-      empezar(archivo.size + miniatura.size);
-      const destino = await pedirSubidaVideo(entradaId, {
-        tipo: 'video/mp4',
-        bytes: archivo.size,
-        duracionMs: resultado.duracionMs,
-        miniaturaTipo: 'image/jpeg',
-      });
-      let deVideo = 0;
-      let deMiniatura = 0;
-      await Promise.all([
-        subirArchivo(destino.video, archivo, (b) => avanzar((deVideo = b) + deMiniatura), senal),
-        subirArchivo(
-          destino.miniatura,
-          miniatura,
-          (b) => avanzar(deVideo + (deMiniatura = b)),
-          senal,
-        ),
-      ]);
-      procesando();
-      await confirmarVideo(entradaId, destino.videoId);
-    });
+    const ok = await subida.ejecutar(({ senal, empezar, avanzar, procesando }) =>
+      subirSena({
+        entradaId,
+        archivo,
+        validado: resultado,
+        senal,
+        capturar,
+        alEmpezar: empezar,
+        alAvanzar: avanzar,
+        alProcesar: procesando,
+      }),
+    );
     if (ok) setVistaPrevia(URL.createObjectURL(archivo));
   }
 

@@ -1,5 +1,6 @@
 import type {
   ConfirmarVideoResponse,
+  SinSenaResponse,
   SubidaImagenInput,
   SubidaImagenResponse,
   SubidaVideoInput,
@@ -67,4 +68,8 @@ export function subirArchivo(
     senal.addEventListener('abort', () => xhr.abort(), { once: true });
     xhr.send(cuerpo);
   });
+}
+
+export function getSinSena(): Promise<SinSenaResponse> {
+  return httpClient.get<SinSenaResponse>('/admin/diccionario/sin-sena');
 }
