@@ -34,32 +34,32 @@ contenido mientras se resuelve el almacenamiento.
 
 ## Tasks
 
-- [ ] **T1** — Formulario: inglés, español, tipo (radio), módulo → unidad (dependiente: al cambiar el
+- [x] **T1** — Formulario: inglés, español, tipo (radio), módulo → unidad (dependiente: al cambiar el
       módulo se vacía la unidad), categoría, nota (opcional, ≤ 300), «Publicada» (switch). Etiquetas
       visibles, error junto al campo, botón «Guardar» inactivo **con motivo** mientras falten inglés o
       español.
-- [ ] **T2** — Aviso de posible duplicado al salir del campo inglés (`duplicados`, HU-531): «Ya existe
+- [x] **T2** — Aviso de posible duplicado al salir del campo inglés (`duplicados`, HU-531): «Ya existe
       “To drink” en Módulo 1 · Acciones» con enlace a esa entrada. No bloquea.
-- [ ] **T3** — Panel lateral en escritorio (foco atrapado, Esc cierra y devuelve el foco a la fila;
+- [x] **T3** — Panel lateral en escritorio (foco atrapado, Esc cierra y devuelve el foco a la fila;
       si hay cambios sin guardar, pregunta dentro del mismo panel). Página en móvil. `Ctrl+S` guarda.
-- [ ] **T4** — «Guardar» y, al crear, «Guardar y crear otra» (vuelve al formulario vacío conservando
+- [x] **T4** — «Guardar» y, al crear, «Guardar y crear otra» (vuelve al formulario vacío conservando
       módulo, unidad y categoría). Al guardar: aviso «Entrada guardada · To drink ya se ve en el
       diccionario» y la tabla se refresca.
-- [ ] **T5** — Desde el editor: «Enviar a la papelera» (con `<AvisoDeshacer>`) y «Ver en el diccionario»
+- [x] **T5** — Desde el editor: «Enviar a la papelera» (con `<AvisoDeshacer>`) y «Ver en el diccionario»
       (abre `/diccionario/entrada/:slug`).
-- [ ] **T6** — Tests: no deja guardar sin inglés y lo dice; cambiar el módulo vacía la unidad; el aviso de
+- [x] **T6** — Tests: no deja guardar sin inglés y lo dice; cambiar el módulo vacía la unidad; el aviso de
       duplicado aparece y no bloquea; «Guardar y crear otra» conserva módulo y categoría; `axe` limpio.
 
 ## Criterios de aceptación
 
-- [ ] **AC1** — El admin crea «To swim / Nadar / Verbo / Módulo 2 · U1 · Acciones» y aparece en la
+- [x] **AC1** — El admin crea «To swim / Nadar / Verbo / Módulo 2 · U1 · Acciones» y aparece en la
       lectura de esa categoría al final de la Unidad 1.
-- [ ] **AC2** — Cerrar el panel con cambios sin guardar pregunta antes, sin abrir un segundo modal.
-- [ ] **AC3** — Crear 3 entradas seguidas con «Guardar y crear otra» no obliga a volver a elegir módulo y
+- [x] **AC2** — Cerrar el panel con cambios sin guardar pregunta antes, sin abrir un segundo modal.
+- [x] **AC3** — Crear 3 entradas seguidas con «Guardar y crear otra» no obliga a volver a elegir módulo y
       categoría.
-- [ ] **AC4** — El editor completo se usa con teclado y lector de pantalla (foco atrapado en el panel,
+- [x] **AC4** — El editor completo se usa con teclado y lector de pantalla (foco atrapado en el panel,
       vuelve a la fila al cerrar).
-- [ ] **AC5** — A 375 px el editor es una página y sigue `07-editor-movil-claro-…png`.
+- [x] **AC5** — A 375 px el editor es una página y sigue `07-editor-movil-claro-…png`.
 
 ## Fuera de alcance
 
@@ -67,4 +67,4 @@ contenido mientras se resuelve el almacenamiento.
 
 ## Notas de implementación
 
-_Se rellena al cerrar: máximo 3 líneas o «Sin desviaciones»._
+Panel sobre `Dialog` de Base UI (`components/ui/panel-lateral.tsx`); la consola intercepta el enlace en escritorio y en móvil navega a la página. El aviso de duplicado dice el módulo, no la categoría: `DuplicadoEntrada` no la trae. La página vuelve a la consola con el aviso en `location.state`.

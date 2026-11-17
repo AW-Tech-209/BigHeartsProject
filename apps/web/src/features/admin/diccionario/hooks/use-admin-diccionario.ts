@@ -1,4 +1,5 @@
 import type {
+  CrearEntradaInput,
   EditarEntradaInput,
   EntradasAdminQuery,
   LoteEntradasInput,
@@ -8,6 +9,9 @@ import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tansta
 
 import {
   aplicarLote,
+  crearEntrada,
+  enviarAPapelera,
+  getEntradaAdmin,
   editarEntrada,
   eliminarParaSiempre,
   getAvance,
@@ -94,4 +98,25 @@ export function useEliminarParaSiempre() {
 export function useVaciarPapelera() {
   const invalidar = useInvalidarTodo();
   return useMutation({ mutationFn: vaciarPapelera, onSuccess: invalidar });
+}
+
+export function useEntradaAdmin(id: string | undefined) {
+  return useQuery({
+    queryKey: [CLAVE, 'entrada', id],
+    queryFn: () => getEntradaAdmin(id ?? ''),
+    enabled: Boolean(id),
+  });
+}
+
+export function useCrearEntrada() {
+  const invalidar = useInvalidarTodo();
+  return useMutation({
+    mutationFn: (input: CrearEntradaInput) => crearEntrada(input),
+    onSuccess: invalidar,
+  });
+}
+
+export function useEnviarAPapelera() {
+  const invalidar = useInvalidarTodo();
+  return useMutation({ mutationFn: enviarAPapelera, onSuccess: invalidar });
 }

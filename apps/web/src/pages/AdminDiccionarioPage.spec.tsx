@@ -28,6 +28,10 @@ import { darSesion } from '@/test/sesion';
 vi.mock('@/features/admin/diccionario/api/admin-diccionario', () => ({
   getAvance: vi.fn(),
   getEntradasAdmin: vi.fn(),
+  getEntradaAdmin: vi.fn(),
+  crearEntrada: vi.fn(),
+  buscarDuplicados: vi.fn(),
+  enviarAPapelera: vi.fn(),
   editarEntrada: vi.fn(),
   aplicarLote: vi.fn(),
   getModulosAdmin: vi.fn(),
@@ -206,6 +210,26 @@ describe('AdminDiccionarioPage — admin', () => {
     await waitFor(() => expect(restaurarEntrada).toHaveBeenCalledTimes(2));
     expect(restaurarEntrada).toHaveBeenCalledWith('e1', undefined);
     expect(restaurarEntrada).toHaveBeenCalledWith('e2', undefined);
+  });
+
+  it('el editor en panel: Esc con cambios pregunta dentro del panel y al salir el foco vuelve', async () => {
+    const { user } = montar();
+    const crear = await screen.findByRole('link', { name: 'Crear entrada' });
+
+    await user.click(crear);
+    const panel = await screen.findByRole('dialog', { name: 'Nueva entrada' });
+    await user.type(await within(panel).findByLabelText('Inglés'), 'To swim');
+    await user.keyboard('{Escape}');
+
+    expect(
+      within(panel).getByText('Tienes cambios sin guardar. ¿Salir sin guardarlos?'),
+    ).toBeInTheDocument();
+    expect(screen.getAllByRole('dialog')).toHaveLength(1);
+    expect(within(panel).getByRole('button', { name: 'Seguir editando' })).toHaveFocus();
+
+    await user.click(within(panel).getByRole('button', { name: 'Salir sin guardar' }));
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    await waitFor(() => expect(crear).toHaveFocus());
   });
 
   it('pasa axe', async () => {

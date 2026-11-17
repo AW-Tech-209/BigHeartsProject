@@ -1,6 +1,9 @@
 import type {
   AvanceDiccionarioResponse,
   CategoriasAdminResponse,
+  CrearEntradaInput,
+  DuplicadosQuery,
+  DuplicadosResponse,
   EditarEntradaInput,
   EntradaAdmin,
   EntradasAdminQuery,
@@ -55,4 +58,20 @@ export function eliminarParaSiempre(id: string): Promise<PurgaResponse> {
 
 export function vaciarPapelera(): Promise<PurgaResponse> {
   return httpClient.delete<PurgaResponse>(`${BASE}/papelera`);
+}
+
+export function getEntradaAdmin(id: string): Promise<EntradaAdmin> {
+  return httpClient.get<EntradaAdmin>(`${BASE}/entradas/${id}`);
+}
+
+export function crearEntrada(input: CrearEntradaInput): Promise<EntradaAdmin> {
+  return httpClient.post<EntradaAdmin>(`${BASE}/entradas`, input);
+}
+
+export function buscarDuplicados(query: DuplicadosQuery): Promise<DuplicadosResponse> {
+  return httpClient.get<DuplicadosResponse>(`${BASE}/entradas/duplicados`, { params: query });
+}
+
+export function enviarAPapelera(id: string): Promise<void> {
+  return httpClient.delete<void>(`${BASE}/entradas/${id}`);
 }

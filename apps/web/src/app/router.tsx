@@ -5,6 +5,7 @@ import { RedirectIfAuthenticated } from '@/features/auth/components/redirect-if-
 import { RequireAuth } from '@/features/auth/components/require-auth';
 import { useAuth } from '@/features/auth/hooks/use-auth';
 import { AdminDiccionarioPage } from '@/pages/AdminDiccionarioPage';
+import { AdminEntradaPage } from '@/pages/AdminEntradaPage';
 import { AdminPapeleraPage } from '@/pages/AdminPapeleraPage';
 import { AulaDetallePage } from '@/pages/AulaDetallePage';
 import { AulasPage } from '@/pages/AulasPage';
@@ -315,6 +316,22 @@ export function AppRoutes() {
         element={
           <RequireAuth roles={[UserRole.ADMIN]}>
             <AdminDiccionarioPage />
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/admin/diccionario/entrada/nueva"
+        element={
+          <RequireAuth roles={[UserRole.ADMIN]}>
+            <AdminEntradaPage />
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/admin/diccionario/entrada/:id"
+        element={
+          <RequireAuth roles={[UserRole.ADMIN]}>
+            <AdminEntradaPage key="editar" />
           </RequireAuth>
         }
       />

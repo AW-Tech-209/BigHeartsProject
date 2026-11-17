@@ -1,6 +1,6 @@
 import type { EntradaAdmin } from '@academia/types';
 import { Eye, EyeOff, FilePenLine, Image, Pencil, X } from 'lucide-react';
-import { useEffect, useRef, useState } from 'react';
+import { type MouseEvent, useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 
 import { Ingles } from '@/components/dominio/ingles';
@@ -27,6 +27,7 @@ type TablaEntradasProps = {
   onMarcar: (id: string, marcada: boolean) => void;
   onMarcarPagina: (marcadas: boolean) => void;
   onGuardada: (entrada: EntradaAdmin) => void;
+  onAbrirEditor: (id: string) => (evento: MouseEvent) => void;
 };
 
 export function TablaEntradas({
@@ -35,6 +36,7 @@ export function TablaEntradas({
   onMarcar,
   onMarcarPagina,
   onGuardada,
+  onAbrirEditor,
 }: TablaEntradasProps) {
   const esMovil = useEsMovil();
   const [editando, setEditando] = useState<string | null>(null);
@@ -65,6 +67,7 @@ export function TablaEntradas({
       cerrar(entrada.id);
       onGuardada(guardada);
     },
+    onAbrirEditor: onAbrirEditor(entrada.id),
     refEditar: (boton: HTMLButtonElement | null) => {
       if (boton) botones.current.set(entrada.id, boton);
       else botones.current.delete(entrada.id);
@@ -138,6 +141,7 @@ type FilaProps = {
   onCancelar: () => void;
   onGuardado: (guardada: EntradaAdmin) => void;
   refEditar: (boton: HTMLButtonElement | null) => void;
+  onAbrirEditor: (evento: MouseEvent) => void;
 };
 
 function Marcar({
@@ -160,7 +164,8 @@ function Acciones({
   entrada,
   onEditar,
   refEditar,
-}: Pick<FilaProps, 'entrada' | 'onEditar' | 'refEditar'>) {
+  onAbrirEditor,
+}: Pick<FilaProps, 'entrada' | 'onEditar' | 'refEditar' | 'onAbrirEditor'>) {
   return (
     <div className="flex items-center gap-1">
       <Button ref={refEditar} variant="ghost" className="size-11 text-primary" onClick={onEditar}>
@@ -169,6 +174,7 @@ function Acciones({
       </Button>
       <Link
         to={`/admin/diccionario/entrada/${entrada.id}`}
+        onClick={onAbrirEditor}
         className="flex size-11 items-center justify-center rounded-lg text-primary hover:bg-muted"
       >
         <FilePenLine aria-hidden="true" strokeWidth={2} className="size-5" />

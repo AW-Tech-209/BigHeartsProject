@@ -6,8 +6,8 @@ import {
   type LoteEntradasInput,
 } from '@academia/types';
 import { ArrowRight, ChevronLeft, ChevronRight, Eye, Plus } from 'lucide-react';
-import { useCallback, useState } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
+import { type MouseEvent, useCallback, useEffect, useState } from 'react';
+import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 
 import { EstadoVacio } from '@/components/dominio/estado-vacio';
 import { AppShell } from '@/components/layout/app-shell';
@@ -18,12 +18,14 @@ import { AccesosConsola } from '@/features/admin/diccionario/components/accesos-
 import { AvanceSenas } from '@/features/admin/diccionario/components/avance-senas';
 import { type Aviso, AvisoDeshacer } from '@/features/admin/diccionario/components/aviso-deshacer';
 import { BarraLote } from '@/features/admin/diccionario/components/barra-lote';
+import { EditorEntrada } from '@/features/admin/diccionario/components/editor-entrada';
 import { FiltrosConsola } from '@/features/admin/diccionario/components/filtros-consola';
 import { TablaEntradas } from '@/features/admin/diccionario/components/tabla-entradas';
 import {
   useAvance,
   useCategoriasAdmin,
   useEntradasAdmin,
+  useEnviarAPapelera,
   useLoteEntradas,
   useModulosAdmin,
   useRestaurarEntradas,
@@ -34,6 +36,10 @@ import {
   leerFiltrosConsola,
   totalPaginas,
 } from '@/features/admin/diccionario/lib/filtros-consola';
+import { mensajeGuardada } from '@/features/admin/diccionario/lib/mensajes';
+import { useEsMovil } from '@/hooks/use-es-movil';
+
+type EstadoNavegacion = { aviso?: string; enviada?: { id: string; ingles: string } } | null;
 
 const MENSAJE_LOTE: Record<AccionLote, (n: number) => string> = {
   [AccionLote.MOVER_CATEGORIA]: (n) =>
@@ -57,11 +63,54 @@ export function AdminDiccionarioPage() {
   const lote = useLoteEntradas();
   const restaurar = useRestaurarEntradas();
   const [seleccion, setSeleccion] = useState<Set<string>>(() => new Set());
-  const [aviso, setAviso] = useState<Aviso | null>(null);
+  const papelera = useEnviarAPapelera();
+  const esMovil = useEsMovil();
+  const location = useLocation();
+  const navigate = useNavigate();
+  const [editor, setEditor] = useState<{ id?: string } | null>(null);
+
+  const deshacerPapelera = (ids: string[]): Aviso['accion'] => ({
+    texto: 'Deshacer',
+    onClick: () =>
+      restaurar.mutate(
+        { ids },
+        {
+          onSuccess: () => avisar(ids.length === 1 ? 'Entrada restaurada' : 'Entradas restauradas'),
+          onError: () => avisar('No pudimos restaurarlas. Búscalas en la Papelera.'),
+        },
+      ),
+  });
+
+  // El editor en página vuelve aquí con su aviso: se muestra una vez y se limpia del historial.
+  const [aviso, setAviso] = useState<Aviso | null>(() => {
+    const estado = location.state as EstadoNavegacion;
+    if (estado?.aviso) return { id: Date.now(), mensaje: estado.aviso };
+    if (estado?.enviada) {
+      return {
+        id: Date.now(),
+        mensaje: `${estado.enviada.ingles} enviada a la papelera`,
+        accion: deshacerPapelera([estado.enviada.id]),
+      };
+    }
+    return null;
+  });
+  useEffect(() => {
+    if (location.state) {
+      navigate(location.pathname + location.search, { replace: true, state: null });
+    }
+  }, [location, navigate]);
 
   const cerrarAviso = useCallback(() => setAviso(null), []);
-  const avisar = (mensaje: string, accion?: Aviso['accion']) =>
+  function avisar(mensaje: string, accion?: Aviso['accion']) {
     setAviso({ id: Date.now(), mensaje, accion });
+  }
+
+  /** En escritorio el editor se abre en el panel; en móvil el enlace lleva a la página. */
+  const abrirEditor = (id?: string) => (evento: MouseEvent) => {
+    if (esMovil) return;
+    evento.preventDefault();
+    setEditor(id ? { id } : {});
+  };
 
   const onCambiar = useCallback(
     (cambio: Partial<EntradasAdminQuery>) => {
@@ -79,18 +128,7 @@ export function AdminDiccionarioPage() {
     setSeleccion(new Set());
     const mensaje = MENSAJE_LOTE[accion.accion](ids.length);
     if (accion.accion === AccionLote.ENVIAR_PAPELERA) {
-      avisar(mensaje, {
-        texto: 'Deshacer',
-        onClick: () =>
-          restaurar.mutate(
-            { ids },
-            {
-              onSuccess: () =>
-                avisar(`${ids.length === 1 ? 'Entrada restaurada' : 'Entradas restauradas'}`),
-              onError: () => avisar('No pudimos restaurarlas. Búscalas en la Papelera.'),
-            },
-          ),
-      });
+      avisar(mensaje, deshacerPapelera(ids));
     } else {
       avisar(mensaje);
     }
@@ -123,7 +161,7 @@ export function AdminDiccionarioPage() {
         }
         accion={
           <Button
-            render={<Link to="/admin/diccionario/entrada/nueva" />}
+            render={<Link to="/admin/diccionario/entrada/nueva" onClick={abrirEditor()} />}
             className="h-12 gap-2 px-5 text-base"
           >
             <Plus aria-hidden="true" strokeWidth={2} className="size-5" />
@@ -242,6 +280,7 @@ export function AdminDiccionarioPage() {
               }
               onMarcarPagina={marcarPagina}
               onGuardada={(e: EntradaAdmin) => avisar(`${e.ingles} guardada`)}
+              onAbrirEditor={abrirEditor}
             />
             <div className="flex flex-wrap items-center justify-between gap-3">
               <p className="text-base text-muted-foreground">
@@ -277,6 +316,18 @@ export function AdminDiccionarioPage() {
           </>
         )}
       </section>
+
+      <EditorEntrada
+        editor={editor}
+        onCerrar={() => setEditor(null)}
+        onGuardada={(guardada) => avisar(mensajeGuardada(guardada))}
+        onPapelera={(e) =>
+          void papelera
+            .mutateAsync(e.id)
+            .then(() => avisar(`${e.ingles} enviada a la papelera`, deshacerPapelera([e.id])))
+            .catch(() => avisar('No pudimos enviarla a la papelera. Inténtalo de nuevo.'))
+        }
+      />
 
       <AvisoDeshacer aviso={aviso} onCerrar={cerrarAviso} />
     </AppShell>
