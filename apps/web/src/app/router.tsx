@@ -7,6 +7,7 @@ import { useAuth } from '@/features/auth/hooks/use-auth';
 import { AdminColaGrabacionPage } from '@/pages/AdminColaGrabacionPage';
 import { AdminDiccionarioPage } from '@/pages/AdminDiccionarioPage';
 import { AdminEntradaPage } from '@/pages/AdminEntradaPage';
+import { AdminEstructuraPage } from '@/pages/AdminEstructuraPage';
 import { AdminPapeleraPage } from '@/pages/AdminPapeleraPage';
 import { AulaDetallePage } from '@/pages/AulaDetallePage';
 import { AulasPage } from '@/pages/AulasPage';
@@ -341,6 +342,14 @@ export function AppRoutes() {
         element={
           <RequireAuth roles={[UserRole.ADMIN]}>
             <AdminColaGrabacionPage />
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/admin/diccionario/estructura"
+        element={
+          <RequireAuth roles={[UserRole.ADMIN]}>
+            <AdminEstructuraPage />
           </RequireAuth>
         }
       />

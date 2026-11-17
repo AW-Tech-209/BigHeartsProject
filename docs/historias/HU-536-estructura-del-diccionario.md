@@ -35,29 +35,29 @@ arrastrando: tiene que funcionar con teclado. Eliminar algo con entradas abre
 
 ## Tasks
 
-- [ ] **T1** — Módulos: lista con número, nombre, tramo (`<InsigniaTramo>`), estado y conteo; editar
+- [x] **T1** — Módulos: lista con número, nombre, tramo (`<InsigniaTramo>`), estado y conteo; editar
       nombre y tramo en línea; interruptor «Disponible» con confirmación («Los estudiantes verán sus N
       palabras»).
-- [ ] **T2** — Unidades de cada módulo: crear (código sugerido = siguiente), renombrar en línea,
+- [x] **T2** — Unidades de cada módulo: crear (código sugerido = siguiente), renombrar en línea,
       reordenar con «Subir»/«Bajar», eliminar.
-- [ ] **T3** — Categorías: crear, renombrar, `<SelectorIcono>` (rejilla de la lista curada, cada ícono
+- [x] **T3** — Categorías: crear, renombrar, `<SelectorIcono>` (rejilla de la lista curada, cada ícono
       con su nombre accesible), descripción corta, reordenar, eliminar.
-- [ ] **T4** — `<DialogoEliminar>` (para unidad y categoría): título serif que nombra el objeto, «Tiene N
+- [x] **T4** — `<DialogoEliminar>` (para unidad y categoría): título serif que nombra el objeto, «Tiene N
       entradas. ¿A dónde van?» (radio: mover a… con selector / enviar a la papelera), campo «Escribe
       “Ropa” para confirmar», foco inicial en «Volver», «Eliminar» inactivo con motivo hasta que el
       nombre coincida.
-- [ ] **T5** — Tests: reordenar con teclado manda el orden nuevo; el diálogo no deja eliminar hasta
+- [x] **T5** — Tests: reordenar con teclado manda el orden nuevo; el diálogo no deja eliminar hasta
       escribir el nombre exacto; sin entradas, eliminar pide solo confirmación simple; `axe` limpio.
 
 ## Criterios de aceptación
 
-- [ ] **AC1** — Renombrar «Unidad 4 · Then and to do» desde aquí se ve en las pantallas de lectura sin
+- [x] **AC1** — Renombrar «Unidad 4 · Then and to do» desde aquí se ve en las pantallas de lectura sin
       recargar la app (invalida las queries del diccionario).
-- [ ] **AC2** — Eliminar «Ropa» moviendo sus entradas a «Objetos» exige escribir «Ropa», y al terminar
+- [x] **AC2** — Eliminar «Ropa» moviendo sus entradas a «Objetos» exige escribir «Ropa», y al terminar
       «Objetos» tiene esas entradas.
-- [ ] **AC3** — Todo reordenamiento se puede hacer sin ratón.
-- [ ] **AC4** — Publicar el Módulo 4 lo muestra como disponible en el inicio del diccionario.
-- [ ] **AC5** — A 375 px sigue `09-estructura-movil-claro.png` sin scroll horizontal.
+- [x] **AC3** — Todo reordenamiento se puede hacer sin ratón.
+- [x] **AC4** — Publicar el Módulo 4 lo muestra como disponible en el inicio del diccionario.
+- [x] **AC5** — A 375 px sigue `09-estructura-movil-claro.png` sin scroll horizontal.
 
 ## Fuera de alcance
 
@@ -65,4 +65,4 @@ arrastrando: tiene que funcionar con teclado. Eliminar algo con entradas abre
 
 ## Notas de implementación
 
-_Se rellena al cerrar: máximo 3 líneas o «Sin desviaciones»._
+Reordenar solo con botones «Subir»/«Bajar» (sin arrastrar); en los extremos quedan `aria-disabled` y su nombre dice por qué. El código sugerido de la unidad nueva se calcula en el cliente; el definitivo lo pone el servidor. Los íconos tienen nombre accesible en español (`NOMBRE_ICONO`).

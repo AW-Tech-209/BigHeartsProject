@@ -145,3 +145,12 @@ export function useTodasLasEntradas() {
     staleTime: 60_000,
   });
 }
+
+/** Cambios de estructura: sin mutación optimista; al responder se refresca la consola y la lectura. */
+export function useAccionEstructura() {
+  const invalidar = useInvalidarTodo();
+  return useMutation({
+    mutationFn: (accion: () => Promise<unknown>) => accion(),
+    onSuccess: invalidar,
+  });
+}
