@@ -86,8 +86,14 @@ describe('AdminEstructuraPage', () => {
     bajar.focus();
     await user.keyboard('{Enter}');
     await waitFor(() => expect(reordenarUnidades).toHaveBeenCalledWith('m1', ['u2', 'u1']));
+    // Tras guardar, el foco vuelve al botón que se pulsó; hay que esperarlo antes de seguir.
+    await waitFor(() =>
+      expect(screen.getByRole('button', { name: 'Bajar Unidad 1' })).toHaveFocus(),
+    );
 
-    screen.getByRole('button', { name: 'Subir Ropa' }).focus();
+    const subirRopa = screen.getByRole('button', { name: 'Subir Ropa' });
+    subirRopa.focus();
+    expect(subirRopa).toHaveFocus();
     await user.keyboard(' ');
     await waitFor(() =>
       expect(reordenarCategorias).toHaveBeenCalledWith(['ropa', 'objetos', 'vacia']),
